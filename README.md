@@ -1,5 +1,7 @@
-# QuadLoco - Crazy fast quadrant target center locator
+# QuadLoco - high precision quadrant target center locator
 
+This package provides a single algorithm focused on the accurate
+location of the precise center of a quadrant target.
 
 ## Purpose
 
@@ -15,6 +17,23 @@ There are multiple phases:
 * Localization (finding center with subpixel precision and accuracy)
 * Verification (using "find" solution to verify raster sample is a quad target)
 
+## Build
+
+```
+CC=/usr/bin/clang CXX=/usr/bin/clang++\
+ \
+ cmake\
+ -DCMAKE_BUILD_TYPE=Release\
+ -DCMAKE_PREFIX_PATH=/tmpLocal/\
+ -DCMAKE_INSTALL_PREFIX=/tmpLocal/\
+ ~/repos/QuadLoco\
+ &&\
+ cmake --build . --target all -j `nproc`\
+ &&\
+ ctest
+ &&\
+ cpack
+```
 
 ## Project Concepts
 
@@ -26,6 +45,16 @@ There are multiple phases:
 	1 and 3 are dark while 2 and 4 are light or vice versa.
 
 #### Terminology
+
+Features
+
+* Line - infinitely long and undirected
+
+* (Line) Segment - finite section of a line that is assigned a direction.
+
+	- Defined by a two points: a begin and an end
+	- Segment Direction (SegDir): defined as unit vector from begin toward end
+	- Edge Direction (EdgDir): righthand perpendicular to SegDir
 
 * Quadrants
 	- Four areas
@@ -79,6 +108,22 @@ There are multiple phases:
 	- At mid point of the two inside signal corners
 
 	- At point which is half-way between each pair of opposing edges
+
+Notation:
+
+* Phi: Start angle around bounding circle. Defines segement begin point.
+
+	- Principal values in half open range [-pi,pi)
+
+* Delta: Different angle added to Phi defines segment end point.
+
+	- Principal values in half open range [-pi,pi)
+
+* Sample Plane: Sample plane: define in association with 'e12' bivector.
+
+* Alignment Reference Dir: vector, 'a', associated with positive edge dir
+
+	- e.g. 'e1' vector
 
 ### Image Properties
 
