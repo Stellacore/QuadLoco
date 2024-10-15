@@ -117,7 +117,7 @@ Notation:
 
 * Delta: Different angle added to Phi defines segment end point.
 
-	- Principal values in half open range [-pi,pi)
+	- Principal values in half open range [0,2pi)
 
 * Sample Plane: Sample plane: define in association with 'e12' bivector.
 
