@@ -1,0 +1,489 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass IEEEtran
+\begin_preamble
+\usepackage {draftwatermark}
+\SetWatermarkLightness{.90}
+
+% \usepackage{lineno}
+% \linenumbers 
+
+% \usepackage{draftwatermark}
+% \SetWatermarkText{DRAFT\\DRAFT\\DRAFT}
+% \SetWatermarkScale{3}
+% \SetWatermarkLightness{.97}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine biblatex
+\cite_engine_type authoryear
+\biblatex_bibstyle authoryear
+\biblatex_citestyle authoryear
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Singularity Free Hough Line Segment Detection
+\end_layout
+
+\begin_layout Author
+Dave Knopp
+\begin_inset Newline newline
+\end_inset
+
+Stellacore Corporation
+\end_layout
+
+\begin_layout Abstract
+This paper addresses Hough transformations for representing line segments
+ over a finite 2D sample area.
+ After a brief review of common existing techniques, this document presents
+ an alternative approach based on the use of two arc positions along a circle
+ that circumscribes the data sample.
+ This circle formulation is described and results are presented with both
+ simulation and TODO actual sample data processing and the practical implementat
+ion issues are reviewed.
+ It is concluded that the proposed circle formulation for the Hough parameters
+ is well suited for linear edge segment extraction.
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+This paper addresses Hough transform parameter representations for representing
+ line segments that occur within a 2D sample area.
+\end_layout
+
+\begin_layout Standard
+A challenge with conventional Hough transform formulations when applied
+ to line detection is what parameters to use to represent the line (or line
+ segment).
+ There are two degrees of freedom, but conventional parameter representations
+ introduce singularities that require special handling.
+ This paper presents an alternative method that is based on a describing
+ two points on a circle that bounds the data.
+ It is demonstrated that this method is free from the singularities that
+ plague common formulations and that the proposed method also encodes important
+ edge direction information.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+One thing in the blurb/draft above - is that this is a bit different (although
+ certainly that's also been done before;-) Here I'm exploring accumulation
+ of points in Hough space.
+ That is possible since i'm assuming the input is an image location and
+ an image edge direction (e.g.
+ what is returned by a gradient edge detector).
+\end_layout
+
+\begin_layout Plain Layout
+So really, i suppose what I'm formulating here is less of a true "transform
+ space" and more a "voting space" formulation.
+ Basically it transforms all strong edgels (on the same line segment) to
+ the same point in hough (voting) space.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Conventional Approaches
+\end_layout
+
+\begin_layout Standard
+E.g.
+ using a slope/intercept formulation, (near) vertical lines require special
+ attention, using polar coordinate expression, lines that go through (near)
+ the origin require special attention.
+\end_layout
+
+\begin_layout Standard
+It should be noted that these conventional parameter representations deal
+ with infinite lines.
+ However practical data sets are finite samples and have finite sizes.
+ This suggests to consider parameter representations for finite line segments
+ rather than infinite lines.
+ For any actual applications, the data sets can be bounded by a circumscribing
+ hyper sphere.
+ For 2D data sets, this takes the form of a circle that contains the data
+ set.
+\end_layout
+
+\begin_layout Standard
+Approaches
+\end_layout
+
+\begin_layout Itemize
+slope/intercept
+\end_layout
+
+\begin_layout Itemize
+radius/angle
+\end_layout
+
+\begin_layout Itemize
+nearest point
+\end_layout
+
+\begin_layout Itemize
+Fan–Beam (boundary circle - as outlined below)
+\end_layout
+
+\begin_layout Subsubsection
+Image Processing
+\end_layout
+
+\begin_layout Standard
+In practice, for image processing, an obvious containing circle is the one
+ that circumscribes a rectangular region of pixels.
+ Alternatively, data values (e.g.
+ edge detections) may be computed from original image pixels, but only evaluated
+ at locations that lie inside a predetermined circle of interest.
+\end_layout
+
+\begin_layout Section
+Methodology
+\end_layout
+
+\begin_layout Subsection
+Circle Formulation
+\end_layout
+
+\begin_layout Standard
+For a circle that bounds a finite area, every infinite line of interest
+ within the area crosses the circle at two points, and the order of the
+ points can be associated with a direction to the line.
+ The two points specify a finite line segment that is bounded by the circle.
+\end_layout
+
+\begin_layout Standard
+The first point can be considered the line segment 
+\begin_inset Quotes eld
+\end_inset
+
+start
+\begin_inset Quotes erd
+\end_inset
+
+ point, and the second can be considered the line segment 
+\begin_inset Quotes eld
+\end_inset
+
+end
+\begin_inset Quotes erd
+\end_inset
+
+ point.
+ The location of each point can be characterized by a single scalar value
+ representing its arc position along the bounding circle.
+ The origin for this arc length measurement can be any position on the circle
+ at which a reference direction crosses the bounding circle.
+ The reference direction can be any direction of interest or convenience
+ E.g., row direction, column direction, preferred direction suggested by contained
+ data, etc.
+\end_layout
+
+\begin_layout Standard
+One scalar arc length value gives a 'start' point on the circle, then a
+ second angle value gives the 'end' point on the circle.
+ It turns out that encoding the two values as a 
+\begin_inset Quotes eld
+\end_inset
+
+start
+\begin_inset Quotes erd
+\end_inset
+
+ arc length and 
+\begin_inset Quotes eld
+\end_inset
+
+delta
+\begin_inset Quotes erd
+\end_inset
+
+ arc length (instead of explicit 
+\begin_inset Quotes eld
+\end_inset
+
+start
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+end
+\begin_inset Quotes erd
+\end_inset
+
+ arc length values) provides a principal domain without phase discontinuities.
+ It also has the advantage of putting the Hough responses associated with
+ longer data sample line segments near to the center of the principal domain.
+\end_layout
+
+\begin_layout Subsection
+No Singularities
+\end_layout
+
+\begin_layout Standard
+This formulation is free from singularities for lines that cross the circle
+ - which includes all possible lines crossing the sample area! Not only
+ is this formulation free from singularities, but also it encodes the direction
+ of the line!
+\end_layout
+
+\begin_layout Subsection
+Edge Direction Encoding
+\end_layout
+
+\begin_layout Standard
+The importance of this last point is readily explained in terms of the four
+ radial edges of a quadrant target.
+ In classic Hough parameter representations, opposite radial edges are associate
+d with the same parameters.
+ In this circle formulation, the two different edge directions are encoded
+ as two different points.
+\end_layout
+
+\begin_layout Subsection
+Implementation Considerations
+\end_layout
+
+\begin_layout Subsubsection
+Phase Wrapping
+\end_layout
+
+\begin_layout Standard
+Another practical challenge is coding around the phase wrapping considerations.
+ That's always a pain to do, but is not a fundamental limitation.
+\end_layout
+
+\begin_layout Subsubsection
+Angle Evaluations
+\end_layout
+
+\begin_layout Standard
+One possible downside of this approach is the involvement of angles which
+ require logarithm (or arctangent) evaluations which are generally an expensive
+ operation.
+ However, for the finite resolution associated with digital image sampling,
+ that can be done with fast lookup tables and/or approximation formulae.
+\end_layout
+
+\begin_layout Section
+Results
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename HoughModel_edgeDirs.png
+	lyxscale 50
+	width 100col%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Line-segment-direction"
+
+\end_inset
+
+Line segment direction encoding in Hough space.
+ The horizontal axis represents the start of segment angle, 
+\begin_inset Formula $\phi:0\le\phi<\pi$
+\end_inset
+
+, while the vertical axis represent the relative different angle, 
+\begin_inset Formula $\delta:0\le\delta<\pi$
+\end_inset
+
+.
+ The colors represent the cosine of the relative direction, 
+\begin_inset Formula $\hat{g}\cdot a$
+\end_inset
+
+, between the edge gradient direction, 
+\begin_inset Formula $\hat{g}$
+\end_inset
+
+, and reference direction, 
+\begin_inset Formula $a=e_{2}$
+\end_inset
+
+.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+A short program to check edge direction for line segments associated with
+ each point in parameter space.
+ The results are illustrated in Figure
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Line-segment-direction"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+Observations and Conclusions
+\end_layout
+
+\begin_layout Standard
+Based on initial research described above, the circle point parameter representa
+tion is very promising and should be explored further.
+ 
+\end_layout
+
+\begin_layout Section
+References to explore
+\end_layout
+
+\begin_layout Itemize
+https://sci-hub.se/10.1007/978-1-4471-4414-4_2
+\begin_inset Newline newline
+\end_inset
+
+Chapter 2 
+\begin_inset Quotes eld
+\end_inset
+
+Review of Hough Transform for Line Detection
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+https://arxiv.org/pdf/2003.04676
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+Deep Hough Transform for Semantic Line Detection
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
