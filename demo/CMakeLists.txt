@@ -27,6 +27,7 @@ set(ProgNames
 	# _  # template for demo programs
 
 	demo_version
+	demoSegDir
 
 	)
 
