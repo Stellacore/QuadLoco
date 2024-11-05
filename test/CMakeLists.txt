@@ -27,7 +27,7 @@ set(unitTests
 
 	_ # test template
 
-	# test_Version # test project version info retrieval
+	test_Version # test project version info retrieval
 
 	)
 
