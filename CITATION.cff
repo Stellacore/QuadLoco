@@ -1,0 +1,42 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: QuadLoco - A high precision quadrant target center locator
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Dave
+    family-names: Knopp
+    affiliation: Stellacore Corporation
+repository-code: 'https://github.com/Stellacore/QuadLoco'
+abstract: >-
+  Quadrant targets are high contrast signal targets that are useful for
+  performing very precise location measurements in the context of
+  photogrammetry and computer vision applications.
+
+  The quad target pattern has characteristics that are conducive to high
+  accuracy center point location with high precision - often to within a
+  small fraction of a pixel.
+
+  The classic quadrant target is pattern of alternating light and dark
+  colored quadrants of a square. These and similar patterns are often 
+  visible in industrial settings, on spacecraft launch vehicles and
+  in precision metrology environments.
+
+  QuadLoco is a C++ open source software library that provides fast,
+  reliable and accurate finding of the center point in digital images
+  quad targets.
+keywords:
+  - Digital Image
+  - Fidicual Targets
+  - Signalized Targets
+  - Control Point
+  - Photogrammetry
+  - Precise Measurement
+license: MIT
+version: PreRelease
+date-released: '2024-12-30'
+
