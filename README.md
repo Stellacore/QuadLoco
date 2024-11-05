@@ -5,12 +5,23 @@ location of the precise center of a quadrant target.
 
 ## Purpose
 
-Quadrant targets are useful for supporting very precise location measurements
-in various photogrammetry and computer vision applications.
+Quadrant targets are high contrast signal targets that are useful for
+performing very precise location measurements in the context of
+photogrammetry and computer vision applications.
 
-Classic quadrant target is pattern of alternating light and dark quadrants of
-a square. Often seen on spacecraft and launch vehicles and robot development
-and testing environments.
+The quad target pattern has characteristics that are conducive to high
+accuracy center point location with high precision - often to within a
+small fraction of a pixel.
+
+The classic quadrant target is pattern of alternating light and dark
+colored quadrants of a square. These and similar patterns are often 
+visible in industrial settings, on spacecraft launch vehicles and
+in precision metrology environments.
+
+QuadLoco is a C++ open source software library that provides fast,
+reliable and accurate finding of the center point in digital images
+quad targets.
+
 
 There are multiple phases:
 * Detection (finding what features in an image are likely quadrant targets)
