@@ -23,16 +23,62 @@
 //
 
 
-#pragma once
-
-
 /*! \file
- * \brief Top level include for QuadLoco project.
- *
- * Convenience header name that includes "QuadLoco.hpp"
- */
+\brief Unit tests (and example) code for quadloco::TODO
+*/
 
 
-#include "QuadLoco.hpp"
+#include "_.hpp" // template for header files
 
+#include "QuadLoco"
+
+#include <iostream>
+#include <sstream>
+
+
+namespace
+{
+	//! Examples for documentation
+	void
+	test0
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample01]
+
+		// [DoxyExample01]
+
+		// TODO replace this with real test code
+		std::string const fname(__FILE__);
+		bool const isTemplate{ (std::string::npos != fname.find("/_.cpp")) };
+		if (! isTemplate)
+		{
+			oss << "Failure to implement real test\n";
+		}
+	}
+
+}
+
+//! Check behavior of NS
+int
+main
+	()
+{
+	int status{ 1 };
+	std::stringstream oss;
+
+	test0(oss);
+
+	if (oss.str().empty()) // Only pass if no errors were encountered
+	{
+		status = 0;
+	}
+	else
+	{
+		// else report error messages
+		std::cerr << "### FAILURE in test file: " << __FILE__ << std::endl;
+		std::cerr << oss.str();
+	}
+	return status;
+}
 

@@ -27,12 +27,24 @@
 
 
 /*! \file
- * \brief Top level include for QuadLoco project.
+ * \brief TODO
  *
- * Convenience header name that includes "QuadLoco.hpp"
  */
 
 
-#include "QuadLoco.hpp"
+// #include "TODO.hpp"
 
+
+namespace quadloco
+{
+
+/*! \brief TODO
+ */
+namespace NM
+{
+
+
+} // [NM]
+
+} // [quadloco]
 
