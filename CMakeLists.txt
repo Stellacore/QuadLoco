@@ -88,7 +88,7 @@ message("### EXPORT_FILENAME: " ${EXPORT_FILENAME})
 add_subdirectory(cmake)
 # add_subdirectory(doc)
 add_subdirectory(src) # project source code
-# add_subdirectory(test)
+add_subdirectory(test)
 add_subdirectory(demo)
 
 # ===
