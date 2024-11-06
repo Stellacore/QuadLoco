@@ -6,9 +6,7 @@ if (DOXYGEN_FOUND)
 	# Variables for expansion in Doxyfile template
 	set(DoxyProjName "${PROJECT_NAME}")
 	set(DoxyProjVersion "${PROJECT_VERSION}")
-	set( DoxyProjTagline
-		"A high precision quadrant target center locator"
-		)
+	set( DoxyProjTagline "${PROJECT_DESCRIPTION}")
 
 	# Default enable doxygen build option
 	option(BUILD_DOC "Build API documentation" ON)

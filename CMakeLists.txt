@@ -32,7 +32,7 @@ setReleaseTag(aSourceIdentity)
 project(
 	QuadLoco
 	VERSION 0.1.0
-	DESCRIPTION "QuadLoco - high precision quadrant target center locator"
+	DESCRIPTION "A fast, high precision, quadrant target center locator"
 	HOMEPAGE_URL
 		"https://github.com/Stellacore/QuadLoco"
 	LANGUAGES CXX
