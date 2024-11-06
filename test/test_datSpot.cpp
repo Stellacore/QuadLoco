@@ -85,6 +85,11 @@ namespace
 			oss << "nullSpot: " << nullSpot << '\n';
 		}
 
+		if (msg.str().empty())
+		{
+			oss << "Failure of op<<() test\n";
+		}
+
 		if (! copySame)
 		{
 			oss << "Failure of copySame test\n";
