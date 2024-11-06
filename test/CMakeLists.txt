@@ -32,6 +32,7 @@ set(unitTests
 	test_datGrid  # general raster grid storage and access
 	test_datRowCol  # discete raster cell locations
 	test_datSizeHW  # basic "high/wide" area boundary (half open)
+	test_datSpan  # half open interval (include start, excludes end)
 	test_datSpot  # 'continuous' raster cell locations
 	test_imgCamera  # simplified ideal perspective camera
 	test_simQuad  # simulation of perspective images of quad target
