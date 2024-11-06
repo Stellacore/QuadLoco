@@ -25,9 +25,11 @@
 # list of all developer unit tests (or could GLOB for filenames)
 set(unitTests
 
-	_ # test template
+	_  # test template
+	test_Version  # test project version info retrieval
 
-	test_Version # test project version info retrieval
+#	test_Quadlike  # assess the "quadness" of a pixel sampling
+	test_simQuad  # check simulation of perspective images of quad target
 
 	)
 
