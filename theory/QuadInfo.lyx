@@ -96,7 +96,15 @@ This document presents describes the basic properties of high contrast quadrant
  applications.
  In particular, it addresses the properties that are relevant to the concepts
  and implementation of center point location algorithms of the QuadLoc open
- source project.
+ source project
+\begin_inset CommandInset citation
+LatexCommand citet
+key "Knopp_QuadLoco_-_A_2024"
+literal "false"
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Section
@@ -320,6 +328,17 @@ noprefix "false"
 \end_inset
 
 .
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+btprint "btPrintCited"
+bibfiles "References"
+
+\end_inset
+
+
 \end_layout
 
 \end_body
