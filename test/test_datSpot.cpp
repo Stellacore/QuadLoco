@@ -60,8 +60,8 @@ namespace
 
 		// output operations
 		std::ostringstream msg;
-		quadloco::dat::Spot const & copySpot = copySpots.back();
-		msg << origSpot << '\n';
+		quadloco::dat::Spot const copySpot{ copySpots.back() };
+		msg << copySpot << '\n';
 
 		// approximate equivalence within tolerance
 		constexpr double tol{ 0. }; // here is exact since copy

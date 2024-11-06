@@ -91,8 +91,8 @@ namespace
 
 		// output operations
 		std::ostringstream msg;
-		quadloco::dat::Span const & copySpan = copySpans.back();
-		msg << origSpan << '\n';
+		quadloco::dat::Span const copySpan{ copySpans.back() };
+		msg << copySpan << '\n';
 
 		// test values in relationship to being contained in span
 		// example test cases: AtTest fields: (value, in/out of span, testId)
