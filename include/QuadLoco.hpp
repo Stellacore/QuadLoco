@@ -36,7 +36,7 @@
  * \endcode
  *
  * Includes the following project headers:
- * \snippet QuadLoco DoxyExample01
+ * \snippet QuadLoco.hpp DoxyExample01
  *
  * This files also defines functions for project data adminstration
  * including
