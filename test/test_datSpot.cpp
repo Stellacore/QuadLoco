@@ -47,6 +47,10 @@ namespace
 	{
 		// [DoxyExample01]
 
+		// construct a null instance
+		quadloco::dat::Spot const nullSpot{};
+		bool const nullIsOkay{ (false == isValid(nullSpot)) };
+
 		// construct with subpixel row,col order
 		quadloco::dat::Spot const origSpot{ 1.125, 2.250 };
 
@@ -63,7 +67,23 @@ namespace
 		constexpr double tol{ 0. }; // here is exact since copy
 		bool const copySame{ nearlyEquals(origSpot, copySpot, tol) };
 
+		// basic arithmetic 
+		quadloco::dat::Spot const spotA{ 29., 23. };
+		quadloco::dat::Spot const spotB{  2.,  5. };
+		quadloco::dat::Spot const gotSum{ spotA + spotB };
+		quadloco::dat::Spot const expSum{ 29.+2., 23.+5. };
+		quadloco::dat::Spot const expDif{ 29.-2., 23.-5. };
+		quadloco::dat::Spot const gotDif{ spotA - spotB };
+		quadloco::dat::Spot const expMul{ 7.*2., 7.*5. };
+		quadloco::dat::Spot const gotMul{ 7.*spotB };
+
 		// [DoxyExample01]
+
+		if (! nullIsOkay)
+		{
+			oss << "Failure of null okay test\n";
+			oss << "nullSpot: " << nullSpot << '\n';
+		}
 
 		if (! copySame)
 		{
@@ -71,11 +91,30 @@ namespace
 			oss << "origSpot: " << origSpot << '\n';
 			oss << "copySpot: " << copySpot << '\n';
 		}
+
+		if (! nearlyEquals(gotSum, expSum, tol))
+		{
+			oss << "Failure of sum test\n";
+			oss << "expSum: " << expSum << '\n';
+			oss << "gotSum: " << gotSum << '\n';
+		}
+		if (! nearlyEquals(gotDif, expDif, tol))
+		{
+			oss << "Failure of sum test\n";
+			oss << "expDif: " << expDif << '\n';
+			oss << "gotDif: " << gotDif << '\n';
+		}
+		if (! nearlyEquals(gotMul, expMul, tol))
+		{
+			oss << "Failure of sum test\n";
+			oss << "expMul: " << expMul << '\n';
+			oss << "gotMul: " << gotMul << '\n';
+		}
 	}
 
 }
 
-//! Check behavior of NS
+//! Check behavior of dat::Spot
 int
 main
 	()
