@@ -29,7 +29,8 @@ set(unitTests
 	test_Version  # test project version info retrieval
 
 #	test_Quadlike  # assess the "quadness" of a pixel sampling
-	test_simQuad  # check simulation of perspective images of quad target
+	test_datExtents  # basic "high/wide" area boundary (half open)
+	test_simQuad  # simulation of perspective images of quad target
 
 	)
 
