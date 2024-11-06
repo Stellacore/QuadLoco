@@ -30,8 +30,6 @@
 
 #include "_.hpp" // template for header files
 
-#include "QuadLoco"
-
 #include <iostream>
 #include <sstream>
 
@@ -59,7 +57,7 @@ namespace
 
 }
 
-//! Check behavior of NS
+//! Standard test case main wrapper
 int
 main
 	()
