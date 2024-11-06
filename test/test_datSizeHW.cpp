@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::dat::Extents
+\brief Unit tests (and example) code for quadloco::dat::SizeHW
 */
 
 
-#include "datExtents.hpp"
+#include "datSizeHW.hpp"
 
 #include "QuadLoco"
 
@@ -49,11 +49,11 @@ namespace
 		// value construction
 		std::size_t const expHigh{ 23u };
 		std::size_t const expWide{ 27u };
-		quadloco::dat::Extents const hwOrig{ expHigh, expWide };
+		quadloco::dat::SizeHW const hwOrig{ expHigh, expWide };
 		std::size_t const expSize{ expHigh * expWide };
 
 		// copy construction
-		quadloco::dat::Extents const hwCopy(hwOrig);
+		quadloco::dat::SizeHW const hwCopy(hwOrig);
 		bool const copyIsSame{ hwCopy == hwOrig };
 
 		// attributes

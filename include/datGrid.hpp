@@ -32,7 +32,7 @@
  */
 
 
-#include "datExtents.hpp"
+#include "datSizeHW.hpp"
 
 #include <string>
 
@@ -106,10 +106,10 @@ namespace dat
 		inline
 		explicit
 		Grid
-			( Extents const & hwArea
+			( SizeHW const & hwSize
 			)
-			: theHigh{ hwArea.high() }
-			, theWide{ hwArea.wide() }
+			: theHigh{ hwSize.high() }
+			, theWide{ hwSize.wide() }
 			, theData{ nullptr }
 		{
 			if (0 < theHigh && 0 < theWide)
@@ -168,11 +168,11 @@ namespace dat
 
 		//! Dimensions of this image
 		inline
-		Extents
-		hwArea
+		SizeHW
+		hwSize
 			() const
 		{
-			return Extents(theHigh, theWide);
+			return SizeHW(theHigh, theWide);
 		}
 
 		//! Number of cells in grid
@@ -181,7 +181,7 @@ namespace dat
 		size
 			() const
 		{
-			return hwArea().size();
+			return hwSize().size();
 		}
 
 		//! bytes in buffer
@@ -190,7 +190,7 @@ namespace dat
 		byteSize
 			() const
 		{
-			return hwArea().size() * sizeof(Type);
+			return hwSize().size() * sizeof(Type);
 		}
 
 		//! Returns reference to element
@@ -250,7 +250,7 @@ namespace dat
 		cend
 			() const
 		{
-			return theData + hwArea().size();
+			return theData + hwSize().size();
 		}
 
 		//! use as iterator
@@ -268,7 +268,7 @@ namespace dat
 		end
 			()
 		{
-			return theData + hwArea().size();
+			return theData + hwSize().size();
 		}
 
 		//! use as const_reverse_iterator
@@ -378,8 +378,8 @@ namespace dat
 		{
 			size_t const dist(std::distance(begin(), iter));
 			return dat::RowCol
-				{ dist / hwArea().wide()
-				, dist % hwArea().wide()
+				{ dist / hwSize().wide()
+				, dist % hwSize().wide()
 				};
 		}
 
@@ -399,7 +399,7 @@ namespace dat
 			{
 				os << title << " ";
 			}
-			Extents const hw{ hwArea() };
+			SizeHW const hw{ hwSize() };
 			os << "High,Wide:"
 				<< ' ' << std::setw(5) << hw.high()
 				<< ' ' << std::setw(5) << hw.wide()

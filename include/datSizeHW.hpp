@@ -46,7 +46,7 @@ namespace dat
 {
 
 	//! Simple container for 2D raster area dimensions (high & wide)
-	class Extents
+	class SizeHW
 	{
 		std::array<std::size_t, 2u> theHighWide{ 0u, 0u };
 
@@ -54,14 +54,14 @@ namespace dat
 
 		//! default null constructor
 		inline
-		Extents
+		SizeHW
 			() = default;
 
 		//! value construction
 		constexpr
 		inline
 		explicit
-		Extents
+		SizeHW
 			( std::size_t const & high
 			, std::size_t const & wide
 			)
@@ -118,7 +118,7 @@ namespace dat
 		inline
 		bool
 		operator==
-			( Extents const & other
+			( SizeHW const & other
 			) const
 		{
 			return
@@ -159,7 +159,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::Extents const & obj
+		, quadloco::dat::SizeHW const & obj
 		)
 	{
 		ostrm << obj.infoString();

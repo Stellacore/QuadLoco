@@ -50,8 +50,8 @@ namespace
 		// [DoxyExample01]
 
 		// general raster grid storage and access - tiny image example
-		quadloco::dat::Extents const hwArea{ 2u, 3u };
-		quadloco::dat::Grid<float> grid(hwArea);
+		quadloco::dat::SizeHW const hwSize{ 2u, 3u };
+		quadloco::dat::Grid<float> grid(hwSize);
 
 		// use iterators to fill values
 		constexpr float fillVal{ 17.f/8.f };
@@ -69,7 +69,7 @@ namespace
 		std::function<FGrid(FGrid const &)> const copyFunc
 			{ [](FGrid const & orig)
 				{
-				FGrid copy(orig.hwArea());
+				FGrid copy(orig.hwSize());
 				std::copy(orig.cbegin(), orig.cend(), copy.begin());
 				return std::move(copy); // move assign
 				}
@@ -112,8 +112,8 @@ namespace
 		iss >> high >> wide;
 		iss >> txt;  // skip "Cells,Bytes" label
 		iss >> nc >> nb;  // skip cell and byte size values
-		quadloco::dat::Extents const loadHW{ high, wide };
-		quadloco::dat::Grid<double> load(loadHW); // create data container
+		quadloco::dat::SizeHW const hwLoad{ high, wide };
+		quadloco::dat::Grid<double> load(hwLoad); // create data container
 		quadloco::dat::Grid<double>::iterator inIter{ load.begin() };
 		for (std::size_t nCell{0u} ; nCell < load.size() ; ++nCell)
 		{
