@@ -4,8 +4,8 @@ find_package(Doxygen)
 if (DOXYGEN_FOUND)
 
 	# Variables for expansion in Doxyfile template
-	set(DoxyProjName "${aProjName}")
-	set(DoxyProjVersion "${aProjVersion}")
+	set(DoxyProjName "${PROJECT_NAME}")
+	set(DoxyProjVersion "${PROJECT_VERSION}")
 	set( DoxyProjTagline
 		"A high precision quadrant target center locator"
 		)
