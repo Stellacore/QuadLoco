@@ -50,7 +50,7 @@ namespace dat
 	//! Discrete grid location in row,colum order.
 	struct Spot
 	{
-		std::array<double, 2u> theLocRC
+		std::array<double, 2u> theLoc
 			{ engabra::g3::null<double>()
 			, engabra::g3::null<double>()
 			};
@@ -62,27 +62,55 @@ namespace dat
 			() const
 		{
 			return
-				(  engabra::g3::isValid(theLocRC[0])
-				&& engabra::g3::isValid(theLocRC[1])
+				(  engabra::g3::isValid(theLoc[0])
+				&& engabra::g3::isValid(theLoc[1])
 				);
 		}
 
-		//! Row coordinate from #theLocRC
+		//! Subscript access to locations -- NO bounds checking
+		inline
+		double const &
+		operator[]
+			( std::size_t const & ndx
+			) const
+		{
+			return theLoc[ndx];
+		}
+
+		//! Alias for #theLoc[0]
+		inline
+		double const &
+		xVal
+			() const
+		{
+			return theLoc[0];
+		}
+
+		//! Alias for #theLoc[1]
+		inline
+		double const &
+		yVal
+			() const
+		{
+			return theLoc[1];
+		}
+
+		//! Alias for #theLoc[0]
 		inline
 		double const &
 		row
 			() const
 		{
-			return theLocRC[0];
+			return theLoc[0];
 		}
 
-		//! Column coordinate from #theLocRC
+		//! Alias for #theLoc[1]
 		inline
 		double const &
 		col
 			() const
 		{
-			return theLocRC[1];
+			return theLoc[1];
 		}
 
 		//! True if individual coordinates of are numerically same within tol
@@ -209,7 +237,7 @@ namespace
 		( quadloco::dat::Spot const spot
 		)
 	{
-		return std::hypot(spot.theLocRC[0], spot.theLocRC[1]);
+		return std::hypot(spot.theLoc[0], spot.theLoc[1]);
 	}
 
 } // [anon/global]
