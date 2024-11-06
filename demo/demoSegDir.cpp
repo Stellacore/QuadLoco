@@ -35,7 +35,7 @@
 #include <iostream>
 
 
-namespace quadloco
+namespace
 {
 	/*! \brief Projection of edge direction (for phi,delta) onto posRefDir
 	 *
@@ -70,7 +70,7 @@ namespace quadloco
 		return edgeDirDot;
 	}
 
-} // [quadloco]
+} // [anon]
 
 
 /*! \brief Evaluate Hough space for the bounding circle reference convention.
@@ -115,7 +115,7 @@ main
 		{
 			// dot product between edge direction and posRefDir axis
 			double const edgDirDot
-				{ quadloco::edgeDirDotValueFor(phi, delta, posRefDir) };
+				{ edgeDirDotValueFor(phi, delta, posRefDir) };
 			ofs
 				<< fixed(phi) << ' ' << fixed(delta)
 				<< fixed(edgDirDot)
