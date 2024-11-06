@@ -23,6 +23,11 @@
 //
 
 
+/*! \file
+\brief Main app to generate edge direction data as function of phi,delta parms.
+*/
+
+
 #include <Engabra>
 
 #include <cmath>
@@ -32,6 +37,13 @@
 
 namespace quadloco
 {
+	/*! \brief Projection of edge direction (for phi,delta) onto posRefDir
+	 *
+	 * The parameters phi,delta (location and arc on bounding circle)
+	 * indirectly specify a line segment with a well defined edge
+	 * direction. This function, returns the vector-vector dot product
+	 * of the edge direction and the provided posRefDir direction.
+	 */
 	double
 	edgeDirDotValueFor
 		( double const & phi
@@ -90,14 +102,18 @@ main
 	constexpr double da{ 1./512. * (endPhi - begPhi) };
 	static engabra::g3::Vector const posRefDir{ engabra::g3::e2 };
 
+	// loop over length of arc on bounding circle
 	static std::string const fname("foo.dat");
 	std::ofstream ofs(fname);
 	for (double delta{begDelta} ; delta < endDelta ; delta += da)
 	{
 		using engabra::g3::io::fixed;
 		ofs << "\n\n# delta: = " << fixed(delta);
+
+		// loop over starting point on bounding circle
 		for (double phi{begPhi} ; phi < endPhi ; phi += da)
 		{
+			// dot product between edge direction and posRefDir axis
 			double const edgDirDot
 				{ quadloco::edgeDirDotValueFor(phi, delta, posRefDir) };
 			ofs
