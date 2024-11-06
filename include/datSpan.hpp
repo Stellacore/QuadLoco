@@ -101,26 +101,26 @@ namespace dat
 
 namespace
 {
-	//! Put obj.infoString() to stream
+	//! Put item.infoString() to stream
 	inline
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::Span const & obj
+		, quadloco::dat::Span const & item
 		)
 	{
-		ostrm << obj.infoString();
+		ostrm << item.infoString();
 		return ostrm;
 	}
 
-	//! True if span is not null
+	//! True if item is not null
 	inline
 	bool
 	isValid
-		( quadloco::dat::Span const & span
+		( quadloco::dat::Span const & item
 		)
 	{
-		return span.isValid();
+		return item.isValid();
 	}
 
 } // [anon/global]
