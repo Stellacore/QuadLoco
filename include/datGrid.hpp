@@ -32,6 +32,7 @@
  */
 
 
+#include "datRowCol.hpp"
 #include "datSizeHW.hpp"
 
 #include <string>
@@ -46,13 +47,6 @@ namespace quadloco
 
 namespace dat
 {
-	struct RowCol
-	{
-		std::size_t const theHigh{ 0u };
-		std::size_t const theWide{ 0u };
-
-	}; // RowCol
-
 	/*! \brief Holds typed data in layout with row/cols.
 
 	Data values are stored in row major order.
@@ -222,7 +216,7 @@ namespace dat
 			( dat::RowCol const & rowcol
 			) const
 		{
-			return operator()(rowcol.theHigh, rowcol.theWide);
+			return operator()(rowcol.theRow, rowcol.theCol);
 		}
 
 		//! Returns pointer to row (non const)
@@ -232,7 +226,7 @@ namespace dat
 			( dat::RowCol const & rowcol
 			)
 		{
-			return operator()(rowcol.theHigh, rowcol.theWide);
+			return operator()(rowcol.theRow, rowcol.theCol);
 		}
 
 		//! use as const_iterator
