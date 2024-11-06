@@ -32,6 +32,9 @@
  */
 
 
+#include "datArea.hpp"
+#include "datSpot.hpp"
+
 #include <Engabra>
 
 
@@ -41,10 +44,48 @@ namespace quadloco
 namespace obj
 {
 
-	struct QuadTarget
+	/*! \brief
+	 *
+	 */
+	class QuadTarget
 	{
 		//! Magnitude of edges on square bounding full quad target signal.
 		double const theEdgeMag{ engabra::g3::null<double>() };
+
+		//! Bounding (half open) area - distinguish target from surround
+		dat::Area const theArea{};
+
+		//! Area symmetric about origin with theEdgeMag size on each side
+		inline
+		static
+		dat::Area
+		areaFor
+			( double const & fullEdgeMag
+			)
+		{
+			double const halfEdgeMag{ .5 * fullEdgeMag };
+			return dat::Area
+				{ dat::Span{ -halfEdgeMag,  halfEdgeMag }
+				, dat::Span{ -halfEdgeMag,  halfEdgeMag }
+				};
+		}
+
+	public:
+
+		//! Construct a null instance
+		inline
+		QuadTarget
+			() = default;
+
+		//! Construct a square target with specified edge sizes
+		inline
+		explicit
+		QuadTarget
+			( double const & fullEdgeLength
+			)
+			: theEdgeMag{ fullEdgeLength }
+			, theArea{ areaFor(theEdgeMag) }
+		{ }
 
 		//! True if this instance contains valid data (is not null)
 		inline
@@ -55,10 +96,106 @@ namespace obj
 			return engabra::g3::isValid(theEdgeMag);
 		}
 
+		//! Ideal radiometric intensity value at spot location
+		inline
+		float
+		intensityAt
+			( dat::Spot const & spotOnQuad
+			) const
+		{
+			// default to nan for outside of target area
+			float value{ std::numeric_limits<float>::quiet_NaN() };
+			constexpr float black{ 0.f };
+			constexpr float white{ 1.f };
+			if (theArea.contains(spotOnQuad))
+			{
+				// this code effectively defines the pattern
+				// (ideally aligned with coordinate axes)
+				double const & loc0 = spotOnQuad[0];
+				double const & loc1 = spotOnQuad[1];
+				if (loc0 < 0.) // note half open interval convention
+				{
+					// on "left" half
+					if (loc1 < 0.)
+					{
+						// on "bottom" half
+						value = black;
+					}
+					else
+					{
+						// on "top" half
+						value = white;
+					}
+				}
+				else
+				{
+					// on "right" half
+					if (loc1 < 0.)
+					{
+						// on "bottom" half
+						value = white;
+					}
+					else
+					{
+						// on "top" half
+						value = black;
+					}
+				}
+			}
+			return value;
+		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "edgeMag: " << engabra::g3::io::fixed(theEdgeMag)
+				<< " area: " << theArea
+				;
+
+			return oss.str();
+		}
+
 	}; // QuadTarget
 
 
 } // [obj]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::obj::QuadTarget const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::obj::QuadTarget const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
 

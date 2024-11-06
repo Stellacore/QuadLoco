@@ -36,6 +36,7 @@ set(unitTests
 	test_datSpan  # half open interval (include start, excludes end)
 	test_datSpot  # 'continuous' raster cell locations
 	test_imgCamera  # simplified ideal perspective camera
+	test_objQuadTarget  # representation of physical target object
 	test_simQuad  # simulation of perspective images of quad target
 
 	)
