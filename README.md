@@ -1,4 +1,4 @@
-# QuadLoco - high precision quadrant target center locator
+# QuadLoco - A fast, high precision, quadrant target center locator
 
 This package provides a single algorithm focused on the accurate
 location of the precise center of a quadrant target.

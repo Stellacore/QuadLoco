@@ -32,7 +32,7 @@ setReleaseTag(aSourceIdentity)
 project(
 	QuadLoco
 	VERSION 0.1.0
-	DESCRIPTION "QuadLoco - high precision quadrant target center locator"
+	DESCRIPTION "A fast, high precision, quadrant target center locator"
 	HOMEPAGE_URL
 		"https://github.com/Stellacore/QuadLoco"
 	LANGUAGES CXX
@@ -86,7 +86,7 @@ message("### EXPORT_TARGETS_NAME: " ${EXPORT_TARGETS_NAME})
 message("### EXPORT_FILENAME: " ${EXPORT_FILENAME})
 
 add_subdirectory(cmake)
-# add_subdirectory(doc)
+add_subdirectory(doc)
 add_subdirectory(src) # project source code
 add_subdirectory(test)
 add_subdirectory(demo)

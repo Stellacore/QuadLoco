@@ -23,54 +23,26 @@
 //
 
 
-#pragma once
-
-
 /*! \file
- * \brief Main Project header file - includes all other public headers.
- *
- * This header includes all other project public headers so that
- * consuming code may (if desired) access all project capabilities as:
- * \code
- * #include <QuadLoco>
- * \endcode
- *
- * Includes the following project headers:
- * \snippet QuadLoco.hpp DoxyExample01
- *
- * This files also defines functions for project data adminstration
- * including
- * \arg projectVersion()
- * \arg sourceIdentity()
- */
+\brief TODO <file description>
+*/
 
 
-// [DoxyExample01]
-
-// #include "TODO.hpp"
-
-// [DoxyExample01]
+// #include ""
 
 
-#include <string>
-
-
-/*! \brief Top level project namespace.
- */
 namespace quadloco
 {
-
-	//! String containing (git-derived) version information
-	std::string
-	projectVersion
-		();
-
-	//! String containing (git-derived) source commit information
-	std::string
-	sourceIdentity
-		();
-
-
 } // [quadloco]
+
+
+/*! \brief TODO <main program description>
+*/
+int
+main
+	()
+{
+	return 0;
+}
 
 
