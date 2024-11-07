@@ -48,7 +48,7 @@ namespace tst
 		//! Camera for rendering target
 		quadloco::img::Camera const theCamera
 			{ quadloco::dat::SizeHW{ 24u, 24u }  // format
-			, double{ 150. }// principal distance
+			, double{ 175. }// principal distance
 			};
 
 		//! Camera exterior orientation
