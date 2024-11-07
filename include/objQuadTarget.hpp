@@ -96,6 +96,24 @@ namespace obj
 			return engabra::g3::isValid(theEdgeMag);
 		}
 
+		//! Span of coordinates in first dimension (e.g. left to right)
+		inline
+		dat::Span const &
+		span0
+			() const
+		{
+			return theArea.theSpans[0];
+		}
+
+		//! Span of coordinates in second dimension (e.g. bottom to top)
+		inline
+		dat::Span const &
+		span1
+			() const
+		{
+			return theArea.theSpans[1];
+		}
+
 		//! Ideal radiometric intensity value at spot location
 		inline
 		float
