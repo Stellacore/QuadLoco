@@ -33,6 +33,7 @@
 
 
 #include "datGrid.hpp"
+#include "pix.hpp"
 
 #include <cstdint>
 #include <filesystem>
@@ -113,6 +114,23 @@ namespace io
 		return ugrid;
 	}
 
+	//! Write 8-bit gray image based on maximal radiometric stretch of fGrid
+	inline
+	bool
+	writeStretchPGM
+		( std::filesystem::path const & pgmPath
+		, dat::Grid<float> const & fGrid
+		)
+	{
+		// compute spanning range of radiometry values
+		dat::Span const fSpan{ pix::fullSpanFor(fGrid) };
+
+		// stretch/compress fGrid values to fit into uGrid
+		dat::Grid<uint8_t> const uGrid{ pix::uGrid8(fGrid, fSpan) };
+
+		// write resulting uGrid
+		return io::writePGM(pgmPath, uGrid);
+	}
 
 } // [io]
 

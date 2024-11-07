@@ -29,9 +29,12 @@
 
 
 #include "datGrid.hpp"
+#include "io.hpp"
 #include "objQuadTarget.hpp"
+#include "pix.hpp"
 #include "sim.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -73,30 +76,37 @@ namespace
 
 		// define a quad target object
 		constexpr double edgeMag{ .125 };
-		quadloco::obj::QuadTarget const objQuad(edgeMag);
+		quadloco::obj::QuadTarget const objQuad(edgeMag, true);
 
 		// simulate image of a quad target
 
 		// an oriented ideal perspective camera
 		tst::CamOri const camOri{};
 
-		quadloco::dat::Grid<float> const pixels
+		quadloco::dat::Grid<float> const fGrid
 			{ quadloco::sim::quadImage
 				(camOri.theCamera, camOri.theCamWrtQua, objQuad)
 			};
 
+quadloco::io::writeStretchPGM("sample.pgm", fGrid);
+
 		// detect quad parameters in (perspective) image
 //		quadloco::img::QuadTarget const imgQuad
-//			{ sim::imageQuadFor(pixels) };
+//			{ sim::imageQuadFor(fGrid) };
 
 		// assess the "quadness" of a pixel sampling
-//		double const gotQuadness{ quadloco::quadnessOf(pixels, imgQuad) };
+//		double const gotQuadness{ quadloco::quadnessOf(fGrid, imgQuad) };
 
 		// [DoxyExample01]
 
+
+quadloco::dat::Span const fSpan{ quadloco::pix::fullSpanFor(fGrid) };
+quadloco::dat::Grid<uint8_t> const uGrid
+	{ quadloco::pix::uGrid8(fGrid, fSpan) };
 std::ofstream ofs("/dev/stdout");
 ofs << '\n';
-ofs << pixels.infoStringContents("pixels:\n", "%4.2f") << '\n';
+ofs << fGrid.infoStringContents("fGrid:\n", "%4.2f") << '\n';
+ofs << uGrid.infoStringContents("uGrid:\n", "%4u") << '\n';
 ofs << '\n';
 
 		// TODO replace this with real test code
