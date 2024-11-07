@@ -154,6 +154,64 @@ namespace
 		}
 	}
 
+
+	//! Check proportional function operations
+	void
+	test1
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample02]
+
+		// spans can be created as constexpr
+		constexpr quadloco::dat::Span aSpan{ 100., 200. };
+
+		// evaluate a point inside span (Interpolation)
+		double const expInterpValue{ 125. };
+		double const expInterpFrac{ .25 };
+
+		double const gotInterpFrac{ aSpan.fractionAtValue(expInterpValue) };
+		double const gotInterpValue{ aSpan.valueAtFraction(expInterpFrac) };
+
+		// evaluate a point outside span (Extrapolation)
+		double const expExtrapValue{ 225. };
+		double const expExtrapFrac{ 1.25 };
+
+		double const gotExtrapFrac{ aSpan.fractionAtValue(expExtrapValue) };
+		double const gotExtrapValue{ aSpan.valueAtFraction(expExtrapFrac) };
+
+		// [DoxyExample02]
+
+		if (! engabra::g3::nearlyEquals(gotInterpFrac, expInterpFrac))
+		{
+			oss << "Failure of interpolation fraction at value test\n";
+			oss << "exp: " << expInterpFrac << '\n';
+			oss << "got: " << gotInterpFrac << '\n';
+		}
+
+		if (! engabra::g3::nearlyEquals(gotInterpValue, expInterpValue))
+		{
+			oss << "Failure of interpolation value at fraction test\n";
+			oss << "exp: " << expInterpValue << '\n';
+			oss << "got: " << gotInterpValue << '\n';
+		}
+
+		if (! engabra::g3::nearlyEquals(gotExtrapFrac, expExtrapFrac))
+		{
+			oss << "Failure of extrapolation fraction at value test\n";
+			oss << "exp: " << expExtrapFrac << '\n';
+			oss << "got: " << gotExtrapFrac << '\n';
+		}
+
+		if (! engabra::g3::nearlyEquals(gotExtrapValue, expExtrapValue))
+		{
+			oss << "Failure of extrapolation value at fraction test\n";
+			oss << "exp: " << expExtrapValue << '\n';
+			oss << "got: " << gotExtrapValue << '\n';
+		}
+
+	}
+
 }
 
 //! Standard test case main wrapper
@@ -165,6 +223,7 @@ main
 	std::stringstream oss;
 
 	test0(oss);
+	test1(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

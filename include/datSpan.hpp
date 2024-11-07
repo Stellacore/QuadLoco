@@ -83,6 +83,38 @@ namespace dat
 			return inside;
 		}
 
+		//! Fractional position of value within this Span (linear map)
+		inline
+		double
+		fractionAtValue
+			( double const & value
+			) const
+		{
+			double frac{ engabra::g3::null<double>() };
+			if (isValid())
+			{
+				double const delta{ value - theBeg };
+				frac = delta / magnitude();
+			}
+			return frac;
+		}
+
+		//! Value at this proprotional location within interval
+		inline
+		double
+		valueAtFraction
+			( double const & frac
+			) const
+		{
+			double value{ engabra::g3::null<double>() };
+			if (isValid())
+			{
+				double const delta{ frac * magnitude() };
+				value = theBeg + delta;
+			}
+			return value;
+		}
+
 		//! Descriptive information about this instance.
 		inline
 		std::string
