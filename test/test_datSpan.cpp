@@ -80,10 +80,14 @@ namespace
 		// construct with subpixel row,col order
 		double const expBeg{ 1.125 };
 		double const expEnd{ 2.250 };
+		double const expMag{ expEnd - expBeg };
 
 		// eps needs to be big enough for meaningful add/sub with end/beg 
 		double const eps{ expEnd * std::numeric_limits<double>::epsilon() };
 		quadloco::dat::Span const origSpan{ expBeg, expEnd };
+
+		// properties
+		double const gotMag{ origSpan.magnitude() };
 
 		// copy construction
 		std::vector<quadloco::dat::Span> const copySpans
@@ -110,6 +114,13 @@ namespace
 		{
 			oss << "Failure of nullIsOkay test\n";
 			oss << "nullSpan: " << nullSpan << '\n';
+		}
+
+		if (! (gotMag == expMag))
+		{
+			oss << "Failure of magnitude test\n";
+			oss << "exp: " << expMag << '\n';
+			oss << "got: " << gotMag << '\n';
 		}
 
 		if (msg.str().empty())

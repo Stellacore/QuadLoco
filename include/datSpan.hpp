@@ -60,6 +60,15 @@ namespace dat
 				);
 		}
 
+		//! Length of span
+		inline
+		double
+		magnitude
+			() const
+		{
+			return (theEnd - theBeg);
+		}
+
 		//! Is value in half open range: [minInclude <= value < maxExclude]?
 		inline
 		bool
