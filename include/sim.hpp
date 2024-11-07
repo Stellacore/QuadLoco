@@ -272,15 +272,15 @@ namespace sim
 
 	//! Simulate an image through camera at position xCamWrtQuad
 	inline
-	dat::Grid<float>
-	quadImage
-		( img::Camera const & camera
+	void
+	injectTargetInto
+		( dat::Grid<float> * const & ptGrid
+		, img::Camera const & camera
 		, rigibra::Transform const & xCamWrtQuad
 		, obj::QuadTarget const & objQuad
 		)
 	{
-		dat::Grid<float> grid(camera.theFormat);
-
+		dat::Grid<float> & grid = *ptGrid;
 		constexpr double objDelta{ 1./1024. };
 
 		double const & beg0 = objQuad.span0().theBeg;
@@ -291,7 +291,6 @@ namespace sim
 		Sampler const sampler(camera, xCamWrtQuad, objQuad);
 
 		using namespace rigibra;
-		dat::Grid<float>::iterator itGrid{ grid.begin() };
 		for (std::size_t row{0u} ; row < grid.high() ; ++row)
 		{
 			for (std::size_t col{0u} ; col < grid.wide() ; ++col)
@@ -300,10 +299,27 @@ namespace sim
 				double const subCol{ (double)col };
 				dat::Spot const detSpot{ subRow, subCol };
 
-				*itGrid++ = sampler.intensityNear(detSpot);
+				float const inten{ sampler.intensityNear(detSpot) };
+				if (engabra::g3::isValid(inten))
+				{
+					grid(row, col) = inten;
+				}
 			}
 		}
+	}
 
+	//! Simulate an image through camera at position xCamWrtQuad
+	inline
+	dat::Grid<float>
+	quadImage
+		( img::Camera const & camera
+		, rigibra::Transform const & xCamWrtQuad
+		, obj::QuadTarget const & objQuad
+		)
+	{
+		dat::Grid<float> grid(camera.theFormat);
+		std::fill(grid.begin(), grid.end(), engabra::g3::null<float>());
+		injectTargetInto(&grid, camera, xCamWrtQuad, objQuad);
 		return grid;
 	}
 
