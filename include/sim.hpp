@@ -38,6 +38,8 @@
 
 #include <Rigibra>
 
+#include <random>
+
 
 namespace quadloco
 {
@@ -145,6 +147,36 @@ namespace sim
 			return theObjQuad.intensityAt(spotInQuad);
 		}
 
+		//! Use subsampling with mutiple calls to intensityAt()
+		inline
+		float
+		intensityNear
+			( dat::Spot const & detSpot
+			, std::size_t const & numSubSamps = 16u
+			) const
+		{
+			float intensity{ engabra::g3::null<float>() };
+			static std::mt19937 gen(48997969u);
+			static std::uniform_real_distribution<double> distro(-.75, .75);
+			float sum{ 0.f };
+			float count{ 0.f };
+			for (std::size_t nn{0u} ; nn < numSubSamps ; ++nn)
+			{
+				dat::Spot const useSpot
+					{ detSpot + dat::Spot{ distro(gen), distro(gen) } };
+				if (isValid(useSpot))
+				{
+					sum += intensityAt(useSpot);
+					count += 1.f;
+				}
+			}
+			if (0.f < count)
+			{
+				intensity = (1.f/count) * sum;
+			}
+			return intensity;
+		}
+
 	}; // Sampler
 
 
@@ -178,8 +210,7 @@ namespace sim
 				double const subCol{ (double)col };
 				dat::Spot const detSpot{ subRow, subCol };
 
-				float const quadInten{ sampler.intensityAt(detSpot) };
-				*itGrid++ = quadInten;
+				*itGrid++ = sampler.intensityNear(detSpot);
 			}
 		}
 
