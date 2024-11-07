@@ -64,6 +64,7 @@ foreach(aUnitTest ${unitTests}) # loop over all tests
 		${aUnitTest}
 		PRIVATE
 			Engabra::Engabra
+			Rigibra::Rigibra
 			${thisProjLib}::${thisProjLib}
 		)
 
