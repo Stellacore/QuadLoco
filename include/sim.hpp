@@ -127,7 +127,7 @@ namespace sim
 
 		//! Provide a pseudo-random linear bias across the scene
 		inline
-		float
+		double
 		noiseBias
 			( dat::Spot const & spotInQuad
 			) const
@@ -145,18 +145,16 @@ namespace sim
 			Vector const locX{ spotInQuad[0], spotInQuad[1], 0. };
 			double const distToX{ ((locX - loc0) * biasDir).theSca[0] };
 			double const bias{ bias0 + biasPerMeter * distToX };
-			float const inten{ static_cast<float>(bias) };
-			return inten;
+			return bias;
 		}
 
-		//! Sample theObjQuad near forward projection of detector location
+		//! Location on QuadTarget (in quad frame) associated with detSpot
 		inline
-		float
-		intensityAt
+		engabra::g3::Vector
+		quadLocFor
 			( dat::Spot const & detSpot
 			) const
 		{
-			float intenSample{ engabra::g3::null<float>() };
 			using engabra::g3::Vector;
 
 			// shorthand
@@ -170,6 +168,20 @@ namespace sim
 
 			// intersect quad frame ray with quad plane
 			Vector const pntInQuad{ intersectOnE12(staInQuad, dirInQuad) };
+
+			return pntInQuad;
+		}
+
+		//! Sample theObjQuad near forward projection of detector location
+		inline
+		double
+		intensityAt
+			( dat::Spot const & detSpot
+			) const
+		{
+			double intenSample{ engabra::g3::null<double>() };
+
+			engabra::g3::Vector const pntInQuad{ quadLocFor(detSpot) };
 
 			// sample intensity from quad target
 			dat::Spot const spotInQuad{ pntInQuad[0], pntInQuad[1] };
@@ -189,7 +201,7 @@ namespace sim
 					{ theNoiseModel.valueFor(incidentValue) };
 
 				// final recorded pixel value
-				intenSample = (float)(valueSignal + valueBias + valueNoise);
+				intenSample = (valueSignal + valueBias + valueNoise);
 			}
 
 			// return the sample value
@@ -198,17 +210,17 @@ namespace sim
 
 		//! Use subsampling with mutiple calls to intensityAt()
 		inline
-		float
+		double
 		intensityNear
 			( dat::Spot const & detSpot
 			, std::size_t const & numSubSamps = 16u
 			) const
 		{
-			float intensity{ engabra::g3::null<float>() };
+			double intensity{ engabra::g3::null<double>() };
 			static std::mt19937 gen(48997969u);
 			static std::uniform_real_distribution<double> distro(-.75, .75);
-			float sum{ 0.f };
-			float count{ 0.f };
+			double sum{ 0. };
+			double count{ 0. };
 			for (std::size_t nn{0u} ; nn < numSubSamps ; ++nn)
 			{
 				dat::Spot const useSpot
@@ -216,12 +228,12 @@ namespace sim
 				if (isValid(useSpot))
 				{
 					sum += intensityAt(useSpot);
-					count += 1.f;
+					count += 1.;
 				}
 			}
-			if (0.f < count)
+			if (0. < count)
 			{
-				intensity = (1.f/count) * sum;
+				intensity = (1./count) * sum;
 			}
 			return intensity;
 		}
@@ -258,7 +270,7 @@ namespace sim
 				double const subCol{ (double)col };
 				dat::Spot const detSpot{ subRow, subCol };
 
-				float const inten{ sampler.intensityNear(detSpot) };
+				float const inten{ (float)sampler.intensityNear(detSpot) };
 				if (engabra::g3::isValid(inten))
 				{
 					grid(row, col) = inten;
