@@ -54,6 +54,18 @@ namespace
 		constexpr double halfEdgeMag{ .5 * fullEdgeMag };
 		quadloco::obj::QuadTarget const origQuadTgt{ fullEdgeMag };
 
+		// radius to all outer corners is the same
+		constexpr double expRadOuter{ std::sqrt(2.) * halfEdgeMag };
+		double const gotRadOuter{ origQuadTgt.radiusOuter() };
+		// radius to all midside (background) corners is same
+		constexpr double expRadInner{ halfEdgeMag };
+		double const gotRadInner{ origQuadTgt.radiusInner() };
+		// center at origin
+		quadloco::dat::Spot const expCenter{ 0., 0. };
+		quadloco::dat::Spot const gotCenter{ origQuadTgt.centerLoc() };
+		std::array<quadloco::dat::Spot, 4u>
+			const gotCornerLocs{ origQuadTgt.cornerLocs() };
+
 		// copy construction
 		std::vector<quadloco::obj::QuadTarget> const copyQuadTgts
 			{ origQuadTgt, origQuadTgt, origQuadTgt };
@@ -79,6 +91,74 @@ namespace
 		float const gotValInRB{ origQuadTgt.intensityAt(spotRB) };
 
 		// [DoxyExample01]
+
+		if (! engabra::g3::nearlyEquals(gotRadOuter, expRadOuter))
+		{
+			oss << "Failure of radius test\n";
+			oss << "exp: " << expRadOuter << '\n';
+			oss << "got: " << gotRadOuter << '\n';
+		}
+
+		if (! engabra::g3::nearlyEquals(gotRadInner, expRadInner))
+		{
+			oss << "Failure of radius test\n";
+			oss << "exp: " << expRadInner << '\n';
+			oss << "got: " << gotRadInner << '\n';
+		}
+
+		if (! nearlyEquals(gotCenter, expCenter))
+		{
+			oss << "Failure of radius test\n";
+			oss << "exp: " << expCenter << '\n';
+			oss << "got: " << gotCenter << '\n';
+		}
+
+		using quadloco::dat::Spot;
+		std::array<Spot, 4u> gotDiffs;
+		for (std::size_t nn{0u} ; nn < 4u ; ++nn)
+		{
+			Spot const & gotCornerLoc = gotCornerLocs[nn];
+			gotDiffs[nn] = gotCornerLoc - gotCenter;
+		}
+		// Outer product structure
+		struct OP
+		{
+			double theBiv{};
+
+			inline
+			explicit
+			OP
+				( Spot const & spotA
+				, Spot const & spotB
+				)
+				: theBiv{ spotA[0]*spotB[1] - spotA[1]*spotB[0] }
+			{ }
+
+		}; // OP
+		double const & expR = expRadOuter;
+		double const expOP
+			{ OP(expR*Spot{ 1., 0. }, expR*Spot{ 0., 1. }).theBiv };
+		double const gotOPa{ OP(gotDiffs[0], gotDiffs[1]).theBiv };
+		double const gotOPb{ OP(gotDiffs[1], gotDiffs[2]).theBiv };
+		double const gotOPc{ OP(gotDiffs[2], gotDiffs[3]).theBiv };
+		double const gotOPd{ OP(gotDiffs[3], gotDiffs[0]).theBiv };
+		constexpr double opTol{ 4. * std::numeric_limits<double>::epsilon() };
+		bool const sameDiffBivs
+			{  engabra::g3::nearlyEquals(gotOPa, expOP, opTol)
+			&& engabra::g3::nearlyEquals(gotOPb, expOP, opTol)
+			&& engabra::g3::nearlyEquals(gotOPc, expOP, opTol)
+			&& engabra::g3::nearlyEquals(gotOPd, expOP, opTol)
+			};
+		if (! sameDiffBivs)
+		{
+			using engabra::g3::io::fixed;
+			oss << "Failure of corner difference bivector test\n";
+			oss << " expOP: " << fixed(expOP) << '\n';
+			oss << "gotOPa: " << fixed(gotOPa) << '\n';
+			oss << "gotOPb: " << fixed(gotOPb) << '\n';
+			oss << "gotOPc: " << fixed(gotOPc) << '\n';
+			oss << "gotOPd: " << fixed(gotOPd) << '\n';
+		}
 
 		if (! nullIsOkay)
 		{

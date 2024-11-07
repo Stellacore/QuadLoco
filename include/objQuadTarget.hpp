@@ -37,6 +37,9 @@
 
 #include <Engabra>
 
+#include <array>
+#include <cmath>
+
 
 namespace quadloco
 {
@@ -112,6 +115,52 @@ namespace obj
 			() const
 		{
 			return theArea.theSpans[1];
+		}
+
+		//! Center location in target frame (origin == zero)
+		inline
+		constexpr
+		dat::Spot
+		centerLoc
+			() const
+		{
+			return dat::Spot{ 0., 0. };
+		}
+
+		//! Circumscribing radius (e.g. hits outer background corners)
+		inline
+		double
+		radiusOuter
+			() const
+		{
+			return (std::sqrt(.5) * theEdgeMag);
+		}
+
+		//! Inscribing radius (e.g. hits midside background corners)
+		inline
+		double
+		radiusInner
+			() const
+		{
+			return (.5 * theEdgeMag);
+		}
+
+		//! The four outer corners in order: RT, LT, LB, RB
+		inline
+		std::array<dat::Spot, 4u>
+		cornerLocs
+			() const
+		{
+			double const lft{ span0().theBeg };
+			double const rgt{ span0().theEnd };
+			double const bot{ span1().theBeg };
+			double const top{ span1().theEnd };
+			return std::array<dat::Spot, 4u>
+				{ dat::Spot{ rgt, top }
+				, dat::Spot{ lft, top }
+				, dat::Spot{ lft, bot }
+				, dat::Spot{ rgt, bot }
+				};
 		}
 
 		//! Ideal radiometric intensity value at spot location
