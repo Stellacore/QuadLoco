@@ -37,6 +37,7 @@ set(unitTests
 	test_datSpot  # 'continuous' raster cell locations
 	test_imgCamera  # simplified ideal perspective camera
 	test_objQuadTarget  # representation of physical target object
+	test_pix  # pixel image manipulations
 	test_simQuad  # simulation of perspective images of quad target
 
 	)
