@@ -89,6 +89,15 @@ namespace
 
 		// [DoxyExample01]
 
+		if (! (hwSize.high() == grid.high()))
+		{
+			oss << "Failure of grid.high() test\n";
+		}
+		if (! (hwSize.wide() == grid.wide()))
+		{
+			oss << "Failure of grid.wide() test\n";
+		}
+
 		if (! (gotSum == expSum)) // exact given binary exact test values.
 		{
 			oss << "Failure of grid sum test\n";

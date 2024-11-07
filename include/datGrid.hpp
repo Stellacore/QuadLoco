@@ -169,6 +169,24 @@ namespace dat
 			return SizeHW(theHigh, theWide);
 		}
 
+		//! Number of cells in each column of the grid
+		inline
+		std::size_t
+		high
+			() const
+		{
+			return theHigh;
+		}
+
+		//! Number of cells in each row of the grid
+		inline
+		std::size_t
+		wide
+			() const
+		{
+			return theWide;
+		}
+
 		//! Number of cells in grid
 		inline
 		std::size_t
