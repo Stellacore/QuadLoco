@@ -47,25 +47,29 @@ namespace
 
 		// create a small simple floating point imag
 		using quadloco::pix::fpix_t;
-		quadloco::dat::Grid<fpix_t> fgrid(quadloco::dat::SizeHW{ 5u, 1u });
-		fgrid(0, 0) = 100.;
-		fgrid(1, 0) = 101.;
-		fgrid(2, 0) = 300.;
-		fgrid(3, 0) = 500.-.001;
-		fgrid(4, 0) = 500.;
+		quadloco::dat::Grid<fpix_t> fGrid(quadloco::dat::SizeHW{ 5u, 1u });
+		fGrid(0, 0) = 100.;
+		fGrid(1, 0) = 101.;
+		fGrid(2, 0) = 300.;
+		fGrid(3, 0) = 500.-.001;
+		fGrid(4, 0) = 500.;
 
-		// expected working span of input imagery
-		quadloco::dat::Span const fSpan{ 101., 500. };
+		// expected working span of input imagery (for test case)
+		quadloco::dat::Span const testSpan{ 101., 500. };
+
+		// full span (that ensures all pixels are valid)
+		quadloco::dat::Span const fullSpan
+			{ quadloco::pix::fullSpanFor(fGrid) };
 
 		// convert to classic uint8_t image
-		quadloco::dat::Grid<uint8_t> const ugrid
-			{ quadloco::pix::uGrid8(fgrid, fSpan) };
+		quadloco::dat::Grid<uint8_t> const uGrid
+			{ quadloco::pix::uGrid8(fGrid, testSpan) };
 
 		//
-		// Expected mapping of values given fSpan
+		// Expected mapping of values given testSpan
 		//
 
-		// expected output values (relative to proportions of fSpan)
+		// expected output values (relative to proportions of testSpan)
 		using namespace quadloco::pix; // for the u8... types
 		uint8_t const exp00{ u8Undr }; // 100. // under exposed
 		uint8_t const exp10{ u8Dark }; // 101. // dark (but okay) exposure
@@ -73,13 +77,27 @@ namespace
 		uint8_t const exp30{ u8Lite }; // 500.-.001 // lite (but okay) exposure
 		uint8_t const exp40{ u8Over }; // 500. // over expossed
 
-		uint8_t const & got00 = ugrid(0, 0);
-		uint8_t const & got10 = ugrid(1, 0);
-		uint8_t const & got20 = ugrid(2, 0);
-		uint8_t const & got30 = ugrid(3, 0);
-		uint8_t const & got40 = ugrid(4, 0);
+		uint8_t const & got00 = uGrid(0, 0);
+		uint8_t const & got10 = uGrid(1, 0);
+		uint8_t const & got20 = uGrid(2, 0);
+		uint8_t const & got30 = uGrid(3, 0);
+		uint8_t const & got40 = uGrid(4, 0);
 
 		// [DoxyExample01]
+
+		// check if full span contains all pixels
+		using FIter = quadloco::dat::Grid<fpix_t>::const_iterator;
+		bool allIn{ true };
+		for (FIter iter{fGrid.cbegin()} ; fGrid.cend() != iter ; ++iter)
+		{
+			fpix_t const & pixVal = *iter;
+			bool const isIn{ fullSpan.contains(pixVal) };
+			allIn &= isIn;
+		}
+		if (! allIn)
+		{
+			oss << "Failure of all in fullSpan test\n";
+		}
 
 		bool allOkay{ true };
 		allOkay &= (got00 == exp00);
@@ -91,8 +109,8 @@ namespace
 		if (! allOkay)
 		{
 			oss << "Failure of radiometric remapping test\n";
-			oss << fgrid.infoStringContents("fgrid", "%6.3f") << '\n';
-			oss << ugrid.infoStringContents("ugrid", "%4d") << '\n';
+			oss << fGrid.infoStringContents("fGrid", "%6.3f") << '\n';
+			oss << uGrid.infoStringContents("uGrid", "%4d") << '\n';
 			oss
 				<< "exp00:" << std::setw(4u) << +exp00 << "  "
 				<< "got00:" << std::setw(4u) << +got00 << '\n';

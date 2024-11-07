@@ -106,6 +106,61 @@ namespace pix
 		return (std::isnormal(fpix) || (0. == fpix));
 	}
 
+	//! Min/Max values from a collection with only isValid() inputs considered
+	template <typename FwdIter, typename PixType = float>
+	inline
+	std::pair<PixType, PixType>
+	validMinMax
+		( FwdIter const & beg
+		, FwdIter const & end
+		)
+	{
+		using namespace quadloco;
+		std::pair<PixType, PixType> minmax
+			{ std::numeric_limits<PixType>::quiet_NaN()
+			, std::numeric_limits<PixType>::quiet_NaN()
+			};
+		if (beg != end)
+		{
+			PixType & min = minmax.first;
+			PixType & max = minmax.second;
+			min = std::numeric_limits<PixType>::max();
+			max = std::numeric_limits<PixType>::lowest();
+			for (FwdIter iter{beg} ; end != iter ; ++iter)
+			{
+				PixType const & pixVal = *iter;
+				if (pixVal < min)
+				{
+					min = pixVal;
+				}
+				if (max < pixVal)
+				{
+					max = pixVal;
+				}
+			}
+		}
+		return minmax;
+	}
+
+	//! Span with begin/end at smallest/largest (valid) values in fGrid
+	template <typename PixType>
+	inline
+	dat::Span
+	fullSpanFor
+		( dat::Grid<PixType> const & fGrid
+		)
+	{
+		std::pair<PixType, PixType> const fMinMax
+			{ validMinMax(fGrid.cbegin(), fGrid.cend()) };
+		PixType const & fMin = fMinMax.first;
+		// bump max by a tiny amount so that largest value *is* included
+		PixType const & fMax = fMinMax.second;
+		PixType const delta{ fMax - fMin };
+		constexpr PixType eps{ std::numeric_limits<PixType>::epsilon() };
+		PixType const useMax{ fMax * (1.f + delta * eps) };
+		return quadloco::dat::Span{ (double)fMin, (double)useMax };
+	}
+
 	//! uint8_t value corresponding to fpix value within fSpan range
 	inline
 	uint8_t
