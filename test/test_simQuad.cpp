@@ -28,13 +28,38 @@
 */
 
 
+#include "datGrid.hpp"
 #include "objQuadTarget.hpp"
+#include "sim.hpp"
 
-#include "QuadLoco"
-
+#include <fstream>
 #include <iostream>
 #include <sstream>
 
+
+namespace tst
+{
+	using namespace engabra::g3;
+	using namespace rigibra;
+
+	//! Test case camera view to use for rendering in simulation
+	struct CamOri
+	{
+		//! Camera for rendering target
+		quadloco::img::Camera const theCamera
+			{ quadloco::dat::SizeHW{ 24u, 24u }  // format
+			, double{ 150. }// principal distance
+			};
+
+		//! Camera exterior orientation
+		Transform const theCamWrtQua
+			{ Vector{ .47, -.32, 1. } // above target
+			, Attitude{ PhysAngle{ BiVector{ .3, .4, .1} } }
+			};
+
+	}; // CamOri
+
+} // [tst]
 
 namespace
 {
@@ -47,21 +72,32 @@ namespace
 		// [DoxyExample01]
 
 		// define a quad target object
-		quadloco::obj::QuadTarget const objQuad
-			{ .theEdgeMag = .05
-			};
+		constexpr double edgeMag{ .125 };
+		quadloco::obj::QuadTarget const objQuad(edgeMag);
 
 		// simulate image of a quad target
-//		quadloco::dat::Grid<float> const pixels
-//			{ quadloco::sim::imageFor(objQuad) };
+
+		// an oriented ideal perspective camera
+		tst::CamOri const camOri{};
+
+		quadloco::dat::Grid<float> const pixels
+			{ quadloco::sim::quadImage
+				(camOri.theCamera, camOri.theCamWrtQua, objQuad)
+			};
 
 		// detect quad parameters in (perspective) image
 //		quadloco::img::QuadTarget const imgQuad
+//			{ sim::imageQuadFor(pixels) };
 
 		// assess the "quadness" of a pixel sampling
 //		double const gotQuadness{ quadloco::quadnessOf(pixels, imgQuad) };
 
 		// [DoxyExample01]
+
+std::ofstream ofs("/dev/stdout");
+ofs << '\n';
+ofs << pixels.infoStringContents("pixels:\n", "%4.2f") << '\n';
+ofs << '\n';
 
 		// TODO replace this with real test code
 		std::string const fname(__FILE__);
