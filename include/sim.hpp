@@ -35,6 +35,7 @@
 #include "datGrid.hpp"
 #include "imgCamera.hpp"
 #include "objQuadTarget.hpp"
+#include "pixNoise.hpp"
 
 #include <Rigibra>
 
@@ -102,6 +103,9 @@ namespace sim
 		rigibra::Transform const theCamWrtQuad{};
 		obj::QuadTarget const theObjQuad{};
 
+		//! Simplistic digital imaging noise model
+		pix::Noise const theNoiseModel{};
+
 		// Cached objects
 		rigibra::Transform const theQuadWrtCam{};
 
@@ -145,55 +149,6 @@ namespace sim
 			return inten;
 		}
 
-		//! Dark current noise (Poisson based on temperature)
-		inline
-		float
-		noiseDark
-			() const
-		{
-			// intensity contribution per electron
-			static float const intenPerE{ .01f };
-			// noise generator
-			static std::mt19937 gen(47989969u);
-
-			// distribution proportional to temperature
-			// NOTE: here assume constant temperature
-			// expected electrons per pixel per second
-			static std::size_t const expEpPpS{ 10u };
-			static std::poisson_distribution<std::size_t> distro(expEpPpS);
-
-			// noise electrons
-			float const fNumE{ static_cast<float>(distro(gen)) };
-
-			// dark intensity
-			float const intenDark{ intenPerE * fNumE };
-
-			return intenDark;
-		}
-
-		//! Shot noise (Poisson based on intensity)
-		inline
-		float
-		noiseShot
-			( float const & inten
-			) const
-		{
-			static float const intenPerE{ .01f };
-			static float const ePerInten{ 1.f / intenPerE };
-			static std::mt19937 gen(96489979u);
-
-			// distribution proportional to intensity
-			float const fullNumE{ ePerInten * inten };
-			float const rootNumE{ std::sqrtf(fullNumE) };
-			std::poisson_distribution<std::size_t> distro(rootNumE);
-
-			// noise electrons
-			float const fNumE{ static_cast<float>(distro(gen)) };
-
-			float const intenShot{ intenPerE * fNumE };
-			return intenShot;
-		}
-
 		//! Sample theObjQuad near forward projection of detector location
 		inline
 		float
@@ -220,17 +175,21 @@ namespace sim
 			dat::Spot const spotInQuad{ pntInQuad[0], pntInQuad[1] };
 
 			// target signal intensity
-			float const intenQuad{ theObjQuad.intensityAt(spotInQuad) };
-			if (engabra::g3::isValid(intenQuad))
+			double const valueSignal{ theObjQuad.intensityAt(spotInQuad) };
+			if (engabra::g3::isValid(valueSignal))
 			{
 				// illumination bias across target
-				float const intenBias{ noiseBias(spotInQuad) };
-				// dark current noise
-				float const intenDark{ noiseDark() };
-				// photon shot noise
-				float const intenShot{ noiseShot(intenQuad + intenBias) };
+				double const valueBias{ noiseBias(spotInQuad) };
 
-				intenSample = (intenQuad + intenBias + intenDark + intenShot);
+				// combined scene effecs (signal plus illum)
+				double const incidentValue{ valueSignal + valueBias };
+
+				// combined noise (dark and shot)
+				double const valueNoise
+					{ theNoiseModel.valueFor(incidentValue) };
+
+				// final recorded pixel value
+				intenSample = (float)(valueSignal + valueBias + valueNoise);
 			}
 
 			// return the sample value
