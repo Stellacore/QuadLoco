@@ -60,6 +60,24 @@ namespace dat
 				);
 		}
 
+		//! Value at start of interval (included in span)
+		inline
+		double const &
+		cbegin
+			() const
+		{
+			return theBeg;
+		}
+
+		//! Value at end of interval (*EX*cluded from span)
+		inline
+		double const &
+		cend
+			() const
+		{
+			return theEnd;
+		}
+
 		//! Length of span
 		inline
 		double

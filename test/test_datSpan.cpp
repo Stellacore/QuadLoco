@@ -110,6 +110,20 @@ namespace
 
 		// [DoxyExample01]
 
+		// check beg/end iterators
+		if (! (expBeg == origSpan.cbegin()))
+		{
+			oss << "Failure of cbegin() test\n";
+			oss << "exp: " << expBeg << '\n';
+			oss << "got: " << origSpan.cbegin() << '\n';
+		}
+		if (! (expEnd == origSpan.cend()))
+		{
+			oss << "Failure of cend() test\n";
+			oss << "exp: " << expEnd << '\n';
+			oss << "got: " << origSpan.cend() << '\n';
+		}
+
 		if (! nullIsOkay)
 		{
 			oss << "Failure of nullIsOkay test\n";
