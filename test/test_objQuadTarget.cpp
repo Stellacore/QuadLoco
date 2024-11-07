@@ -81,14 +81,14 @@ namespace
 		quadloco::dat::Spot const spotLT{ -partEdgeMag,  partEdgeMag };
 		quadloco::dat::Spot const spotLB{ -partEdgeMag, -partEdgeMag };
 		quadloco::dat::Spot const spotRB{  partEdgeMag, -partEdgeMag };
-		float const expValInRT{ 0.f };
-		float const expValInLT{ 1.f };
-		float const expValInLB{ 0.f };
-		float const expValInRB{ 1.f };
-		float const gotValInRT{ origQuadTgt.intensityAt(spotRT) };
-		float const gotValInLT{ origQuadTgt.intensityAt(spotLT) };
-		float const gotValInLB{ origQuadTgt.intensityAt(spotLB) };
-		float const gotValInRB{ origQuadTgt.intensityAt(spotRB) };
+		double const expValInRT{ 0. };
+		double const expValInLT{ 1. };
+		double const expValInLB{ 0. };
+		double const expValInRB{ 1. };
+		double const gotValInRT{ origQuadTgt.intensityAt(spotRT) };
+		double const gotValInLT{ origQuadTgt.intensityAt(spotLT) };
+		double const gotValInLB{ origQuadTgt.intensityAt(spotLB) };
+		double const gotValInRB{ origQuadTgt.intensityAt(spotRB) };
 
 		// [DoxyExample01]
 

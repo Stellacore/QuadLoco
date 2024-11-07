@@ -172,15 +172,15 @@ namespace obj
 
 		//! Ideal radiometric intensity value at spot location
 		inline
-		float
+		double
 		intensityAt
 			( dat::Spot const & spotOnQuad
 			) const
 		{
 			// default to nan for outside of target area
-			float value{ std::numeric_limits<float>::quiet_NaN() };
-			constexpr float black{ 0.f };
-			constexpr float white{ 1.f };
+			double value{ std::numeric_limits<double>::quiet_NaN() };
+			constexpr double black{ 0. };
+			constexpr double white{ 1. };
 			if (theArea.contains(spotOnQuad))
 			{
 				// this code effectively defines the pattern
