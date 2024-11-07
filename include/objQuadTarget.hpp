@@ -58,6 +58,9 @@ namespace obj
 		//! Bounding (half open) area - distinguish target from surround
 		dat::Area const theArea{};
 
+		//! If true clip the background patches into triangles
+		bool const theClipBackCorners{ false };
+
 		//! Area symmetric about origin with theEdgeMag size on each side
 		inline
 		static
@@ -85,9 +88,13 @@ namespace obj
 		explicit
 		QuadTarget
 			( double const & fullEdgeLength
+				//!< Length of center lines (twice a radial edge length)
+			, bool const & clipBackCorners = false
+				//!< ?clip the outer half corners of background
 			)
 			: theEdgeMag{ fullEdgeLength }
 			, theArea{ areaFor(theEdgeMag) }
+			, theClipBackCorners{ clipBackCorners }
 		{ }
 
 		//! True if this instance contains valid data (is not null)
@@ -207,6 +214,19 @@ namespace obj
 						// on "top" half
 						value = black;
 					}
+				}
+			}
+			// introduce triangle clipping
+			if (theClipBackCorners && (black == value))
+			{
+				// apply foreground color to outer triangle areas
+				// of background signal to produce a double-triangle
+				// target signal
+				double const dot{ spotOnQuad[0] + spotOnQuad[1] };
+				double const diagLim{ radiusInner() };
+				if (diagLim < std::abs(dot))
+				{
+					value = white;
 				}
 			}
 			return value;
