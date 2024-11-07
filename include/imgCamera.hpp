@@ -102,6 +102,23 @@ namespace img
 			return dat::Spot{ (.5 * highDub), (.5 * wideDub) };
 		}
 
+		//! External direction in camera exterior (exit=entrance) frame
+		inline
+		engabra::g3::Vector
+		directionForDetSpot
+			( dat::Spot const & detSpot
+			) const
+		{
+			dat::Spot const rcFromCenter{ detSpot - formatCenter() };
+			double const imgX{  rcFromCenter[1] };
+			double const imgY{ -rcFromCenter[0] };
+			using namespace engabra::g3;
+			// add principal distance along negative 'z' axis
+			engabra::g3::Vector const vecInExt{ imgX, imgY, -thePD };
+			// and unitize for direction
+			return engabra::g3::direction(vecInExt);
+		}
+
 		//! Projected spot in camera detector frame (but maybe out of bounds)
 		inline
 		dat::Spot

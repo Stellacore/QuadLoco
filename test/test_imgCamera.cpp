@@ -30,6 +30,8 @@
 
 #include "imgCamera.hpp"
 
+#include <Engabra>
+
 #include <iostream>
 #include <sstream>
 
@@ -63,19 +65,19 @@ namespace
 		// location relative to camera external frame
 		// naming relative to 3D exterior frame
 		// ('x' to right, 'y' up, 'z' toward viewer)
-		engabra::g3::Vector const rgtInExt{  1.,  0., -30. };
-		engabra::g3::Vector const lftInExt{ -1.,  0., -30. };
-		engabra::g3::Vector const topInExt{  0.,  2., -30. };
-		engabra::g3::Vector const botInExt{  0., -2., -30. };
+		engabra::g3::Vector const rgtPntInExt{  1.,  0., -30. };
+		engabra::g3::Vector const lftPntInExt{ -1.,  0., -30. };
+		engabra::g3::Vector const topPntInExt{  0.,  2., -30. };
+		engabra::g3::Vector const botPntInExt{  0., -2., -30. };
 
 		// project locations onto detector frame
 		using quadloco::dat::Spot;
 		// naming relative to raster row/col as displayed on typical screen
 		// ('row' down, 'y' to right, 'z' toward viewer)
-		Spot const rgtOnDet{ camera.detectorSpotFor(rgtInExt) };
-		Spot const lftOnDet{ camera.detectorSpotFor(lftInExt) };
-		Spot const topOnDet{ camera.detectorSpotFor(topInExt) };
-		Spot const botOnDet{ camera.detectorSpotFor(botInExt) };
+		Spot const rgtOnDet{ camera.detectorSpotFor(rgtPntInExt) };
+		Spot const lftOnDet{ camera.detectorSpotFor(lftPntInExt) };
+		Spot const topOnDet{ camera.detectorSpotFor(topPntInExt) };
+		Spot const botOnDet{ camera.detectorSpotFor(botPntInExt) };
 
 		// check expected "on screen" geometry
 		bool const okayRowLR{ (lftOnDet.row() == rgtOnDet.row()) };
@@ -83,8 +85,26 @@ namespace
 		bool const okayRowTB{ (topOnDet.row() < botOnDet.row()) };
 		bool const okayColTB{ (topOnDet.col() == botOnDet.col()) };
 
-		double const objDistLR{ magnitude(rgtInExt - lftInExt) };
+		double const objDistLR{ magnitude(rgtPntInExt - lftPntInExt) };
 		double const imgDistLR{ magnitude(rgtOnDet - lftOnDet) };
+
+		// forward project detector spots from camera ...
+		using engabra::g3::Vector;
+		Vector const rgtDirInExt{ camera.directionForDetSpot(rgtOnDet) };
+		Vector const lftDirInExt{ camera.directionForDetSpot(lftOnDet) };
+		Vector const topDirInExt{ camera.directionForDetSpot(topOnDet) };
+		Vector const botDirInExt{ camera.directionForDetSpot(botOnDet) };
+
+		// ... and check if they are collinear with the object space points
+		// (e.g. bivector product of direction (from origin) and pnt is zero)
+		double const rgtErrMag
+			{ engabra::g3::magnitude((rgtDirInExt * rgtPntInExt).theBiv) };
+		double const lftErrMag
+			{ engabra::g3::magnitude((lftDirInExt * lftPntInExt).theBiv) };
+		double const topErrMag
+			{ engabra::g3::magnitude((topDirInExt * topPntInExt).theBiv) };
+		double const botErrMag
+			{ engabra::g3::magnitude((botDirInExt * botPntInExt).theBiv) };
 
 		// [DoxyExample01]
 
@@ -112,6 +132,29 @@ namespace
 			oss << "topOnDet: " << topOnDet << '\n';
 			oss << "botOnDet: " << botOnDet << '\n';
 		}
+
+		using engabra::g3::io::fixed;
+		if (! engabra::g3::nearlyEquals(rgtErrMag, 0.))
+		{
+			oss << "Failure of rgtErrMag misclosure test\n";
+			oss << "rgtErrMag: " << fixed(rgtErrMag, 1u, 15u) << '\n';
+		}
+		if (! engabra::g3::nearlyEquals(lftErrMag, 0.))
+		{
+			oss << "Failure of lftErrMag misclosure test\n";
+			oss << "lftErrMag: " << fixed(lftErrMag, 1u, 15u) << '\n';
+		}
+		if (! engabra::g3::nearlyEquals(topErrMag, 0.))
+		{
+			oss << "Failure of topErrMag misclosure test\n";
+			oss << "topErrMag: " << fixed(topErrMag, 1u, 15u) << '\n';
+		}
+		if (! engabra::g3::nearlyEquals(botErrMag, 0.))
+		{
+			oss << "Failure of botErrMag misclosure test\n";
+			oss << "botErrMag: " << fixed(botErrMag, 1u, 15u) << '\n';
+		}
+
 	}
 
 }
