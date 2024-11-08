@@ -50,6 +50,24 @@ namespace dat
 		std::size_t const theRow{ 0u };
 		std::size_t const theCol{ 0u };
 
+		//! Convenience access to #theRow
+		inline
+		std::size_t const &
+		row
+			() const
+		{
+			return theRow;
+		}
+
+		//! Convenience access to #theCol
+		inline
+		std::size_t const &
+		col
+			() const
+		{
+			return theCol;
+		}
+
 		//! True if this and other have exactly the same data
 		inline
 		bool
