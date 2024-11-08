@@ -234,7 +234,7 @@ namespace dat
 			( dat::RowCol const & rowcol
 			) const
 		{
-			return operator()(rowcol.theRow, rowcol.theCol);
+			return operator()(rowcol.row(), rowcol.col());
 		}
 
 		//! Returns pointer to row (non const)
@@ -244,7 +244,7 @@ namespace dat
 			( dat::RowCol const & rowcol
 			)
 		{
-			return operator()(rowcol.theRow, rowcol.theCol);
+			return operator()(rowcol.row(), rowcol.col());
 		}
 
 		//! use as const_iterator

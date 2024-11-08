@@ -59,12 +59,12 @@ namespace
 
 		// [DoxyExample01]
 
-		if (! (rcCopy.row() == rcOrig.theRow))
+		if (! (rcCopy.row() == rcOrig.theRowCol[0]))
 		{
 			oss << "Failure of row() test\n";
 		}
 
-		if (! (rcCopy.col() == rcOrig.theCol))
+		if (! (rcCopy.col() == rcOrig.theRowCol[1]))
 		{
 			oss << "Failure of col() test\n";
 		}
