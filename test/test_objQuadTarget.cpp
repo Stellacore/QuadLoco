@@ -85,10 +85,10 @@ namespace
 		double const expValInLT{ 1. };
 		double const expValInLB{ 0. };
 		double const expValInRB{ 1. };
-		double const gotValInRT{ origQuadTgt.intensityAt(spotRT) };
-		double const gotValInLT{ origQuadTgt.intensityAt(spotLT) };
-		double const gotValInLB{ origQuadTgt.intensityAt(spotLB) };
-		double const gotValInRB{ origQuadTgt.intensityAt(spotRB) };
+		double const gotValInRT{ origQuadTgt.quadSignalAt(spotRT) };
+		double const gotValInLT{ origQuadTgt.quadSignalAt(spotLT) };
+		double const gotValInLB{ origQuadTgt.quadSignalAt(spotLB) };
+		double const gotValInRB{ origQuadTgt.quadSignalAt(spotRB) };
 
 		// [DoxyExample01]
 

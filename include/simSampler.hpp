@@ -165,14 +165,14 @@ namespace sim
 				dat::Spot const spotInQuad{ pntInQuad[0], pntInQuad[1] };
 
 				// target signal intensity
-				intenSample = theObjQuad.intensityAt(spotInQuad);
+				intenSample = theObjQuad.quadSignalAt(spotInQuad);
 			}
 
 			// return the sample value
 			return intenSample;
 		}
 
-		//! Use subsampling with mutiple calls to intensityAt()
+		//! Use subsampling to determine primary signal
 		inline
 		double
 		pureSignalIntensity
@@ -202,7 +202,7 @@ namespace sim
 			return intensity;
 		}
 
-		//! Use subsampling with mutiple calls to intensityAt()
+		//! Use add noise to signal
 		inline
 		double
 		intensityNear

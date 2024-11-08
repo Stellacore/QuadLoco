@@ -76,7 +76,12 @@ namespace
 
 		// define a quad target object
 		constexpr double edgeMag{ .125 };
-		quadloco::obj::QuadTarget const objQuad(edgeMag, true);
+		quadloco::obj::QuadTarget const objQuad
+			( edgeMag
+			, quadloco::obj::QuadTarget::None
+			| quadloco::obj::QuadTarget::DoubleTriangle
+			| quadloco::obj::QuadTarget::AddSurround
+			);
 
 		// simulate image of a quad target
 
@@ -105,8 +110,8 @@ quadloco::dat::Grid<uint8_t> const uGrid
 	{ quadloco::pix::uGrid8(fGrid, fSpan) };
 std::ofstream ofs("/dev/stdout");
 ofs << '\n';
-ofs << fGrid.infoStringContents("fGrid:\n", "%4.2f") << '\n';
 ofs << uGrid.infoStringContents("uGrid:\n", "%4u") << '\n';
+ofs << fGrid.infoStringContents("fGrid:\n", "%4.2f") << '\n';
 ofs << '\n';
 
 		// TODO replace this with real test code
