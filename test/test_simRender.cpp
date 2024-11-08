@@ -40,30 +40,6 @@
 #include <sstream>
 
 
-namespace tst
-{
-	using namespace engabra::g3;
-	using namespace rigibra;
-
-	//! Test case camera view to use for rendering in simulation
-	struct CamOri
-	{
-		//! Camera for rendering target
-		quadloco::img::Camera const theCamera
-			{ quadloco::dat::SizeHW{ 24u, 24u }  // format
-			, double{ 175. }// principal distance
-			};
-
-		//! Camera exterior orientation
-		Transform const theCamWrtQua
-			{ Vector{ .47, -.32, 1. } // above target
-			, Attitude{ PhysAngle{ BiVector{ .3, .4, .1} } }
-			};
-
-	}; // CamOri
-
-} // [tst]
-
 namespace
 {
 	//! Examples for documentation
@@ -79,31 +55,34 @@ namespace
 		quadloco::obj::QuadTarget const objQuad
 			( edgeMag
 			, quadloco::obj::QuadTarget::None
-			| quadloco::obj::QuadTarget::DoubleTriangle
+		//	| quadloco::obj::QuadTarget::DoubleTriangle
 			| quadloco::obj::QuadTarget::AddSurround
 			);
 
 		// simulate image of a quad target
 
-		// an oriented ideal perspective camera
-		tst::CamOri const camOri{};
+		// configure camera to produce near identity rendering
+		quadloco::img::Camera const camera
+			{ quadloco::dat::SizeHW{ 128u, 128u }  // format
+			, double{ 128. }// principal distance (== to quad edge)
+			};
+		// exterior orientation directly above the quad target
+		double const camOriZ{ 1.125*edgeMag }; // get a bit of the surround
+		rigibra::Transform const xCamWrtQua
+			{ engabra::g3::Vector{ 0., 0., camOriZ }
+			, rigibra::identity<rigibra::Attitude>()
+			};
 
-		quadloco::sim::Render const render
-			{ camOri.theCamera, camOri.theCamWrtQua, objQuad };
+		// render image (and have simulation return known img::QuadTarget)
+		quadloco::sim::Render const render{ camera, xCamWrtQua, objQuad };
 		quadloco::dat::Grid<float> const fGrid{ render.quadImage() };
 
 quadloco::io::writeStretchPGM("sample.pgm", fGrid);
 
-		// detect quad parameters in (perspective) image
-//		quadloco::img::QuadTarget const imgQuad
-//			{ sim::imageQuadFor(fGrid) };
-
-		// assess the "quadness" of a pixel sampling
-//		double const gotQuadness{ quadloco::quadnessOf(fGrid, imgQuad) };
-
 		// [DoxyExample01]
 
 
+/*
 quadloco::dat::Span const fSpan{ quadloco::pix::fullSpanFor(fGrid) };
 quadloco::dat::Grid<uint8_t> const uGrid
 	{ quadloco::pix::uGrid8(fGrid, fSpan) };
@@ -112,6 +91,7 @@ ofs << '\n';
 ofs << uGrid.infoStringContents("uGrid:\n", "%4u") << '\n';
 ofs << fGrid.infoStringContents("fGrid:\n", "%4.2f") << '\n';
 ofs << '\n';
+*/
 
 		// TODO replace this with real test code
 		std::string const fname(__FILE__);

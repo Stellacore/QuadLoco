@@ -41,7 +41,7 @@ set(unitTests
 	test_io  # basic i/o support (e.g. pgm images)
 	test_objQuadTarget  # representation of physical target object
 	test_pix  # pixel image manipulations
-	test_simQuad  # simulation of perspective images of quad target
+	test_simRender  # simulation of perspective images of quad target
 	test_simSampler  # simulation of image intensity sampling
 
 	)
