@@ -32,14 +32,7 @@
  */
 
 
-#include "datGrid.hpp"
-#include "imgCamera.hpp"
-#include "objQuadTarget.hpp"
-#include "simSampler.hpp"
-
-#include <Rigibra>
-
-#include <random>
+// #include ""//TODO
 
 
 namespace quadloco
@@ -80,60 +73,6 @@ namespace sim
 		return scalePixPerObj;
 	}
 	*/
-
-	//! Simulate an image through camera at position xCamWrtQuad
-	inline
-	void
-	injectTargetInto
-		( dat::Grid<float> * const & ptGrid
-		, img::Camera const & camera
-		, rigibra::Transform const & xCamWrtQuad
-		, obj::QuadTarget const & objQuad
-		)
-	{
-		dat::Grid<float> & grid = *ptGrid;
-		constexpr double objDelta{ 1./1024. };
-
-		double const & beg0 = objQuad.span0().theBeg;
-		double const & end0 = objQuad.span0().theEnd;
-		double const & beg1 = objQuad.span1().theBeg;
-		double const & end1 = objQuad.span1().theEnd;
-
-		Sampler const sampler(camera, xCamWrtQuad, objQuad);
-
-		using namespace rigibra;
-		for (std::size_t row{0u} ; row < grid.high() ; ++row)
-		{
-			for (std::size_t col{0u} ; col < grid.wide() ; ++col)
-			{
-				double const subRow{ (double)row };
-				double const subCol{ (double)col };
-				dat::Spot const detSpot{ subRow, subCol };
-
-				float const inten{ (float)sampler.intensityAt(detSpot) };
-				if (engabra::g3::isValid(inten))
-				{
-					grid(row, col) = inten;
-				}
-			}
-		}
-	}
-
-	//! Simulate an image through camera at position xCamWrtQuad
-	inline
-	dat::Grid<float>
-	quadImage
-		( img::Camera const & camera
-		, rigibra::Transform const & xCamWrtQuad
-		, obj::QuadTarget const & objQuad
-		)
-	{
-		dat::Grid<float> grid(camera.theFormat);
-		std::fill(grid.begin(), grid.end(), engabra::g3::null<float>());
-		injectTargetInto(&grid, camera, xCamWrtQuad, objQuad);
-		return grid;
-	}
-
 
 } // [sim]
 

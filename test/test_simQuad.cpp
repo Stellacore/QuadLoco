@@ -32,7 +32,7 @@
 #include "io.hpp"
 #include "objQuadTarget.hpp"
 #include "pix.hpp"
-#include "sim.hpp"
+#include "simRender.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -88,10 +88,9 @@ namespace
 		// an oriented ideal perspective camera
 		tst::CamOri const camOri{};
 
-		quadloco::dat::Grid<float> const fGrid
-			{ quadloco::sim::quadImage
-				(camOri.theCamera, camOri.theCamWrtQua, objQuad)
-			};
+		quadloco::sim::Render const render
+			{ camOri.theCamera, camOri.theCamWrtQua, objQuad };
+		quadloco::dat::Grid<float> const fGrid{ render.quadImage() };
 
 quadloco::io::writeStretchPGM("sample.pgm", fGrid);
 
