@@ -205,9 +205,9 @@ namespace sim
 		//! Use add noise to signal
 		inline
 		double
-		intensityNear
+		intensityAt
 			( dat::Spot const & detSpot
-			, std::size_t const & numSubSamps = 16u
+			, std::size_t const & numSubSamps = 256u
 			) const
 		{
 			double intenSample{ engabra::g3::null<double>() };

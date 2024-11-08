@@ -110,7 +110,7 @@ namespace sim
 				double const subCol{ (double)col };
 				dat::Spot const detSpot{ subRow, subCol };
 
-				float const inten{ (float)sampler.intensityNear(detSpot) };
+				float const inten{ (float)sampler.intensityAt(detSpot) };
 				if (engabra::g3::isValid(inten))
 				{
 					grid(row, col) = inten;
