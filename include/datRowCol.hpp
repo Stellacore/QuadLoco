@@ -32,7 +32,9 @@
  */
 
 
+#include <array>
 #include <iomanip>
+#include <numeric>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -47,8 +49,29 @@ namespace dat
 	//! Discrete grid location in row,colum order.
 	struct RowCol
 	{
-		std::size_t const theRow{ 0u };
-		std::size_t const theCol{ 0u };
+		//! Aggregate type row/col index data.
+		std::array<std::size_t, 2u>  const theRowCol
+			{ std::numeric_limits<std::size_t>::max()
+			, std::numeric_limits<std::size_t>::max()
+			};
+
+		//! Convenience access to to theRowCol[0]
+		inline
+		std::size_t const &
+		row
+			() const
+		{
+			return theRowCol[0];
+		}
+
+		//! Convenience access to theRowCol[1]
+		inline
+		std::size_t const &
+		col
+			() const
+		{
+			return theRowCol[1];
+		}
 
 		//! True if this and other have exactly the same data
 		inline
@@ -58,8 +81,8 @@ namespace dat
 			) const
 		{
 			return
-				(  (other.theRow == theRow)
-				&& (other.theCol == theCol)
+				(  (other.row() == row())
+				&& (other.col() == col())
 				);
 		}
 
@@ -76,8 +99,8 @@ namespace dat
 				oss << title << ' ';
 			}
 			oss
-				<< std::setw(5u) << theRow
-				<< ' ' << std::setw(5u) << theCol
+				<< std::setw(5u) << row()
+				<< ' ' << std::setw(5u) << col()
 				;
 			return oss.str();
 		}

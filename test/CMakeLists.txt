@@ -30,6 +30,7 @@ set(unitTests
 
 #	test_Quadlike  # assess the "quadness" of a pixel sampling
 	test_datArea  # a 2D range of values
+	test_datChipSpec  # a 2D sub region of a larger area
 	test_datGrid  # general raster grid storage and access
 	test_datRowCol  # discete raster cell locations
 	test_datSizeHW  # basic "high/wide" area boundary (half open)

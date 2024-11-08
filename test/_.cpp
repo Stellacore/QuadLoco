@@ -38,7 +38,7 @@ namespace
 {
 	//! Examples for documentation
 	void
-	test0
+	test1
 		( std::ostream & oss
 		)
 	{
@@ -65,7 +65,8 @@ main
 	int status{ 1 };
 	std::stringstream oss;
 
-	test0(oss);
+//	test0(oss);
+	test1(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{
