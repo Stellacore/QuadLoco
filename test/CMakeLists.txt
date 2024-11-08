@@ -29,6 +29,7 @@ set(unitTests
 	test_Version  # test project version info retrieval
 
 #	test_Quadlike  # assess the "quadness" of a pixel sampling
+	test_datFence  # bounding region determination
 	test_datArea  # a 2D range of values
 	test_datChipSpec  # a 2D sub region of a larger area
 	test_datGrid  # general raster grid storage and access
