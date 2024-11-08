@@ -42,6 +42,7 @@ set(unitTests
 	test_objQuadTarget  # representation of physical target object
 	test_pix  # pixel image manipulations
 	test_simQuad  # simulation of perspective images of quad target
+	test_simSampler  # simulation of image intensity sampling
 
 	)
 
