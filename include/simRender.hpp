@@ -36,6 +36,7 @@
 #include "imgCamera.hpp"
 #include "imgQuadTarget.hpp"
 #include "objQuadTarget.hpp"
+#include "simConfig.hpp"
 #include "simSampler.hpp"
 
 #include <Rigibra>
@@ -83,6 +84,26 @@ namespace sim
 			, theCamWrtQuad{ xCamWrtQuad }
 			, theObjQuad{ objQuad }
 			, theSampler(theCamera, theCamWrtQuad, theObjQuad, samplerOptions)
+		{ }
+
+		//! Construct rendering engine to simulate quad target images
+		inline
+		explicit
+		Render
+			( sim::Config const & simConfig
+				//!< Simulation configuration
+			, unsigned const & samplerOptions =
+				( Sampler::UseSceneBias
+				| Sampler::UseImageNoise
+				)
+				//!< XOR of quadloco::sim::Sampler::OptionFlags
+			)
+			: Render
+				( simConfig.camera()
+				, simConfig.xformStaWrtQuad()
+				, simConfig.objQuadTarget()
+				, samplerOptions
+				)
 		{ }
 
 		//! Geometry of perspective image created by quadImage()

@@ -161,6 +161,15 @@ namespace obj
 			return theArea.theSpans[1];
 		}
 
+		//! Edge length along outside of square
+		inline
+		double const &
+		edgeMag
+			() const
+		{
+			return theEdgeMag;
+		}
+
 		//! Half outer edge - edge size of {back,fore}ground squares
 		inline
 		double
