@@ -154,14 +154,13 @@ namespace obj
 			return theArea.theSpans[1];
 		}
 
-		//! Center location in target frame (origin == zero)
+		//! Half outer edge - edge size of {back,fore}ground squares
 		inline
-		constexpr
-		dat::Spot
-		centerLoc
+		double
+		halfEdgeMag
 			() const
 		{
-			return dat::Spot{ 0., 0. };
+			return (.5 * theEdgeMag);
 		}
 
 		//! Circumscribing radius (e.g. hits outer background corners)
@@ -179,7 +178,53 @@ namespace obj
 		radiusInner
 			() const
 		{
-			return (.5 * theEdgeMag);
+			return halfEdgeMag();
+		}
+
+		//! Center location in target frame (origin == zero)
+		inline
+		constexpr
+		dat::Spot
+		centerSpot
+			() const
+		{
+			return dat::Spot{ 0., 0. };
+		}
+
+		//! Point on outer edge along 'x' axis
+		inline
+		dat::Spot
+		midSidePosX
+			() const
+		{
+			return dat::Spot{ halfEdgeMag(), 0. };
+		}
+
+		//! Point on outer edge along 'x' axis
+		inline
+		dat::Spot
+		midSideNegX
+			() const
+		{
+			return dat::Spot{ -halfEdgeMag(), 0. };
+		}
+
+		//! Point on outer edge along 'x' axis
+		inline
+		dat::Spot
+		midSidePosY
+			() const
+		{
+			return dat::Spot{ 0., halfEdgeMag() };
+		}
+
+		//! Point on outer edge along 'x' axis
+		inline
+		dat::Spot
+		midSideNegY
+			() const
+		{
+			return dat::Spot{ 0., -halfEdgeMag() };
 		}
 
 		//! The four outer corners in order: RT, LT, LB, RB
