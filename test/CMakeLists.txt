@@ -29,6 +29,7 @@ set(unitTests
 	test_Version  # test project version info retrieval
 
 #	test_Quadlike  # assess the "quadness" of a pixel sampling
+	test_datFence  # bounding region determination
 	test_datArea  # a 2D range of values
 	test_datChipSpec  # a 2D sub region of a larger area
 	test_datGrid  # general raster grid storage and access
@@ -38,9 +39,11 @@ set(unitTests
 	test_datSpot  # 'continuous' raster cell locations
 	test_imgCamera  # simplified ideal perspective camera
 	test_io  # basic i/o support (e.g. pgm images)
-	test_objQuadTarget  # representation of physical target object
+	test_imgQuadTarget  # represent perspective image of obj::QuadTarget
+	test_objQuadTarget  # represent physical target object
 	test_pix  # pixel image manipulations
-	test_simQuad  # simulation of perspective images of quad target
+	test_simRender  # simulation of perspective images of quad target
+	test_simSampler  # simulation of image intensity sampling
 
 	)
 

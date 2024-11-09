@@ -62,7 +62,11 @@ namespace
 		double const gotRadInner{ origQuadTgt.radiusInner() };
 		// center at origin
 		quadloco::dat::Spot const expCenter{ 0., 0. };
-		quadloco::dat::Spot const gotCenter{ origQuadTgt.centerLoc() };
+		quadloco::dat::Spot const gotCenter{ origQuadTgt.centerSpot() };
+		quadloco::dat::Spot const gotPosX{ origQuadTgt.midSidePosX() };
+		quadloco::dat::Spot const gotPosY{ origQuadTgt.midSidePosY() };
+		quadloco::dat::Spot const gotNegX{ origQuadTgt.midSideNegX() };
+		quadloco::dat::Spot const gotNegY{ origQuadTgt.midSideNegY() };
 		std::array<quadloco::dat::Spot, 4u>
 			const gotCornerLocs{ origQuadTgt.cornerLocs() };
 
@@ -85,10 +89,10 @@ namespace
 		double const expValInLT{ 1. };
 		double const expValInLB{ 0. };
 		double const expValInRB{ 1. };
-		double const gotValInRT{ origQuadTgt.intensityAt(spotRT) };
-		double const gotValInLT{ origQuadTgt.intensityAt(spotLT) };
-		double const gotValInLB{ origQuadTgt.intensityAt(spotLB) };
-		double const gotValInRB{ origQuadTgt.intensityAt(spotRB) };
+		double const gotValInRT{ origQuadTgt.quadSignalAt(spotRT) };
+		double const gotValInLT{ origQuadTgt.quadSignalAt(spotLT) };
+		double const gotValInLB{ origQuadTgt.quadSignalAt(spotLB) };
+		double const gotValInRB{ origQuadTgt.quadSignalAt(spotRB) };
 
 		// [DoxyExample01]
 
@@ -111,6 +115,20 @@ namespace
 			oss << "Failure of radius test\n";
 			oss << "exp: " << expCenter << '\n';
 			oss << "got: " << gotCenter << '\n';
+		}
+
+		if (! nearlyEquals(expCenter, (gotPosX+gotNegX)))
+		{
+			oss << "Failure of symmetry in midSide{Pos,Neg}X test\n";
+			oss << "gotPosX: " << gotPosX << '\n';
+			oss << "gotNegX: " << gotNegX << '\n';
+		}
+
+		if (! nearlyEquals(expCenter, (gotPosY+gotNegY)))
+		{
+			oss << "Failure of symmetry in midSide{Pos,Neg}Y test\n";
+			oss << "gotPosY: " << gotPosY << '\n';
+			oss << "gotNegY: " << gotNegY << '\n';
 		}
 
 		using quadloco::dat::Spot;

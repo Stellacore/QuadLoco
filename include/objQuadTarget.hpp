@@ -39,6 +39,7 @@
 
 #include <array>
 #include <cmath>
+#include <random>
 
 
 namespace quadloco
@@ -47,11 +48,14 @@ namespace quadloco
 namespace obj
 {
 
-	/*! \brief
-	 *
+	/*! \brief Quad target geometry and signal intensity model
 	 */
 	class QuadTarget
 	{
+		static constexpr double theBlack{ 0. };
+		static constexpr double theWhite{ 1. };
+		static constexpr double theMeanValue{ .5 * (theBlack + theWhite) };
+
 		//! Magnitude of edges on square bounding full quad target signal.
 		double const theEdgeMag{ engabra::g3::null<double>() };
 
@@ -59,7 +63,10 @@ namespace obj
 		dat::Area const theArea{};
 
 		//! If true clip the background patches into triangles
-		bool const theClipBackCorners{ false };
+		bool const theDoubleTriangle{ false };
+
+		//! If true, quadSignalAt() returns dithered background values
+		bool const theAddSurround{ true };
 
 		//! Area symmetric about origin with theEdgeMag size on each side
 		inline
@@ -78,6 +85,32 @@ namespace obj
 
 	public:
 
+		//! Rendering options
+		enum OptionFlags
+		{
+			  None            = 0x0000
+			, AddSurround     = 0x0001
+			, DoubleTriangle  = 0x0002
+		};
+
+	private:
+
+		//! True if testVal bit is set within haveBits
+		inline
+		static
+		bool
+		isSet
+			( unsigned const & haveBits
+			, OptionFlags const & testVal
+			)
+		{
+			unsigned const setVal{ haveBits & (unsigned)testVal };
+			bool const hasBit (0u != setVal);
+			return hasBit;
+		}
+
+	public:
+
 		//! Construct a null instance
 		inline
 		QuadTarget
@@ -89,12 +122,16 @@ namespace obj
 		QuadTarget
 			( double const & fullEdgeLength
 				//!< Length of center lines (twice a radial edge length)
-			, bool const & clipBackCorners = false
-				//!< ?clip the outer half corners of background
+			, unsigned const & options =
+				( AddSurround
+			//	| DoubleTriangle
+				)
+				//!< Specify rendering options (or'd OptionFlags value)
 			)
 			: theEdgeMag{ fullEdgeLength }
 			, theArea{ areaFor(theEdgeMag) }
-			, theClipBackCorners{ clipBackCorners }
+			, theDoubleTriangle{ isSet(options, DoubleTriangle) }
+			, theAddSurround{ isSet(options, AddSurround) }
 		{ }
 
 		//! True if this instance contains valid data (is not null)
@@ -124,14 +161,22 @@ namespace obj
 			return theArea.theSpans[1];
 		}
 
-		//! Center location in target frame (origin == zero)
+		//! Edge length along outside of square
 		inline
-		constexpr
-		dat::Spot
-		centerLoc
+		double const &
+		edgeMag
 			() const
 		{
-			return dat::Spot{ 0., 0. };
+			return theEdgeMag;
+		}
+
+		//! Half outer edge - edge size of {back,fore}ground squares
+		inline
+		double
+		halfEdgeMag
+			() const
+		{
+			return (.5 * theEdgeMag);
 		}
 
 		//! Circumscribing radius (e.g. hits outer background corners)
@@ -149,7 +194,53 @@ namespace obj
 		radiusInner
 			() const
 		{
-			return (.5 * theEdgeMag);
+			return halfEdgeMag();
+		}
+
+		//! Center location in target frame (origin == zero)
+		inline
+		constexpr
+		dat::Spot
+		centerSpot
+			() const
+		{
+			return dat::Spot{ 0., 0. };
+		}
+
+		//! Point on outer edge along 'x' axis
+		inline
+		dat::Spot
+		midSidePosX
+			() const
+		{
+			return dat::Spot{ halfEdgeMag(), 0. };
+		}
+
+		//! Point on outer edge along 'x' axis
+		inline
+		dat::Spot
+		midSideNegX
+			() const
+		{
+			return dat::Spot{ -halfEdgeMag(), 0. };
+		}
+
+		//! Point on outer edge along 'x' axis
+		inline
+		dat::Spot
+		midSidePosY
+			() const
+		{
+			return dat::Spot{ 0., halfEdgeMag() };
+		}
+
+		//! Point on outer edge along 'x' axis
+		inline
+		dat::Spot
+		midSideNegY
+			() const
+		{
+			return dat::Spot{ 0., -halfEdgeMag() };
 		}
 
 		//! The four outer corners in order: RT, LT, LB, RB
@@ -170,54 +261,68 @@ namespace obj
 				};
 		}
 
+		//! Create an arbitrary surround background scene
+		inline
+		double
+		surroundSignalAt
+			( dat::Spot const & spotOnQuad
+			) const
+		{
+			double const val0{ theMeanValue };
+
+			// generate a signal relative to val0
+			double delta{ 0. };
+			double const amp{ std::abs(theWhite - theBlack) };
+			double const frq{ engabra::g3::turnFull / radiusInner() };
+			if (::isValid(spotOnQuad))
+			{
+				double delta
+					{ amp * std::cos(frq*spotOnQuad[0])
+					+ amp * std::sin(frq*spotOnQuad[1])
+					};
+			}
+
+			// noise to add
+			static std::mt19937 gen(55243674u);
+			static std::normal_distribution<double> distro(.0, .125);
+			double const noise{ distro(gen) };
+
+			return (val0 + delta + noise);
+		}
+
+
 		//! Ideal radiometric intensity value at spot location
 		inline
 		double
-		intensityAt
+		quadSignalAt
 			( dat::Spot const & spotOnQuad
 			) const
 		{
 			// default to nan for outside of target area
 			double value{ std::numeric_limits<double>::quiet_NaN() };
-			constexpr double black{ 0. };
-			constexpr double white{ 1. };
+
+			// unless requested to filling surrounding area
+			if (theAddSurround)
+			{
+				value = surroundSignalAt(spotOnQuad);
+			}
+
 			if (theArea.contains(spotOnQuad))
 			{
 				// this code effectively defines the pattern
 				// (ideally aligned with coordinate axes)
 				double const & loc0 = spotOnQuad[0];
 				double const & loc1 = spotOnQuad[1];
-				if (loc0 < 0.) // note half open interval convention
-				{
-					// on "left" half
-					if (loc1 < 0.)
-					{
-						// on "bottom" half
-						value = black;
-					}
-					else
-					{
-						// on "top" half
-						value = white;
-					}
-				}
-				else
-				{
-					// on "right" half
-					if (loc1 < 0.)
-					{
-						// on "bottom" half
-						value = white;
-					}
-					else
-					{
-						// on "top" half
-						value = black;
-					}
-				}
+
+				// a useful case for tertiary conditional operator
+				double const sign0{ (loc0 < 0.) ? -1. : 1. };
+				double const sign1{ (loc1 < 0.) ? -1. : 1. };
+				double const signEval{ sign0 * sign1 };
+				value = (signEval < 0.) ? theWhite : theBlack;
 			}
+
 			// introduce triangle clipping
-			if (theClipBackCorners && (black == value))
+			if (theDoubleTriangle && (theBlack == value))
 			{
 				// apply foreground color to outer triangle areas
 				// of background signal to produce a double-triangle
@@ -226,7 +331,7 @@ namespace obj
 				double const diagLim{ radiusInner() };
 				if (diagLim < std::abs(dot))
 				{
-					value = white;
+					value = theWhite;
 				}
 			}
 			return value;

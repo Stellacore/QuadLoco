@@ -24,28 +24,69 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::obj::QuadTarget
+\brief Unit tests (and example) code for quadloco::sim::Sampler
 */
 
 
 #include "datGrid.hpp"
 #include "io.hpp"
-#include "objQuadTarget.hpp"
-#include "pix.hpp"
+#include "simConfig.hpp"
 #include "sim.hpp"
+#include "simSampler.hpp"
 
-#include <algorithm>
-#include <fstream>
 #include <iostream>
 #include <sstream>
 
 
-namespace tst
+namespace
 {
-	using namespace engabra::g3;
-	using namespace rigibra;
+	//! Examples for documentation
+	void
+	test0
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample01]
 
-	//! Test case camera view to use for rendering in simulation
+		// setup simulation configuration
+		constexpr quadloco::dat::SizeHW hwChip{ 60u, 40u };
+		quadloco::obj::QuadTarget const objQuad(2.100);
+
+		using namespace engabra::g3;
+		using namespace rigibra;
+		std::vector<Transform> const xStaWrtQuads
+			{ Transform
+				{ Vector{ .5, -.5, 1. }
+				, Attitude{ PhysAngle{ BiVector{ .5, 0., 0. } } }
+				}
+			};
+		for (rigibra::Transform const & xStaWrtQuad : xStaWrtQuads)
+		{
+/*
+			quadloco::sim::Config const config
+				{ quadloco::sim::Config::toViewQuadFrom
+					(hwChip, xStaWrtQuad, objQuad)
+				};
+
+std::cout << '\n';
+std::cout << "config:\n" << config << '\n';
+std::cout << '\n';
+
+			quadloco::dat::Grid<float> const fGrid
+				{ quadloco::sim::quadImage
+					(config.theCamera, config.theStaWrtQuad, objQuad)
+				};
+
+quadloco::io::writeStretchPGM("sample.pgm", fGrid);
+*/
+
+		}
+
+	/*
+		using engabra::g3::Vector;
+
+		quadloco::sim::Config const config
+
 	struct CamOri
 	{
 		//! Camera for rendering target
@@ -61,53 +102,9 @@ namespace tst
 			};
 
 	}; // CamOri
-
-} // [tst]
-
-namespace
-{
-	//! Examples for documentation
-	void
-	test0
-		( std::ostream & oss
-		)
-	{
-		// [DoxyExample01]
-
-		// define a quad target object
-		constexpr double edgeMag{ .125 };
-		quadloco::obj::QuadTarget const objQuad(edgeMag, true);
-
-		// simulate image of a quad target
-
-		// an oriented ideal perspective camera
-		tst::CamOri const camOri{};
-
-		quadloco::dat::Grid<float> const fGrid
-			{ quadloco::sim::quadImage
-				(camOri.theCamera, camOri.theCamWrtQua, objQuad)
-			};
-
-quadloco::io::writeStretchPGM("sample.pgm", fGrid);
-
-		// detect quad parameters in (perspective) image
-//		quadloco::img::QuadTarget const imgQuad
-//			{ sim::imageQuadFor(fGrid) };
-
-		// assess the "quadness" of a pixel sampling
-//		double const gotQuadness{ quadloco::quadnessOf(fGrid, imgQuad) };
+	*/
 
 		// [DoxyExample01]
-
-
-quadloco::dat::Span const fSpan{ quadloco::pix::fullSpanFor(fGrid) };
-quadloco::dat::Grid<uint8_t> const uGrid
-	{ quadloco::pix::uGrid8(fGrid, fSpan) };
-std::ofstream ofs("/dev/stdout");
-ofs << '\n';
-ofs << fGrid.infoStringContents("fGrid:\n", "%4.2f") << '\n';
-ofs << uGrid.infoStringContents("uGrid:\n", "%4u") << '\n';
-ofs << '\n';
 
 		// TODO replace this with real test code
 		std::string const fname(__FILE__);
@@ -120,7 +117,7 @@ ofs << '\n';
 
 }
 
-//! Check behavior of TODO
+//! Standard test case main wrapper
 int
 main
 	()
