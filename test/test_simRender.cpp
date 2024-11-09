@@ -42,9 +42,20 @@
 
 namespace
 {
-	//! Examples for documentation
+	//! Check centering / subpixel precision
 	void
 	test0
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample00]
+		// [DoxyExample00]
+
+	}
+
+	//! Example general use
+	void
+	test1
 		( std::ostream & oss
 		)
 	{
@@ -79,32 +90,36 @@ namespace
 		// ... retrieve geometry of the simulated image
 		quadloco::img::QuadTarget const imgQuad{ render.imgQuadTarget() };
 
-std::cout << "  fGrid: " << fGrid << '\n';
-std::cout << "imgQuad: " << imgQuad << '\n';
-
-quadloco::io::writeStretchPGM("sample.pgm", fGrid);
+		// note min/max pixel values (e.g. useful for normalizing radiometry)
+		quadloco::dat::Span const fSpan{ quadloco::pix::fullSpanFor(fGrid) };
 
 		// [DoxyExample01]
 
+		// Display results
+		/*
+		std::cout << "  fGrid: " << fGrid << '\n';
+		std::cout << "  fSpan: " << fSpan << '\n';
+		std::cout << "imgQuad: " << imgQuad << '\n';
+		quadloco::io::writeStretchPGM("sample.pgm", fGrid);
+		*/
 
-/*
-quadloco::dat::Span const fSpan{ quadloco::pix::fullSpanFor(fGrid) };
-quadloco::dat::Grid<uint8_t> const uGrid
-	{ quadloco::pix::uGrid8(fGrid, fSpan) };
-std::ofstream ofs("/dev/stdout");
-ofs << '\n';
-ofs << uGrid.infoStringContents("uGrid:\n", "%4u") << '\n';
-ofs << fGrid.infoStringContents("fGrid:\n", "%4.2f") << '\n';
-ofs << '\n';
-*/
-
-		// TODO replace this with real test code
-		std::string const fname(__FILE__);
-		bool const isTemplate{ (std::string::npos != fname.find("/_.cpp")) };
-		if (! isTemplate)
+		// TODO could used more sophisticated testing... but, for now
+		// (since surround is also rendered)
+		// just check that all rendered pixels are valid
+		bool allValid{ true };
+		std::for_each
+			( fGrid.cbegin(), fGrid.cend()
+			, [&allValid] (float const & pixVal)
+				{ return engabra::g3::isValid(pixVal); }
+			);
+		if (! allValid)
 		{
-			oss << "Failure to implement real test\n";
+			oss << "Failure of all pixel valid test\n";
+			oss << "  fGrid: " << fGrid << '\n';
+			oss << "  fSpan: " << fSpan << '\n';
+			oss << "imgQuad: " << imgQuad << '\n';
 		}
+
 	}
 
 }
@@ -118,6 +133,7 @@ main
 	std::stringstream oss;
 
 	test0(oss);
+	test1(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{
