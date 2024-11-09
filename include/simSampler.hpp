@@ -34,12 +34,14 @@
 
 #include "datSpot.hpp"
 #include "imgCamera.hpp"
+#include "imgQuadTarget.hpp"
 #include "objQuadTarget.hpp"
 #include "pixNoise.hpp"
 
 #include <Engabra>
 #include <Rigibra>
 
+#include <functional>
 #include <random>
 
 
@@ -201,6 +203,39 @@ namespace sim
 			}
 			return intensity;
 		}
+
+		//! Geometry of perspective image created by quadImage()
+		inline
+		img::QuadTarget
+		imgQuadTarget
+			() const
+		{
+			using namespace engabra::g3;
+			std::function<Vector(dat::Spot)> const vecFrom
+				{ [] (dat::Spot const & spot)
+					{ return Vector{ spot[0], spot[1], 0. }; }
+				};
+			Vector const centerInExt
+				{ theCamWrtQuad(vecFrom(theObjQuad.centerSpot())) };
+			Vector const xMidInExt
+				{ theCamWrtQuad(vecFrom(theObjQuad.midSidePosX())) };
+			Vector const yMidInExt
+				{ theCamWrtQuad(vecFrom(theObjQuad.midSidePosY())) };
+
+			dat::Spot const centerInDet
+				{ theCamera.detectorSpotFor(centerInExt) };
+			dat::Spot const xMidInDet
+				{ theCamera.detectorSpotFor(xMidInExt) };
+			dat::Spot const yMidInDet
+				{ theCamera.detectorSpotFor(yMidInExt) };
+
+			Vector const center{ vecFrom(centerInDet) };
+			Vector const xDir{ direction(vecFrom(xMidInDet - centerInDet)) };
+			Vector const yDir{ direction(vecFrom(yMidInDet - centerInDet)) };
+
+			return img::QuadTarget{ center, xDir, yDir };
+		}
+
 
 		//! Use add noise to signal
 		inline
