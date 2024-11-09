@@ -71,6 +71,11 @@ namespace sim
 		//! Inverse of #theCamWrtQuad
 		rigibra::Transform const theQuadWrtCam{};
 
+		// Sampling options
+		bool const theUseSceneBias{ true };
+		bool const theUseImageNoise{ true };
+
+
 		//! Intersection of ray with the Z=0 (e12) plane
 		inline
 		static
@@ -87,6 +92,31 @@ namespace sim
 			return (rayBeg + lambda*rayDir);
 		}
 
+	public:
+
+		//! Options to modify simulation sampling
+		enum OptionFlags
+		{
+			  None           = 0x0000
+			, UseSceneBias   = 0x0001
+			, UseImageNoise  = 0x0002
+		};
+
+	private:
+
+		//! True if testVal bit is set within haveBits
+		inline
+		static
+		bool
+		isSet
+			( unsigned const & haveBits
+			, OptionFlags const & testVal
+			)
+		{
+			unsigned const setVal{ haveBits & (unsigned)testVal };
+			bool const hasBit (0u != setVal);
+			return hasBit;
+		}
 
 	public:
 
@@ -97,11 +127,14 @@ namespace sim
 			( img::Camera const & camera
 			, rigibra::Transform const & xCamWrtQuad
 			, obj::QuadTarget const & objQuad
+			, unsigned const & optionsMask = (UseSceneBias | UseImageNoise)
 			)
 			: theCamera{ camera }
 			, theCamWrtQuad{ xCamWrtQuad }
 			, theObjQuad{ objQuad }
 			, theQuadWrtCam{ rigibra::inverse(theCamWrtQuad) }
+			, theUseSceneBias{ isSet(optionsMask, UseSceneBias) }
+			, theUseImageNoise{ isSet(optionsMask, UseImageNoise) }
 		{ }
 
 		//! Provide a pseudo-random linear bias across the scene
@@ -242,7 +275,7 @@ namespace sim
 		double
 		intensityAt
 			( dat::Spot const & detSpot
-			, std::size_t const & numSubSamps = 256u
+			, std::size_t const & numSubSamps
 			) const
 		{
 			double intenSample{ engabra::g3::null<double>() };
@@ -263,14 +296,21 @@ namespace sim
 				dat::Spot const spotInQuad{ pntInQuad[0], pntInQuad[1] };
 
 				// illumination bias across target
-				double const valueBias{ noiseBias(spotInQuad) };
+				double valueBias{ 0. };
+				if (theUseSceneBias)
+				{
+					valueBias = noiseBias(spotInQuad);
+				}
 
 				// combined scene effecs (signal plus illum)
 				double const incidentValue{ valueSignal + valueBias };
 
 				// combined noise (dark and shot)
-				double const valueNoise
-					{ theNoiseModel.valueFor(incidentValue) };
+				double valueNoise{ 0. };
+				if (theUseImageNoise)
+				{
+					valueNoise = theNoiseModel.valueFor(incidentValue);
+				}
 
 				// final recorded pixel value
 				intenSample = incidentValue + valueNoise;

@@ -63,17 +63,26 @@ namespace sim
 
 	public:
 
+		//! Construct rendering engine to simulate quad target images
 		inline
 		explicit
 		Render
 			( img::Camera const & camera
+				//!< Camera geometry with which to render image
 			, rigibra::Transform const & xCamWrtQuad
+				//!< Orientation of camera (exterior) frame w.r.t. objQuad
 			, obj::QuadTarget const & objQuad
+				//!< Quad target (defines the quad reference frame) 
+			, unsigned const & samplerOptions =
+				( Sampler::UseSceneBias
+				| Sampler::UseImageNoise
+				)
+				//!< XOR of quadloco::sim::Sampler::OptionFlags
 			)
 			: theCamera{ camera }
 			, theCamWrtQuad{ xCamWrtQuad }
 			, theObjQuad{ objQuad }
-			, theSampler(theCamera, theCamWrtQuad, theObjQuad)
+			, theSampler(theCamera, theCamWrtQuad, theObjQuad, samplerOptions)
 		{ }
 
 		//! Geometry of perspective image created by quadImage()
@@ -82,19 +91,19 @@ namespace sim
 		imgQuadTarget
 			() const
 		{
-			Sampler const sampler(theCamera, theCamWrtQuad, theObjQuad);
-			return sampler.imgQuadTarget();
+			return theSampler.imgQuadTarget();
 		}
 
 		//! Simulate an image through camera at position xCamWrtQuad
 		inline
 		dat::Grid<float>
 		quadImage
-			() const
+			( std::size_t const & numSubSamp = 64u
+			) const
 		{
 			dat::Grid<float> grid(theCamera.theFormat);
 			std::fill(grid.begin(), grid.end(), engabra::g3::null<float>());
-			injectTargetInto(&grid);
+			injectTargetInto(&grid, numSubSamp);
 			return grid;
 		}
 
@@ -103,6 +112,7 @@ namespace sim
 		void
 		injectTargetInto
 			( dat::Grid<float> * const & ptGrid
+			, std::size_t const & numSubSamp
 			) const
 		{
 			dat::Grid<float> & grid = *ptGrid;
@@ -115,8 +125,6 @@ double const & beg1 = theObjQuad.span1().theBeg;
 double const & end1 = theObjQuad.span1().theEnd;
 */
 
-			Sampler const sampler(theCamera, theCamWrtQuad, theObjQuad);
-
 			using namespace rigibra;
 			for (std::size_t row{0u} ; row < grid.high() ; ++row)
 			{
@@ -126,7 +134,8 @@ double const & end1 = theObjQuad.span1().theEnd;
 					double const subCol{ (double)col };
 					dat::Spot const detSpot{ subRow, subCol };
 
-					float const inten{ (float)sampler.intensityAt(detSpot) };
+					float const inten
+						{ (float)theSampler.intensityAt(detSpot, numSubSamp) };
 					if (engabra::g3::isValid(inten))
 					{
 						grid(row, col) = inten;

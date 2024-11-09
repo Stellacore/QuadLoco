@@ -93,6 +93,8 @@ namespace obj
 			, DoubleTriangle  = 0x0002
 		};
 
+	private:
+
 		//! True if testVal bit is set within haveBits
 		inline
 		static
@@ -107,6 +109,8 @@ namespace obj
 			return hasBit;
 		}
 
+	public:
+
 		//! Construct a null instance
 		inline
 		QuadTarget
@@ -118,7 +122,10 @@ namespace obj
 		QuadTarget
 			( double const & fullEdgeLength
 				//!< Length of center lines (twice a radial edge length)
-			, unsigned const & options = AddSurround
+			, unsigned const & options =
+				( AddSurround
+			//	| DoubleTriangle
+				)
 				//!< Specify rendering options (or'd OptionFlags value)
 			)
 			: theEdgeMag{ fullEdgeLength }
