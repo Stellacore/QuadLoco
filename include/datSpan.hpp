@@ -63,7 +63,7 @@ namespace dat
 		//! Value at start of interval (included in span)
 		inline
 		double const &
-		cbegin
+		min
 			() const
 		{
 			return theBeg;
@@ -72,7 +72,7 @@ namespace dat
 		//! Value at end of interval (*EX*cluded from span)
 		inline
 		double const &
-		cend
+		max
 			() const
 		{
 			return theEnd;

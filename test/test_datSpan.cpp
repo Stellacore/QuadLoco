@@ -111,17 +111,17 @@ namespace
 		// [DoxyExample01]
 
 		// check beg/end iterators
-		if (! (expBeg == origSpan.cbegin()))
+		if (! (expBeg == origSpan.min()))
 		{
-			oss << "Failure of cbegin() test\n";
+			oss << "Failure of min() test\n";
 			oss << "exp: " << expBeg << '\n';
-			oss << "got: " << origSpan.cbegin() << '\n';
+			oss << "got: " << origSpan.min() << '\n';
 		}
-		if (! (expEnd == origSpan.cend()))
+		if (! (expEnd == origSpan.max()))
 		{
-			oss << "Failure of cend() test\n";
+			oss << "Failure of max() test\n";
 			oss << "exp: " << expEnd << '\n';
-			oss << "got: " << origSpan.cend() << '\n';
+			oss << "got: " << origSpan.max() << '\n';
 		}
 
 		if (! nullIsOkay)
