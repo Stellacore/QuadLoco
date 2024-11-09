@@ -39,6 +39,7 @@ set(unitTests
 	test_datSpot  # 'continuous' raster cell locations
 	test_imgCamera  # simplified ideal perspective camera
 	test_io  # basic i/o support (e.g. pgm images)
+	test_prbGauss1D  # Gaussian probability density functions in 1D
 	test_prbQuadness  # probabilitic assessor of quad target pixel patterns
 	test_imgQuadTarget  # represent perspective image of obj::QuadTarget
 	test_objQuadTarget  # represent physical target object
