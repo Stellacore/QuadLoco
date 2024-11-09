@@ -66,6 +66,7 @@ namespace img
 		engabra::g3::Vector const theDirX
 			{engabra::g3::null<engabra::g3::Vector>()};
 
+
 		//! \brief Angle (positive CCW) from theDirX to adjacent radial edge.
 		engabra::g3::Vector const theDirY
 			{engabra::g3::null<engabra::g3::Vector>()};
@@ -83,6 +84,18 @@ namespace img
 				&& engabra::g3::isValid(theDirX)
 				&& engabra::g3::isValid(theDirY)
 				);
+		}
+
+		//! True if theDirX(wedge)theDirY is aligned with e12
+		inline
+		bool
+		isDextral
+			() const
+		{
+			using namespace engabra::g3;
+			BiVector const bivXY{ (theDirX * theDirY).theBiv };
+			double const dot{ (-bivXY * e12).theSca[0] };
+			return (0. < dot);
 		}
 
 		//! True if this instance isValid() with (tol<angleSizeYwX)
@@ -109,7 +122,7 @@ namespace img
 			() const
 		{
 			using namespace engabra::g3;
-			Spinor const spinYwX{ direction(theDirY) * direction(theDirX) };
+			Spinor const spinYwX{ direction(theDirX) * direction(theDirY) };
 			BiVector const angle{ logG2(spinYwX).theBiv };
 			double const angSize{ -(angle * e12).theSca[0] };
 			return angSize;
@@ -158,16 +171,19 @@ namespace img
 			std::ostringstream oss;
 			if (! title.empty())
 			{
-				oss << title << ' ';
+				oss << title << '\n';
 			}
 			oss
-				<< "center: " << theCenter
-				<< ' '
-				<< "theDirX: " << theDirX
-				<< ' '
-				<< "theDirY: " << theDirY
+				<< "isValid: " << std::boolalpha << isValid()
+					<< "  isStable: " << std::boolalpha << isStable()
+					<< "  isDextral: " << std::boolalpha << isDextral()
+				<< '\n'
+				<< "center(r,c): " << theCenter
+				<< '\n'
+				<< "  dirX(r,c): " << theDirX
+				<< '\n'
+				<< "  dirY(r,c): " << theDirY
 				;
-
 			return oss.str();
 		}
 

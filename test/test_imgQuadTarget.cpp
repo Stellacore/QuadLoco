@@ -71,8 +71,8 @@ namespace
 		Vector const center{ 34.5, 67.8, 0. };
 
 		// setup direction of axes
-		constexpr double angleX{  .25 };
-		constexpr double angleY{ 1.25 };
+		constexpr double angleX{  .125 };
+		constexpr double angleY{ 1.250 };
 		using std::cos;
 		using std::sin;
 		Vector const dirX{ direction(Vector{ cos(angleX), sin(angleX), 0. }) };
@@ -84,6 +84,7 @@ namespace
 		// get (image space) angle from X to Y
 		double expAngleYwX{ angleY - angleX };
 		double const gotAngleYwX{ imgQuad.angleSizeYwX() };
+std::cout << "gotAngleYwX: " << gotAngleYwX << '\n';
 
 		// the (ideal) images are symmetric under half turn rotation
 		quadloco::img::QuadTarget const imgQuadA{ imgQuad }; // copy ctor
