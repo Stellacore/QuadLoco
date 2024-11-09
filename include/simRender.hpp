@@ -98,12 +98,13 @@ namespace sim
 		inline
 		dat::Grid<float>
 		quadImage
-			( std::size_t const & numSubSamp = 64u
+			( std::size_t const & numOverSamp = 64u
+				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
 			) const
 		{
 			dat::Grid<float> grid(theCamera.theFormat);
 			std::fill(grid.begin(), grid.end(), engabra::g3::null<float>());
-			injectTargetInto(&grid, numSubSamp);
+			injectTargetInto(&grid, numOverSamp);
 			return grid;
 		}
 
@@ -112,7 +113,9 @@ namespace sim
 		void
 		injectTargetInto
 			( dat::Grid<float> * const & ptGrid
-			, std::size_t const & numSubSamp
+				//!< Destination into which to render image
+			, std::size_t const & numOverSamp
+				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
 			) const
 		{
 			dat::Grid<float> & grid = *ptGrid;
@@ -135,7 +138,7 @@ double const & end1 = theObjQuad.span1().theEnd;
 					dat::Spot const detSpot{ subRow, subCol };
 
 					float const inten
-						{ (float)theSampler.intensityAt(detSpot, numSubSamp) };
+						{ (float)theSampler.intensityAt(detSpot, numOverSamp) };
 					if (engabra::g3::isValid(inten))
 					{
 						grid(row, col) = inten;

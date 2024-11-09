@@ -137,29 +137,6 @@ namespace sim
 			, theUseImageNoise{ isSet(optionsMask, UseImageNoise) }
 		{ }
 
-		//! Provide a pseudo-random linear bias across the scene
-		inline
-		double
-		noiseBias
-			( dat::Spot const & spotInQuad
-			) const
-		{
-			using namespace engabra::g3;
-			// use lower left corner of quad as reference
-			static double const bias0{ .1f };
-			static double const biasPerMeter{ 0.50f };
-			static Vector const biasDir{ direction(Vector{ 1.5, 1., .0}) };
-			Vector const loc0
-				{ theObjQuad.span0().theBeg
-				, theObjQuad.span1().theBeg
-				, 0.
-				};
-			Vector const locX{ spotInQuad[0], spotInQuad[1], 0. };
-			double const distToX{ ((locX - loc0) * biasDir).theSca[0] };
-			double const bias{ bias0 + biasPerMeter * distToX };
-			return bias;
-		}
-
 		//! Location on QuadTarget (in quad frame) associated with detSpot
 		inline
 		engabra::g3::Vector
@@ -184,6 +161,29 @@ namespace sim
 			return pntInQuad;
 		}
 
+		//! Provide a pseudo-random linear bias across the scene
+		inline
+		double
+		noiseBias
+			( dat::Spot const & spotInQuad
+			) const
+		{
+			using namespace engabra::g3;
+			// use lower left corner of quad as reference
+			static double const bias0{ .1f };
+			static double const biasPerMeter{ 0.50f };
+			static Vector const biasDir{ direction(Vector{ 1.5, 1., .0}) };
+			Vector const loc0
+				{ theObjQuad.span0().theBeg
+				, theObjQuad.span1().theBeg
+				, 0.
+				};
+			Vector const locX{ spotInQuad[0], spotInQuad[1], 0. };
+			double const distToX{ ((locX - loc0) * biasDir).theSca[0] };
+			double const bias{ bias0 + biasPerMeter * distToX };
+			return bias;
+		}
+
 		//! Sample theObjQuad near forward projection of detector location
 		inline
 		double
@@ -198,7 +198,6 @@ namespace sim
 			{
 				// sample intensity from quad target
 				dat::Spot const spotInQuad{ pntInQuad[0], pntInQuad[1] };
-
 				// target signal intensity
 				intenSample = theObjQuad.quadSignalAt(spotInQuad);
 			}
@@ -212,22 +211,36 @@ namespace sim
 		double
 		pureSignalIntensity
 			( dat::Spot const & detSpot
-			, std::size_t const & numSubSamps
+				//!< Location at which to evaluate object quad signal
+			, std::size_t const & numOverSamps
+				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
 			) const
 		{
 			double intensity{ engabra::g3::null<double>() };
 			static std::mt19937 gen(48997969u);
-			static std::normal_distribution<double> distro(-.75, .75);
+			static std::normal_distribution<double> distro(.0, .5);
 			double sum{ 0. };
 			double count{ 0. };
-			for (std::size_t nn{0u} ; nn < numSubSamps ; ++nn)
+			std::size_t const numSamps{ 1u + numOverSamps };
+			for (std::size_t nn{0u} ; nn < numSamps ; ++nn)
 			{
-				dat::Spot const delta{ distro(gen), distro(gen) };
-				dat::Spot const useSpot{ detSpot + delta };
+				// place first spot on exact pixel location
+				constexpr dat::Spot halfSpot{ .5, .5 };
+				dat::Spot delta{ 0., 0. };
+				if (0u < nn)
+				{
+					delta = dat::Spot{ distro(gen), distro(gen) };
+				}
+
+				dat::Spot const useSpot{ detSpot + halfSpot + delta };
 				if (isValid(useSpot))
 				{
-					sum += quadSignalFor(useSpot);
-					count += 1.;
+					double const qSig{ quadSignalFor(useSpot) };
+					if (engabra::g3::isValid(qSig))
+					{
+						sum += qSig;
+						count += 1.;
+					}
 				}
 			}
 			if (0. < count)
@@ -275,14 +288,16 @@ namespace sim
 		double
 		intensityAt
 			( dat::Spot const & detSpot
-			, std::size_t const & numSubSamps
+				//!< Location at which to simulate intensity
+			, std::size_t const & numOverSamps
+				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
 			) const
 		{
 			double intenSample{ engabra::g3::null<double>() };
 
 			// initial supersampled ideal signal
 			double const valueSignal
-				{ pureSignalIntensity(detSpot, numSubSamps) };
+				{ pureSignalIntensity(detSpot, numOverSamps) };
 
 			// add noise
 			if (engabra::g3::isValid(valueSignal))

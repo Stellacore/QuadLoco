@@ -292,6 +292,7 @@ namespace obj
 			// default to nan for outside of target area
 			double value{ std::numeric_limits<double>::quiet_NaN() };
 
+			// unless requested to filling surrounding area
 			if (theAddSurround)
 			{
 				value = surroundSignalAt(spotOnQuad);

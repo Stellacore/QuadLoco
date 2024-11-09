@@ -49,7 +49,76 @@ namespace
 		)
 	{
 		// [DoxyExample00]
+
+		//
+		// Exact sampling (no oversampling or noise)
+		//
+
+		// define a quad target object
+		constexpr double edgeMag{ 1. };
+		quadloco::obj::QuadTarget const objQuad
+			( edgeMag
+			, quadloco::obj::QuadTarget::None
+		//	| quadloco::obj::QuadTarget::DoubleTriangle
+		//	| quadloco::obj::QuadTarget::AddSurround
+			);
+
+		// configure camera and orientation such that
+		// camera format exactly matches the objQuad target
+		constexpr std::size_t numPix{ 2u };
+		constexpr std::size_t numOverSample{ 0u }; // 0-> no over sampling
+		quadloco::img::Camera const camera
+			{ quadloco::dat::SizeHW{ numPix, numPix }  // format
+			, double{ (double)numPix }// principal distance (== to quad edge)
+			};
+		// exterior orientation directly above the quad target
+		double const camOriZ{ edgeMag }; // fit format to quad size
+		rigibra::Transform const xCamWrtQua // directly above quad center
+			{ engabra::g3::Vector{ 0., 0., camOriZ }
+			, rigibra::identity<rigibra::Attitude>()
+			};
+
+		// render result
+		using opt = quadloco::sim::Sampler::OptionFlags;
+		quadloco::sim::Render const render
+			( camera, xCamWrtQua, objQuad
+			, opt::None // no SceneBias nor ImageNoise
+			);
+		quadloco::dat::Grid<float> const gotPixGrid
+			{ render.quadImage(numOverSample) };
+
+		// For this test case, quad should exactly fill the 2x2 grid
+		// E.g., gotPixGrid should contain values:
+		//
+		//     1.f  0.f
+		//     0.f  1.f
+		//
+
 		// [DoxyExample00]
+
+		if ( (2u == gotPixGrid.high())
+		  && (2u == gotPixGrid.wide())
+		   )
+		{
+			quadloco::dat::Grid<float> expPixGrid{ gotPixGrid.hwSize() };
+			expPixGrid(0u, 0u) = 1.f;  expPixGrid(0u, 1u) = 0.f;  
+			expPixGrid(1u, 0u) = 0.f;  expPixGrid(1u, 1u) = 1.f;  
+
+			bool const samePixGrid
+				{ std::equal
+					( gotPixGrid.cbegin(), gotPixGrid.cend()
+					, expPixGrid.cbegin()
+					)
+				};
+			if (! samePixGrid)
+			{
+				oss << "Failure of exact target render test(1)\n";
+				oss << expPixGrid.infoStringContents
+					("# expPixGrid:", "%5.3f") << '\n';
+				oss << gotPixGrid.infoStringContents
+					("# gotPixGrid:", "%5.3f") << '\n';
+			}
+		}
 
 	}
 
