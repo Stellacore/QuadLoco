@@ -34,6 +34,7 @@
 
 #include "datGrid.hpp"
 #include "imgCamera.hpp"
+#include "imgQuadTarget.hpp"
 #include "objQuadTarget.hpp"
 #include "simSampler.hpp"
 
@@ -46,11 +47,56 @@ namespace quadloco
 namespace sim
 {
 	//! Functor for rendering simulated quadrant images
-	struct Render
+	class Render
 	{
+		//! Camera with which to render image geometry and intensities
 		img::Camera const theCamera{};
+
+		//! Exterior orientation of camera w.r.t. quad target
 		rigibra::Transform const theCamWrtQuad{};
+
+		//! Quad target geometry in object space
 		obj::QuadTarget const theObjQuad{};
+
+		//! Cached data - must be set in ctor
+		Sampler const theSampler;
+
+	public:
+
+		inline
+		explicit
+		Render
+			( img::Camera const & camera
+			, rigibra::Transform const & xCamWrtQuad
+			, obj::QuadTarget const & objQuad
+			)
+			: theCamera{ camera }
+			, theCamWrtQuad{ xCamWrtQuad }
+			, theObjQuad{ objQuad }
+			, theSampler(theCamera, theCamWrtQuad, theObjQuad)
+		{ }
+
+		//! Geometry of perspective image created by quadImage()
+		inline
+		img::QuadTarget
+		imgQuadTarget
+			() const
+		{
+			Sampler const sampler(theCamera, theCamWrtQuad, theObjQuad);
+			return sampler.imgQuadTarget();
+		}
+
+		//! Simulate an image through camera at position xCamWrtQuad
+		inline
+		dat::Grid<float>
+		quadImage
+			() const
+		{
+			dat::Grid<float> grid(theCamera.theFormat);
+			std::fill(grid.begin(), grid.end(), engabra::g3::null<float>());
+			injectTargetInto(&grid);
+			return grid;
+		}
 
 		//! Simulate an image through camera at position xCamWrtQuad
 		inline
@@ -87,18 +133,6 @@ double const & end1 = theObjQuad.span1().theEnd;
 					}
 				}
 			}
-		}
-
-		//! Simulate an image through camera at position xCamWrtQuad
-		inline
-		dat::Grid<float>
-		quadImage
-			() const
-		{
-			dat::Grid<float> grid(theCamera.theFormat);
-			std::fill(grid.begin(), grid.end(), engabra::g3::null<float>());
-			injectTargetInto(&grid);
-			return grid;
 		}
 
 	}; // Render

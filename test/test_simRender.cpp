@@ -73,9 +73,14 @@ namespace
 			, rigibra::identity<rigibra::Attitude>()
 			};
 
-		// render image (and have simulation return known img::QuadTarget)
-		quadloco::sim::Render const render{ camera, xCamWrtQua, objQuad };
+		// render simulated image and ...
+		quadloco::sim::Render const render(camera, xCamWrtQua, objQuad);
 		quadloco::dat::Grid<float> const fGrid{ render.quadImage() };
+		// ... retrieve geometry of the simulated image
+		quadloco::img::QuadTarget const imgQuad{ render.imgQuadTarget() };
+
+std::cout << "  fGrid: " << fGrid << '\n';
+std::cout << "imgQuad: " << imgQuad << '\n';
 
 quadloco::io::writeStretchPGM("sample.pgm", fGrid);
 
