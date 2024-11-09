@@ -38,7 +38,10 @@
 #include "pix.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
+#include <numeric>
+#include <utility>
 
 
 namespace quadloco
@@ -48,12 +51,264 @@ namespace quadloco
  */
 namespace prb
 {
+
 	using Edge = std::array<double, 2u>;
+
 	constexpr Edge sNullEdge
 		{ std::numeric_limits<double>::quiet_NaN()
 		, std::numeric_limits<double>::quiet_NaN()
 		};
 
+
+	//! Gaussian probability distribution in 1-dimension
+	struct Gauss1D
+	{
+		double const theMean{ std::numeric_limits<double>::quiet_NaN() };
+		double const theSigma{ std::numeric_limits<double>::quiet_NaN() };
+
+		double const theCoeff{ std::numeric_limits<double>::quiet_NaN() };
+
+
+		//! Normalizing coefficient for sigma value
+		inline
+		static
+		double
+		ampForSigma
+			( double const & sigma
+			)
+		{
+			static double const rootTwoPi
+				{ std::sqrt(2. * std::numbers::pi_v<double>) };
+			return (1. / (sigma * rootTwoPi));
+		}
+
+		// Construct invalid instance
+		inline
+		explicit
+		Gauss1D
+			() = default;
+
+		//! Construct with expected mean value and standard deviation
+		inline
+		explicit
+		Gauss1D
+			( double const & mean
+			, double const & sigma
+			)
+			: theMean{ mean }
+			, theSigma{ sigma }
+			, theCoeff{ ampForSigma(sigma) }
+		{ }
+
+		//! True if this instance has valid data
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  engabra::g3::isValid(theMean)
+				&& engabra::g3::isValid(theSigma)
+				);
+		}
+
+		//! Probability density value
+		inline
+		double
+		operator()
+			( double const & evalAt
+			) const
+		{
+			double const delta{ (evalAt - theMean) };
+			double const zVal{ delta / theSigma };
+			double const arg{ -.5 * zVal * zVal };
+			return std::exp(arg);
+		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "mean: " << engabra::g3::io::fixed(theMean)
+				<< ' '
+				<< "sigma: " << engabra::g3::io::fixed(theSigma)
+				;
+
+			return oss.str();
+		}
+
+	}; // Gauss1D
+
+} // [prb]
+
+} // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::prb::Gauss1D const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::prb::Gauss1D const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
+
+
+
+namespace quadloco
+{
+
+/*! \brief Probability function namespace.
+ */
+namespace prb
+{
+
+	//! TODO
+	struct Sorter
+	{
+		Gauss1D const theFlatProbs{};
+		Gauss1D const theEdgeProbs{};
+
+		//! Sigma value for given value span
+		inline
+		static
+		double
+		sigmaFor
+			( dat::Span const & edgeMagSpan
+			)
+		{
+			// compute a 'sigma value' from each end point that makes
+			// the other endpoint unlikely
+			double const sigma{ (1./3.) * edgeMagSpan.magnitude() };
+			return sigma;
+		}
+
+		//! Construct invalid members
+		inline
+		explicit
+		Sorter
+			() = default;
+
+		//! Set classification parameters based on range of values
+		inline
+		explicit
+		Sorter
+			( dat::Span const & edgeMagSpan
+			)
+			: theFlatProbs{ Gauss1D(edgeMagSpan.min(), sigmaFor(edgeMagSpan)) }
+			, theEdgeProbs{ Gauss1D(edgeMagSpan.max(), sigmaFor(edgeMagSpan)) }
+		{ }
+
+		//! Pseudo-probability density that edgeMag is on a flat region
+		inline
+		double
+		flatProbFor
+			( double const & edgeMag
+			) const
+		{
+			return theFlatProbs(edgeMag);
+		}
+
+		//! Pseudo-probability density that edgeMag is on an edge
+		inline
+		double
+		edgeProbFor
+			( double const & edgeMag
+			) const
+		{
+			return theEdgeProbs(edgeMag);
+		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << '\n';
+			}
+			oss
+				<< "theFlatProbs: " << theFlatProbs
+				<< '\n'
+				<< "theEdgeProbs: " << theEdgeProbs
+				;
+
+			return oss.str();
+		}
+
+
+	}; // Sorter
+
+
+} // [prb]
+
+} // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::prb::Sorter const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	/*
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::prb::Sorter const & item
+		)
+	{
+		return item.isValid();
+	}
+	*/
+
+} // [anon/global]
+
+
+namespace quadloco
+{
+
+namespace prb
+{
 
 	//! TODO
 	struct QuadStats
@@ -61,6 +316,9 @@ namespace prb
 		dat::Grid<Edge> const theEdgeGrads{};
 		dat::Grid<double> const theEdgeMags{};
 		dat::Span const theEdgeMagSpan{};
+		Sorter const theSorterFlatEdge{};
+		dat::Grid<double> const theFlatProbs{};
+		dat::Grid<double> const theEdgeProbs{};
 
 		inline
 		static
@@ -80,6 +338,50 @@ namespace prb
 				*outIter = std::hypot(edge[0], edge[1]);
 			}
 			return mags;
+		}
+
+		inline
+		static
+		dat::Grid<double>
+		flatGridFor
+			( dat::Grid<double> const & edgeMags
+			, Sorter const & sorterFlatEdge
+			)
+		{
+			dat::Grid<double> flatProbs(edgeMags.hwSize());
+			using InIter = dat::Grid<double>::const_iterator;
+			using OutIter = dat::Grid<double>::iterator;
+			InIter inIter{ edgeMags.cbegin() };
+			for (OutIter outIter{flatProbs.begin()}
+				; flatProbs.end() != outIter ; ++outIter, ++inIter)
+			{
+				double const & edgeMag = *inIter;
+				double const flatProb{ sorterFlatEdge.flatProbFor(edgeMag) };
+				*outIter = flatProb;
+			}
+			return flatProbs;
+		}
+
+		inline
+		static
+		dat::Grid<double>
+		edgeGridFor
+			( dat::Grid<double> const & edgeMags
+			, Sorter const & sorterFlatEdge
+			)
+		{
+			dat::Grid<double> edgeProbs(edgeMags.hwSize());
+			using InIter = dat::Grid<double>::const_iterator;
+			using OutIter = dat::Grid<double>::iterator;
+			InIter inIter{ edgeMags.cbegin() };
+			for (OutIter outIter{edgeProbs.begin()}
+				; edgeProbs.end() != outIter ; ++outIter, ++inIter)
+			{
+				double const & edgeMag = *inIter;
+				double const edgeProb{ sorterFlatEdge.edgeProbFor(edgeMag) };
+				*outIter = edgeProb;
+			}
+			return edgeProbs;
 		}
 
 		inline
@@ -141,19 +443,6 @@ namespace prb
 			return edgeGrid;
 		}
 
-		/*
-		//! Generate stats from pixGrid
-		inline
-		static
-		QuadStats
-		from
-			( dat::Grid<float> const & pixGrid
-			)
-		{
-			return QuadStats{ edgeGradsFor(pixGrid), ... };
-		}
-		*/
-
 		//! Construct stats for pixGrid data
 		inline
 		explicit
@@ -163,6 +452,9 @@ namespace prb
 			: theEdgeGrads{ edgeGradsFor(pixGrid) }
 			, theEdgeMags{ edgeMagsFor(theEdgeGrads) }
 			, theEdgeMagSpan{ pix::fullSpanFor(theEdgeMags) }
+			, theSorterFlatEdge(theEdgeMagSpan)
+			, theFlatProbs{ flatGridFor(theEdgeMags, theSorterFlatEdge) }
+			, theEdgeProbs{ edgeGridFor(theEdgeMags, theSorterFlatEdge) }
 		{ }
 
 		//! Descriptive information about this instance.
@@ -183,7 +475,17 @@ namespace prb
 				<< "   theEdgeMags: " << theEdgeMags
 				<< '\n'
 				<< "theEdgeMagSpan: " << theEdgeMagSpan
+				<< '\n'
+				<< "theSorterFlatEdge: " << theSorterFlatEdge
 				<< '\n';
+		/*
+		dat::Grid<Edge> const theEdgeGrads{};
+		dat::Grid<double> const theEdgeMags{};
+		dat::Span const theEdgeMagSpan{};
+		Sorter const theSorterFlatEdge{};
+		dat::Grid<double> const theFlatProbs{};
+		dat::Grid<double> const theEdgeProbs{};
+		*/
 
 			return oss.str();
 		}
@@ -267,6 +569,12 @@ std::cout << stats.theEdgeGrads.infoStringContents
 	<< '\n';
 std::cout << stats.theEdgeMags.infoStringContents
 	("edgeMags", " %5.2f")
+	<< '\n';
+std::cout << stats.theFlatProbs.infoStringContents
+	("flatProbs", " %5.2f")
+	<< '\n';
+std::cout << stats.theEdgeProbs.infoStringContents
+	("edgeProbs", " %5.2f")
 	<< '\n';
 std::cout << '\n';
 std::cout << "stats:\n" << stats << '\n';
