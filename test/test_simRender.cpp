@@ -32,6 +32,7 @@
 #include "io.hpp"
 #include "objQuadTarget.hpp"
 #include "pix.hpp"
+#include "simConfig.hpp"
 #include "simRender.hpp"
 
 #include <algorithm>
@@ -63,25 +64,19 @@ namespace
 		//	| quadloco::obj::QuadTarget::AddSurround
 			);
 
-		// configure camera and orientation such that
-		// camera format exactly matches the objQuad target
 		constexpr std::size_t numPix{ 2u };
 		constexpr std::size_t numOverSample{ 0u }; // 0-> no over sampling
-		quadloco::img::Camera const camera
-			{ quadloco::dat::SizeHW{ numPix, numPix }  // format
-			, double{ (double)numPix }// principal distance (== to quad edge)
-			};
-		// exterior orientation directly above the quad target
-		double const camOriZ{ edgeMag }; // fit format to quad size
-		rigibra::Transform const xCamWrtQua // directly above quad center
-			{ engabra::g3::Vector{ 0., 0., camOriZ }
-			, rigibra::identity<rigibra::Attitude>()
-			};
+
+		// configure camera and orientation such that
+		// camera format exactly matches the objQuad target
+		quadloco::sim::Config const config
+			{ quadloco::sim::Config::faceOn(objQuad, numPix) };
+
 
 		// render result
 		using opt = quadloco::sim::Sampler::OptionFlags;
 		quadloco::sim::Render const render
-			( camera, xCamWrtQua, objQuad
+			( config
 			, opt::None // no SceneBias nor ImageNoise
 			);
 		quadloco::dat::Grid<float> const gotPixGrid
