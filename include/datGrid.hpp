@@ -35,6 +35,7 @@
 #include "datRowCol.hpp"
 #include "datSizeHW.hpp"
 
+#include <functional>
 #include <string>
 
 // implementation
@@ -111,6 +112,16 @@ namespace dat
 				theData = new Type[theHigh * theWide];
 			}
 		}
+
+		//! Convenience constructor taking individual high/wide args
+		inline
+		explicit
+		Grid
+			( std::size_t const & high
+			, std::size_t const & wide
+			)
+			: Grid{ SizeHW{ high, wide } }
+		{ }
 
 		//! Move constructor
 		inline
@@ -406,20 +417,20 @@ namespace dat
 			( std::string const & title=std::string()
 			) const
 		{
-			std::ostringstream os;
+			std::ostringstream oss;
 			if (!title.empty())
 			{
-				os << title << " ";
+				oss << title << " ";
 			}
 			SizeHW const hw{ hwSize() };
-			os << "High,Wide:"
+			oss << "High,Wide:"
 				<< ' ' << std::setw(5) << hw.high()
 				<< ' ' << std::setw(5) << hw.wide()
 				<< "  Cells,Bytes:"
 				<< ' ' << std::setw(5) << size()
 				<< ' ' << std::setw(5) << byteSize()
 				;
-			return os.str();
+			return oss.str();
 		}
 
 		/*! \brief The content values of the this instance
@@ -460,6 +471,46 @@ namespace dat
 			}
 			return oss.str();
 		}
+
+		/*! \brief Content formatted with formating function
+		 *
+		 * Format is:
+		 * \arg infoString() as first line
+		 * \arg each line is a row of values formatted with fmtFunc
+		 *
+		 * Example:
+		 * \snippet test_datGrid.cpp DoxyExample00
+		 */
+		inline
+		std::string
+		infoStringContents
+			( std::string const & title
+				//!< Heading to print (along with size info)
+			, std::function<std::string(Type const & elem)> const & fmtFunc
+				//!< Function providing a string for each cell element
+			) const
+		{
+			std::ostringstream oss;
+			oss << infoString(title);
+			if (isValid())
+			{
+				const_iterator iter{ cbegin() };
+				for (size_t row(0); row < theHigh; ++row)
+				{
+					oss << '\n';
+					for (size_t col(0); col < theWide; ++col)
+					{
+						oss << ' ' << fmtFunc(*iter++);
+					}
+				}
+			}
+			else
+			{
+				oss << " <null>";
+			}
+			return oss.str();
+		}
+
 
 /*
 		//! exactly equals operator
