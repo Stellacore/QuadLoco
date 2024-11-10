@@ -47,7 +47,11 @@ namespace quadloco
 namespace pix
 {
 
-	//! GRADent ELement structure representing a directed edge gradient
+	/*! \brief GRADent ELement structure representing a directed edge gradient.
+	 *
+	 * \note For computing gradient values over entire dat::Grid instances
+	 * refer to functions in pixgrid.hpp (e.g. gradelGridFor()).
+	 */
 	class Gradel
 	{
 		//! Internal data representation (could probably use 16-bit floats?)
@@ -86,6 +90,16 @@ namespace pix
 				}
 		{ }
 
+		//! Read-only access to ndx-the coordinate - NO BOUNDS CHECKING
+		inline
+		float const &
+		operator[]
+			( std::size_t const & ndx
+			) const
+		{
+			return theComps[ndx];
+		}
+
 		//! True if this instance is not null
 		inline
 		bool
@@ -117,7 +131,6 @@ namespace pix
 				;
 			return oss.str();
 		}
-
 
 	}; // Gradel
 
