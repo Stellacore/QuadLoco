@@ -64,7 +64,7 @@ namespace
 		quadloco::dat::Grid<SomeType> const someGrid(5u, 6u);
 
 		// output contents with custom formatting function
-		// note that infoStringContents adds a space between elements
+		// note that default separator between fields is a space
 		std::ostringstream msg;
 		msg << someGrid.infoStringContents
 			( "someGrid"  // title string
@@ -115,24 +115,16 @@ namespace
 		grid(1u, 1u) = dVal;
 		grid(0u, 2u) = grid(0u, 0u);
 
-		// return move copy
+		// make a deep copy (in place of op==() or copy ctor())
 		using FGrid = quadloco::dat::Grid<float>;
-		std::function<FGrid(FGrid const &)> const copyFunc
-			{ [](FGrid const & orig)
-				{
-				FGrid copy(orig.hwSize());
-				std::copy(orig.cbegin(), orig.cend(), copy.begin());
-				return std::move(copy); // move assign
-				}
-			};
-		FGrid const copy{ copyFunc(grid) };
+		FGrid const copy{ FGrid::copyOf(grid) };
 
 		// constant iterator access
 		float const gotSum
 			{ std::accumulate(copy.cbegin(), copy.cend(), 0.f) };
 		float const expSum{ 3.f*dVal + 3.*fillVal };
 
-		// output
+		// output (ref infoStringContents() overloads for custom data types)
 		std::ostringstream ostrm;
 		ostrm << grid << '\n'; // puts grid.infoString() to stream
 		// put grid cell contents to stream

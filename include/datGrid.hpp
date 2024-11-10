@@ -71,9 +71,18 @@ namespace dat
 		typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 		typedef std::reverse_iterator<iterator> reverse_iterator;
 
-	public: // static methods
+		// static methods
 
-		//! A null (zero sized) grid
+		//! DISABLE copy construction (use move sytax, or std::copy(...))
+		Grid
+			(Grid const & other) = delete;
+
+		//! DISABLE assignment (use move sytax, or std::copy(...))
+		Grid &
+		operator=
+			(Grid const & rhs) = delete;
+
+		//! Examplicit null instance (zero size, no data). Same as Grid{};
 		static
 		Grid
 		null
@@ -82,22 +91,30 @@ namespace dat
 			return {};
 		}
 
-		// disable copy construction
-		Grid
-			(Grid const & other) = delete;
+		//! Return a (deep) copy of original
+		inline
+		static
+		Grid<Type>
+		copyOf
+			( Grid<Type> const & orig
+			)
+		{
+			Grid<Type> copy{ orig.hwSize() };
+			std::copy
+				( orig.cbegin(), orig.cend()
+				, copy.begin()
+				);
+			return std::move(copy);
+		}
+			
 
-		// disable copy assignment
-		Grid &
-		operator=
-			(Grid const & rhs) = delete;
+		// methods
 
-	public: // methods
-
-		//! Construct empty
+		//! Construct a null instance (false == isValid()): (same Grid::null())
 		Grid
 			() = default;
 
-		//! Construct with geometry (NOTE: uninitialized values)
+		//! Construct geometry and allocate space (NOTE: uninitialized values)
 		inline
 		explicit
 		Grid
@@ -151,7 +168,7 @@ namespace dat
 			return *this;
 		}
 
-		//! standard destructor
+		//! Standard destructor (deletes data store)
 		inline
 		~Grid
 			()
@@ -162,13 +179,13 @@ namespace dat
 			}
 		}
 
-		//! check if is valid
+		//! True if this instance is not null (has data
 		inline
 		bool
 		isValid
 			() const
 		{
-			return theData != nullptr;
+			return (theData != nullptr);
 		}
 
 		//! Dimensions of this image
@@ -180,7 +197,7 @@ namespace dat
 			return SizeHW(theHigh, theWide);
 		}
 
-		//! Number of cells in each column of the grid
+		//! Number of cells in each column of the grid (== hwSize.high())
 		inline
 		std::size_t
 		high
@@ -189,7 +206,7 @@ namespace dat
 			return theHigh;
 		}
 
-		//! Number of cells in each row of the grid
+		//! Number of cells in each row of the grid (== hwSize.wide())
 		inline
 		std::size_t
 		wide
@@ -198,7 +215,7 @@ namespace dat
 			return theWide;
 		}
 
-		//! Number of cells in grid
+		//! Number of cells in grid (aka "element count")
 		inline
 		std::size_t
 		size
@@ -207,7 +224,7 @@ namespace dat
 			return hwSize().size();
 		}
 
-		//! bytes in buffer
+		//! Number of bytes consumed by data = ((size()*sizeof(Type))
 		inline
 		size_t
 		byteSize
@@ -216,7 +233,7 @@ namespace dat
 			return hwSize().size() * sizeof(Type);
 		}
 
-		//! Returns reference to element
+		//! Constant reference to specified element
 		inline
 		Type const &
 		operator()
@@ -227,7 +244,7 @@ namespace dat
 			return *(theData + row * theWide + col);
 		}
 
-		//! Returns pointer to row (non const)
+		//! Mutuable reference to specified element
 		inline
 		Type &
 		operator()
@@ -238,7 +255,7 @@ namespace dat
 			return *(theData + row * theWide + col);
 		}
 
-		//! Returns reference to element
+		//! Constant reference to specified element
 		inline
 		Type const &
 		operator()
@@ -248,7 +265,7 @@ namespace dat
 			return operator()(rowcol.row(), rowcol.col());
 		}
 
-		//! Returns pointer to row (non const)
+		//! Mutuable reference to specified element
 		inline
 		Type &
 		operator()
@@ -258,7 +275,7 @@ namespace dat
 			return operator()(rowcol.row(), rowcol.col());
 		}
 
-		//! use as const_iterator
+		//! Iterator to start of read only data
 		inline
 		const_iterator
 		cbegin
@@ -267,7 +284,7 @@ namespace dat
 			return theData;
 		}
 
-		//! use as const_iterator
+		//! Iterator to end of read only data
 		inline
 		const_iterator
 		cend
@@ -276,7 +293,7 @@ namespace dat
 			return theData + hwSize().size();
 		}
 
-		//! use as iterator
+		//! Iterator to start of mutable data
 		inline
 		iterator
 		begin
@@ -285,7 +302,7 @@ namespace dat
 			return theData;
 		}
 
-		//! use as iterator
+		//! Iterator to end of mutable data
 		inline
 		iterator
 		end
@@ -294,7 +311,7 @@ namespace dat
 			return theData + hwSize().size();
 		}
 
-		//! use as const_reverse_iterator
+		//! Reverse-direction iterator to start of read only data
 		inline
 		const_reverse_iterator
 		crbegin
@@ -303,7 +320,7 @@ namespace dat
 			return const_reverse_iterator(end());
 		}
 
-		//! use as const_reverse_iterator
+		//! Reverse-direction iterator to end of read only data
 		inline
 		const_reverse_iterator
 		crend
@@ -312,7 +329,7 @@ namespace dat
 			return const_reverse_iterator(begin());
 		}
 
-		//! use as reverse_iterator
+		//! Reverse-direction iterator to start of mutable data
 		inline
 		reverse_iterator
 		rbegin
@@ -321,7 +338,7 @@ namespace dat
 			return reverse_iterator(end());
 		}
 
-		//! use as reverse_iterator
+		//! Reverse-direction iterator to end of mutable data
 		inline
 		reverse_iterator
 		rend
@@ -330,7 +347,7 @@ namespace dat
 			return reverse_iterator(begin());
 		}
 
-		//! const row access, use as const iterator
+		//! Iterator to start of *ROW* of read only data
 		inline
 		const_iterator
 		cbeginRow
@@ -340,7 +357,7 @@ namespace dat
 			return theData + (row * theWide);
 		}
 
-		//! const row access, use as const iterator
+		//! Iterator to end of *ROW* of read only data
 		inline
 		const_iterator
 		cendRow
@@ -350,7 +367,7 @@ namespace dat
 			return beginRow(row + 1);
 		}
 
-		//! row access, use as iterator
+		//! Iterator to start of *ROW* of mutable data
 		inline
 		iterator
 		beginRow
@@ -360,7 +377,7 @@ namespace dat
 			return theData + (row * theWide);
 		}
 
-		//! row access, use as iterator
+		//! Iterator to end of *ROW* of mutable data
 		inline
 		iterator
 		endRow
@@ -370,7 +387,7 @@ namespace dat
 			return beginRow(row + 1);
 		}
 
-		//! iterator at given row, ocl
+		//! Iterator to read-only data element at (row,col)
 		inline
 		const_iterator
 		citerAt
@@ -381,7 +398,7 @@ namespace dat
 			return theData + (row * theWide + col);
 		}
 
-		//! iterator at given row, ocl
+		//! Iterator to mutable data element at (row,col)
 		inline
 		iterator
 		iterAt
@@ -392,7 +409,7 @@ namespace dat
 			return theData + (row * theWide + col);
 		}
 
-		//! row/col from iterator
+		//! Row/Colum indices associated with iter value
 		inline
 		dat::RowCol
 		rowColFor
@@ -477,6 +494,8 @@ namespace dat
 		 * Format is:
 		 * \arg infoString() as first line
 		 * \arg each line is a row of values formatted with fmtFunc
+		 * \arg fieldSeparator is inserted between fields
+		 * \arg rows are separated with a newline ('\n')
 		 *
 		 * Example:
 		 * \snippet test_datGrid.cpp DoxyExample00
@@ -488,6 +507,8 @@ namespace dat
 				//!< Heading to print (along with size info)
 			, std::function<std::string(Type const & elem)> const & fmtFunc
 				//!< Function providing a string for each cell element
+			, std::string const & fieldSeparator = std::string(" ")
+				//!< Insert this string between individual fields
 			) const
 		{
 			std::ostringstream oss;
@@ -500,7 +521,7 @@ namespace dat
 					oss << '\n';
 					for (size_t col(0); col < theWide; ++col)
 					{
-						oss << ' ' << fmtFunc(*iter++);
+						oss << fieldSeparator << fmtFunc(*iter++);
 					}
 				}
 			}
