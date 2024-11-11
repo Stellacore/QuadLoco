@@ -37,6 +37,7 @@
 #include <Engabra>
 
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 
@@ -112,6 +113,20 @@ namespace pix
 				);
 		}
 
+		//! True if this and other instance data are same within tol
+		inline
+		bool
+		nearlyEquals
+			( Gradel const & other
+			, double const & tol = std::numeric_limits<float>::epsilon()
+			) const
+		{
+			return
+				(  engabra::g3::nearlyEquals(theComps[0], other.theComps[0])
+				&& engabra::g3::nearlyEquals(theComps[1], other.theComps[1])
+				);
+		}
+
 		//! Descriptive information about this instance.
 		inline
 		std::string
@@ -162,6 +177,18 @@ namespace
 		)
 	{
 		return item.isValid();
+	}
+
+	//! True if both items are same within tol
+	inline
+	bool
+	nearlyEquals
+		( quadloco::pix::Gradel const & itemA
+		, quadloco::pix::Gradel const & itemB
+		, double const & tol = std::numeric_limits<float>::epsilon()
+		)
+	{
+		return itemA.nearlyEquals(itemB, tol);
 	}
 
 } // [anon/global]
