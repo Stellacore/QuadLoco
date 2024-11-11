@@ -28,7 +28,7 @@
 */
 
 
-#include "prbQuadness.hpp"
+#include "prbquad.hpp"
 
 #include "datSizeHW.hpp"
 #include "imgCamera.hpp"
@@ -71,7 +71,7 @@ namespace
 		quadloco::img::Camera const & camera = config.camera();
 		rigibra::Transform const & xCamWrtQua = config.xformStaWrtQuad();
 
-		// render simulated image and ...
+		// render simulated image
 		using opt = quadloco::sim::Sampler::OptionFlags;
 		quadloco::sim::Render const render
 			( config
@@ -79,21 +79,29 @@ namespace
 			, opt::None // no SceneBias nor ImageNoise
 			);
 		quadloco::dat::Grid<float> const pixGrid{ render.quadImage(numOver) };
-		// ... retrieve geometry of the simulated image
-		quadloco::img::QuadTarget const imgQuad{ render.imgQuadTarget() };
+		// retrieve geometry of the simulated image
+		quadloco::img::QuadTarget const expImgQuad{ render.imgQuadTarget() };
+
+		// for this test, assume the found geometry is perfect
+		quadloco::img::QuadTarget const & gotImgQuad = expImgQuad;
+
+		double const probQuad
+			{ quadloco::prb::isQuadlike(pixGrid, gotImgQuad) };
 
 std::cout << pixGrid.infoStringContents("pixGrid:", "%6.3f") << '\n';
+std::cout << "probQuad: " << probQuad << '\n';
 
-		// check if the result is "quad-like"
-		quadloco::prb::Quadness const quadness{ imgQuad };
-		bool const isQuad{ quadness.isLikelyQuad(pixGrid) };
+		// assess the quadness of pixels w.r.t. the estimated "found" geometry
 
 		// [DoxyExample01]
 
+		// check if the result is more likely than not to be "quad-like"
+		bool const isQuad{ .5 < probQuad };
 		if (! isQuad)
 		{
 			oss << "Failure of isQuad test\n";
-			oss << "quadness: " << quadness << '\n';
+			oss << "probQuad: " << probQuad << '\n';
+			oss << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
 		}
 
 	}
