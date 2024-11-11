@@ -30,6 +30,7 @@
 
 #include "pixgrid.hpp"
 
+#include "datChipSpec.hpp"
 #include "datGrid.hpp"
 #include "pixGradel.hpp"
 #include "pixgrid.hpp"
@@ -118,80 +119,124 @@ namespace
 	{
 		// [DoxyExample01]
 
-		// using tiny data grids for easy testing
+		// using tiny data grids for easy test data inspection
 		constexpr std::size_t ndxHalf{ 4u };
 		constexpr std::size_t ndxFull{ 2u*ndxHalf };
 		quadloco::dat::SizeHW const hwSize{ ndxFull, ndxFull };
 		// one with vertical, one with horizontal edges
-		quadloco::dat::Grid<float> vPixels(hwSize); // Vertical edge
-		quadloco::dat::Grid<float> hPixels(hwSize); // Horizontal edge
+		quadloco::dat::Grid<float> tbPixels(hwSize); // Top-to-Bot edge
+		quadloco::dat::Grid<float> lrPixels(hwSize); // Lft-to-Rgt edge
 		constexpr float backVal{ -15.25f };
 		constexpr float foreVal{  -5.25f };
 		// initialize both grids to background values
-		std::fill(vPixels.begin(), vPixels.end(), backVal);
-		std::fill(hPixels.begin(), hPixels.end(), backVal);
+		std::fill(tbPixels.begin(), tbPixels.end(), backVal);
+		std::fill(lrPixels.begin(), lrPixels.end(), backVal);
 
-		// set foreground for bottom half of the horizontal edge grid
-		std::fill(hPixels.beginRow(ndxHalf), hPixels.end(), foreVal);
-
-		// set foreground for right half of the vertical edge grid
-		for (std::size_t row{0u} ; row < hwSize.high() ; ++row)
-		{
-			// and right half of vertical edge grid to foreground
-			std::fill
-				( vPixels.beginRow(row) + ndxHalf
-				, vPixels.endRow(row)
-				, foreVal
-				);
-		}
-
-		// compute edge gradient across stepFull pixels
-		// Gradient magnitude prop to:
-		// [gridVal(rc + stepHalf) - gridVal(rc - stepHalf)] / (2*stepHalf)
+		// Step sizes used to evaluate gradient for this test
 		constexpr std::size_t stepHalf{ 1u };
 		constexpr std::size_t stepFull{ 2u * stepHalf };
-		// Vertical grid gradients
-		quadloco::dat::Grid<quadloco::pix::Gradel> const vGradels
-			{ quadloco::pix::grid::gradelGridFor(vPixels, stepHalf) };
-		// Horizontal grid gradients
-		quadloco::dat::Grid<quadloco::pix::Gradel> const hGradels
-			{ quadloco::pix::grid::gradelGridFor(hPixels, stepHalf) };
 
+		// set foreground for bottom half of the horizontal edge grid
+		std::fill(tbPixels.beginRow(ndxHalf), tbPixels.end(), foreVal);
+		quadloco::pix::Gradel const tbExpGradel{ 10./(double)stepFull, 0. };
+
+		// Use ChipSpec to set right half foreground for vertical edge grid
+		quadloco::dat::ChipSpec const lrFillSpec
+			{ quadloco::dat::RowCol{ 0u, lrPixels.wide()/2u }
+			, quadloco::dat::SizeHW{ lrPixels.high(), lrPixels.wide()/2u }
+			};
+		quadloco::pix::grid::setSubGridValues(&lrPixels, lrFillSpec, foreVal);
+		quadloco::pix::Gradel const lrExpGradel{ 0., 10./(double)stepFull };
+
+		// Compute edge gradient across stepFull pixels
+
+		// gradient magnitude prop to:
+		// [gridVal(rc + stepHalf) - gridVal(rc - stepHalf)] / (2*stepHalf)
+		// Vertical grid gradients
+		quadloco::dat::Grid<quadloco::pix::Gradel> const lrGradels
+			{ quadloco::pix::grid::gradelGridFor(lrPixels, stepHalf) };
+		// Horizontal grid gradients
+		quadloco::dat::Grid<quadloco::pix::Gradel> const tbGradels
+			{ quadloco::pix::grid::gradelGridFor(tbPixels, stepHalf) };
 
 		// [DoxyExample01]
 
-		// last pixel of first half
-		constexpr std::size_t ndxLast{ ndxHalf - 1u };
-		// firat pixel of second half
-		constexpr std::size_t ndxNext{ ndxHalf };
 
-		// for edge detection across stepFull pixels (stepHalf on each side)
-		constexpr std::size_t ndxEdgeBeg{ ndxLast - (stepHalf-1u) };
-		constexpr std::size_t ndxEdgeEnd{ ndxNext + (stepHalf-1u) };
+		using namespace quadloco::dat;
+		using namespace quadloco::pix;
 
-std::cout << "ndxEdgeBeg: " << ndxEdgeBeg << '\n';
-std::cout << "ndxEdgeEnd: " << ndxEdgeEnd << '\n';
+		// Extract computed gradient values within edge regions
+		ChipSpec const tbChipSpec{ RowCol{ 3u, 1u }, SizeHW{ 2u, 6u } };
+		Grid<Gradel> const tbGotChipGels
+			{ grid::subGridValuesFrom(tbGradels, tbChipSpec) };
+		//
+		ChipSpec const lrChipSpec{ RowCol{ 1u, 3u }, SizeHW{ 6u, 2u } };
+		Grid<Gradel> const lrGotChipGels
+			{ grid::subGridValuesFrom(lrGradels, lrChipSpec) };
 
-		for (std::size_t row{0u} ; row < hwSize.high() ; ++row)
+		// Create expected chips populated with expected gradel values
+		Grid<Gradel> tbExpChipGels(tbGotChipGels.hwSize());
+		std::fill(tbExpChipGels.begin(), tbExpChipGels.end(), tbExpGradel);
+		//
+		Grid<Gradel> lrExpChipGels(lrGotChipGels.hwSize());
+		std::fill(lrExpChipGels.begin(), lrExpChipGels.end(), lrExpGradel);
+
+		// Check if extracted edge values match expected ones
+
+		std::function<std::string(Gradel const &)> const fmtFunc
+			{ [] (Gradel const & elem)
+				{ return std::format("({:4.1f},{:4.1f})", elem[0], elem[1]); }
+			};
+
+		std::function<bool(Gradel const & gdelA, Gradel const & gdelB)>
+			const nearlyEqualGradels
+			{ [] (Gradel const & gdelA, Gradel const & gdelB)
+				{ return nearlyEquals(gdelA, gdelB); }
+			};
+
+		bool const tbOkay
+			{ (tbGotChipGels.hwSize() == tbExpChipGels.hwSize())
+			&& std::equal
+				( tbGotChipGels.cbegin(), tbGotChipGels.cend()
+				, tbExpChipGels.cbegin()
+				, nearlyEqualGradels
+				)
+			};
+
+		if (! tbOkay)
 		{
-			for (std::size_t col{0u} ; col < hwSize.wide() ; ++col)
-			{
-			}
+			oss << "Failure of tb*ChipGels test\n";
+			oss << tbPixels
+				.infoStringContents("tbPixels", "%5.0f") << '\n';
+			oss << tbGradels
+				.infoStringContents("tbGradels", fmtFunc) << '\n';
+			oss << tbExpChipGels
+				.infoStringContents("tbExpChipGels", fmtFunc) << '\n';
+			oss << tbGotChipGels
+				.infoStringContents("tbGotChipGels", fmtFunc) << '\n';
 		}
 
-		using quadloco::dat::Grid;
-		using quadloco::pix::Gradel;
-		std::cout << vPixels.infoStringContents("vPixels", "%5.0f") << '\n';
-		std::cout << hPixels.infoStringContents("hPixels", "%5.0f") << '\n';
-		auto const fmtFunc
-			{ [] (Gradel const & elem)
-				{ return std::format("({:5.3f},{:5.3f})", elem[0], elem[1]); }
+		bool const lrOkay
+			{ (lrGotChipGels.hwSize() == lrExpChipGels.hwSize())
+			&& std::equal
+				( lrGotChipGels.cbegin(), lrGotChipGels.cend()
+				, lrExpChipGels.cbegin()
+				, nearlyEqualGradels
+				)
 			};
-		std::cout << vGradels.infoStringContents("vGradels", fmtFunc) << '\n';
-		std::cout << hGradels.infoStringContents("hGradels", fmtFunc) << '\n';
 
-oss << "implement me\n";
-
+		if (! lrOkay)
+		{
+			oss << "Failure of lr*ChipGels test\n";
+			oss << lrPixels
+				.infoStringContents("lrPixels", "%5.0f") << '\n';
+			oss << lrGradels
+				.infoStringContents("lrGradels", fmtFunc) << '\n';
+			oss << lrExpChipGels
+				.infoStringContents("lrExpChipGels", fmtFunc) << '\n';
+			oss << lrGotChipGels
+				.infoStringContents("lrGotChipGels", fmtFunc) << '\n';
+		}
 	}
 
 }
@@ -205,7 +250,7 @@ main
 	std::stringstream oss;
 
 	test0(oss);
-//	test1(oss);
+	test1(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

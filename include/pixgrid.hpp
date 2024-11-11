@@ -32,6 +32,7 @@
  */
 
 
+#include "datChipSpec.hpp"
 #include "datGrid.hpp"
 #include "pixGradel.hpp"
 
@@ -152,6 +153,50 @@ namespace grid
 
 		//! fill final rows
 		fillLastRows(beg, hwSize, nPad, value);
+	}
+
+	//! Set pixels in full image that correspond with chip spec region
+	template <typename Type>
+	inline
+	void
+	setSubGridValues
+		( dat::Grid<Type> * const & ptFull
+		, dat::ChipSpec const & chipSpec
+		, Type const & value
+		)
+	{
+		for (std::size_t rowChip{0u} ; rowChip < chipSpec.high() ; ++rowChip)
+		{
+			for (std::size_t colChip{0u} ; colChip < chipSpec.wide()
+				; ++colChip)
+			{
+				dat::RowCol const rcChip{ rowChip, colChip };
+				(*ptFull)(chipSpec.rcFullForChipRC(rcChip)) = value;
+			}
+		}
+	}
+
+	//! Copy of fullGrid pixels defined by chip spec region
+	template <typename Type>
+	inline
+	dat::Grid<Type>
+	subGridValuesFrom
+		( dat::Grid<Type> const & fullGrid
+		, dat::ChipSpec const & chipSpec
+		)
+	{
+		dat::Grid<Type> values(chipSpec.hwSize());
+		for (std::size_t rowChip{0u} ; rowChip < chipSpec.high() ; ++rowChip)
+		{
+			for (std::size_t colChip{0u} ; colChip < chipSpec.wide()
+				; ++colChip)
+			{
+				dat::RowCol const rcChip{ rowChip, colChip };
+				dat::RowCol const rcFull{ chipSpec.rcFullForChipRC(rcChip) };
+				values(rcChip) = fullGrid(rcFull);
+			}
+		}
+		return values;
 	}
 
 
