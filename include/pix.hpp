@@ -92,6 +92,23 @@ namespace pix
 
 
 	//
+	// Null values
+	//
+
+	//! A "not available" indicator for data of Type
+	template <typename Type>
+	inline
+	constexpr
+	Type
+	null
+		()
+	{
+		return std::numeric_limits<Type>::quiet_NaN();
+	}
+
+
+
+	//
 	// Functions
 	//
 

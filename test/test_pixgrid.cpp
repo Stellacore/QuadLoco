@@ -36,6 +36,7 @@
 #include "pixgrid.hpp"
 
 #include <algorithm>
+#include <complex>
 #include <format>
 #include <iostream>
 #include <sstream>
@@ -239,6 +240,107 @@ namespace
 		}
 	}
 
+	//! Check bilinear interpolation
+	void
+	test2
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample02]
+
+		// grid of samples (minimum example here)
+		quadloco::dat::SizeHW const hwSize{ 4u, 5u };
+		quadloco::dat::Grid<double> values{ hwSize };
+		std::fill(values.begin(), values.end(), quadloco::pix::null<double>());
+		constexpr std::size_t rowNdx1{ 1u };
+		constexpr std::size_t rowNdx2{ rowNdx1 + 1u };
+		constexpr std::size_t colNdx1{ 2u };
+		constexpr std::size_t colNdx2{ colNdx1 + 1u };
+		values(rowNdx1, colNdx1) = 17.;
+		values(rowNdx2, colNdx1) = 11.;
+		values(rowNdx1, colNdx2) = 23.;
+		values(rowNdx2, colNdx2) = 29.;
+
+		// sample at arbitrary location (inside the grid, else returns null)
+		quadloco::dat::Spot const at
+			{ .25 + (double)rowNdx1
+			, .75 + (double)rowNdx2
+			};
+		double const gotVal{ quadloco::pix::grid::bilinValueAt(values, at) };
+
+		// [DoxyExample02]
+
+		quadloco::dat::Spot const out
+			{ 2.25 + (double)rowNdx1
+			,  .75 + (double)rowNdx2
+			};
+		double const outVal{ quadloco::pix::grid::bilinValueAt(values, out) };
+		if (engabra::g3::isValid(outVal))
+		{
+			oss << "Failure of out of bounds not valid test(3)\n";
+			oss << "exp: " << quadloco::pix::null<double>() << '\n';
+			oss << "got: " << outVal << '\n';
+		}
+
+		//! wikipedia: https://en.wikipedia.org/wiki/Bilinear_interpolation
+		double const & fQ11 = values(rowNdx1, colNdx1);
+		double const & fQ21 = values(rowNdx2, colNdx1);
+		double const & fQ12 = values(rowNdx1, colNdx2);
+		double const & fQ22 = values(rowNdx2, colNdx2);
+		//
+		double const x0{ at[0] };
+		double const y0{ at[1] };
+		//
+		double const x1{ (double)rowNdx1 };
+		double const y1{ (double)colNdx1 };
+		double const x2{ (double)rowNdx2 };
+		double const y2{ (double)colNdx2 };
+		//
+		double const x20{ x2 - x0 };
+		double const x01{ x0 - x1 };
+		double const y20{ y2 - y0 };
+		double const y01{ y0 - y1 };
+		//
+		double const x21{ x2 - x1 };
+		double const y21{ y2 - y1 };
+		double const scale{ 1. / (x21 * y21) };
+		double const sum
+			{ fQ11*x20*y20
+			+ fQ21*x01*y20
+			+ fQ12*x20*y01
+			+ fQ22*x01*y01
+			};
+		double const expVal{ scale * sum };
+		if (! engabra::g3::nearlyEquals(gotVal, expVal))
+		{
+			oss << "Failure of bilinear double interp test(3)\n";
+			oss << "exp: " << expVal << '\n';
+			oss << "got: " << gotVal << '\n';
+			oss << values.infoStringContents("values", "%6.2f") << '\n';
+
+		}
+
+		// check instantation with a complex type
+		using namespace quadloco;
+		using namespace quadloco::dat;
+		using namespace quadloco::pix::grid;
+		dat::Grid<std::complex<double> > cplxGrid(4u, 5u);
+		std::complex<double> const expValue{ 100., -200. };
+		std::fill	
+			( cplxGrid.begin(), cplxGrid.end()
+			, expValue
+			);
+		std::complex<double> const gotValue
+			{ pix::grid::bilinValueAt(cplxGrid, Spot{ 2., 3. }) };
+		// interp should be exact with the integer values used here
+		if (! (gotValue == expValue))
+		{
+			oss << "Failure of bilinear complex interp test(3)\n";
+			oss << "exp: " << expValue << '\n';
+			oss << "got: " << gotValue << '\n';
+		}
+	}
+
 }
 
 //! Standard test case main wrapper
@@ -251,6 +353,7 @@ main
 
 	test0(oss);
 	test1(oss);
+	test2(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

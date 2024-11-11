@@ -34,9 +34,12 @@
 
 #include "datChipSpec.hpp"
 #include "datGrid.hpp"
+#include "datSpot.hpp"
 #include "pixGradel.hpp"
+#include "pix.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <utility>
 
 
@@ -269,6 +272,71 @@ namespace grid
 		}
 
 		return gradels;
+	}
+
+	/*! Value interpolated at location within grid using bilinear model.
+	 *
+	 * \note: Type must support operations including
+	 * \arg (double * Type)
+	 * \arg (Type +/- Type)
+	 */
+	template <typename Type>
+	inline
+	Type
+	bilinValueAt
+		( dat::Grid<Type> const & grid
+		, dat::Spot const & at
+		)
+	{
+		Type value{ pix::null<Type>() };
+
+		// interpret 0,1 as row,col into grid
+		double const & atRow = at[0];
+		double const & atCol = at[1];
+
+		// check if 'at' point is within grid at first (min) corner
+		double const minRow{ std::floor(atRow) };
+		double const minCol{ std::floor(atCol) };
+		bool const isInMin{ (0. < minRow) && (0. < minCol) };
+		if (isInMin)
+		{
+			// indices into grid (at minRow, minCol)
+			std::size_t const ndxRow1{ static_cast<std::size_t>(atRow) };
+			std::size_t const ndxCol1{ static_cast<std::size_t>(atCol) };
+			std::size_t const ndxRow2{ ndxRow1 + 1u };
+			std::size_t const ndxCol2{ ndxCol1 + 1u };
+
+			// check if 'at' point is within grid at opposite (max) corner
+			bool const isInMax
+				{ (ndxRow2 < grid.high()) && (ndxCol2 < grid.wide()) };
+			if (isInMax)
+			{
+				// fraction into the cell where interpolation is to occur
+				double const rowFrac{ atRow - (double)(ndxRow1) };
+				double const colFrac{ atCol - (double)(ndxCol1) };
+
+				// Generate value spans at the four corners
+
+				// interpolate along first (lower bounding) edge
+				Type const val11{ grid(ndxRow1, ndxCol1) };
+				Type const val21{ grid(ndxRow2, ndxCol1) };
+				Type const val12{ grid(ndxRow1, ndxCol2) };
+				Type const val22{ grid(ndxRow2, ndxCol2) };
+
+				double const sclRow{ (atRow - minRow) };
+				Type const dValA{ sclRow * (val21 - val11) };
+				Type const dValB{ sclRow * (val22 - val12) };
+				Type const valA{ val11 + dValA };
+				Type const valB{ val12 + dValB };
+
+				double const sclCol{ (atCol - minCol) };
+				Type const dVal0{ sclCol * (valB - valA) };
+				Type const val0{ dVal0 + valA };
+				value = val0;
+			}
+		}
+
+		return value;
 	}
 
 
