@@ -28,8 +28,12 @@
 */
 
 
+#include "datGrid.hpp"
 #include "pixGradel.hpp"
+#include "pixgrid.hpp"
 
+#include <algorithm>
+#include <format>
 #include <iostream>
 #include <sstream>
 
@@ -83,17 +87,6 @@ namespace
 		// [DoxyExample01]
 
 		// [DoxyExample01]
-
-/*
-		// TODO replace this with real test code
-		std::string const fname(__FILE__);
-		bool const isTemplate{ (std::string::npos != fname.find("/_.cpp")) };
-		if (! isTemplate)
-		{
-			oss << "Failure to implement real test\n";
-		}
-*/
-
 	}
 
 }

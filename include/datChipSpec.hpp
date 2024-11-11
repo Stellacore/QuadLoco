@@ -65,6 +65,33 @@ namespace dat
 			return theSizeHW.isValid();
 		}
 
+		//! Size of this chip - convenience for theSizeHW
+		inline
+		SizeHW const &
+		hwSize
+			() const
+		{
+			return theSizeHW;
+		}
+
+		//! Number rows in this chip - convenience for theSizeHW.high()
+		inline
+		std::size_t
+		high
+			() const
+		{
+			return theSizeHW.high();
+		}
+
+		//! Number columns in this chip - convenience for theSizeHW.wide()
+		inline
+		std::size_t
+		wide
+			() const
+		{
+			return theSizeHW.wide();
+		}
+
 		//! Row within (implicit) full raster data where this chip starts
 		inline
 		std::size_t const &

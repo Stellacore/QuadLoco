@@ -37,6 +37,7 @@
 #include <Engabra>
 
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 
@@ -47,7 +48,11 @@ namespace quadloco
 namespace pix
 {
 
-	//! GRADent ELement structure representing a directed edge gradient
+	/*! \brief GRADent ELement structure representing a directed edge gradient.
+	 *
+	 * \note For computing gradient values over entire dat::Grid instances
+	 * refer to functions in pixgrid.hpp (e.g. gradelGridFor()).
+	 */
 	class Gradel
 	{
 		//! Internal data representation (could probably use 16-bit floats?)
@@ -86,6 +91,16 @@ namespace pix
 				}
 		{ }
 
+		//! Read-only access to ndx-the coordinate - NO BOUNDS CHECKING
+		inline
+		float const &
+		operator[]
+			( std::size_t const & ndx
+			) const
+		{
+			return theComps[ndx];
+		}
+
 		//! True if this instance is not null
 		inline
 		bool
@@ -95,6 +110,20 @@ namespace pix
 			return
 				(  engabra::g3::isValid(theComps[0])
 				&& engabra::g3::isValid(theComps[1])
+				);
+		}
+
+		//! True if this and other instance data are same within tol
+		inline
+		bool
+		nearlyEquals
+			( Gradel const & other
+			, double const & tol = std::numeric_limits<float>::epsilon()
+			) const
+		{
+			return
+				(  engabra::g3::nearlyEquals(theComps[0], other.theComps[0])
+				&& engabra::g3::nearlyEquals(theComps[1], other.theComps[1])
 				);
 		}
 
@@ -117,7 +146,6 @@ namespace pix
 				;
 			return oss.str();
 		}
-
 
 	}; // Gradel
 
@@ -149,6 +177,18 @@ namespace
 		)
 	{
 		return item.isValid();
+	}
+
+	//! True if both items are same within tol
+	inline
+	bool
+	nearlyEquals
+		( quadloco::pix::Gradel const & itemA
+		, quadloco::pix::Gradel const & itemB
+		, double const & tol = std::numeric_limits<float>::epsilon()
+		)
+	{
+		return itemA.nearlyEquals(itemB, tol);
 	}
 
 } // [anon/global]

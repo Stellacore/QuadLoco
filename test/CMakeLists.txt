@@ -45,6 +45,7 @@ set(unitTests
 	test_objQuadTarget  # represent physical target object
 	test_pix  # pixel image manipulations
 	test_pixGradel  # pixel Gradent element type and functions
+	test_pixgrid  # pixel/grid functions (e.g. image processing)
 	test_simRender  # simulation of perspective images of quad target
 	test_simSampler  # simulation of image intensity sampling
 
