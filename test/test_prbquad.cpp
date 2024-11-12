@@ -82,6 +82,8 @@ namespace
 		// retrieve geometry of the simulated image
 		quadloco::img::QuadTarget const expImgQuad{ render.imgQuadTarget() };
 
+std::cout << "expImgQuad: " << expImgQuad << '\n';
+
 		// for this test, assume the found geometry is perfect
 		quadloco::img::QuadTarget const & gotImgQuad = expImgQuad;
 
