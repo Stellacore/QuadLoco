@@ -248,6 +248,183 @@ namespace prb
 		std::cout << "...dev: " << dev << '\n';
 	}
 
+	//! Samples drawn from symmetry radii of quad squares
+	template <typename Type>
+	struct SquareRadiiSamples
+	{
+		// samples drawn from the signal flat areas (radially between edges)
+		std::vector<Type> thePPs{};  // TR square
+		std::vector<Type> theNPs{};  // TL square
+		std::vector<Type> theNNs{};  // BL square
+		std::vector<Type> thePNs{};  // BR square
+
+		//! Extract samples from grid based on imgQuad geometry
+		inline
+		static
+		SquareRadiiSamples
+		from
+			( dat::Grid<Type> const & pixGrid
+			, img::QuadTarget const & imgQuad
+			)
+		{
+			std::vector<Type> ppVals{};
+			std::vector<Type> npVals{};
+			std::vector<Type> nnVals{};
+			std::vector<Type> pnVals{};
+
+			using namespace engabra::g3;
+			Vector const & orig = imgQuad.theCenter;
+			Vector const & xpDir = imgQuad.theDirX;
+			Vector const & ypDir = imgQuad.theDirY;
+			Vector const xnDir{ -xpDir };
+			Vector const ynDir{ -ypDir };
+			Vector const ppDir{ direction(xpDir + ypDir) }; // quad TR
+			Vector const npDir{ direction(xnDir + ypDir) }; // quad TL
+			Vector const pnDir{ direction(xpDir + ynDir) }; // quad BL
+			Vector const nnDir{ direction(xnDir + ynDir) }; // quad BR
+
+			// follow radial edge from center outward
+			// start away from center (poor edge define)
+			double const rad0{ 2. };
+			// use diagonal as worst case radius (but expect less)
+			double const maxRad
+				{ std::hypot((double)pixGrid.high(), (double)pixGrid.wide()) };
+			constexpr double dr{ 1. };
+
+			std::size_t const maxSize{ (std::size_t)(std::ceil(maxRad / dr)) };
+			ppVals.reserve(maxSize);
+			npVals.reserve(maxSize);
+			nnVals.reserve(maxSize);
+			pnVals.reserve(maxSize);
+
+			for (double rad{rad0} ; rad < maxRad ; rad += dr)
+			{
+				// radial edge locations
+				Vector const xpLoc{ orig + rad * xpDir };
+				Vector const xnLoc{ orig + rad * xnDir };
+				Vector const ypLoc{ orig + rad * ypDir };
+				Vector const ynLoc{ orig + rad * ynDir };
+
+				// radial flat locations (midway between edges
+				Vector const ppLoc{ .5 * (xpLoc + ypLoc) };
+				Vector const npLoc{ .5 * (xnLoc + ypLoc) };
+				Vector const nnLoc{ .5 * (xnLoc + ynLoc) };
+				Vector const pnLoc{ .5 * (xpLoc + ynLoc) };
+
+				// radial flat sample spots (cast from Vector)
+				dat::Spot const ppSpot{ ppLoc[0], ppLoc[1] };
+				dat::Spot const npSpot{ npLoc[0], npLoc[1] };
+				dat::Spot const nnSpot{ nnLoc[0], nnLoc[1] };
+				dat::Spot const pnSpot{ pnLoc[0], pnLoc[1] };
+
+
+				std::size_t numValid{ 0u };
+
+				Type const ppVal
+					{ pix::grid::bilinValueAt<Type>(pixGrid, ppSpot) };
+				if (isValid(ppVal))
+				{
+					ppVals.emplace_back(ppVal);
+					++numValid;
+				}
+
+				Type const npVal
+					{ pix::grid::bilinValueAt<Type>(pixGrid, npSpot) };
+				if (isValid(npVal))
+				{
+					npVals.emplace_back(npVal);
+					++numValid;
+				}
+
+				Type const nnVal
+					{ pix::grid::bilinValueAt<Type>(pixGrid, nnSpot) };
+				if (isValid(nnVal))
+				{
+					nnVals.emplace_back(nnVal);
+					++numValid;
+				}
+
+				Type const pnVal
+					{ pix::grid::bilinValueAt<Type>(pixGrid, pnSpot) };
+				if (isValid(pnVal))
+				{
+					pnVals.emplace_back(pnVal);
+					++numValid;
+				}
+
+				// If all four radial samples are invalid, then
+				// likely have run past the size of the data grid
+				if (0u == numValid)
+				{
+					break;
+				}
+			}
+
+			return SquareRadiiSamples{ ppVals, npVals, nnVals, pnVals };
+		}
+
+		//! Catenation of all samples into a single array
+		inline
+		std::vector<Type>
+		allSamps
+			() const
+		{
+			std::vector<Type> allVals{};
+			allVals.insert(allVals.end(), thePPs.cbegin(), thePPs.cend());
+			allVals.insert(allVals.end(), theNPs.cbegin(), theNPs.cend());
+			allVals.insert(allVals.end(), theNNs.cbegin(), theNNs.cend());
+			allVals.insert(allVals.end(), thePNs.cbegin(), thePNs.cend());
+			return allVals;
+		}
+
+
+	}; // SquareRadiiSamples
+
+
+	//! Basic statistics for each square flat and all samples together
+	template <typename Type>
+	struct QuadSampleStats
+	{
+		Stats<Type> thePP{};
+		Stats<Type> theNP{};
+		Stats<Type> theNN{};
+		Stats<Type> thePN{};
+		Stats<Type> theAll{};
+
+		inline
+		static
+		QuadSampleStats
+		from
+			( SquareRadiiSamples<Type> const & samps
+			)
+		{
+			// TODO Could be optimized (consider everything in one place
+
+			Stats<Type> ppStats{};
+			ppStats.consider(samps.thePPs.cbegin(), samps.thePPs.cend());
+
+			Stats<Type> npStats{};
+			npStats.consider(samps.theNPs.cbegin(), samps.theNPs.cend());
+
+			Stats<Type> nnStats{};
+			nnStats.consider(samps.theNNs.cbegin(), samps.theNNs.cend());
+
+			Stats<Type> pnStats{};
+			pnStats.consider(samps.thePNs.cbegin(), samps.thePNs.cend());
+
+			Stats<Type> allStats{};
+			allStats.consider(samps.thePPs.cbegin(), samps.thePPs.cend());
+			allStats.consider(samps.theNPs.cbegin(), samps.theNPs.cend());
+			allStats.consider(samps.theNNs.cbegin(), samps.theNNs.cend());
+			allStats.consider(samps.thePNs.cbegin(), samps.thePNs.cend());
+
+			return QuadSampleStats
+				{ ppStats, npStats, nnStats, pnStats, allStats };
+		}
+
+	}; // QuadSampleStats
+
+
 	//! A (pseudo)probabilty values in pixGrid conform with image quad signal
 	template <typename Type>
 	inline
@@ -257,115 +434,23 @@ namespace prb
 		, img::QuadTarget const & imgQuad
 		)
 	{
-		// samples drawn from the signal flat areas (radially between edges)
-		std::vector<Type> ppVals{};
-		std::vector<Type> npVals{};
-		std::vector<Type> nnVals{};
-		std::vector<Type> pnVals{};
+		// sample grid along square symmetry radii
+		SquareRadiiSamples<Type> const radSamps
+			{ SquareRadiiSamples<Type>::from(pixGrid, imgQuad) };
 
-		using namespace engabra::g3;
-		Vector const & orig = imgQuad.theCenter;
-		Vector const & xpDir = imgQuad.theDirX;
-		Vector const & ypDir = imgQuad.theDirY;
-		Vector const xnDir{ -xpDir };
-		Vector const ynDir{ -ypDir };
-		Vector const ppDir{ direction(xpDir + ypDir) }; // quad TR
-		Vector const npDir{ direction(xnDir + ypDir) }; // quad TL
-		Vector const pnDir{ direction(xpDir + ynDir) }; // quad BL
-		Vector const nnDir{ direction(xnDir + ynDir) }; // quad BR
+		// compute statistics for the samples
+		QuadSampleStats<Type> const stats
+			{ QuadSampleStats<Type>::from(radSamps) };
 
-std::cout << "pixGrid: " << pixGrid << '\n';
-std::cout << "imgQuad: " << imgQuad << '\n';
-
-		// follow radial edge from center outward
-		double const rad0{ 2. }; // start away from center (poor edge define)
-		double const maxRad // way conservative max radius
-			{ std::hypot((double)pixGrid.high(), (double)pixGrid.wide()) };
-		constexpr double dr{ 1. };
-
-		std::size_t const maxSize{ (std::size_t)(std::ceil(maxRad / dr)) };
-		ppVals.reserve(maxSize);
-		npVals.reserve(maxSize);
-		nnVals.reserve(maxSize);
-		pnVals.reserve(maxSize);
-
-		for (double rad{rad0} ; rad < maxRad ; rad += dr)
-		{
-			// radial edge samples
-			Vector const xpLoc{ orig + rad * xpDir };
-			Vector const xnLoc{ orig + rad * xnDir };
-			Vector const ypLoc{ orig + rad * ypDir };
-			Vector const ynLoc{ orig + rad * ynDir };
-			// radial flat samples
-			Vector const ppLoc{ .5 * (xpLoc + ypLoc) };
-			Vector const npLoc{ .5 * (xnLoc + ypLoc) };
-			Vector const nnLoc{ .5 * (xnLoc + ynLoc) };
-			Vector const pnLoc{ .5 * (xpLoc + ynLoc) };
-
-			dat::Spot const ppSpot{ ppLoc[0], ppLoc[1] };
-			dat::Spot const npSpot{ npLoc[0], npLoc[1] };
-			dat::Spot const nnSpot{ nnLoc[0], nnLoc[1] };
-			dat::Spot const pnSpot{ pnLoc[0], pnLoc[1] };
-
-			// TODO - could probably break loop if all four are invalid
-
-			Type const ppVal{ pix::grid::bilinValueAt<Type>(pixGrid, ppSpot) };
-			if (isValid(ppVal))
-			{
-				ppVals.emplace_back(ppVal);
-			}
-
-			Type const npVal{ pix::grid::bilinValueAt<Type>(pixGrid, npSpot) };
-			if (isValid(npVal))
-			{
-				npVals.emplace_back(npVal);
-			}
-
-			Type const nnVal{ pix::grid::bilinValueAt<Type>(pixGrid, nnSpot) };
-			if (isValid(nnVal))
-			{
-				nnVals.emplace_back(nnVal);
-			}
-
-			Type const pnVal{ pix::grid::bilinValueAt<Type>(pixGrid, pnSpot) };
-			if (isValid(pnVal))
-			{
-				pnVals.emplace_back(pnVal);
-			}
-		}
-
-		std::vector<Type> allVals{};
-		allVals.insert(allVals.end(), ppVals.cbegin(), ppVals.cend());
-		allVals.insert(allVals.end(), npVals.cbegin(), npVals.cend());
-		allVals.insert(allVals.end(), nnVals.cbegin(), nnVals.cend());
-		allVals.insert(allVals.end(), pnVals.cbegin(), pnVals.cend());
-
-
-		Stats<Type> allStats{};
-
-		Stats<Type> ppStats{};
-		ppStats.consider(ppVals.cbegin(), ppVals.cend());
-		allStats.consider(ppVals.cbegin(), ppVals.cend());
-
-		Stats<Type> npStats{};
-		npStats.consider(npVals.cbegin(), npVals.cend());
-		allStats.consider(npVals.cbegin(), npVals.cend());
-
-		Stats<Type> nnStats{};
-		nnStats.consider(nnVals.cbegin(), nnVals.cend());
-		allStats.consider(nnVals.cbegin(), nnVals.cend());
-
-		Stats<Type> pnStats{};
-		pnStats.consider(pnVals.cbegin(), pnVals.cend());
-		allStats.consider(pnVals.cbegin(), pnVals.cend());
+		// use samples to estimate "quadness"
 
 
 std::cout << '\n';
-showSampsReal(ppVals, ppStats, "\npp");
-showSampsReal(npVals, npStats, "\nnp");
-showSampsReal(nnVals, nnStats, "\nnn");
-showSampsReal(pnVals, pnStats, "\npn");
-showSampsReal(allVals, allStats, "\nall");
+showSampsReal(radSamps.thePPs, stats.thePP, "\npp");
+showSampsReal(radSamps.theNPs, stats.theNP, "\nnp");
+showSampsReal(radSamps.theNNs, stats.theNN, "\nnn");
+showSampsReal(radSamps.thePNs, stats.thePN, "\npn");
+showSampsReal(radSamps.allSamps(), stats.theAll, "\nall");
 
 
 
