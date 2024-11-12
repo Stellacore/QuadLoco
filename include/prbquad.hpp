@@ -48,35 +48,6 @@ namespace quadloco
 
 namespace prb
 {
-
-	//! Show information about sample values
-	template <typename Type>
-	inline
-	void
-	showSampsReal
-		( std::vector<Type> const & samps
-		, Stats<Type> const & stats
-		, std::string const & title
-		)
-	{
-		std::cout << title << '\n';
-		std::cout << "---size: (" << samps.size() << ")\n";
-
-		std::cout << "...";
-		for (std::size_t nn{0u} ; nn < samps.size() ; ++nn)
-		{
-			std::cout << ' ' << samps[nn];
-		}
-
-		Type const dev{ Stats<Type>::deviation(samps, stats.mean()) };
-
-		std::cout << '\n';
-		std::cout << "...min: " << stats.min() << '\n';
-		std::cout << "...ave: " << stats.mean() << '\n';
-		std::cout << "...max: " << stats.max() << '\n';
-		std::cout << "...dev: " << dev << '\n';
-	}
-
 	//! Samples drawn from symmetry radii of quad squares
 	template <typename Type>
 	struct SquareRadiiSamples
@@ -374,7 +345,7 @@ namespace prb
 					strData << "==== quadProb: " << quadProb << '\n';
 
 				}
-				else
+				else // std::abs(sigMag) < epsilon
 				{
 					strMsg << "small signal distinction\n";
 					strMsg << "sigMag: "  << sigMag << '\n';
@@ -382,7 +353,7 @@ namespace prb
 					strMsg << "meanFore: "  << meanFore << '\n';
 				}
 			}
-			else
+			else // std::abs(rangeAll) < epsilon
 			{
 				strMsg << "small overall data range\n";
 				strMsg << "rangeAll: "  << rangeAll << '\n';
@@ -390,19 +361,8 @@ namespace prb
 				strMsg << "maxAll: "  << maxAll << '\n';
 				strMsg << "statsAll: " << stats.theAll.infoString() << '\n';
 			}
-
-			/*
-			std::cout << '\n';
-			showSampsReal(radSamps.thePPs, stats.thePP, "\npp");
-			showSampsReal(radSamps.theNPs, stats.theNP, "\nnp");
-			showSampsReal(radSamps.theNNs, stats.theNN, "\nnn");
-			showSampsReal(radSamps.thePNs, stats.thePN, "\npn");
-			showSampsReal(radSamps.allSamps(), stats.theAll, "\nall");
-			*/
-
-
 		}
-		else
+		else // if (radSamps.isSignificant())
 		{
 			strMsg << "Insufficient number or radial samples\n";
 			strMsg << "radSamps: " << radSamps.infoString() << '\n';
