@@ -57,7 +57,7 @@ namespace img
 		engabra::g3::Vector const theCenter
 			{engabra::g3::null<engabra::g3::Vector>()};
 
-		/*! \brief One of two directions for target "x-axis".
+		/*! \brief One of two *UNITARY* directions - target "x-axis".
 		 *
 		 * This direction is associated with one of the two radial
 		 * edges that has foreground (white) to the right side of
@@ -67,7 +67,7 @@ namespace img
 			{engabra::g3::null<engabra::g3::Vector>()};
 
 
-		//! \brief Angle (positive CCW) from theDirX to adjacent radial edge.
+		//! \brief Second of two *UNITARY* directions - target "y-axis".
 		engabra::g3::Vector const theDirY
 			{engabra::g3::null<engabra::g3::Vector>()};
 
