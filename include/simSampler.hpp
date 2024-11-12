@@ -269,17 +269,18 @@ namespace sim
 				{ theCamWrtQuad(vecFrom(theObjQuad.midSidePosY())) };
 
 			dat::Spot const centerInDet
-				{ theCamera.detectorSpotFor(centerInExt) };
+				{ theCamera.projectedSpotFor(centerInExt) };
 			dat::Spot const xMidInDet
-				{ theCamera.detectorSpotFor(xMidInExt) };
+				{ theCamera.projectedSpotFor(xMidInExt) };
 			dat::Spot const yMidInDet
-				{ theCamera.detectorSpotFor(yMidInExt) };
+				{ theCamera.projectedSpotFor(yMidInExt) };
 
 			Vector const center{ vecFrom(centerInDet) };
 			Vector const xDir{ direction(vecFrom(xMidInDet - centerInDet)) };
 			Vector const yDir{ direction(vecFrom(yMidInDet - centerInDet)) };
 
-			return img::QuadTarget{ center, xDir, yDir };
+			img::QuadTarget const imgQuad{ center, xDir, yDir };
+			return imgQuad;
 		}
 
 

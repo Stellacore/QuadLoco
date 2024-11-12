@@ -47,6 +47,57 @@ namespace
 		( std::ostream & oss
 		)
 	{
+		// [DoxyExample00]
+
+		// construct a grid of arbitrary data type
+		struct SomeType
+		{
+			// use this function in custom lambda below
+			inline
+			std::string
+			infoString
+				() const
+			{
+				return std::string("WhatEver");
+			}
+		};
+		quadloco::dat::Grid<SomeType> const someGrid(5u, 6u);
+
+		// output contents with custom formatting function
+		// note that default separator between fields is a space
+		std::ostringstream msg;
+		msg << someGrid.infoStringContents
+			( "someGrid"  // title string
+			, [] (SomeType const & element) { return element.infoString(); }
+			);
+
+		// [DoxyExample00]
+
+		std::string::size_type const end = std::string::npos;
+		std::string::size_type pos = 0;
+		std::size_t count{ 0u };
+		std::string const str{ msg.str() };
+		std::string const word{ SomeType{}.infoString() };
+		while (end != (pos = str.find("WhatEver", pos)))
+		{
+			++count;
+			pos += word.length();
+		}
+		if (! (someGrid.size() == count))
+		{
+			oss << "Failure of output cell count test\n";
+			oss << "exp: " << someGrid.size() << '\n';
+			oss << "got: " << count << '\n';
+		}
+
+	}
+
+	//! Examples for documentation
+	void
+	test1
+		( std::ostream & oss
+		)
+	{
 		// [DoxyExample01]
 
 		// general raster grid storage and access - tiny image example
@@ -64,24 +115,16 @@ namespace
 		grid(1u, 1u) = dVal;
 		grid(0u, 2u) = grid(0u, 0u);
 
-		// return move copy
+		// make a deep copy (in place of op==() or copy ctor())
 		using FGrid = quadloco::dat::Grid<float>;
-		std::function<FGrid(FGrid const &)> const copyFunc
-			{ [](FGrid const & orig)
-				{
-				FGrid copy(orig.hwSize());
-				std::copy(orig.cbegin(), orig.cend(), copy.begin());
-				return std::move(copy); // move assign
-				}
-			};
-		FGrid const copy{ copyFunc(grid) };
+		FGrid const copy{ FGrid::copyOf(grid) };
 
 		// constant iterator access
 		float const gotSum
 			{ std::accumulate(copy.cbegin(), copy.cend(), 0.f) };
 		float const expSum{ 3.f*dVal + 3.*fillVal };
 
-		// output
+		// output (ref infoStringContents() overloads for custom data types)
 		std::ostringstream ostrm;
 		ostrm << grid << '\n'; // puts grid.infoString() to stream
 		// put grid cell contents to stream
@@ -151,6 +194,7 @@ main
 	std::stringstream oss;
 
 	test0(oss);
+	test1(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

@@ -55,17 +55,18 @@ namespace
 		// Exact sampling (no oversampling or noise)
 		//
 
-		// define a quad target object
+		// simulation test configuration
 		constexpr double edgeMag{ 1. };
+		constexpr std::size_t numPix{ 2u };
+		constexpr std::size_t numOverSample{ 0u }; // 0-> no over sampling
+
+		// define a quad target object
 		quadloco::obj::QuadTarget const objQuad
 			( edgeMag
 			, quadloco::obj::QuadTarget::None
 		//	| quadloco::obj::QuadTarget::DoubleTriangle
 		//	| quadloco::obj::QuadTarget::AddSurround
 			);
-
-		constexpr std::size_t numPix{ 2u };
-		constexpr std::size_t numOverSample{ 0u }; // 0-> no over sampling
 
 		// configure camera and orientation such that
 		// camera format exactly matches the objQuad target
@@ -125,8 +126,12 @@ namespace
 	{
 		// [DoxyExample01]
 
-		// define a quad target object
+		// simulation test configuration
 		constexpr double edgeMag{ .125 };
+		constexpr std::size_t numPix{ 128u };
+		constexpr std::size_t numOverSample{ 64u }; // 0-> no over sampling
+
+		// define a quad target object
 		quadloco::obj::QuadTarget const objQuad
 			( edgeMag
 			, quadloco::obj::QuadTarget::None
@@ -136,20 +141,19 @@ namespace
 
 		// simulate image of a quad target
 
-		// configure camera to produce near identity rendering
-		quadloco::img::Camera const camera
-			{ quadloco::dat::SizeHW{ 128u, 128u }  // format
-			, double{ 128. }// principal distance (== to quad edge)
-			};
-		// exterior orientation directly above the quad target
-		double const camOriZ{ 1.125*edgeMag }; // get a bit of the surround
-		rigibra::Transform const xCamWrtQua
-			{ engabra::g3::Vector{ 0., 0., camOriZ }
-			, rigibra::identity<rigibra::Attitude>()
-			};
+		// configure camera and orientation such that
+		// camera format exactly matches the objQuad target
+		quadloco::sim::Config const config
+			{ quadloco::sim::Config::faceOn(objQuad, numPix) };
 
-		// render simulated image and ...
-		quadloco::sim::Render const render(camera, xCamWrtQua, objQuad);
+
+		// render result
+		using opt = quadloco::sim::Sampler::OptionFlags;
+		quadloco::sim::Render const render
+			( config
+			, opt::None // no SceneBias nor ImageNoise
+			);
+
 		quadloco::dat::Grid<float> const fGrid{ render.quadImage() };
 		// ... retrieve geometry of the simulated image
 		quadloco::img::QuadTarget const imgQuad{ render.imgQuadTarget() };

@@ -30,8 +30,10 @@
 
 #include "datGrid.hpp"
 #include "io.hpp"
+#include "prbquad.hpp"
 #include "simConfig.hpp"
 #include "sim.hpp"
+#include "simRender.hpp"
 #include "simSampler.hpp"
 
 #include <iostream>
@@ -52,66 +54,89 @@ namespace
 		constexpr quadloco::dat::SizeHW hwChip{ 60u, 40u };
 		quadloco::obj::QuadTarget const objQuad(2.100);
 
+		quadloco::dat::SizeHW const format{ 128u, 128u };
+		double const pd{ 128. };
+		quadloco::img::Camera const camera{ format, pd };
+
 		using namespace engabra::g3;
 		using namespace rigibra;
-		std::vector<Transform> const xStaWrtQuads
-			{ Transform
-				{ Vector{ .5, -.5, 1. }
-				, Attitude{ PhysAngle{ BiVector{ .5, 0., 0. } } }
+		struct TestCase
+		{
+			Transform theStaWrtQuad{};
+			double theQuadProb{ engabra::g3::null<double>() };
+		};
+
+		std::vector<TestCase> testcases
+			{ TestCase
+				{ Transform
+					{ Vector{ .0,  .0, 1. }
+					, Attitude{ PhysAngle{ BiVector{ .0, 0., 0. } } }
+					}
+				}
+			, TestCase
+				{ Transform
+					{ Vector{ .5, -.5, 1. }
+					, Attitude{ PhysAngle{ BiVector{ .5, 0., 0. } } }
+					}
+				}
+			, TestCase
+				{ Transform
+					{ Vector{ .0,  .0, 1. }
+					, Attitude{ PhysAngle{ BiVector{ .0, 0., 1.25 } } }
+					}
 				}
 			};
-		for (rigibra::Transform const & xStaWrtQuad : xStaWrtQuads)
+
+		// run multiple test cases
+		for (TestCase & testcase : testcases)
 		{
-/*
+			std::size_t const numPix{ std::max(hwChip.high(), hwChip.wide()) };
 			quadloco::sim::Config const config
-				{ quadloco::sim::Config::toViewQuadFrom
-					(hwChip, xStaWrtQuad, objQuad)
+				{ objQuad
+				, camera
+				, testcase.theStaWrtQuad
 				};
 
-std::cout << '\n';
-std::cout << "config:\n" << config << '\n';
-std::cout << '\n';
+			// render result
+			using opt = quadloco::sim::Sampler::OptionFlags;
+			quadloco::sim::Render const render
+				( config
+				// None, UseSceneBias, UseImageNoise
+				, opt::None | opt::UseImageNoise
+				);
+			quadloco::dat::Grid<float> const pixGrid{ render.quadImage() };
+			//quadloco::io::writeStretchPGM("sample.pgm", pixGrid);
 
-			quadloco::dat::Grid<float> const fGrid
-				{ quadloco::sim::quadImage
-					(config.theCamera, config.theStaWrtQuad, objQuad)
-				};
+			// retrieve geometry of the simulated image
+			quadloco::img::QuadTarget const expImgQuad
+				{ render.imgQuadTarget() };
+			std::ostringstream msg;
+			double const quadProb
+				{ quadloco::prb::isQuadlike(pixGrid, expImgQuad, &msg) };
 
-quadloco::io::writeStretchPGM("sample.pgm", fGrid);
-*/
+			// note test case result
+			testcase.theQuadProb = quadProb;
+std::cout << "quadProb: " << engabra::g3::io::fixed(quadProb) << '\n';
 
 		}
 
-	/*
-		using engabra::g3::Vector;
-
-		quadloco::sim::Config const config
-
-	struct CamOri
-	{
-		//! Camera for rendering target
-		quadloco::img::Camera const theCamera
-			{ quadloco::dat::SizeHW{ 24u, 24u }  // format
-			, double{ 175. }// principal distance
-			};
-
-		//! Camera exterior orientation
-		Transform const theCamWrtQua
-			{ Vector{ .47, -.32, 1. } // above target
-			, Attitude{ PhysAngle{ BiVector{ .3, .4, .1} } }
-			};
-
-	}; // CamOri
-	*/
-
 		// [DoxyExample01]
 
-		// TODO replace this with real test code
-		std::string const fname(__FILE__);
-		bool const isTemplate{ (std::string::npos != fname.find("/_.cpp")) };
-		if (! isTemplate)
+		// check that all quads are more likely than not
+		bool probAll{ true };
+		for (TestCase const & testcase : testcases)
 		{
-			oss << "Failure to implement real test\n";
+			probAll &= (.5 < testcase.theQuadProb);
+		}
+
+		if (! probAll)
+		{
+			oss << "Failure of all probability test\n";
+			for (TestCase const & testcase : testcases)
+			{
+				double const & quadProb = testcase.theQuadProb;
+				oss << "quadProb:\n" << std::fixed << quadProb << '\n';
+			}
 		}
 	}
 

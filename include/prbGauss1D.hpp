@@ -27,10 +27,17 @@
 
 
 /*! \file
- * \brief Declarations for dat::Span
+ * \brief Declarations for quadloco::prb::Gauss1D
  *
  */
 
+
+#include <cmath>
+#include <iostream>
+#include <limits>
+#include <numbers>
+#include <sstream>
+#include <string>
 
 #include <Engabra>
 
@@ -38,99 +45,73 @@
 namespace quadloco
 {
 
-namespace dat
+namespace prb
 {
 
-	//! A half open interval
-	struct Span
+	//! Gaussian probability distribution in 1-dimension
+	struct Gauss1D
 	{
-		double const theBeg{ engabra::g3::null<double>() };
-		double const theEnd{ engabra::g3::null<double>() };
+		double const theMean{ std::numeric_limits<double>::quiet_NaN() };
+		double const theSigma{ std::numeric_limits<double>::quiet_NaN() };
 
-		//! True if this instance contains valid data
+		double const theCoeff{ std::numeric_limits<double>::quiet_NaN() };
+
+
+		//! Normalizing coefficient for sigma value
+		inline
+		static
+		double
+		ampForSigma
+			( double const & sigma
+			)
+		{
+			static double const rootTwoPi
+				{ std::sqrt(2. * std::numbers::pi_v<double>) };
+			return (1. / (sigma * rootTwoPi));
+		}
+
+		// Construct invalid instance
+		inline
+		explicit
+		Gauss1D
+			() = default;
+
+		//! Construct with expected mean value and standard deviation
+		inline
+		explicit
+		Gauss1D
+			( double const & mean
+			, double const & sigma
+			)
+			: theMean{ mean }
+			, theSigma{ sigma }
+			, theCoeff{ ampForSigma(sigma) }
+		{ }
+
+		//! True if this instance has valid data
 		inline
 		bool
 		isValid
 			() const
 		{
 			return
-				(  engabra::g3::isValid(theBeg)
-				&& engabra::g3::isValid(theEnd)
-				&& (theBeg < theEnd)
+				(  engabra::g3::isValid(theMean)
+				&& engabra::g3::isValid(theSigma)
 				);
 		}
 
-		//! Value at start of interval (included in span)
-		inline
-		double const &
-		min
-			() const
-		{
-			return theBeg;
-		}
-
-		//! Value at end of interval (*EX*cluded from span)
-		inline
-		double const &
-		max
-			() const
-		{
-			return theEnd;
-		}
-
-		//! Length of span
+		//! Probability density value
 		inline
 		double
-		magnitude
-			() const
-		{
-			return (theEnd - theBeg);
-		}
-
-		//! Is value in half open range: [minInclude <= value < maxExclude]?
-		inline
-		bool
-		contains
-			( double const & value
+		operator()
+			( double const & evalAt
 			) const
 		{
-			bool const inside
-				{  (! (value < theBeg))  // beg <= value
-				&&    (value < theEnd)   // value < end
-				};
-			return inside;
-		}
-
-		//! Fractional position of value within this Span (linear map)
-		inline
-		double
-		fractionAtValue
-			( double const & value
-			) const
-		{
-			double frac{ engabra::g3::null<double>() };
-			if (isValid())
-			{
-				double const delta{ value - theBeg };
-				frac = delta / magnitude();
-			}
-			return frac;
-		}
-
-		//! Value at this proprotional location within interval
-		inline
-		double
-		valueAtFraction
-			( double const & frac
-			) const
-		{
-			double value{ engabra::g3::null<double>() };
-			if (isValid())
-			{
-				double const delta{ frac * magnitude() };
-				value = theBeg + delta;
-			}
-			return value;
+			double const delta{ (evalAt - theMean) };
+			double const zVal{ delta / theSigma };
+			double const arg{ -.5 * zVal * zVal };
+			double const density{ theCoeff * std::exp(arg) };
+			return density;
 		}
 
 		//! Descriptive information about this instance.
@@ -145,15 +126,19 @@ namespace dat
 			{
 				oss << title << ' ';
 			}
-			using engabra::g3::io::fixed;
-			oss << fixed(theBeg) << ' ' << fixed(theEnd) ;
+			oss
+				<< "mean: " << engabra::g3::io::fixed(theMean)
+				<< ' '
+				<< "sigma: " << engabra::g3::io::fixed(theSigma)
+				;
+
 			return oss.str();
 		}
 
-	};
+	}; // Gauss1D
 
 
-} // [dat]
+} // [prb]
 
 } // [quadloco]
 
@@ -165,7 +150,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::Span const & item
+		, quadloco::prb::Gauss1D const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -176,12 +161,11 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::dat::Span const & item
+		( quadloco::prb::Gauss1D const & item
 		)
 	{
 		return item.isValid();
 	}
 
 } // [anon/global]
-
 
