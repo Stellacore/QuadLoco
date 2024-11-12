@@ -324,13 +324,13 @@ namespace grid
 				Type const val22{ grid(ndxRow2, ndxCol2) };
 
 				double const sclRow{ (atRow - minRow) };
-				Type const dValA{ sclRow * (val21 - val11) };
-				Type const dValB{ sclRow * (val22 - val12) };
+				Type const dValA{ (Type)(sclRow * (val21 - val11)) };
+				Type const dValB{ (Type)(sclRow * (val22 - val12)) };
 				Type const valA{ val11 + dValA };
 				Type const valB{ val12 + dValB };
 
 				double const sclCol{ (atCol - minCol) };
-				Type const dVal0{ sclCol * (valB - valA) };
+				Type const dVal0{ (Type)(sclCol * (valB - valA)) };
 				Type const val0{ dVal0 + valA };
 				value = val0;
 			}
