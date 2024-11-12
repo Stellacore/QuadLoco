@@ -1,3 +1,4 @@
+
 //
 // MIT License
 //
@@ -27,12 +28,24 @@
 
 
 /*! \file
- * \brief Top level include for quadloco:: namespace and QuadLoco project.
+ * \brief Top level file for quadloco::prb namespace
  *
- * Convenience header name that includes "QuadLoco.hpp"
  */
 
 
-#include "QuadLoco.hpp"
+// #include "TODO.hpp"
 
+
+namespace quadloco
+{
+
+/*! \brief Namespaced functions and utilities for probabilty computations
+ */
+namespace prb
+{
+
+
+} // [prb]
+
+} // [quadloco]
 

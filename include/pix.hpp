@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for pixel data and functions
+ * \brief Top level file for quadloco::pix namespace
  *
  */
 
@@ -43,7 +43,7 @@
 namespace quadloco
 {
 
-/*! \brief TODO
+/*! \brief Namespaced functions and utilities for pixel (dat::Grid) elements.
  */
 namespace pix
 {

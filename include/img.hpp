@@ -27,12 +27,24 @@
 
 
 /*! \file
- * \brief Top level include for quadloco:: namespace and QuadLoco project.
+ * \brief Top level file for quadloco::img namespace
  *
- * Convenience header name that includes "QuadLoco.hpp"
  */
 
 
-#include "QuadLoco.hpp"
+// #include "TODO.hpp"
 
+
+namespace quadloco
+{
+
+/*! \brief Namespaced functions for working with (perspective) image geometries
+ */
+namespace img
+{
+
+
+} // [img]
+
+} // [quadloco]
 

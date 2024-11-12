@@ -37,6 +37,7 @@
 #include "imgQuadTarget.hpp"
 #include "pixGradel.hpp"
 #include "pixgrid.hpp"
+#include "prbStats.hpp"
 
 #include <limits>
 #include <vector>
@@ -47,233 +48,6 @@ namespace quadloco
 
 namespace prb
 {
-	//! Tracking class to monitor min/max of multiple collections
-	template <typename Type>
-	class Stats
-	{
-		std::size_t theCount{ 0u };
-		Type theSum{ 0 };
-		Type theMin{ std::numeric_limits<Type>::max() };
-		Type theMax{ std::numeric_limits<Type>::lowest() };
-
-	public:
-
-		//! Default construction (empty content) - use consider() to update
-		inline
-		Stats
-			() = default;
-
-		//! Construct by considering this collection
-		template <typename FwdIter>
-		inline
-		Stats
-			( FwdIter const & beg
-			, FwdIter const & end
-			)
-		{
-			consider(beg, end);
-		}
-
-		//! Smallest element considered
-		inline
-		Type const &
-		min
-			() const
-		{
-			return theMin;
-		}
-
-		//! Smallest element considered
-		inline
-		Type
-		mean
-			() const
-		{
-			Type result{ pix::null<Type>() };
-			if (0u < theCount)
-			{
-				result = (Type)((1./(double)theCount) * theSum);
-			}
-			return result;
-		}
-
-		//! Largest element considered
-		inline
-		Type const &
-		max
-			() const
-		{
-			return theMax;
-		}
-
-		//! Adjust the current min/max values to accomodate all samps
-		template <typename FwdIter>
-		inline
-		void
-		consider
-			( FwdIter const & beg
-			, FwdIter const & end
-			)
-		{
-			if (end != beg)
-			{
-				// update the sum
-				theSum = std::accumulate(beg, end, theSum);
-				theCount += (std::size_t)(std::distance(beg, end));
-				// update the min/max
-				std::pair<FwdIter, FwdIter>
-					const itPair{ std::minmax_element(beg, end) };
-				Type const & valMin = *(itPair.first);
-				if (valMin < theMin)
-				{
-					theMin = valMin;
-				}
-				Type const & valMax = *(itPair.second);
-				if (theMax < valMax)
-				{
-					theMax = valMax;
-				}
-			}
-		}
-
-		//! Descriptive information about this instance
-		inline
-		std::string
-		infoString
-			( std::string const & title = {}
-			) const
-		{
-			std::ostringstream oss;
-			if (! title.empty())
-			{
-				oss << title << ' ';
-			}
-			oss
-				<< "count: " << theCount
-				<< ' '
-				<< "sum: " << theSum
-				<< ' '
-				<< "min: " << min()
-				<< ' '
-				<< "mean: " << mean()
-				<< ' '
-				<< "max: " << max()
-				;
-			return oss.str();
-		}
-	};
-
-
-	/*
-	//! Average of sample values
-	template <typename Type>
-	inline
-	Type
-	mean
-		( std::vector<Type> const & samps
-		)
-	{
-		Type ave{ pix::null<Type>() };
-		constexpr Type zero{ 0 };
-		Type const sum
-			{ std::accumulate(samps.cbegin(), samps.cend(), zero) };
-		if (! samps.empty()) // need at least one sample for average
-		{
-			double count{ (double)samps.size() };
-			ave = (Type)((1./count) * sum);
-		}
-		return ave;
-	}
-	*/
-
-	//! Standard deviation of sample values about given mean
-	template <typename Type>
-	inline
-	Type
-	deviation
-		( std::vector<Type> const & samps
-		, Type const & mean
-		)
-	{
-		Type dev{ pix::null<Type>() };
-		if (1u < samps.size()) // need at least one sample for average
-		{
-			Type sumSq{ 0 };
-			for (std::size_t nn{0u} ; nn < samps.size() ; ++nn)
-			{
-				Type const dev{ samps[nn] - mean };
-				sumSq = sumSq + (dev * dev);
-			}
-			double const dof{ (double)(samps.size() - 1u ) };
-			dev = std::sqrt((Type)((1./dof) * sumSq));
-		}
-		return dev;
-	}
-
-	/*
-	//! Average of sample values
-	template <typename Type>
-	inline
-	std::pair<Type, Type>
-	minmax
-		( std::vector<Type> const & samps
-		)
-	{
-		Stats<Type> minmax;
-		minmax.consider(samps.cbegin(), samps.cend());
-		return { minmax.min(), minmax.max() };
-	}
-	*/
-
-	/*
-	//! Sample statistics
-	template <typename Type>
-	struct SampStats
-	{
-		Stats<Type> theStats;
-		Type theDev;
-
-		//! Construct from sample values
-		inline
-		SampStats
-			( std::vector<Type> const & samps
-			)
-			: theStats{ Stats<Type>(samps.cbegin(), samps.cend()) }
-			, theDev{ deviation(samps, theStats.mean()) }
-		{ }
-
-	}; // SampStats
-	*/
-
-
-	//! Show information about sample values
-	template <typename Type>
-	inline
-	void
-	showSampsReal
-		( std::vector<Type> const & samps
-		, Stats<Type> const & stats
-		, std::string const & title
-		)
-	{
-		std::cout << title << '\n';
-		std::cout << "---size: (" << samps.size() << ")\n";
-
-		std::cout << "...";
-		for (std::size_t nn{0u} ; nn < samps.size() ; ++nn)
-		{
-			std::cout << ' ' << samps[nn];
-		}
-
-		Type const dev{ deviation(samps, stats.mean()) };
-
-		std::cout << '\n';
-		std::cout << "...min: " << stats.min() << '\n';
-		std::cout << "...ave: " << stats.mean() << '\n';
-		std::cout << "...max: " << stats.max() << '\n';
-		std::cout << "...dev: " << dev << '\n';
-	}
-
 	//! Samples drawn from symmetry radii of quad squares
 	template <typename Type>
 	struct SquareRadiiSamples
@@ -571,7 +345,7 @@ namespace prb
 					strData << "==== quadProb: " << quadProb << '\n';
 
 				}
-				else
+				else // std::abs(sigMag) < epsilon
 				{
 					strMsg << "small signal distinction\n";
 					strMsg << "sigMag: "  << sigMag << '\n';
@@ -579,7 +353,7 @@ namespace prb
 					strMsg << "meanFore: "  << meanFore << '\n';
 				}
 			}
-			else
+			else // std::abs(rangeAll) < epsilon
 			{
 				strMsg << "small overall data range\n";
 				strMsg << "rangeAll: "  << rangeAll << '\n';
@@ -587,19 +361,8 @@ namespace prb
 				strMsg << "maxAll: "  << maxAll << '\n';
 				strMsg << "statsAll: " << stats.theAll.infoString() << '\n';
 			}
-
-			/*
-			std::cout << '\n';
-			showSampsReal(radSamps.thePPs, stats.thePP, "\npp");
-			showSampsReal(radSamps.theNPs, stats.theNP, "\nnp");
-			showSampsReal(radSamps.theNNs, stats.theNN, "\nnn");
-			showSampsReal(radSamps.thePNs, stats.thePN, "\npn");
-			showSampsReal(radSamps.allSamps(), stats.theAll, "\nall");
-			*/
-
-
 		}
-		else
+		else // if (radSamps.isSignificant())
 		{
 			strMsg << "Insufficient number or radial samples\n";
 			strMsg << "radSamps: " << radSamps.infoString() << '\n';

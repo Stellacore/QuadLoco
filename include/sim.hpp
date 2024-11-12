@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Simulation namespace top level header.
+ * \brief Top level file for quadloco::sim namespace
  *
  */
 
@@ -38,7 +38,7 @@
 namespace quadloco
 {
 
-/*! \brief Functions and utilities for supporting simulation
+/*! \brief Namespaced functions and utilities for data simulation
  */
 namespace sim
 {

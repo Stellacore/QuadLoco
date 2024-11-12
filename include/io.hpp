@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for input/output functions and utilities
+ * \brief Top level file for quadloco::io namespace
  *
  */
 
@@ -43,7 +43,7 @@
 namespace quadloco
 {
 
-/*! \brief Functions and utilities for supporting Input/Output.
+/*! \brief Namespaced functions and utilities for supporting Input/Output.
  */
 namespace io
 {
