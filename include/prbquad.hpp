@@ -103,7 +103,7 @@ namespace prb
 		max
 			() const
 		{
-			return theMin;
+			return theMax;
 		}
 
 		//! Adjust the current min/max values to accomodate all samps
@@ -134,6 +134,32 @@ namespace prb
 					theMax = valMax;
 				}
 			}
+		}
+
+		//! Descriptive information about this instance
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "count: " << theCount
+				<< ' '
+				<< "sum: " << theSum
+				<< ' '
+				<< "min: " << min()
+				<< ' '
+				<< "mean: " << mean()
+				<< ' '
+				<< "max: " << max()
+				;
+			return oss.str();
 		}
 	};
 
@@ -258,6 +284,23 @@ namespace prb
 		std::vector<Type> theNNs{};  // BL square
 		std::vector<Type> thePNs{};  // BR square
 
+
+		//! True if each radii contains at least this many samples
+		inline
+		bool
+		isSignificant
+			( std::size_t const & minNum = 2u
+			) const
+		{
+			bool const tooFew
+				{  (thePPs.size() < minNum)
+				&& (theNPs.size() < minNum)
+				&& (theNNs.size() < minNum)
+				&& (thePNs.size() < minNum)
+				};
+			return (! tooFew);
+		}
+
 		//! Extract samples from grid based on imgQuad geometry
 		inline
 		static
@@ -377,6 +420,25 @@ namespace prb
 			return allVals;
 		}
 
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss << "counts: "
+				<< " PP: " << thePPs.size()
+				<< " NP: " << theNPs.size()
+				<< " NN: " << theNNs.size()
+				<< " PN: " << thePNs.size()
+				;
+			return oss.str();
+		}
 
 	}; // SquareRadiiSamples
 
@@ -432,33 +494,129 @@ namespace prb
 	isQuadlike
 		( dat::Grid<Type> const & pixGrid
 		, img::QuadTarget const & imgQuad
+		, std::ostream * const & ptMessages = nullptr
 		)
 	{
+		double quadProb{ 0. };
+		std::ostringstream strMsg;
+		std::ostringstream strData;
+
 		// sample grid along square symmetry radii
 		SquareRadiiSamples<Type> const radSamps
 			{ SquareRadiiSamples<Type>::from(pixGrid, imgQuad) };
 
-		// compute statistics for the samples
-		QuadSampleStats<Type> const stats
-			{ QuadSampleStats<Type>::from(radSamps) };
+		if (radSamps.isSignificant())
+		{
+			// compute statistics for the samples
+			QuadSampleStats<Type> const stats
+				{ QuadSampleStats<Type>::from(radSamps) };
 
-		// use samples to estimate "quadness"
+			// use statistics to estimate "quadness"
+
+			// check for variation of any kind (e.g. not null or const grid)
+			Type const minAll{ stats.theAll.min() };
+			Type const maxAll{ stats.theAll.max() };
+			Type const rangeAll{ maxAll - minAll };
+
+			strData << "@@@@ statsAll: " << stats.theAll.infoString() << '\n';
+			strData << "@@@@ minAll: " << minAll << '\n';
+			strData << "@@@@ maxAll: " << maxAll << '\n';
+			strData << "@@@@ rangeAll: " << rangeAll << '\n';
+
+			if (std::numeric_limits<Type>::epsilon() < std::abs(rangeAll))
+			{
+				Type const meanPP{ stats.thePP.mean() };
+				Type const meanNP{ stats.theNP.mean() };
+				Type const meanNN{ stats.theNN.mean() };
+				Type const meanPN{ stats.thePN.mean() };
+				Type const meanBack{ (Type)(.5 * (meanPP + meanNN)) };
+				Type const meanFore{ (Type)(.5 * (meanNP + meanPN)) };
+
+				// check overall signal
+				Type const sigMag{ meanFore - meanBack };
+
+				strData << "#### meanPP: " << meanPP << '\n';
+				strData << "#### meanNP: " << meanNP << '\n';
+				strData << "#### meanNN: " << meanNN << '\n';
+				strData << "#### meanPN: " << meanPN << '\n';
+				strData << "#### meanBack: " << meanBack << '\n';
+				strData << "#### meanFore: " << meanFore << '\n';
+				strData << "#### sigMag: " << sigMag << '\n';
+
+				if (std::numeric_limits<Type>::epsilon() < std::abs(sigMag))
+				{
+					Type const invRange{ (Type)(1. / rangeAll) };
+					Type const invSigMag{ (Type)(1. / sigMag) };
+
+					// pseudoProb that signal is significant
+					Type const fracSig{ invRange * (meanFore - meanBack) };
+
+					// pseudoProb that foreground squares are uniform
+					Type const argBack{ invSigMag * (meanPP - meanNN) };
+					Type const argFore{ invSigMag * (meanNP - meanPN) };
+
+					// NOTE: Code assumes 'real' type (e.g. not complex, etc)
+
+					Type const probBack{ std::exp(-(argBack*argBack)) };
+					Type const probFore{ std::exp(-(argFore*argFore)) };
+
+					// pseudo-voodoo
+					quadProb = fracSig * probBack * probFore;
+
+					strData << "==== invRange: " << invRange << '\n';
+					strData << "==== invSigMag: " << invSigMag << '\n';
+					strData << "==== fracSig: " << fracSig << '\n';
+					strData << "==== argBack: " << argBack << '\n';
+					strData << "==== argFore: " << argFore << '\n';
+					strData << "==== quadProb: " << quadProb << '\n';
+
+				}
+				else
+				{
+					strMsg << "small signal distinction\n";
+					strMsg << "sigMag: "  << sigMag << '\n';
+					strMsg << "meanBack: "  << meanBack << '\n';
+					strMsg << "meanFore: "  << meanFore << '\n';
+				}
+			}
+			else
+			{
+				strMsg << "small overall data range\n";
+				strMsg << "rangeAll: "  << rangeAll << '\n';
+				strMsg << "maxAll: "  << maxAll << '\n';
+				strMsg << "maxAll: "  << maxAll << '\n';
+				strMsg << "statsAll: " << stats.theAll.infoString() << '\n';
+			}
+
+			/*
+			std::cout << '\n';
+			showSampsReal(radSamps.thePPs, stats.thePP, "\npp");
+			showSampsReal(radSamps.theNPs, stats.theNP, "\nnp");
+			showSampsReal(radSamps.theNNs, stats.theNN, "\nnn");
+			showSampsReal(radSamps.thePNs, stats.thePN, "\npn");
+			showSampsReal(radSamps.allSamps(), stats.theAll, "\nall");
+			*/
 
 
-std::cout << '\n';
-showSampsReal(radSamps.thePPs, stats.thePP, "\npp");
-showSampsReal(radSamps.theNPs, stats.theNP, "\nnp");
-showSampsReal(radSamps.theNNs, stats.theNN, "\nnn");
-showSampsReal(radSamps.thePNs, stats.thePN, "\npn");
-showSampsReal(radSamps.allSamps(), stats.theAll, "\nall");
+		}
+		else
+		{
+			strMsg << "Insufficient number or radial samples\n";
+			strMsg << "radSamps: " << radSamps.infoString() << '\n';
+		}
 
+		// if something went wrong, append data values to message string
+		if (! strMsg.str().empty())
+		{
+			strMsg << "DataValues\n" << strData.str();
+		}
 
+		if (ptMessages)
+		{
+			(*ptMessages) << strMsg.str() << '\n';
+		}
 
-		// edge groups should exhibit rotational symmetry
-
-		// flat groups should exhibit +-+- symmetry
-
-		return .0; // TODO
+		return quadProb;
 	}
 
 

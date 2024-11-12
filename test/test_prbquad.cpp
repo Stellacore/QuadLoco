@@ -82,18 +82,13 @@ namespace
 		// retrieve geometry of the simulated image
 		quadloco::img::QuadTarget const expImgQuad{ render.imgQuadTarget() };
 
-std::cout << "expImgQuad: " << expImgQuad << '\n';
-
 		// for this test, assume the found geometry is perfect
 		quadloco::img::QuadTarget const & gotImgQuad = expImgQuad;
 
-		double const probQuad
-			{ quadloco::prb::isQuadlike(pixGrid, gotImgQuad) };
-
-std::cout << pixGrid.infoStringContents("pixGrid:", "%6.3f") << '\n';
-std::cout << "probQuad: " << probQuad << '\n';
-
 		// assess the quadness of pixels w.r.t. the estimated "found" geometry
+		std::ostringstream msg; // diagnostic info
+		double const probQuad
+			{ quadloco::prb::isQuadlike(pixGrid, gotImgQuad, &msg) };
 
 		// [DoxyExample01]
 
@@ -102,8 +97,10 @@ std::cout << "probQuad: " << probQuad << '\n';
 		if (! isQuad)
 		{
 			oss << "Failure of isQuad test\n";
-			oss << "probQuad: " << probQuad << '\n';
 			oss << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
+			oss << "expImgQuad: " << expImgQuad << '\n';
+			oss << "probQuad: " << probQuad << '\n';
+			oss << "msg: " << msg.str() << '\n';
 		}
 
 	}
