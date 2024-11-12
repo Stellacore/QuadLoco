@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::TODO
+\brief Unit tests (and example) code for quadloco::dat::Fence
 */
 
 
-#include "_.hpp" // template for header files
+#include "datFence.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -38,21 +38,39 @@ namespace
 {
 	//! Examples for documentation
 	void
-	test1
+	test0
 		( std::ostream & oss
 		)
 	{
 		// [DoxyExample01]
 
+		quadloco::dat::Fence<int> fence;
+		fence.include(3);
+		fence.include(7);
+		fence.include(-5);
+
+		int const expMin{ -5 };
+		int const expMax{  7 };
+		int const gotMin{ fence.min() };
+		int const gotMax{ fence.max() };
+
 		// [DoxyExample01]
 
-		// TODO replace this with real test code
-		std::string const fname(__FILE__);
-		bool const isTemplate{ (std::string::npos != fname.find("/_.cpp")) };
-		if (! isTemplate)
+		if (! (gotMin == expMin))
 		{
-			oss << "Failure to implement real test\n";
+			oss << "Failure of fence min test\n";
+			oss << "exp: " << expMin << '\n';
+			oss << "got: " << gotMin << '\n';
+			oss << "fence: " << fence << '\n';
 		}
+		if (! (gotMax == expMax))
+		{
+			oss << "Failure of fence max test\n";
+			oss << "exp: " << expMax << '\n';
+			oss << "got: " << gotMax << '\n';
+			oss << "fence: " << fence << '\n';
+		}
+
 	}
 
 }
@@ -65,8 +83,7 @@ main
 	int status{ 1 };
 	std::stringstream oss;
 
-//	test0(oss);
-	test1(oss);
+	test0(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

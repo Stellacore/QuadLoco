@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::TODO
+\brief Unit tests (and example) code for quadloco::dat::RowCol
 */
 
 
-#include "_.hpp" // template for header files
+#include "datRowCol.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -38,26 +38,48 @@ namespace
 {
 	//! Examples for documentation
 	void
-	test1
+	test0
 		( std::ostream & oss
 		)
 	{
 		// [DoxyExample01]
 
+		// location in (row,col) order
+		quadloco::dat::RowCol const rcOrig{ 100u, 200u };
+
+		// output operator
+		std::ostringstream msg;
+		msg << rcOrig << '\n';
+
+		// copy
+		quadloco::dat::RowCol const rcCopy{ rcOrig };
+
+		// can test (exact) equality
+		bool const copyIsSame{ rcOrig == rcCopy };
+
 		// [DoxyExample01]
 
-		// TODO replace this with real test code
-		std::string const fname(__FILE__);
-		bool const isTemplate{ (std::string::npos != fname.find("/_.cpp")) };
-		if (! isTemplate)
+		if (! (rcCopy.row() == rcOrig.theRowCol[0]))
 		{
-			oss << "Failure to implement real test\n";
+			oss << "Failure of row() test\n";
+		}
+
+		if (! (rcCopy.col() == rcOrig.theRowCol[1]))
+		{
+			oss << "Failure of col() test\n";
+		}
+
+		if (! copyIsSame)
+		{
+			oss << "Failure of copyIsSame test\n";
+			oss << "rcOrig: " << rcOrig << '\n';
+			oss << "rcCopy: " << rcCopy << '\n';
 		}
 	}
 
 }
 
-//! Standard test case main wrapper
+//! Check behavior of NS
 int
 main
 	()
@@ -65,8 +87,7 @@ main
 	int status{ 1 };
 	std::stringstream oss;
 
-//	test0(oss);
-	test1(oss);
+	test0(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

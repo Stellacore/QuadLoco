@@ -24,14 +24,16 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::TODO
+\brief Unit tests (and example) code for quadloco::prb::Gauss1D
 */
 
 
-#include "_.hpp" // template for header files
+#include "prbGauss1D.hpp"
 
 #include <iostream>
 #include <sstream>
+
+#include <Engabra>
 
 
 namespace
@@ -44,15 +46,45 @@ namespace
 	{
 		// [DoxyExample01]
 
+		// expected Gaussian probability density function 
+		constexpr double mean{ 17. };
+		constexpr double sigma{ 5. };
+		quadloco::prb::Gauss1D const pdfNormal(mean, sigma);
+
+		// at the mean value, the exp factor is 1 and value is leading constant
+		constexpr double pi{ std::numbers::pi_v<double> };
+		double const expAtMean { 1./(sigma * std::sqrt(2.*pi)) };
+		double const gotAtMean{ pdfNormal(mean) };
+
+		// and unit area under curve
+		constexpr double expSum{ 1. };
+		double gotSum{ 0. }; // e.g. Riemann sum as approximation for test
+		constexpr double delVal{ 1./1024./1024. };
+		constexpr double minVal{ mean - 7.*sigma };
+		constexpr double maxVal{ mean + 7.*sigma };
+		for (double atVal{minVal} ; atVal < maxVal ; atVal += delVal)
+		{
+			gotSum += delVal * pdfNormal(atVal);
+		}
+
 		// [DoxyExample01]
 
-		// TODO replace this with real test code
-		std::string const fname(__FILE__);
-		bool const isTemplate{ (std::string::npos != fname.find("/_.cpp")) };
-		if (! isTemplate)
+		if (! engabra::g3::nearlyEquals(gotAtMean, expAtMean))
 		{
-			oss << "Failure to implement real test\n";
+			oss << "Failure of pdf at mean test\n";
+			oss << "exp: " << expAtMean << '\n';
+			oss << "got: " << gotAtMean << '\n';
 		}
+
+		double const tol{ delVal };
+		if (! engabra::g3::nearlyEquals(gotSum, expSum, tol))
+		{
+			using engabra::g3::io::fixed;
+			oss << "Failure of cumulative pdf sum test\n";
+			oss << "exp: " << fixed(expSum) << '\n';
+			oss << "got: " << fixed(gotSum) << '\n';
+		}
+
 	}
 
 }

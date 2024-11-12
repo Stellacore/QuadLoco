@@ -63,6 +63,11 @@ include(cmake/BuildFlags.cmake)
 find_package(Engabra REQUIRED NO_MODULE)
 message(Engabra Found: ${Engabra_FOUND})
 message(Engabra Version: ${Engabra_VERSION})
+
+find_package(Rigibra REQUIRED NO_MODULE)
+message(Rigibra Found: ${Rigibra_FOUND})
+message(Rigibra Version: ${Rigibra_VERSION})
+
 message("### CMAKE_MAJOR_VERSION: " ${CMAKE_MAJOR_VERSION})
 message("### CMAKE_MINOR_VERSION: " ${CMAKE_MINOR_VERSION})
 message("### CMAKE_PATCH_VERSION: " ${CMAKE_PATCH_VERSION})

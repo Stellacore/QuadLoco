@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::TODO
+\brief Unit tests (and example) code for quadloco::dat::Area
 */
 
 
-#include "_.hpp" // template for header files
+#include "datArea.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -38,20 +38,63 @@ namespace
 {
 	//! Examples for documentation
 	void
-	test1
+	test0
 		( std::ostream & oss
 		)
 	{
 		// [DoxyExample01]
 
+		// null area
+		quadloco::dat::Area const nullArea{};
+		bool const nullIsOkay{ (false == nullArea.isValid()) };
+
+		//! construct from two Spans
+		quadloco::dat::Span const span0{ 17., 19. };
+		quadloco::dat::Span const span1{ 23., 29. };
+		quadloco::dat::Area const anArea{ span0, span1 };
+
+		// stream output
+		std::ostringstream msg;
+		msg << anArea << '\n';
+
+		// the 'containing rules' are those of dat::Span independently
+		quadloco::dat::Spot const spotIn{ 18., 24. };
+		quadloco::dat::Spot const spotOut0{ 16., 24. };
+		quadloco::dat::Spot const spotOut1{ 18., 30. };
+		bool const expContainsA{ true };
+		bool const gotContainsA{ anArea.contains(spotIn) };
+		bool const expContainsB{ false };
+		bool const gotContainsB{ anArea.contains(spotOut0) };
+		bool const expContainsC{ false };
+		bool const gotContainsC{ anArea.contains(spotOut1) };
+
 		// [DoxyExample01]
 
-		// TODO replace this with real test code
-		std::string const fname(__FILE__);
-		bool const isTemplate{ (std::string::npos != fname.find("/_.cpp")) };
-		if (! isTemplate)
+		if (! nullIsOkay)
 		{
-			oss << "Failure to implement real test\n";
+			oss << "Failure of nullIsOkay test\n";
+			oss << "nullArea: " << nullArea << '\n';
+		}
+
+		if ( msg.str().empty())
+		{
+			oss << "Failure of op<<() content test\n";
+		}
+
+		bool const okayContains
+			{  (gotContainsA == expContainsA)
+			&& (gotContainsB == expContainsB)
+			&& (gotContainsC == expContainsC)
+			};
+		if (! okayContains)
+		{
+			oss << "Failure of contains test\n";
+			oss << "expContainsA: " << expContainsA << '\n';
+			oss << "expContainsB: " << expContainsB << '\n';
+			oss << "expContainsC: " << expContainsC << '\n';
+			oss << "gotContainsA: " << gotContainsA << '\n';
+			oss << "gotContainsB: " << gotContainsB << '\n';
+			oss << "gotContainsC: " << gotContainsC << '\n';
 		}
 	}
 
@@ -65,8 +108,7 @@ main
 	int status{ 1 };
 	std::stringstream oss;
 
-//	test0(oss);
-	test1(oss);
+	test0(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{
