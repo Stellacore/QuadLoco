@@ -29,23 +29,24 @@ set(unitTests
 	test_Version  # test project version info retrieval
 
 #	test_Quadlike  # assess the "quadness" of a pixel sampling
-	test_datFence  # bounding region determination
 	test_datArea  # a 2D range of values
 	test_datChipSpec  # a 2D sub region of a larger area
+	test_datFence  # bounding region determination
 	test_datGrid  # general raster grid storage and access
 	test_datRowCol  # discete raster cell locations
 	test_datSizeHW  # basic "high/wide" area boundary (half open)
 	test_datSpan  # half open interval (include start, excludes end)
 	test_datSpot  # 'continuous' raster cell locations
+	test_fndHoughAD  # location via Hough alpha-delta parameter space
 	test_imgCamera  # simplified ideal perspective camera
-	test_io  # basic i/o support (e.g. pgm images)
-	test_prbGauss1D  # Gaussian probability density functions in 1D
-	test_prbquad  # probabilitic assessor of quad target pixel patterns
 	test_imgQuadTarget  # represent perspective image of obj::QuadTarget
+	test_io  # basic i/o support (e.g. pgm images)
 	test_objQuadTarget  # represent physical target object
-	test_pix  # pixel image manipulations
 	test_pixGradel  # pixel Gradent element type and functions
 	test_pixgrid  # pixel/grid functions (e.g. image processing)
+	test_pix  # pixel image manipulations
+	test_prbGauss1D  # Gaussian probability density functions in 1D
+	test_prbquad  # probabilitic assessor of quad target pixel patterns
 	test_simRender  # simulation of perspective images of quad target
 	test_simSampler  # simulation of image intensity sampling
 
