@@ -76,7 +76,7 @@ namespace quadloco
 namespace prb
 {
 
-	//! TODO
+	//! TODO -- Experimental Code -- TODO
 	struct Sorter
 	{
 		Gauss1D const theFlatProbs{};
@@ -197,7 +197,7 @@ namespace quadloco
 namespace prb
 {
 
-	//! TODO
+	//! TODO -- Experimental Code -- TODO
 	struct QuadStats
 	{
 		dat::Grid<Edge> const theEdgeGrads{};

@@ -50,7 +50,7 @@ namespace quadloco
 namespace sim
 {
 
-	/*! Configuration information needed to simulation an image of QuadTarget
+	/*! \brief Configuration info needed to simulate a QuadTarget image
 	 *
 	 * \snippet test_simSampler.cpp DoxyExample01
 	 */
