@@ -36,6 +36,7 @@
 
 #include <Engabra>
 
+#include <format>
 #include <iostream>
 #include <limits>
 #include <sstream>
@@ -60,6 +61,30 @@ namespace pix
 			{ engabra::g3::null<float>()
 			, engabra::g3::null<float>()
 			};
+
+	public: // static functions
+
+		//! Functor for formatting Gradel data into a string
+		struct Formatter
+		{
+			//! std::format to apply to each of the two theComps
+			std::string const theFormatEach{ "{:4.1f}" };
+
+			inline
+			std::string
+			operator()
+				( Gradel const & elem
+				) const
+			{
+				std::ostringstream fmt;
+				fmt << '(' << theFormatEach << ',' << theFormatEach << ')';
+				return std::vformat
+					( fmt.str()
+					, std::make_format_args(elem[0], elem[1])
+					);
+			}
+
+		}; // Formatter
 
 	public:
 
