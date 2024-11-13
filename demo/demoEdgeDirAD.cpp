@@ -94,7 +94,7 @@ main
 	constexpr double da{ 1./512. * (endAlpha - begAlpha) };
 
 	// loop over length of arc on bounding circle
-	static std::string const fname("/tmp/demoEdgeDir_foo.dat");
+	static std::string const fname("/tmp/foo_demoEdgeDirAD.dat");
 	std::ofstream ofs(fname);
 	for (double delta{begDelta} ; delta < endDelta ; delta += da)
 	{
