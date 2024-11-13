@@ -1283,37 +1283,43 @@ status open
 \begin_layout Plain Layout
 \begin_inset CommandInset label
 LatexCommand label
-name "fig:Line-segment-direction"
+name "fig:Edge-Gradient-direction"
 
 \end_inset
 
-Line segment direction encoding in Hough space.
- The horizontal axis represents the start of segment angle, 
+Direction of pixel edge gradient, 
+\begin_inset Formula $\hat{g}$
+\end_inset
+
+, associated with 
+\begin_inset Formula $\alpha$
+\end_inset
+
+,
+\begin_inset Formula $\delta$
+\end_inset
+
+ encoding in Hough space.
+ The horizontal axis represents the Hough space start angle parameter, 
 \begin_inset Formula $\alpha:-\pi\le\alpha<\pi$
 \end_inset
 
-, while the vertical axis represent the relative difference angle, 
+, while the vertical axis represent the Hough space relative difference
+ angle, 
 \begin_inset Formula $\delta:0\le\delta<2\pi$
 \end_inset
 
 .
- The colors represent the cosine of the magnitude of the 
-\begin_inset Formula $e_{1}$
+ The colors represent the cosine of the gradient directions - i.e.
+ 
+\begin_inset Formula $\hat{g}\cdot e_{1}$
 \end_inset
 
- component (left image) and the 
-\begin_inset Formula $e_{2}$
+ in the left image and 
+\begin_inset Formula $\hat{g}\cdot e_{2}$
 \end_inset
 
- component (right image) of the line direction vector, 
-\begin_inset Formula $d$
-\end_inset
-
-, that is recovered at each 
-\begin_inset Formula $\left(\alpha,\delta\right)$
-\end_inset
-
- location on the graph.
+ in the right image.
 \end_layout
 
 \end_inset
@@ -1340,7 +1346,7 @@ A short program to check edge direction for line segments associated with
 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "fig:Line-segment-direction"
+reference "fig:Edge-Gradient-direction"
 plural "false"
 caps "false"
 noprefix "false"
@@ -1350,13 +1356,31 @@ noprefix "false"
 .
 \end_layout
 
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+TODO
+\end_layout
+
+\end_inset
+
+/TBD Sample 
+\begin_inset Formula $\alpha,\delta$
+\end_inset
+
+ spaces for various line images
+\end_layout
+
 \begin_layout Section
 Observations and Conclusions
 \end_layout
 
 \begin_layout Standard
 Based on initial simulation results described above, the circle point parameter
- representation is very promising and should be explored further.
+ representation is appropriate for line segment representation in raster
+ data samples.
 \end_layout
 
 \begin_layout Subsection
@@ -1381,6 +1405,42 @@ The importance of this last point is readily explained in terms of the four
 d with the same parameters.
  In this circle formulation, the two different edge directions are encoded
  as two different points.
+\end_layout
+
+\begin_layout Subsection
+Computations Complexity
+\end_layout
+
+\begin_layout Standard
+One downside is that the computations are somewhat more complex than various
+ linear parameter formulations.
+ For this present case, arc tangent (or complex logarithms) are needed to
+ extract the angular parameters from vector data.
+ In the other direction trigonometric cosine and sine functions must be
+ evaluated.
+\end_layout
+
+\begin_layout Subsection
+Phase Wrapping
+\end_layout
+
+\begin_layout Standard
+The cyclical nature of angular parameters require that implementations address
+ data wrap around at the borders of parameters space.
+ However, judious selection of the branch cut for parameters 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ and 
+\begin_inset Formula $\delta$
+\end_inset
+
+, the longest and line segments convert to parameters within the middle
+ of parameter space.
+\end_layout
+
+\begin_layout Standard
+TODO/TBD - demonstrate this for some actual lines!
 \end_layout
 
 \begin_layout Standard
