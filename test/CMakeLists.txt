@@ -38,6 +38,7 @@ set(unitTests
 	test_datSizeHW  # basic "high/wide" area boundary (half open)
 	test_datSpan  # half open interval (include start, excludes end)
 	test_datSpot  # 'continuous' raster cell locations
+	test_datVec2D  # support for 2D vector operations
 	test_fndHoughAD  # location via Hough alpha-delta parameter space
 	test_imgCamera  # simplified ideal perspective camera
 	test_imgQuadTarget  # represent perspective image of obj::QuadTarget
