@@ -127,5 +127,20 @@ namespace
 		return ostrm;
 	}
 
+	//! True if the two items are identical (mostly for template compatibility)
+	inline
+	bool
+	nearlyEquals
+		( quadloco::dat::RowCol const & itemA
+		, quadloco::dat::RowCol const & itemB
+		, double const & tol = 0.
+		)
+	{
+		return
+			(  (itemA.row() == itemB.row())
+			&& (itemA.col() == itemB.col())
+			);
+	}
+
 } // [anon/global]
 
