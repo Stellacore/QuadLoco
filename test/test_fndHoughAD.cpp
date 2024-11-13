@@ -334,7 +334,7 @@ namespace fnd
 		//! Solutions where ray intersects circle
 		inline
 		std::pair<dat::Spot, dat::Spot>
-		spotSolutionPairFor
+		spotPairOnRay
 			( engabra::g3::Vector const & rayStart
 			, engabra::g3::Vector const & rayDir
 			) const
@@ -354,10 +354,10 @@ namespace fnd
 
 			// quadratic equation components
 			Vector const wvec{ spnt - cpnt };
-			double const bHalf{ (wvec * ddir).theSca[0] };
-			double const cc{ magSq(wvec) - rho*rho };
-			double const lamMid{ -bHalf };
-			double const radicand{ bHalf*bHalf - cc };
+			double const beta{ (wvec * ddir).theSca[0] };
+			double const gamma{ magSq(wvec) - rho*rho };
+			double const lamMid{ -beta };
+			double const radicand{ beta*beta - gamma };
 
 			// check for real roots (else return default null instances)
 			if (! (radicand < 0.))
@@ -431,10 +431,10 @@ std::cout << "alphaFor: alpha: " << alpha << '\n';
 			double const dy{ spotOnCircle[1] - circle.theCenter[1] };
 			double const delta{ (std::atan2(dy, dx) - alpha) };
 /*
-std::cout << "alphaFor: dx: " << dx << '\n';
-std::cout << "alphaFor: dy: " << dy << '\n';
-std::cout << "alphaFor: alpha: " << alpha << '\n';
-std::cout << "alphaFor: delta: " << delta << '\n';
+std::cout << "deltaFor: dx: " << dx << '\n';
+std::cout << "deltaFor: dy: " << dy << '\n';
+std::cout << "deltaFor: alpha: " << alpha << '\n';
+std::cout << "deltaFor: delta: " << delta << '\n';
 */
 			return delta;
 		}
@@ -452,16 +452,13 @@ std::cout << "alphaFor: delta: " << delta << '\n';
 			using namespace engabra::g3;
 			using dat::cast::vector;
 			Vector const rayStart{ vector(edgeLine.theAnyPntRC) };
-			Vector const rayDir{ vector(edgeLine.theGradelRC) };
+			Vector const edgeDir{ vector(edgeLine.theGradelRC) };
+			Vector const rayDir{ (edgeDir * e12).theVec };
 
 			// compute intersection points on circle
-			std::pair<dat::Spot, dat::Spot> const solnPair
-				{ ci.spotSolutionPairFor(rayStart, rayDir) };
 
-/*
-std::cout << "solnPair.1: " << solnPair.first << '\n';
-std::cout << "solnPair.2: " << solnPair.second << '\n';
-*/
+			std::pair<dat::Spot, dat::Spot> const solnPair
+				{ ci.spotPairOnRay(rayStart, rayDir) };
 
 			// compute alpha,delta values for intersection points
 			double const alpha{ alphaFor(solnPair.first, circle) };
@@ -479,7 +476,6 @@ std::cout << "solnPair.2: " << solnPair.second << '\n';
 
 			return ParmAD{ alpha, delta };
 		}
-
 
 		//! True if this instance is valid
 		inline
@@ -634,6 +630,20 @@ namespace
 		quadloco::dat::Grid<float> const pixGrid
 			{ quadloco::fnd::gridWithEdge(hwSize, expEdgeLine) };
 
+		// expected configuration
+		quadloco::fnd::Circle const circle
+			{ quadloco::fnd::Circle::circumScribing(pixGrid.hwSize()) };
+		quadloco::fnd::ParmAD const expMaxAD
+			{ quadloco::fnd::ParmAD::from(expEdgeLine, circle) };
+
+std::cout << '\n';
+std::cout << "hwSize: " << hwSize << '\n';
+std::cout << "circle: " << circle << '\n';
+std::cout << "expEdgeLine: " << expEdgeLine << '\n';
+std::cout << "expMaxAD: " << expMaxAD << '\n';
+std::cout << '\n';
+
+
 		// compute Gradel image
 		quadloco::dat::Grid<quadloco::pix::Gradel> const gradels
 			{ quadloco::pix::grid::gradelGridFor(pixGrid) };
@@ -645,17 +655,16 @@ namespace
 			{ // TODO
 			};
 
-		quadloco::fnd::Circle const circle
-			{ quadloco::fnd::Circle::circumScribing(gradels.hwSize()) };
-		quadloco::fnd::ParmAD const expMaxAD
-			{ quadloco::fnd::ParmAD::from(expEdgeLine, circle) };
-
 		// edge asociated with max AD peak
-		quadloco::fnd::EdgeLine const gotEdgeLine{};
+		quadloco::fnd::EdgeLine const gotEdgeLine
+			{ // TODO
+			};
 
+/*
 std::cout << pixGrid.infoStringContents("pixGrid", "%11.2f") << '\n';
 std::cout << gradels.infoStringContents
 	("gradels", quadloco::pix::Gradel::Formatter{}) << '\n';
+*/
 
 		// [DoxyExample01]
 
