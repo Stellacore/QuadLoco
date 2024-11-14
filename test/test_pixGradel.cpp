@@ -24,12 +24,12 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::pix::Gradel
+\brief Unit tests (and example) code for quadloco::pix::Grad
 */
 
 
 #include "datGrid.hpp"
-#include "pixGradel.hpp"
+#include "pixGrad.hpp"
 #include "pixgrid.hpp"
 
 #include <algorithm>
@@ -49,12 +49,12 @@ namespace
 		// [DoxyExample00]
 
 		// null pixel gradient element
-		quadloco::pix::Gradel const aNull{};
+		quadloco::pix::Grad const aNull{};
 		bool const expNull{ false };
 		bool const gotNull{ isValid(aNull) };
 
 		// valid pixel gradent element
-		quadloco::pix::Gradel const aOkay{ 1.25, -2.15 };
+		quadloco::pix::Grad const aOkay{ 1.25, -2.15 };
 		bool const expOkay{ true };
 		bool const gotOkay{ isValid(aOkay) };
 
