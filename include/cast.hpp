@@ -35,6 +35,7 @@
 #include "pixGradel.hpp"
 #include "datRowCol.hpp"
 #include "datSpot.hpp"
+#include "datVec2D.hpp"
 
 #include <Engabra>
 
@@ -73,6 +74,16 @@ namespace cast
 		return engabra::g3::Vector{ spot[0], spot[1], 0. };
 	}
 
+	//! Engabra Vector: [0,1] from vec[0,1], with output [2] set to zero.
+	inline
+	engabra::g3::Vector
+	vector
+		( dat::Vec2D const & vec
+		)
+	{
+		return engabra::g3::Vector{ vec[0], vec[1], 0. };
+	}
+
 	//! Engabra Vector: [0,1] from gradient element, [2] set to zero.
 	inline
 	engabra::g3::Vector
@@ -88,6 +99,7 @@ namespace cast
 	// 2D data from 3D
 	//
 
+	//! Integral values that are the std::floor values of vec[0,1]
 	inline
 	dat::RowCol
 	rowcol
@@ -100,6 +112,7 @@ namespace cast
 			};
 	}
 
+	//! The first two components, vec[0,1]
 	inline
 	dat::Spot
 	spot
@@ -109,6 +122,20 @@ namespace cast
 		return dat::Spot{ vec[0], vec[1] };
 	}
 
+	//! The first two components, vec[0,1]
+	inline
+	dat::Vec2D
+	vec2D
+		( engabra::g3::Vector const & vec
+		)
+	{
+		return dat::Vec2D
+			{ vec[0]
+			, vec[1]
+			};
+	}
+
+	//! Float cast of the first two components, vec[0,1]
 	inline
 	pix::Gradel
 	gradel
