@@ -43,7 +43,7 @@ namespace
 		)
 	{
 		using namespace quadloco;
-		constexpr dat::Vec2D const aNull{};
+		constexpr dat::Vec2D<double> const aNull{};
 		if ( isValid(aNull))
 		{
 			oss << "Failure of aNull test(0)\n";
@@ -53,25 +53,25 @@ namespace
 		// [DoxyExample00]
 	
 		using namespace quadloco::dat;
-		Vec2D const vecA{ 3., 4. };
-		Vec2D const vecB{ -4., 3. };
+		Vec2D<double> const vecA{ 3., 4. };
+		Vec2D<double> const vecB{ -4., 3. };
 
-		Vec2D const gotUnitA{ direction(vecA) };
+		Vec2D<double> const gotUnitA{ direction(vecA) };
 		double const gotMagA{ magnitude(vecA) };
 		double const gotDotAB{ dot(vecA, vecB) };
 		double const gotOuterAB{ outer(vecA, vecB) };
 
-		Vec2D const gotAddAB{ vecA + vecB };
-		Vec2D const gotSubAB{ vecA - vecB };
+		Vec2D<double> const gotAddAB{ vecA + vecB };
+		Vec2D<double> const gotSubAB{ vecA - vecB };
 
 		// [DoxyExample00]
 
 		double const expMagA{ std::hypot(3., 4.)  };
-		Vec2D const expUnitA{ (1./expMagA)*3., (1./expMagA)*4. };
+		Vec2D<double> const expUnitA{ (1./expMagA)*3., (1./expMagA)*4. };
 		double const expDotAB{ 3.*(-4.) + 4.*3. };
 		double const expOuterAB{ 3.*3. - (-4.)*4. };
-		Vec2D const expAddAB{ 3. + (-4.), 4.+3. };
-		Vec2D const expSubAB{ 3. - (-4.), 4.-3. };
+		Vec2D<double> const expAddAB{ 3. + (-4.), 4.+3. };
+		Vec2D<double> const expSubAB{ 3. - (-4.), 4.-3. };
 
 		if (! engabra::g3::nearlyEquals(gotMagA, expMagA))
 		{
@@ -107,7 +107,7 @@ namespace
 		)
 	{
 		using namespace quadloco;
-		constexpr dat::Vec2D const aNull{};
+		constexpr dat::Vec2D<float> const aNull{};
 
 		// [DoxyExample01]
 

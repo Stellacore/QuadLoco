@@ -51,13 +51,13 @@ namespace dat
 {
 
 	//! Discrete grid location in row,colum order.
-	struct Spot : public dat::Vec2D
+	struct Spot : public dat::Vec2D<double>
 	{
 		inline
 		explicit
 		Spot
 			()
-			: dat::Vec2D{}
+			: dat::Vec2D<double>{}
 		{ }
 
 		inline
@@ -66,15 +66,15 @@ namespace dat
 			( double const val0
 			, double const val1
 			)
-			: dat::Vec2D{ val0, val1 }
+			: dat::Vec2D<double>{ val0, val1 }
 		{ }
 
 		inline
 		explicit
 		Spot
-			( dat::Vec2D const vec2D
+			( dat::Vec2D<double> const vec2D
 			)
-			: dat::Vec2D{ vec2D.theData }
+			: dat::Vec2D<double>{ vec2D.theData }
 		{ }
 
 		inline

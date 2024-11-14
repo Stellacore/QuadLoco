@@ -63,14 +63,14 @@ namespace
 	rejectFromLine
 		( quadloco::dat::Spot const & loc
 		, quadloco::dat::Spot const & linePnt
-		, quadloco::dat::Vec2D const & lineDir
+		, quadloco::dat::Vec2D<double> const & lineDir
 		, double const tol = std::numeric_limits<double>::epsilon()
 		)
 	{
 		double rej{ engabra::g3::null<double>() };
 		using namespace quadloco;
 		dat::Spot const delta{ loc - linePnt };
-		dat::Vec2D const unitDir{ direction(lineDir) };
+		dat::Vec2D<double> const unitDir{ direction(lineDir) };
 		rej = dat::outer(lineDir, unitDir);
 		return rej;
 	}
@@ -102,7 +102,7 @@ namespace
 		quadloco::dat::Spot const spotOnLine
 			{ center + quadloco::dat::Spot{ dx, 0. } };
 		quadloco::pix::Gradel const gradel{ 1., 0. };
-		quadloco::dat::Vec2D const lineDir
+		quadloco::dat::Vec2D<double> const lineDir
 			{ quadloco::fnd::lineDirFromEdgeDir(gradel) };
 
 		// circle intersection with vertical line
@@ -190,7 +190,7 @@ namespace
 
 		// circle intersection with vertical line
 		quadloco::dat::CircleIntersector const intersector{ circle };
-		quadloco::dat::Vec2D const lineDir
+		quadloco::dat::Vec2D<double> const lineDir
 			{ quadloco::fnd::lineDirFromEdgeDir(gradel) };
 		std::pair<quadloco::dat::Spot, quadloco::dat::Spot> const gotPair
 			{ intersector(spotOnLine, lineDir) };

@@ -78,7 +78,7 @@ namespace cast
 	inline
 	engabra::g3::Vector
 	vector
-		( dat::Vec2D const & vec
+		( dat::Vec2D<double> const & vec
 		)
 	{
 		return engabra::g3::Vector{ vec[0], vec[1], 0. };
@@ -123,13 +123,14 @@ namespace cast
 	}
 
 	//! The first two components, vec[0,1]
+	template <typename Type>
 	inline
-	dat::Vec2D
+	dat::Vec2D<Type>
 	vec2D
 		( engabra::g3::Vector const & vec
 		)
 	{
-		return dat::Vec2D
+		return dat::Vec2D<Type>
 			{ vec[0]
 			, vec[1]
 			};

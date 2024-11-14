@@ -56,7 +56,7 @@ namespace pix
 		dat::Spot const theSpot{};
 
 		//! Direction of the (positive) gradient across the edge
-		dat::Vec2D const theGrad;
+		dat::Vec2D<double> const theGrad;
 
 
 		//! Location of this edgel
@@ -74,12 +74,12 @@ namespace pix
 
 		//! Gradient at this edgel location
 		inline
-		dat::Vec2D const &
+		dat::Vec2D<double> const &
 		gradient
 			() const
 		{
 			return theGrad;
-		//	return dat::Vec2D
+		//	return dat::Vec2D<double>
 		//		{ (double)theGrad[0]
 		//		, (double)theGrad[1]
 		//		};

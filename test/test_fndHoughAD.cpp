@@ -295,7 +295,7 @@ std::cout << "deltaFor: delta: " << delta << '\n';
 
 			// compute intersection points on circle
 
-			quadloco::dat::Vec2D const lineDir
+			quadloco::dat::Vec2D<double> const lineDir
 				{ quadloco::fnd::lineDirFromEdgeDir(edgel.theGrad) };
 
 			dat::CircleIntersector const intersector{ circle };
@@ -426,7 +426,7 @@ namespace
 		// generate grid (image) with a well defined edge
 		quadloco::pix::Edgel const expEdgel
 			{ quadloco::dat::Spot{ 3., 4. }
-			, quadloco::dat::Vec2D{ 2., 4. }
+			, quadloco::dat::Vec2D<double>{ 2., 4. }
 			};
 
 		// create an image with a strong edge

@@ -43,7 +43,7 @@ namespace fnd
 
 	//! Direction perpendicular to gradel direction in right hand sense
 	inline
-	quadloco::dat::Vec2D
+	quadloco::dat::Vec2D<double>
 	lineDirFromEdgeDir
 		( quadloco::pix::Gradel const & gradel
 		)
@@ -56,9 +56,9 @@ namespace fnd
 
 	//! Direction perpendicular to gradel direction in right hand sense
 	inline
-	quadloco::dat::Vec2D
+	quadloco::dat::Vec2D<double>
 	lineDirFromEdgeDir
-		( quadloco::dat::Vec2D const & edgeGradient
+		( quadloco::dat::Vec2D<double> const & edgeGradient
 		)
 	{
 		return

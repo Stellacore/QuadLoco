@@ -133,11 +133,12 @@ namespace
 
 		using quadloco::dat::Spot;
 		using quadloco::dat::Vec2D;
-		std::array<Vec2D, 4u> gotDiffs;
+		std::array<Vec2D<double>, 4u> gotDiffs;
 		for (std::size_t nn{0u} ; nn < 4u ; ++nn)
 		{
 			Spot const & gotCornerLoc = gotCornerLocs[nn];
-			gotDiffs[nn] = Vec2D(gotCornerLoc) - Vec2D(gotCenter);
+			gotDiffs[nn] =
+				Vec2D<double>(gotCornerLoc) - Vec2D<double>(gotCenter);
 		}
 		// Outer product structure
 		using quadloco::dat::outer;
