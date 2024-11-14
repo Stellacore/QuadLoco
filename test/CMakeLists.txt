@@ -32,6 +32,7 @@ set(unitTests
 	test_cast  # data type conversion operations
 	test_datArea  # a 2D range of values
 	test_datChipSpec  # a 2D sub region of a larger area
+	test_datCircle  # geometric circle (and line intersection)
 	test_datFence  # bounding region determination
 	test_datGrid  # general raster grid storage and access
 	test_datRowCol  # discete raster cell locations
