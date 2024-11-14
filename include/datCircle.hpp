@@ -139,7 +139,7 @@ namespace dat
 		inline
 		std::pair<dat::Spot, dat::Spot>
 		operator()
-			( dat::Spot const & linePnt
+			( dat::Vec2D<double> const & linePnt
 				//!< Any arbirary point on the line
 			, dat::Vec2D<double> const & lineDir
 				//!< Positive direction along line
