@@ -24,78 +24,56 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::dat::Vec2D
+\brief Unit tests (and example) code for quadloco::pix::Grad
 */
 
 
-#include "datVec2D.hpp"
+#include "datGrid.hpp"
+#include "pixGrad.hpp"
+#include "pixgrid.hpp"
 
+#include <algorithm>
+#include <format>
 #include <iostream>
 #include <sstream>
 
 
 namespace
 {
-	//! Examples for documentation
+	//! Check null/valid instances
 	void
 	test0
 		( std::ostream & oss
 		)
 	{
-		using namespace quadloco;
-		constexpr dat::Vec2D<double> const aNull{};
-		if ( isValid(aNull))
+		// [DoxyExample00]
+
+		// null pixel gradient element
+		quadloco::pix::Grad const aNull{};
+		bool const expNull{ false };
+		bool const gotNull{ isValid(aNull) };
+
+		// valid pixel gradent element
+		quadloco::pix::Grad const aOkay{ 1.25, -2.15 };
+		bool const expOkay{ true };
+		bool const gotOkay{ isValid(aOkay) };
+
+		// [DoxyExample00]
+
+		if (! (gotOkay == expOkay))
 		{
-			oss << "Failure of aNull test(0)\n";
+			oss << "Failure of Okay pix::Grad element test(0)\n";
+			oss << "exp: " << expOkay << '\n';
+			oss << "got: " << gotOkay << '\n';
+			oss << "aOkay: " << aOkay << '\n';
+		}
+
+		if (! (gotNull == expNull))
+		{
+			oss << "Failure of Null pix::Grad element test(0)\n";
+			oss << "exp: " << expNull << '\n';
+			oss << "got: " << gotNull << '\n';
 			oss << "aNull: " << aNull << '\n';
-		}
-
-		// [DoxyExample00]
-	
-		using namespace quadloco::dat;
-		Vec2D<double> const vecA{ 3., 4. };
-		Vec2D<double> const vecB{ -4., 3. };
-
-		Vec2D<double> const gotUnitA{ direction(vecA) };
-		double const gotMagA{ magnitude(vecA) };
-		double const gotDotAB{ dot(vecA, vecB) };
-		double const gotOuterAB{ outer(vecA, vecB) };
-
-		Vec2D<double> const gotAddAB{ vecA + vecB };
-		Vec2D<double> const gotSubAB{ vecA - vecB };
-
-		// [DoxyExample00]
-
-		double const expMagA{ std::hypot(3., 4.)  };
-		Vec2D<double> const expUnitA{ (1./expMagA)*3., (1./expMagA)*4. };
-		double const expDotAB{ 3.*(-4.) + 4.*3. };
-		double const expOuterAB{ 3.*3. - (-4.)*4. };
-		Vec2D<double> const expAddAB{ 3. + (-4.), 4.+3. };
-		Vec2D<double> const expSubAB{ 3. - (-4.), 4.-3. };
-
-		if (! engabra::g3::nearlyEquals(gotMagA, expMagA))
-		{
-			oss << "Failure of gotMagA test(0)\n";
-		}
-		if (! nearlyEquals(gotUnitA, expUnitA))
-		{
-			oss << "Failure of gotUnitA test(0)\n";
-		}
-		if (! engabra::g3::nearlyEquals(gotDotAB, expDotAB))
-		{
-			oss << "Failure of gotDotAB test(0)\n";
-		}
-		if (! engabra::g3::nearlyEquals(gotOuterAB, expOuterAB))
-		{
-			oss << "Failure of gotOuterAB test(0)\n";
-		}
-		if (! nearlyEquals(gotAddAB, expAddAB))
-		{
-			oss << "Failure of gotAddAB test(0)\n";
-		}
-		if (! nearlyEquals(gotSubAB, expSubAB))
-		{
-			oss << "Failure of gotSubAB test(0)\n";
 		}
 
 	}
@@ -106,11 +84,7 @@ namespace
 		( std::ostream & oss
 		)
 	{
-		using namespace quadloco;
-		constexpr dat::Vec2D<float> const aNull{};
-
 		// [DoxyExample01]
-
 
 		// [DoxyExample01]
 	}

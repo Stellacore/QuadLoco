@@ -63,14 +63,14 @@ namespace
 	rejectFromLine
 		( quadloco::dat::Spot const & loc
 		, quadloco::dat::Spot const & linePnt
-		, quadloco::dat::Vec2D const & lineDir
+		, quadloco::dat::Vec2D<double> const & lineDir
 		, double const tol = std::numeric_limits<double>::epsilon()
 		)
 	{
 		double rej{ engabra::g3::null<double>() };
 		using namespace quadloco;
 		dat::Spot const delta{ loc - linePnt };
-		dat::Vec2D const unitDir{ direction(lineDir) };
+		dat::Vec2D<double> const unitDir{ direction(lineDir) };
 		rej = dat::outer(lineDir, unitDir);
 		return rej;
 	}
@@ -101,9 +101,9 @@ namespace
 		constexpr double dx{ 1. };
 		quadloco::dat::Spot const spotOnLine
 			{ center + quadloco::dat::Spot{ dx, 0. } };
-		quadloco::pix::Gradel const gradel{ 1., 0. };
-		quadloco::dat::Vec2D const lineDir
-			{ quadloco::fnd::lineDirFromEdgeDir(gradel) };
+		quadloco::pix::Grad const pixGrad{ 1., 0. };
+		quadloco::dat::Vec2D<double> const lineDir
+			{ quadloco::fnd::lineDirFromEdgeDir(pixGrad) };
 
 		// circle intersection with vertical line
 		quadloco::dat::CircleIntersector const intersector{ circle };
@@ -186,12 +186,12 @@ namespace
 
 		// simple intersection test - with vertical line
 		quadloco::dat::Spot const spotOnLine{ 12., 18. };
-		quadloco::pix::Gradel const gradel{ -1.25, 1.75 };
+		quadloco::pix::Grad const pixGrad{ -1.25, 1.75 };
 
 		// circle intersection with vertical line
 		quadloco::dat::CircleIntersector const intersector{ circle };
-		quadloco::dat::Vec2D const lineDir
-			{ quadloco::fnd::lineDirFromEdgeDir(gradel) };
+		quadloco::dat::Vec2D<double> const lineDir
+			{ quadloco::fnd::lineDirFromEdgeDir(pixGrad) };
 		std::pair<quadloco::dat::Spot, quadloco::dat::Spot> const gotPair
 			{ intersector(spotOnLine, lineDir) };
 

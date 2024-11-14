@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::dat::Vec2D
+ * \brief Declarations for quadloco::dat::Vec2D class template
  *
  */
 
@@ -36,6 +36,7 @@
 
 #include <array>
 #include <cmath>
+#include <format>
 
 
 namespace quadloco
@@ -43,15 +44,54 @@ namespace quadloco
 
 namespace dat
 {
+	template <typename Type>
+	inline
+	bool
+	isValidType
+		( Type const & value
+		)
+	{
+		constexpr Type zero{ 0 };
+		return (std::isnormal(value) || (zero == value) );
+	}
 
 	//! Generic 2D vector structure
+	template <typename Type>
 	struct Vec2D
 	{
 		//! Component data values
-		std::array<double, 2u> theData
-			{ engabra::g3::null<double>()
-			, engabra::g3::null<double>()
+		std::array<Type, 2u> theData
+			{ engabra::g3::null<Type>()
+			, engabra::g3::null<Type>()
 			};
+
+		//! Functor for formatting member data into a string
+		struct Formatter
+		{
+			//! std::format to apply to each of the two theComps
+			std::string const theFormatEach{ "{:4.1f}" };
+
+			// String after theFormatEach to encode each of the two values
+			inline
+			std::string
+			operator()
+				( Vec2D<Type> const & elem
+				) const
+			{
+				std::ostringstream fmt;
+				fmt << '(' << theFormatEach << ',' << theFormatEach << ')';
+				return std::vformat
+					( fmt.str()
+					, std::make_format_args(elem[0], elem[1])
+					);
+			}
+
+		}; // Formatter
+
+
+		inline
+		~Vec2D
+			() = default;
 
 		//! True if this instance contain valid data (is not null)
 		inline
@@ -59,12 +99,15 @@ namespace dat
 		isValid
 			() const
 		{
-			return engabra::g3::isValid(theData);
+			return
+				(  isValidType<Type>(theData[0])
+				&& isValidType<Type>(theData[1])
+				);
 		}
 
 		//! Access to component values
 		inline
-		double const &
+		Type const &
 		operator[]
 			( std::size_t const & ndx
 			) const
@@ -77,7 +120,7 @@ namespace dat
 		bool
 		nearlyEquals
 			( Vec2D const & other
-			, double const tol = std::numeric_limits<double>::epsilon()
+			, Type const tol = std::numeric_limits<Type>::epsilon()
 			) const
 		{
 			return
@@ -110,11 +153,12 @@ namespace dat
 	}; // Vec2D
 
 	//! Scaling operations
+	template <typename Type>
 	inline
-	Vec2D
+	Vec2D<Type>
 	operator*
-		( double const & scl
-		, Vec2D const & vec
+		( Type const & scl
+		, Vec2D<Type> const & vec
 		)
 	{
 		return { scl*vec[0], scl*vec[1] };
@@ -124,23 +168,27 @@ namespace dat
 	// Vector properties
 	//
 
+	//! Scalar magnitude (length) of vec
+	template <typename Type>
 	inline
-	double
+	Type
 	magnitude
-		( Vec2D const & vec
+		( Vec2D<Type> const & vec
 		)
 	{
 		return std::hypot(vec[0], vec[1]);
 	}
 
+	//! Unitary (1.==magnitude) direction for vec
+	template <typename Type>
 	inline
-	Vec2D
+	Vec2D<Type>
 	direction
-		( Vec2D const & vec
+		( Vec2D<Type> const & vec
 		)
 	{
-		Vec2D unit{};
-		double const mag{ magnitude(vec) };
+		Vec2D<Type> unit{};
+		Type const mag{ magnitude(vec) };
 		if (engabra::g3::isValid(mag))
 		{
 			unit = (1./mag) * vec;
@@ -153,45 +201,49 @@ namespace dat
 	//
 
 	//! Sum (vecA + vecB)
+	template <typename Type>
 	inline
-	Vec2D
+	Vec2D<Type>
 	operator+
-		( Vec2D const & vecA
-		, Vec2D const & vecB
+		( Vec2D<Type> const & vecA
+		, Vec2D<Type> const & vecB
 		)
 	{
-		return Vec2D{ vecA[0] + vecB[0], vecA[1] + vecB[1] };
+		return Vec2D<Type>{ vecA[0] + vecB[0], vecA[1] + vecB[1] };
 	}
 
 	//! Difference (vecA - vecB)
+	template <typename Type>
 	inline
-	Vec2D
+	Vec2D<Type>
 	operator-
-		( Vec2D const & vecA
-		, Vec2D const & vecB
+		( Vec2D<Type> const & vecA
+		, Vec2D<Type> const & vecB
 		)
 	{
-		return Vec2D{ vecA[0] - vecB[0], vecA[1] - vecB[1] };
+		return Vec2D<Type>{ vecA[0] - vecB[0], vecA[1] - vecB[1] };
 	}
 
 
 	//! Scalar dot product
+	template <typename Type>
 	inline
-	double
+	Type
 	dot
-		( Vec2D const & vecA
-		, Vec2D const & vecB
+		( Vec2D<Type> const & vecA
+		, Vec2D<Type> const & vecB
 		)
 	{
 		return (vecA[0]*vecB[0] + vecA[1]*vecB[1]);
 	}
 
 	//! Real analog of wedge product
+	template <typename Type>
 	inline
-	double
+	Type
 	outer
-		( Vec2D const & vecA
-		, Vec2D const & vecB
+		( Vec2D<Type> const & vecA
+		, Vec2D<Type> const & vecB
 		)
 	{
 		return (vecA[0]*vecB[1] - vecA[1]*vecB[0]);
@@ -205,11 +257,12 @@ namespace dat
 namespace
 {
 	//! Put item.infoString() to stream
+	template <typename Type>
 	inline
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::Vec2D const & item
+		, quadloco::dat::Vec2D<Type> const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -217,22 +270,24 @@ namespace
 	}
 
 	//! True if item is not null
+	template <typename Type>
 	inline
 	bool
 	isValid
-		( quadloco::dat::Vec2D const & item
+		( quadloco::dat::Vec2D<Type> const & item
 		)
 	{
 		return item.isValid();
 	}
 
 	//! True if both instances are same within tolerance
+	template <typename Type>
 	inline
 	bool
 	nearlyEquals
-		( quadloco::dat::Vec2D const & itemA
-		, quadloco::dat::Vec2D const & itemB
-		, double const tol = std::numeric_limits<double>::epsilon()
+		( quadloco::dat::Vec2D<Type> const & itemA
+		, quadloco::dat::Vec2D<Type> const & itemB
+		, Type const tol = std::numeric_limits<Type>::epsilon()
 		)
 	{
 		return itemA.nearlyEquals(itemB, tol);

@@ -33,8 +33,8 @@
 
 
 #include "cast.hpp"
-#include "datSpot.hpp"
-#include "datVec2D.hpp"
+#include "pixGrad.hpp"
+#include "pixSpot.hpp"
 
 #include <Engabra>
 
@@ -53,36 +53,28 @@ namespace pix
 	struct Edgel
 	{
 		//! Any point on the line
-		dat::Spot const theSpot{};
+		pix::Spot const theSpot{};
 
 		//! Direction of the (positive) gradient across the edge
-		dat::Vec2D const theGrad;
+		pix::Grad const theGrad{};
 
 
 		//! Location of this edgel
 		inline
-		dat::Spot const &
+		pix::Spot const &
 		location
 			() const
 		{
 			return theSpot;
-		//	return dat::Spot
-		//		{ (double)theSpot[0]
-		//		, (double)theSpot[1]
-		//		};
 		}
 
 		//! Gradient at this edgel location
 		inline
-		dat::Vec2D const &
+		pix::Grad const &
 		gradient
 			() const
 		{
 			return theGrad;
-		//	return dat::Vec2D
-		//		{ (double)theGrad[0]
-		//		, (double)theGrad[1]
-		//		};
 		}
 
 		//! True if both the point location and gradent direction are valid
@@ -101,26 +93,44 @@ namespace pix
 		inline
 		bool
 		rcInFront
-			( dat::Spot const & rcLoc
+			( dat::Spot const & rcDatSpot
 			) const
 		{
-			return (! rcInBack(rcLoc));
+			return (! rcInBack(rcDatSpot));
 		}
 
 		//! True if location is behind the edge (relative to gradient)
 		inline
 		bool
 		rcInBack
-			( dat::Spot const & rcLoc
+			( dat::Spot const & rcDatSpot
 			) const
 		{
-			// A bit wasteful to compute in 3D, but easy
-			using namespace engabra::g3;
+			return rcInBack
+				(pix::Spot{ (float)rcDatSpot.row(), (float)rcDatSpot.col() });
+		}
 
-			using cast::vector;
-			Vector const delta{ vector(rcLoc) - vector(location()) };
-			double const rejection{ (delta* vector(gradient())).theSca[0] };
-			return (rejection < 0.);
+		//! True if location is in front of edge (relative to gradient)
+		inline
+		bool
+		rcInFront
+			( pix::Spot const & rcPixSpot
+			) const
+		{
+			return rcInFront	
+				(dat::Spot{ (double)rcPixSpot.row(), (double)rcPixSpot.col() });
+		}
+
+		//! True if location is behind the edge (relative to gradient)
+		inline
+		bool
+		rcInBack
+			( pix::Spot const & rcPixSpot
+			) const
+		{
+			pix::Spot const delta{ rcPixSpot - location() };
+			float const projection{ dot(delta, gradient()) };
+			return (projection < 0.f);
 		}
 
 		//! True if location is in front of edge (relative to gradient)
@@ -131,7 +141,7 @@ namespace pix
 			) const
 		{
 			return rcInFront	
-				(dat::Spot{ (double)rowcol.row(), (double)rowcol.col() });
+				(pix::Spot{ (float)rowcol.row(), (float)rowcol.col() });
 		}
 
 		//! True if location is behind the edge (relative to gradient)
@@ -142,7 +152,7 @@ namespace pix
 			) const
 		{
 			return rcInBack
-				(dat::Spot{ (double)rowcol.row(), (double)rowcol.col() });
+				(pix::Spot{ (float)rowcol.row(), (float)rowcol.col() });
 		}
 
 		//! True if components are same as those of other within tol
@@ -181,7 +191,6 @@ namespace pix
 		}
 
 	}; // Edgel
-
 
 } // [pix]
 

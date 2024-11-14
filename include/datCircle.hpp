@@ -141,7 +141,7 @@ namespace dat
 		operator()
 			( dat::Spot const & linePnt
 				//!< Any arbirary point on the line
-			, dat::Vec2D const & lineDir
+			, dat::Vec2D<double> const & lineDir
 				//!< Positive direction along line
 			) const
 		{

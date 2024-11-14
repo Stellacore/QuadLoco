@@ -199,7 +199,6 @@ namespace obj
 
 		//! Center location in target frame (origin == zero)
 		inline
-		constexpr
 		dat::Spot
 		centerSpot
 			() const

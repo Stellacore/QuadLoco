@@ -35,7 +35,7 @@
 #include "datChipSpec.hpp"
 #include "datGrid.hpp"
 #include "datSpot.hpp"
-#include "pixGradel.hpp"
+#include "pixGrad.hpp"
 #include "pix.hpp"
 
 #include <algorithm>
@@ -203,7 +203,7 @@ namespace grid
 	}
 
 
-	/*! Compute Gradels for each pixel location (except at edges)
+	/*! Compute pix::Grad for each pixel location (except at edges)
 	 *
 	 * The stepHalf determine how wide an increment is used to estimate
 	 * the edge in each direction. E.g., for a one dimensional signal
@@ -212,7 +212,7 @@ namespace grid
 	 * grad1D = (gVal[ndx+stepHalf] - gVal[ndx-stepHalf]) / (2.*stepHalf)
 	 * \endverbatim
 	 *
-	 * For 2D grid, the Gradel components are computed similarly for
+	 * For 2D grid, the pix::Grad components are computed similarly for
 	 * each direction. Note that this is NOT a classic window computation
 	 * but rather two indpenendent evaluations done in each index. E.g.,
 	 * at location (row,col), the computed gradient is:
@@ -226,13 +226,13 @@ namespace grid
 	 */
 	inline
 	static
-	dat::Grid<pix::Gradel>
-	gradelGridFor
+	dat::Grid<pix::Grad>
+	gradientGridFor
 		( dat::Grid<float> const & inGrid
 		, std::size_t const & stepHalf = 1u
 		)
 	{
-		dat::Grid<pix::Gradel> gradels;
+		dat::Grid<pix::Grad> grads;
 
 		// check if there is enough room to process anything
 		std::size_t const stepFull{ 2u * stepHalf };
@@ -240,7 +240,7 @@ namespace grid
 		{
 			// allocate space
 			dat::SizeHW const hwSize{ inGrid.hwSize() };
-			gradels = dat::Grid<pix::Gradel>(hwSize);
+			grads = dat::Grid<pix::Grad>(hwSize);
 
 			//! Determine start and end indices
 			std::size_t const rowNdxBeg{ stepHalf };
@@ -249,8 +249,8 @@ namespace grid
 			std::size_t const colNdxEnd{ colNdxBeg + hwSize.wide() - stepFull };
 
 			// set border to null values
-			static Gradel const gNull{};
-			fillBorder(gradels.begin(), gradels.hwSize(), stepHalf, gNull);
+			static Grad const gNull{};
+			fillBorder(grads.begin(), grads.hwSize(), stepHalf, gNull);
 
 			float const scl{ 1.f / (float)stepFull };
 			for (std::size_t row{rowNdxBeg} ; row < rowNdxEnd ; ++row)
@@ -266,12 +266,12 @@ namespace grid
 					float const colGrad
 						{ scl * (inGrid(row, colP1) - inGrid(row, colM1)) };
 
-					gradels(row,col) = Gradel{ rowGrad, colGrad };
+					grads(row,col) = Grad{ rowGrad, colGrad };
 				}
 			}
 		}
 
-		return gradels;
+		return grads;
 	}
 
 	/*! Value interpolated at location within grid using bilinear model.

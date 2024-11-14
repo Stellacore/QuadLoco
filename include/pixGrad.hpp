@@ -27,65 +27,64 @@
 
 
 /*! \file
- * \brief Declarations for dat::Spot
+ * \brief Declarations for quadloco::pix::Grad
  *
  */
 
 
 #include "datVec2D.hpp"
 
-// #include <Engabra>
-
 #include <iostream>
-// #include <array>
-// #include <cmath>
-// #include <limits>
-// #include <sstream>
-// #include <string>
 
 
 namespace quadloco
 {
 
-namespace dat
+namespace pix
 {
 
-	//! Discrete grid location in row,colum order.
-	struct Spot : public dat::Vec2D<double>
+	/*! \brief GRADent ELement structure representing a directed edge gradient.
+	 *
+	 * \note For computing gradient values over entire dat::Grid instances
+	 * refer to functions in pixgrid.hpp (e.g. gradientGridFor()).
+	 */
+	struct Grad : public dat::Vec2D<float>
 	{
+
 		inline
 		explicit
-		Spot
+		Grad
 			()
-			: dat::Vec2D<double>{}
+			: dat::Vec2D<float>{}
 		{ }
 
 		inline
 		explicit
-		Spot
-			( double const val0
-			, double const val1
+		Grad
+			( float const val0
+			, float const val1
 			)
-			: dat::Vec2D<double>{ val0, val1 }
+			: dat::Vec2D<float>{ val0, val1 }
 		{ }
 
 		inline
 		explicit
-		Spot
-			( dat::Vec2D<double> const vec2D
+		Grad
+			( dat::Vec2D<float> const vec2D
 			)
-			: dat::Vec2D<double>{ vec2D.theData }
+			: dat::Vec2D<float>{ vec2D.theData }
 		{ }
 
 		inline
 		virtual
-		~Spot
+		~Grad
 			() = default;
 
+
 		//! Alias for (*this)[0]
 		inline
-		double const &
-		xVal
+		float const &
+		dx
 			() const
 		{
 			return (*this)[0];
@@ -93,8 +92,8 @@ namespace dat
 
 		//! Alias for (*this)[1]
 		inline
-		double const &
-		yVal
+		float const &
+		dy
 			() const
 		{
 			return (*this)[1];
@@ -102,8 +101,8 @@ namespace dat
 
 		//! Alias for (*this)[0]
 		inline
-		double const &
-		row
+		float const &
+		drow
 			() const
 		{
 			return (*this)[0];
@@ -111,55 +110,56 @@ namespace dat
 
 		//! Alias for (*this)[1]
 		inline
-		double const &
-		col
+		float const &
+		dcol
 			() const
 		{
 			return (*this)[1];
 		}
 
-	}; // Spot
+
+	}; // Grad
 
 
-} // [dat]
+} // [pix]
 
 } // [quadloco]
 
 
 namespace
 {
-	//! Put obj.infoString() to stream
+	//! Put item.infoString() to stream
 	inline
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::Spot const & obj
+		, quadloco::pix::Grad const & item
 		)
 	{
-		ostrm << obj.infoString();
+		ostrm << item.infoString();
 		return ostrm;
 	}
 
-	//! True if spot is not null
+	//! True if item is not null
 	inline
 	bool
 	isValid
-		( quadloco::dat::Spot const & spot
+		( quadloco::pix::Grad const & item
 		)
 	{
-		return spot.isValid();
+		return item.isValid();
 	}
 
-	//! Are coordinates of each spot numerically same within tolerance?
+	//! True if both items are same within tol
 	inline
 	bool
 	nearlyEquals
-		( quadloco::dat::Spot const & spotA
-		, quadloco::dat::Spot const & spotB
-		, double const & tol = std::numeric_limits<double>::epsilon()
+		( quadloco::pix::Grad const & itemA
+		, quadloco::pix::Grad const & itemB
+		, float const & tol = std::numeric_limits<float>::epsilon()
 		)
 	{
-		return spotA.nearlyEquals(spotB);
+		return itemA.nearlyEquals(itemB, tol);
 	}
 
 } // [anon/global]

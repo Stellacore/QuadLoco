@@ -32,7 +32,7 @@
  */
 
 
-#include "pixGradel.hpp"
+#include "pixGrad.hpp"
 #include "datRowCol.hpp"
 #include "datSpot.hpp"
 #include "datVec2D.hpp"
@@ -78,7 +78,7 @@ namespace cast
 	inline
 	engabra::g3::Vector
 	vector
-		( dat::Vec2D const & vec
+		( dat::Vec2D<double> const & vec
 		)
 	{
 		return engabra::g3::Vector{ vec[0], vec[1], 0. };
@@ -88,10 +88,10 @@ namespace cast
 	inline
 	engabra::g3::Vector
 	vector
-		( pix::Gradel const & gradel
+		( pix::Grad const & grad
 		)
 	{
-		return engabra::g3::Vector{ gradel[0], gradel[1], 0. };
+		return engabra::g3::Vector{ grad[0], grad[1], 0. };
 	}
 
 
@@ -123,13 +123,14 @@ namespace cast
 	}
 
 	//! The first two components, vec[0,1]
+	template <typename Type>
 	inline
-	dat::Vec2D
+	dat::Vec2D<Type>
 	vec2D
 		( engabra::g3::Vector const & vec
 		)
 	{
-		return dat::Vec2D
+		return dat::Vec2D<Type>
 			{ vec[0]
 			, vec[1]
 			};
@@ -137,12 +138,12 @@ namespace cast
 
 	//! Float cast of the first two components, vec[0,1]
 	inline
-	pix::Gradel
-	gradel
+	pix::Grad
+	grad
 		( engabra::g3::Vector const & vec
 		)
 	{
-		return pix::Gradel
+		return pix::Grad
 			{ static_cast<float>(vec[0])
 			, static_cast<float>(vec[1])
 			};

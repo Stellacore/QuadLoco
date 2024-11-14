@@ -35,7 +35,7 @@
 #include "datSpot.hpp"
 #include "fndHoughAD.hpp"
 #include "pixEdgel.hpp"
-#include "pixGradel.hpp"
+#include "pixGrad.hpp"
 #include "pixgrid.hpp"
 #include "pix.hpp"
 
@@ -59,7 +59,7 @@ namespace fnd
 		dat::Spot const theAnyPntRC{};
 
 		//! Direction of the (positive) gradient across the edge
-		pix::Gradel const theGradelRC{};
+		pix::Grad const theGradRC{};
 
 
 		//! True if both the point location and gradent direction are valid
@@ -70,7 +70,7 @@ namespace fnd
 		{
 			return
 				(  theAnyPntRC.isValid()
-				&& theGradelRC.isValid()
+				&& theGradRC.isValid()
 				);
 		}
 
@@ -96,7 +96,7 @@ namespace fnd
 
 			using cast::vector;
 			Vector const delta{ vector(rcLoc) - vector(theAnyPntRC) };
-			double const rejection{ (delta* vector(theGradelRC)).theSca[0] };
+			double const rejection{ (delta* vector(theGradRC)).theSca[0] };
 			return (rejection < 0.);
 		}
 
@@ -132,7 +132,7 @@ namespace fnd
 		{
 			return
 				(  theAnyPntRC.nearlyEquals(other.theAnyPntRC)
-				&& theGradelRC.nearlyEquals(other.theGradelRC)
+				&& theGradRC.nearlyEquals(other.theGradRC)
 				);
 		}
 
@@ -151,7 +151,7 @@ namespace fnd
 			oss
 				<< "theAnyPntRC: " << theAnyPntRC
 				<< ' '
-				<< "theGradelRC: " << theGradelRC
+				<< "theGradRC: " << theGradRC
 				;
 
 			return oss.str();
@@ -295,12 +295,12 @@ std::cout << "deltaFor: delta: " << delta << '\n';
 
 			// compute intersection points on circle
 
-			quadloco::dat::Vec2D const lineDir
+			quadloco::dat::Vec2D<double> const lineDir
 				{ quadloco::fnd::lineDirFromEdgeDir(edgel.theGrad) };
 
 			dat::CircleIntersector const intersector{ circle };
 			std::pair<dat::Spot, dat::Spot> const solnPair
-				{ intersector(edgel.theSpot, lineDir) };
+{};//				{ intersector(edgel.theSpot, lineDir) };
 
 			// compute alpha,delta values for intersection points
 			double const alpha{ alphaFor(solnPair.first, circle) };
@@ -425,8 +425,8 @@ namespace
 
 		// generate grid (image) with a well defined edge
 		quadloco::pix::Edgel const expEdgel
-			{ quadloco::dat::Spot{ 3., 4. }
-			, quadloco::dat::Vec2D{ 2., 4. }
+			{ quadloco::pix::Spot{ 3., 4. }
+			, quadloco::pix::Grad{ 2., 4. }
 			};
 
 		// create an image with a strong edge
@@ -448,11 +448,11 @@ std::cout << "expMaxAD: " << expMaxAD << '\n';
 std::cout << '\n';
 
 
-		// compute Gradel image
-		quadloco::dat::Grid<quadloco::pix::Gradel> const gradels
-			{ quadloco::pix::grid::gradelGridFor(pixGrid) };
+		// compute Grad image
+		quadloco::dat::Grid<quadloco::pix::Grad> const grads
+			{ quadloco::pix::grid::gradientGridFor(pixGrid) };
 
-		// accumulate Gradel values into Hough A(lpha)-D(elta) buffer
+		// accumulate Grad values into Hough A(lpha)-D(elta) buffer
 
 		// extract maximum AD value
 		quadloco::fnd::ParmAD const gotMaxAD
@@ -466,8 +466,8 @@ std::cout << '\n';
 
 /*
 std::cout << pixGrid.infoStringContents("pixGrid", "%11.2f") << '\n';
-std::cout << gradels.infoStringContents
-	("gradels", quadloco::pix::Gradel::Formatter{}) << '\n';
+std::cout << grads.infoStringContents
+	("grads", quadloco::pix::Grad::Formatter{}) << '\n';
 */
 
 		// [DoxyExample01]
