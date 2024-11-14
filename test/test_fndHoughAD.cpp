@@ -28,9 +28,13 @@
 */
 
 
+#include "cast.hpp"
+#include "datCircle.hpp"
 #include "datGrid.hpp"
 #include "datRowCol.hpp"
 #include "datSpot.hpp"
+#include "fndHoughAD.hpp"
+#include "pixEdgel.hpp"
 #include "pixGradel.hpp"
 #include "pixgrid.hpp"
 #include "pix.hpp"
@@ -44,38 +48,10 @@
 namespace quadloco
 {
 
-namespace dat
-{
-
-namespace cast
-{
-	//! Engabra Vector: [0,1] from spot, [2] set to zero.
-	inline
-	engabra::g3::Vector
-	vector
-		( dat::Spot const & spot
-		)
-	{
-		return engabra::g3::Vector{ spot[0], spot[1], 0. };
-	}
-
-	//! Engabra Vector: [0,1] from gradient element, [2] set to zero.
-	inline
-	engabra::g3::Vector
-	vector
-		( pix::Gradel const & gradel
-		)
-	{
-		return engabra::g3::Vector{ gradel[0], gradel[1], 0. };
-	}
-
-} // [cast]
-
-} // [dat]
-
 namespace fnd
 {
 
+/*
 	//! Description of line in raster space
 	struct EdgeLine
 	{
@@ -118,7 +94,7 @@ namespace fnd
 			// A bit wasteful to compute in 3D, but easy
 			using namespace engabra::g3;
 
-			using dat::cast::vector;
+			using cast::vector;
 			Vector const delta{ vector(rcLoc) - vector(theAnyPntRC) };
 			double const rejection{ (delta* vector(theGradelRC)).theSca[0] };
 			return (rejection < 0.);
@@ -182,12 +158,13 @@ namespace fnd
 		}
 
 	}; // EdgeLine
+*/
 
 	inline
 	dat::Grid<float>
 	gridWithEdge
 		( dat::SizeHW const & hwSize
-		, EdgeLine const & edgeLine
+		, pix::Edgel const & edgel
 		)
 	{
 		dat::Grid<float> pixGrid(hwSize);
@@ -197,7 +174,7 @@ namespace fnd
 			{
 				dat::RowCol const rcLoc{ row, col };
 				float pixValue{ 0. };
-				if (edgeLine.rcInFront(rcLoc))
+				if (edgel.rcInFront(rcLoc))
 				{
 					pixValue = 1.;
 				}
@@ -212,6 +189,7 @@ namespace fnd
 } // [quadloco]
 
 
+/*
 namespace
 {
 	//! Put item.infoString() to stream
@@ -249,6 +227,7 @@ namespace
 	}
 
 } // [anon/global]
+*/
 
 
 namespace quadloco
@@ -256,141 +235,6 @@ namespace quadloco
 
 namespace fnd
 {
-	//! Circle containing bounding rectangle
-	struct Circle
-	{
-		//! Circle center location (in [pix])
-		dat::Spot const theCenter{};
-
-		//! Circle radius (in [pix])
-		double const theRadius{ engabra::g3::null<double>() };
-
-		//! Circle circumscribing format
-		inline
-		static
-		Circle
-		circumScribing
-			( dat::SizeHW const & hwSize
-			)
-		{
-			dat::Spot const center{ hwSize.centerSpot() };
-			double const radius{ .5*hwSize.diagonal() };
-			return Circle{ center, radius };
-		}
-
-		//! True if this instance is valid
-		inline
-		bool
-		isValid
-			() const
-		{
-			return
-				(  theCenter.isValid()
-				&& engabra::g3::isValid(theRadius)
-				);
-		}
-
-		//! True if this instance is nearly the same as other within tol
-		inline
-		bool
-		nearlyEquals
-			( Circle const & other
-			, double const & tol = std::numeric_limits<double>::epsilon()
-			) const
-		{
-			return
-				(  theCenter.nearlyEquals(other.theCenter, tol)
-				&& engabra::g3::nearlyEquals(theRadius, other.theRadius, tol)
-				);
-		}
-
-		//! Descriptive information about this instance.
-		inline
-		std::string
-		infoString
-			( std::string const & title = {}
-			) const
-		{
-			std::ostringstream oss;
-			if (! title.empty())
-			{
-				oss << title << ' ';
-			}
-			oss
-				<< "theCenter: " << theCenter
-				<< ' '
-				<< "theRadius: " << theRadius
-				;
-			return oss.str();
-		}
-
-	}; // Circle
-
-	struct CircleIntersect
-	{
-		dat::Spot const theCenterSpot{};
-		double const theRadius{ engabra::g3::null<double>() };
-
-		//! Solutions where ray intersects circle
-		inline
-		std::pair<dat::Spot, dat::Spot>
-		spotPairOnRay
-			( engabra::g3::Vector const & rayStart
-			, engabra::g3::Vector const & rayDir
-			) const
-		{
-			std::pair<dat::Spot, dat::Spot> solnPair
-				{ dat::Spot{} , dat::Spot{} };
-
-
-			// use engabra vectors for coding convenience
-			using namespace engabra::g3;
-			Vector const cpnt{ dat::cast::vector(theCenterSpot) };
-			double const & rho = theRadius;
-
-			// be sure direction is unitary (supresses quadratic coefficient)
-			Vector const & spnt = rayStart;
-			Vector const ddir{ direction(rayDir) };
-
-			// quadratic equation components
-			Vector const wvec{ spnt - cpnt };
-			double const beta{ (wvec * ddir).theSca[0] };
-			double const gamma{ magSq(wvec) - rho*rho };
-			double const lamMid{ -beta };
-			double const radicand{ beta*beta - gamma };
-
-			// check for real roots (else return default null instances)
-			if (! (radicand < 0.))
-			{
-				double const delta{ std::sqrt(radicand) };
-				double const lamNeg{ lamMid - delta };
-				double const lamPos{ lamMid + delta };
-
-				Vector const xNeg{ spnt + lamNeg*ddir };
-				Vector const xPos{ spnt + lamPos*ddir };
-
-				solnPair.first  = dat::Spot{ xNeg[0], xNeg[1] };
-				solnPair.second = dat::Spot{ xPos[0], xPos[1] };
-
-				/*
-				Vector const rPos{ xPos - cpnt };
-				Vector const rNeg{ xNeg - cpnt };
-				double const magPos{ magnitude(rPos) };
-				double const magNeg{ magnitude(rNeg) };
-				std::cout << "rPos: " << rPos << '\n';
-				std::cout << "rNeg: " << rNeg << '\n';
-				std::cout << "magPos: " << magPos << '\n';
-				std::cout << "magNeg: " << magNeg << '\n';
-				*/
-			}
-
-			return solnPair;
-		}
-
-
-	}; // CircleIntersect
-
-
 	//! Hough parameter space location
 	struct ParmAD
 	{
@@ -403,7 +247,7 @@ namespace fnd
 		double
 		alphaFor
 			( dat::Spot const & spotOnCircle
-			, Circle const & circle
+			, dat::Circle const & circle
 			)
 		{
 			double const dx{ spotOnCircle[0] - circle.theCenter[0] };
@@ -423,7 +267,7 @@ std::cout << "alphaFor: alpha: " << alpha << '\n';
 		double
 		deltaFor
 			( dat::Spot const & spotOnCircle
-			, Circle const & circle
+			, dat::Circle const & circle
 			, double const & alpha
 			)
 		{
@@ -443,22 +287,20 @@ std::cout << "deltaFor: delta: " << delta << '\n';
 		static
 		ParmAD
 		from
-			( EdgeLine const & edgeLine
-			, Circle const & circle
+			( pix::Edgel const & edgel
+			, dat::Circle const & circle
 			)
 		{
-			CircleIntersect const ci{ circle.theCenter, circle.theRadius };
-
 			using namespace engabra::g3;
-			using dat::cast::vector;
-			Vector const rayStart{ vector(edgeLine.theAnyPntRC) };
-			Vector const edgeDir{ vector(edgeLine.theGradelRC) };
-			Vector const rayDir{ (edgeDir * e12).theVec };
 
 			// compute intersection points on circle
 
+			quadloco::dat::Vec2D const lineDir
+				{ quadloco::fnd::lineDirFromEdgeDir(edgel.theGrad) };
+
+			dat::CircleIntersector const intersector{ circle };
 			std::pair<dat::Spot, dat::Spot> const solnPair
-				{ ci.spotPairOnRay(rayStart, rayDir) };
+				{ intersector(edgel.theSpot, lineDir) };
 
 			// compute alpha,delta values for intersection points
 			double const alpha{ alphaFor(solnPair.first, circle) };
@@ -539,44 +381,6 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::fnd::Circle const & item
-		)
-	{
-		ostrm << item.infoString();
-		return ostrm;
-	}
-
-	//! True if item is not null
-	inline
-	bool
-	isValid
-		( quadloco::fnd::Circle const & item
-		)
-	{
-		return item.isValid();
-	}
-
-	//! True if both items have very nearly the same values
-	inline
-	bool
-	nearlyEquals
-		( quadloco::fnd::Circle const & itemA
-		, quadloco::fnd::Circle const & itemB
-		, double const & tol = std::numeric_limits<double>::epsilon()
-		)
-	{
-		return itemA.nearlyEquals(itemB, tol);
-	}
-
-} // [anon/global]
-
-namespace
-{
-	//! Put item.infoString() to stream
-	inline
-	std::ostream &
-	operator<<
-		( std::ostream & ostrm
 		, quadloco::fnd::ParmAD const & item
 		)
 	{
@@ -620,26 +424,26 @@ namespace
 		// [DoxyExample01]
 
 		// generate grid (image) with a well defined edge
-		quadloco::fnd::EdgeLine const expEdgeLine
+		quadloco::pix::Edgel const expEdgel
 			{ quadloco::dat::Spot{ 3., 4. }
-			, quadloco::pix::Gradel{ 2., 4. }
+			, quadloco::dat::Vec2D{ 2., 4. }
 			};
 
 		// create an image with a strong edge
 		quadloco::dat::SizeHW const hwSize{ 7u, 10u };
 		quadloco::dat::Grid<float> const pixGrid
-			{ quadloco::fnd::gridWithEdge(hwSize, expEdgeLine) };
+			{ quadloco::fnd::gridWithEdge(hwSize, expEdgel) };
 
 		// expected configuration
-		quadloco::fnd::Circle const circle
-			{ quadloco::fnd::Circle::circumScribing(pixGrid.hwSize()) };
+		quadloco::dat::Circle const circle
+			{ quadloco::dat::Circle::circumScribing(pixGrid.hwSize()) };
 		quadloco::fnd::ParmAD const expMaxAD
-			{ quadloco::fnd::ParmAD::from(expEdgeLine, circle) };
+			{ quadloco::fnd::ParmAD::from(expEdgel, circle) };
 
 std::cout << '\n';
 std::cout << "hwSize: " << hwSize << '\n';
 std::cout << "circle: " << circle << '\n';
-std::cout << "expEdgeLine: " << expEdgeLine << '\n';
+std::cout << "expEdgel: " << expEdgel << '\n';
 std::cout << "expMaxAD: " << expMaxAD << '\n';
 std::cout << '\n';
 
@@ -656,7 +460,7 @@ std::cout << '\n';
 			};
 
 		// edge asociated with max AD peak
-		quadloco::fnd::EdgeLine const gotEdgeLine
+		quadloco::pix::Edgel const gotEdgel
 			{ // TODO
 			};
 
@@ -668,11 +472,11 @@ std::cout << gradels.infoStringContents
 
 		// [DoxyExample01]
 
-		if (! nearlyEquals(gotEdgeLine, expEdgeLine))
+		if (! nearlyEquals(gotEdgel, expEdgel))
 		{
-			oss << "Failure of edgeline test(1)\n";
-			oss << "exp: " << expEdgeLine << '\n';
-			oss << "got: " << gotEdgeLine << '\n';
+			oss << "Failure of Edgel test(1)\n";
+			oss << "exp: " << expEdgel << '\n';
+			oss << "got: " << gotEdgel << '\n';
 		}
 
 		if (! isValid(circle))

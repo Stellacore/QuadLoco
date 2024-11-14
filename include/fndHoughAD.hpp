@@ -54,6 +54,19 @@ namespace fnd
 			};
 	}
 
+	//! Direction perpendicular to gradel direction in right hand sense
+	inline
+	quadloco::dat::Vec2D
+	lineDirFromEdgeDir
+		( quadloco::dat::Vec2D const & edgeGradient
+		)
+	{
+		return
+			{ -edgeGradient[1]
+			,  edgeGradient[0]
+			};
+	}
+
 
 
 
