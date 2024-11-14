@@ -32,7 +32,9 @@
  */
 
 
+#include "cast.hpp"
 #include "datSpot.hpp"
+#include "datVec2D.hpp"
 #include "imgCamera.hpp"
 #include "imgQuadTarget.hpp"
 #include "objQuadTarget.hpp"
@@ -225,7 +227,7 @@ namespace sim
 			for (std::size_t nn{0u} ; nn < numSamps ; ++nn)
 			{
 				// place first spot on exact pixel location
-				constexpr dat::Spot halfSpot{ .5, .5 };
+				dat::Spot const halfSpot{ .5, .5 };
 				dat::Spot delta{ 0., 0. };
 				if (0u < nn)
 				{
@@ -257,27 +259,27 @@ namespace sim
 			() const
 		{
 			using namespace engabra::g3;
-			std::function<Vector(dat::Spot)> const vecFrom
-				{ [] (dat::Spot const & spot)
-					{ return Vector{ spot[0], spot[1], 0. }; }
-				};
-			Vector const centerInExt
-				{ theCamWrtQuad(vecFrom(theObjQuad.centerSpot())) };
-			Vector const xMidInExt
-				{ theCamWrtQuad(vecFrom(theObjQuad.midSidePosX())) };
-			Vector const yMidInExt
-				{ theCamWrtQuad(vecFrom(theObjQuad.midSidePosY())) };
+			using namespace quadloco::dat;
 
-			dat::Spot const centerInDet
+			Vector const centerInExt
+				{ theCamWrtQuad(cast::vector(theObjQuad.centerSpot())) };
+			Vector const xMidInExt
+				{ theCamWrtQuad(cast::vector(theObjQuad.midSidePosX())) };
+			Vector const yMidInExt
+				{ theCamWrtQuad(cast::vector(theObjQuad.midSidePosY())) };
+
+			dat::Vec2D const centerInDet
 				{ theCamera.projectedSpotFor(centerInExt) };
-			dat::Spot const xMidInDet
+			dat::Vec2D const xMidInDet
 				{ theCamera.projectedSpotFor(xMidInExt) };
-			dat::Spot const yMidInDet
+			dat::Vec2D const yMidInDet
 				{ theCamera.projectedSpotFor(yMidInExt) };
 
-			Vector const center{ vecFrom(centerInDet) };
-			Vector const xDir{ direction(vecFrom(xMidInDet - centerInDet)) };
-			Vector const yDir{ direction(vecFrom(yMidInDet - centerInDet)) };
+			Vector const center{ cast::vector(centerInDet) };
+			Vector const xDir
+				{ direction(cast::vector(xMidInDet - centerInDet)) };
+			Vector const yDir
+				{ direction(cast::vector(yMidInDet - centerInDet)) };
 
 			img::QuadTarget const imgQuad{ center, xDir, yDir };
 			return imgQuad;

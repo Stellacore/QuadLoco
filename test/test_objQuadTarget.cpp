@@ -132,34 +132,21 @@ namespace
 		}
 
 		using quadloco::dat::Spot;
-		std::array<Spot, 4u> gotDiffs;
+		using quadloco::dat::Vec2D;
+		std::array<Vec2D, 4u> gotDiffs;
 		for (std::size_t nn{0u} ; nn < 4u ; ++nn)
 		{
 			Spot const & gotCornerLoc = gotCornerLocs[nn];
-			gotDiffs[nn] = gotCornerLoc - gotCenter;
+			gotDiffs[nn] = Vec2D(gotCornerLoc) - Vec2D(gotCenter);
 		}
 		// Outer product structure
-		struct OP
-		{
-			double theBiv{};
-
-			inline
-			explicit
-			OP
-				( Spot const & spotA
-				, Spot const & spotB
-				)
-				: theBiv{ spotA[0]*spotB[1] - spotA[1]*spotB[0] }
-			{ }
-
-		}; // OP
+		using quadloco::dat::outer;
 		double const & expR = expRadOuter;
-		double const expOP
-			{ OP(expR*Spot{ 1., 0. }, expR*Spot{ 0., 1. }).theBiv };
-		double const gotOPa{ OP(gotDiffs[0], gotDiffs[1]).theBiv };
-		double const gotOPb{ OP(gotDiffs[1], gotDiffs[2]).theBiv };
-		double const gotOPc{ OP(gotDiffs[2], gotDiffs[3]).theBiv };
-		double const gotOPd{ OP(gotDiffs[3], gotDiffs[0]).theBiv };
+		double const expOP{ outer(expR*Spot{ 1., 0. }, expR*Spot{ 0., 1. }) };
+		double const gotOPa{ outer(gotDiffs[0], gotDiffs[1]) };
+		double const gotOPb{ outer(gotDiffs[1], gotDiffs[2]) };
+		double const gotOPc{ outer(gotDiffs[2], gotDiffs[3]) };
+		double const gotOPd{ outer(gotDiffs[3], gotDiffs[0]) };
 		constexpr double opTol{ 4. * std::numeric_limits<double>::epsilon() };
 		bool const sameDiffBivs
 			{  engabra::g3::nearlyEquals(gotOPa, expOP, opTol)
