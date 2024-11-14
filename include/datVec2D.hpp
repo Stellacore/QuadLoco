@@ -43,6 +43,16 @@ namespace quadloco
 
 namespace dat
 {
+	template <typename Type>
+	inline
+	bool
+	isValidType
+		( Type const & value
+		)
+	{
+		constexpr Type zero{ 0 };
+		return (std::isnormal(value) || (zero == value) );
+	}
 
 	//! Generic 2D vector structure
 	template <typename Type>
@@ -54,13 +64,20 @@ namespace dat
 			, engabra::g3::null<Type>()
 			};
 
+		inline
+		~Vec2D
+			() = default;
+
 		//! True if this instance contain valid data (is not null)
 		inline
 		bool
 		isValid
 			() const
 		{
-			return engabra::g3::isValid(theData);
+			return
+				(  isValidType<Type>(theData[0])
+				&& isValidType<Type>(theData[1])
+				);
 		}
 
 		//! Access to component values
