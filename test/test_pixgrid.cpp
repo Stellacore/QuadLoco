@@ -168,19 +168,19 @@ namespace
 
 		// Extract computed gradient values within edge regions
 		ChipSpec const tbChipSpec{ RowCol{ 3u, 1u }, SizeHW{ 2u, 6u } };
-		Grid<Grad> const tbGotChipGels
+		Grid<Grad> const tbGotChipGrads
 			{ grid::subGridValuesFrom(tbGrads, tbChipSpec) };
 		//
 		ChipSpec const lrChipSpec{ RowCol{ 1u, 3u }, SizeHW{ 6u, 2u } };
-		Grid<Grad> const lrGotChipGels
+		Grid<Grad> const lrGotChipGrads
 			{ grid::subGridValuesFrom(lrGrads, lrChipSpec) };
 
 		// Create expected chips populated with expected grad values
-		Grid<Grad> tbExpChipGels(tbGotChipGels.hwSize());
-		std::fill(tbExpChipGels.begin(), tbExpChipGels.end(), tbExpGrad);
+		Grid<Grad> tbExpChipGrads(tbGotChipGrads.hwSize());
+		std::fill(tbExpChipGrads.begin(), tbExpChipGrads.end(), tbExpGrad);
 		//
-		Grid<Grad> lrExpChipGels(lrGotChipGels.hwSize());
-		std::fill(lrExpChipGels.begin(), lrExpChipGels.end(), lrExpGrad);
+		Grid<Grad> lrExpChipGrads(lrGotChipGrads.hwSize());
+		std::fill(lrExpChipGrads.begin(), lrExpChipGrads.end(), lrExpGrad);
 
 		// Check if extracted edge values match expected ones
 
@@ -193,47 +193,47 @@ namespace
 			};
 
 		bool const tbOkay
-			{ (tbGotChipGels.hwSize() == tbExpChipGels.hwSize())
+			{ (tbGotChipGrads.hwSize() == tbExpChipGrads.hwSize())
 			&& std::equal
-				( tbGotChipGels.cbegin(), tbGotChipGels.cend()
-				, tbExpChipGels.cbegin()
+				( tbGotChipGrads.cbegin(), tbGotChipGrads.cend()
+				, tbExpChipGrads.cbegin()
 				, nearlyEqualGrads
 				)
 			};
 
 		if (! tbOkay)
 		{
-			oss << "Failure of tb*ChipGels test\n";
+			oss << "Failure of tb*ChipGrads test\n";
 			oss << tbPixels
 				.infoStringContents("tbPixels", "%5.0f") << '\n';
 			oss << tbGrads
 				.infoStringContents("tbGrads", fmtFunc) << '\n';
-			oss << tbExpChipGels
-				.infoStringContents("tbExpChipGels", fmtFunc) << '\n';
-			oss << tbGotChipGels
-				.infoStringContents("tbGotChipGels", fmtFunc) << '\n';
+			oss << tbExpChipGrads
+				.infoStringContents("tbExpChipGrads", fmtFunc) << '\n';
+			oss << tbGotChipGrads
+				.infoStringContents("tbGotChipGrads", fmtFunc) << '\n';
 		}
 
 		bool const lrOkay
-			{ (lrGotChipGels.hwSize() == lrExpChipGels.hwSize())
+			{ (lrGotChipGrads.hwSize() == lrExpChipGrads.hwSize())
 			&& std::equal
-				( lrGotChipGels.cbegin(), lrGotChipGels.cend()
-				, lrExpChipGels.cbegin()
+				( lrGotChipGrads.cbegin(), lrGotChipGrads.cend()
+				, lrExpChipGrads.cbegin()
 				, nearlyEqualGrads
 				)
 			};
 
 		if (! lrOkay)
 		{
-			oss << "Failure of lr*ChipGels test\n";
+			oss << "Failure of lr*ChipGrads test\n";
 			oss << lrPixels
 				.infoStringContents("lrPixels", "%5.0f") << '\n';
 			oss << lrGrads
 				.infoStringContents("lrGraGrads", fmtFunc) << '\n';
-			oss << lrExpChipGels
-				.infoStringContents("lrExpChipGels", fmtFunc) << '\n';
-			oss << lrGotChipGels
-				.infoStringContents("lrGotChipGels", fmtFunc) << '\n';
+			oss << lrExpChipGrads
+				.infoStringContents("lrExpChipGrads", fmtFunc) << '\n';
+			oss << lrGotChipGrads
+				.infoStringContents("lrGotChipGrads", fmtFunc) << '\n';
 		}
 	}
 
