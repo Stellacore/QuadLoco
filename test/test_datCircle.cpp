@@ -101,9 +101,9 @@ namespace
 		constexpr double dx{ 1. };
 		quadloco::dat::Spot const spotOnLine
 			{ center + quadloco::dat::Spot{ dx, 0. } };
-		quadloco::pix::Gradel const gradel{ 1., 0. };
+		quadloco::pix::Grad const pixGrad{ 1., 0. };
 		quadloco::dat::Vec2D<double> const lineDir
-			{ quadloco::fnd::lineDirFromEdgeDir(gradel) };
+			{ quadloco::fnd::lineDirFromEdgeDir(pixGrad) };
 
 		// circle intersection with vertical line
 		quadloco::dat::CircleIntersector const intersector{ circle };
@@ -186,12 +186,12 @@ namespace
 
 		// simple intersection test - with vertical line
 		quadloco::dat::Spot const spotOnLine{ 12., 18. };
-		quadloco::pix::Gradel const gradel{ -1.25, 1.75 };
+		quadloco::pix::Grad const pixGrad{ -1.25, 1.75 };
 
 		// circle intersection with vertical line
 		quadloco::dat::CircleIntersector const intersector{ circle };
 		quadloco::dat::Vec2D<double> const lineDir
-			{ quadloco::fnd::lineDirFromEdgeDir(gradel) };
+			{ quadloco::fnd::lineDirFromEdgeDir(pixGrad) };
 		std::pair<quadloco::dat::Spot, quadloco::dat::Spot> const gotPair
 			{ intersector(spotOnLine, lineDir) };
 

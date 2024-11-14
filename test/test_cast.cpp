@@ -51,19 +51,19 @@ namespace
 			{ 7u, 3u };
 		dat::Spot const srcSpot
 			{ 7.5, 3.75 };
-		pix::Gradel const srcGradel
+		pix::Grad const srcGrad
 			{ (float)srcSpot.row(), (float)srcSpot.col() };
 
 		// Casting into 3D vectors (add a 3rd component identically zero)
 		using namespace quadloco;
 		engabra::g3::Vector const vecRowCol{ cast::vector(srcRowCol) };
 		engabra::g3::Vector const vecSpot{ cast::vector(srcSpot) };
-		engabra::g3::Vector const vecGradel{ cast::vector(srcGradel) };
+		engabra::g3::Vector const vecGrad{ cast::vector(srcGrad) };
 
 		// Casting back into 2D (ignores the third component)
 		dat::RowCol const dstRowCol{ cast::rowcol(vecRowCol) };
 		dat::Spot const dstSpot{ cast::spot(vecSpot) };
-		pix::Gradel const dstGradel{ cast::gradel(vecSpot) };
+		pix::Grad const dstGrad{ cast::grad(vecSpot) };
 
 		// [DoxyExample01]
 
@@ -75,9 +75,9 @@ namespace
 		{
 			oss << "Failure of vec[2]=0 Spot test\n";
 		}
-		if (! engabra::g3::nearlyEquals(vecGradel[2], 0.))
+		if (! engabra::g3::nearlyEquals(vecGrad[2], 0.))
 		{
-			oss << "Failure of vec[2]=0 Gradel test\n";
+			oss << "Failure of vec[2]=0 Grad test\n";
 		}
 
 		if (! nearlyEquals(dstRowCol, srcRowCol))
@@ -92,11 +92,11 @@ namespace
 			oss << "src: " << srcSpot << '\n';
 			oss << "dst: " << dstSpot << '\n';
 		}
-		if (! nearlyEquals(dstGradel, srcGradel))
+		if (! nearlyEquals(dstGrad, srcGrad))
 		{
-			oss << "Failure of dst.from.vec Gradel test\n";
-			oss << "src: " << srcGradel << '\n';
-			oss << "dst: " << dstGradel << '\n';
+			oss << "Failure of dst.from.vec Grad test\n";
+			oss << "src: " << srcGrad << '\n';
+			oss << "dst: " << dstGrad << '\n';
 		}
 	}
 

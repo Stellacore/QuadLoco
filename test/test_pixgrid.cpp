@@ -32,7 +32,7 @@
 
 #include "datChipSpec.hpp"
 #include "datGrid.hpp"
-#include "pixGradel.hpp"
+#include "pixGrad.hpp"
 #include "pixgrid.hpp"
 
 #include <algorithm>
@@ -139,7 +139,7 @@ namespace
 
 		// set foreground for bottom half of the horizontal edge grid
 		std::fill(tbPixels.beginRow(ndxHalf), tbPixels.end(), foreVal);
-		quadloco::pix::Gradel const tbExpGradel{ 10./(double)stepFull, 0. };
+		quadloco::pix::Grad const tbExpGrad{ 10./(double)stepFull, 0. };
 
 		// Use ChipSpec to set right half foreground for vertical edge grid
 		quadloco::dat::ChipSpec const lrFillSpec
@@ -147,18 +147,18 @@ namespace
 			, quadloco::dat::SizeHW{ lrPixels.high(), lrPixels.wide()/2u }
 			};
 		quadloco::pix::grid::setSubGridValues(&lrPixels, lrFillSpec, foreVal);
-		quadloco::pix::Gradel const lrExpGradel{ 0., 10./(double)stepFull };
+		quadloco::pix::Grad const lrExpGrad{ 0., 10./(double)stepFull };
 
 		// Compute edge gradient across stepFull pixels
 
 		// gradient magnitude prop to:
 		// [gridVal(rc + stepHalf) - gridVal(rc - stepHalf)] / (2*stepHalf)
 		// Vertical grid gradients
-		quadloco::dat::Grid<quadloco::pix::Gradel> const lrGradels
-			{ quadloco::pix::grid::gradelGridFor(lrPixels, stepHalf) };
+		quadloco::dat::Grid<quadloco::pix::Grad> const lrGrads
+			{ quadloco::pix::grid::gradientGridFor(lrPixels, stepHalf) };
 		// Horizontal grid gradients
-		quadloco::dat::Grid<quadloco::pix::Gradel> const tbGradels
-			{ quadloco::pix::grid::gradelGridFor(tbPixels, stepHalf) };
+		quadloco::dat::Grid<quadloco::pix::Grad> const tbGrads
+			{ quadloco::pix::grid::gradientGridFor(tbPixels, stepHalf) };
 
 		// [DoxyExample01]
 
@@ -168,30 +168,30 @@ namespace
 
 		// Extract computed gradient values within edge regions
 		ChipSpec const tbChipSpec{ RowCol{ 3u, 1u }, SizeHW{ 2u, 6u } };
-		Grid<Gradel> const tbGotChipGels
-			{ grid::subGridValuesFrom(tbGradels, tbChipSpec) };
+		Grid<Grad> const tbGotChipGels
+			{ grid::subGridValuesFrom(tbGrads, tbChipSpec) };
 		//
 		ChipSpec const lrChipSpec{ RowCol{ 1u, 3u }, SizeHW{ 6u, 2u } };
-		Grid<Gradel> const lrGotChipGels
-			{ grid::subGridValuesFrom(lrGradels, lrChipSpec) };
+		Grid<Grad> const lrGotChipGels
+			{ grid::subGridValuesFrom(lrGrads, lrChipSpec) };
 
-		// Create expected chips populated with expected gradel values
-		Grid<Gradel> tbExpChipGels(tbGotChipGels.hwSize());
-		std::fill(tbExpChipGels.begin(), tbExpChipGels.end(), tbExpGradel);
+		// Create expected chips populated with expected grad values
+		Grid<Grad> tbExpChipGels(tbGotChipGels.hwSize());
+		std::fill(tbExpChipGels.begin(), tbExpChipGels.end(), tbExpGrad);
 		//
-		Grid<Gradel> lrExpChipGels(lrGotChipGels.hwSize());
-		std::fill(lrExpChipGels.begin(), lrExpChipGels.end(), lrExpGradel);
+		Grid<Grad> lrExpChipGels(lrGotChipGels.hwSize());
+		std::fill(lrExpChipGels.begin(), lrExpChipGels.end(), lrExpGrad);
 
 		// Check if extracted edge values match expected ones
 
-		std::function<std::string(Gradel const &)> const fmtFunc
-			{ [] (Gradel const & elem)
+		std::function<std::string(Grad const &)> const fmtFunc
+			{ [] (Grad const & elem)
 				{ return std::format("({:4.1f},{:4.1f})", elem[0], elem[1]); }
 			};
 
-		std::function<bool(Gradel const & gdelA, Gradel const & gdelB)>
-			const nearlyEqualGradels
-			{ [] (Gradel const & gdelA, Gradel const & gdelB)
+		std::function<bool(Grad const & gdelA, Grad const & gdelB)>
+			const nearlyEqualGrads
+			{ [] (Grad const & gdelA, Grad const & gdelB)
 				{ return nearlyEquals(gdelA, gdelB); }
 			};
 
@@ -200,7 +200,7 @@ namespace
 			&& std::equal
 				( tbGotChipGels.cbegin(), tbGotChipGels.cend()
 				, tbExpChipGels.cbegin()
-				, nearlyEqualGradels
+				, nearlyEqualGrads
 				)
 			};
 
@@ -209,8 +209,8 @@ namespace
 			oss << "Failure of tb*ChipGels test\n";
 			oss << tbPixels
 				.infoStringContents("tbPixels", "%5.0f") << '\n';
-			oss << tbGradels
-				.infoStringContents("tbGradels", fmtFunc) << '\n';
+			oss << tbGrads
+				.infoStringContents("tbGrads", fmtFunc) << '\n';
 			oss << tbExpChipGels
 				.infoStringContents("tbExpChipGels", fmtFunc) << '\n';
 			oss << tbGotChipGels
@@ -222,7 +222,7 @@ namespace
 			&& std::equal
 				( lrGotChipGels.cbegin(), lrGotChipGels.cend()
 				, lrExpChipGels.cbegin()
-				, nearlyEqualGradels
+				, nearlyEqualGrads
 				)
 			};
 
@@ -231,8 +231,8 @@ namespace
 			oss << "Failure of lr*ChipGels test\n";
 			oss << lrPixels
 				.infoStringContents("lrPixels", "%5.0f") << '\n';
-			oss << lrGradels
-				.infoStringContents("lrGradels", fmtFunc) << '\n';
+			oss << lrGrads
+				.infoStringContents("lrGraGrads", fmtFunc) << '\n';
 			oss << lrExpChipGels
 				.infoStringContents("lrExpChipGels", fmtFunc) << '\n';
 			oss << lrGotChipGels

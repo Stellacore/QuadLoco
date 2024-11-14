@@ -62,7 +62,7 @@ namespace
 
 		if (! (gotOkay == expOkay))
 		{
-			oss << "Failure of Okay gradel element test(0)\n";
+			oss << "Failure of Okay pix::Grad element test(0)\n";
 			oss << "exp: " << expOkay << '\n';
 			oss << "got: " << gotOkay << '\n';
 			oss << "aOkay: " << aOkay << '\n';
@@ -70,7 +70,7 @@ namespace
 
 		if (! (gotNull == expNull))
 		{
-			oss << "Failure of Null gradel element test(0)\n";
+			oss << "Failure of Null pix::Grad element test(0)\n";
 			oss << "exp: " << expNull << '\n';
 			oss << "got: " << gotNull << '\n';
 			oss << "aNull: " << aNull << '\n';

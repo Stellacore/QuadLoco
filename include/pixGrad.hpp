@@ -47,7 +47,7 @@ namespace pix
 	/*! \brief GRADent ELement structure representing a directed edge gradient.
 	 *
 	 * \note For computing gradient values over entire dat::Grid instances
-	 * refer to functions in pixgrid.hpp (e.g. gradelGridFor()).
+	 * refer to functions in pixgrid.hpp (e.g. gradientGridFor()).
 	 */
 	struct Grad : public dat::Vec2D<float>
 	{

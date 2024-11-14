@@ -35,7 +35,6 @@
 #include "datGrid.hpp"
 #include "datSpot.hpp"
 #include "imgQuadTarget.hpp"
-#include "pixGradel.hpp"
 #include "pixgrid.hpp"
 #include "prbStats.hpp"
 

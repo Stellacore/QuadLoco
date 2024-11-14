@@ -32,7 +32,8 @@
  */
 
 
-// #include "TODO.hpp"
+#include "datVec2D.hpp"
+#include "pixGrad.hpp"
 
 
 namespace quadloco
@@ -41,27 +42,28 @@ namespace quadloco
 namespace fnd
 {
 
-	//! Direction perpendicular to gradel direction in right hand sense
+	//! Direction perpendicular to gradient direction in right hand sense
 	inline
-	quadloco::dat::Vec2D<double>
+	dat::Vec2D<double>
 	lineDirFromEdgeDir
-		( quadloco::pix::Gradel const & gradel
+		( pix::Grad const & grad
 		)
 	{
-		return
-			{ -gradel[1]
-			,  gradel[0]
+		return dat::Vec2D<double>
+			{ -(double)grad[1]
+			,  (double)grad[0]
 			};
 	}
 
-	//! Direction perpendicular to gradel direction in right hand sense
+	//! Direction perpendicular to gradient direction in right hand sense
+	template <typename Type>
 	inline
-	quadloco::dat::Vec2D<double>
+	dat::Vec2D<Type>
 	lineDirFromEdgeDir
-		( quadloco::dat::Vec2D<double> const & edgeGradient
+		( dat::Vec2D<Type> const & edgeGradient
 		)
 	{
-		return
+		return dat::Vec2D<Type>
 			{ -edgeGradient[1]
 			,  edgeGradient[0]
 			};
