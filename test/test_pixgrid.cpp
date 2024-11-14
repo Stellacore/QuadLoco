@@ -184,10 +184,7 @@ namespace
 
 		// Check if extracted edge values match expected ones
 
-		std::function<std::string(Grad const &)> const fmtFunc
-			{ [] (Grad const & elem)
-				{ return std::format("({:4.1f},{:4.1f})", elem[0], elem[1]); }
-			};
+		Vec2D<float>::Formatter const fmtFunc{ "{:4.1f}" };
 
 		std::function<bool(Grad const & gdelA, Grad const & gdelB)>
 			const nearlyEqualGrads

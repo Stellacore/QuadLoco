@@ -36,6 +36,7 @@
 
 #include <array>
 #include <cmath>
+#include <format>
 
 
 namespace quadloco
@@ -63,6 +64,30 @@ namespace dat
 			{ engabra::g3::null<Type>()
 			, engabra::g3::null<Type>()
 			};
+
+		//! Functor for formatting member data into a string
+		struct Formatter
+		{
+			//! std::format to apply to each of the two theComps
+			std::string const theFormatEach{ "{:4.1f}" };
+
+			// String after theFormatEach to encode each of the two values
+			inline
+			std::string
+			operator()
+				( Vec2D<Type> const & elem
+				) const
+			{
+				std::ostringstream fmt;
+				fmt << '(' << theFormatEach << ',' << theFormatEach << ')';
+				return std::vformat
+					( fmt.str()
+					, std::make_format_args(elem[0], elem[1])
+					);
+			}
+
+		}; // Formatter
+
 
 		inline
 		~Vec2D
