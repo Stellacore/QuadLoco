@@ -48,6 +48,7 @@ set(unitTests
 	test_pixGrad  # pixel Gradent element type and functions
 	test_pixgrid  # pixel/grid functions (e.g. image processing)
 	test_pix  # pixel image manipulations
+	test_pixEdgel  # individual pixel edge information (Spot and Grad)
 	test_pixSpot  # 'continuous' raster cell locations
 	test_prbGauss1D  # Gaussian probability density functions in 1D
 	test_prbquad  # probabilitic assessor of quad target pixel patterns

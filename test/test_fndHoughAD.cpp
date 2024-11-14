@@ -300,7 +300,7 @@ std::cout << "deltaFor: delta: " << delta << '\n';
 
 			dat::CircleIntersector const intersector{ circle };
 			std::pair<dat::Spot, dat::Spot> const solnPair
-				{ intersector(edgel.theSpot, lineDir) };
+{};//				{ intersector(edgel.theSpot, lineDir) };
 
 			// compute alpha,delta values for intersection points
 			double const alpha{ alphaFor(solnPair.first, circle) };
@@ -425,8 +425,8 @@ namespace
 
 		// generate grid (image) with a well defined edge
 		quadloco::pix::Edgel const expEdgel
-			{ quadloco::dat::Spot{ 3., 4. }
-			, quadloco::dat::Vec2D<double>{ 2., 4. }
+			{ quadloco::pix::Spot{ 3., 4. }
+			, quadloco::pix::Grad{ 2., 4. }
 			};
 
 		// create an image with a strong edge
