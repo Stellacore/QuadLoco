@@ -45,7 +45,7 @@ set(unitTests
 	test_imgQuadTarget  # represent perspective image of obj::QuadTarget
 	test_io  # basic i/o support (e.g. pgm images)
 	test_objQuadTarget  # represent physical target object
-	test_pixGradel  # pixel Gradent element type and functions
+	test_pixGrad  # pixel Gradent element type and functions
 	test_pixgrid  # pixel/grid functions (e.g. image processing)
 	test_pix  # pixel image manipulations
 	test_prbGauss1D  # Gaussian probability density functions in 1D
