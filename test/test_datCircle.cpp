@@ -29,6 +29,7 @@
 
 
 #include "datCircle.hpp"
+#include "fndHoughAD.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -75,19 +76,6 @@ namespace
 	}
 
 
-	//! Direction perpendicular to gradel direction in right hand sense
-	inline
-	quadloco::dat::Vec2D
-	lineDirFromEdgeDir
-		( quadloco::pix::Gradel const & gradel
-		)
-	{
-		return
-			{ -gradel[1]
-			,  gradel[0]
-			};
-	}
-
 	//! Examples for documentation
 	void
 	test0
@@ -114,7 +102,8 @@ namespace
 		quadloco::dat::Spot const spotOnLine
 			{ center + quadloco::dat::Spot{ dx, 0. } };
 		quadloco::pix::Gradel const gradel{ 1., 0. };
-		quadloco::dat::Vec2D const lineDir{ lineDirFromEdgeDir(gradel) };
+		quadloco::dat::Vec2D const lineDir
+			{ quadloco::fnd::lineDirFromEdgeDir(gradel) };
 
 		// circle intersection with vertical line
 		quadloco::dat::CircleIntersector const intersector{ circle };
@@ -201,7 +190,8 @@ namespace
 
 		// circle intersection with vertical line
 		quadloco::dat::CircleIntersector const intersector{ circle };
-		quadloco::dat::Vec2D const lineDir{ lineDirFromEdgeDir(gradel) };
+		quadloco::dat::Vec2D const lineDir
+			{ quadloco::fnd::lineDirFromEdgeDir(gradel) };
 		std::pair<quadloco::dat::Spot, quadloco::dat::Spot> const gotPair
 			{ intersector(spotOnLine, lineDir) };
 
