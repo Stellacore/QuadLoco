@@ -142,9 +142,15 @@ namespace hough
 			double const dx{ spotOnCircle[0] - circle.theCenter[0] };
 			double const dy{ spotOnCircle[1] - circle.theCenter[1] };
 			double delta{ (std::atan2(dy, dx) - alpha) };
+			constexpr double piTwo{ 2.*std::numbers::pi_v<double> };
 			if (delta < 0.)
 			{
-				delta = delta + 2.*std::numbers::pi_v<double>;
+				delta = delta + piTwo;
+			}
+			// this check shouldn't be necessary, but for safety
+			if (! (delta < piTwo))
+			{
+				delta = delta - piTwo;
 			}
 			return delta;
 		}
