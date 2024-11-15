@@ -113,6 +113,32 @@ namespace cast
 			};
 	}
 
+	//! Integral values that are the std::floor values of datSpot[0,1]
+	inline
+	dat::RowCol
+	datRowCol
+		( dat::Spot const & datSpot
+		)
+	{
+		return dat::RowCol
+			{ static_cast<std::size_t>(std::floor(datSpot[0]))
+			, static_cast<std::size_t>(std::floor(datSpot[1]))
+			};
+	}
+
+	//! Integral values that are the std::floor values of pixSpot[0,1]
+	inline
+	dat::RowCol
+	datRowCol
+		( pix::Spot const & pixSpot
+		)
+	{
+		return dat::RowCol
+			{ static_cast<std::size_t>(std::floorf(pixSpot[0]))
+			, static_cast<std::size_t>(std::floorf(pixSpot[1]))
+			};
+	}
+
 	//
 	// To dat::Vec2D<Type>
 	//
