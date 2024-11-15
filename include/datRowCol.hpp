@@ -50,7 +50,7 @@ namespace dat
 	struct RowCol
 	{
 		//! Aggregate type row/col index data.
-		std::array<std::size_t, 2u>  const theRowCol
+		std::array<std::size_t, 2u> theRowCol
 			{ std::numeric_limits<std::size_t>::max()
 			, std::numeric_limits<std::size_t>::max()
 			};
