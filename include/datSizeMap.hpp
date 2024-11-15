@@ -67,6 +67,18 @@ namespace dat
 				}
 		{ }
 
+		//! True if all data members are valid
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  theSpanGrids[0].isValid() && theSpanGrids[1].isValid()
+				&& theSpanAreas[0].isValid() && theSpanAreas[1].isValid()
+				);
+		}
+
 		//! Area spot associated with grid spot location
 		inline
 		Spot
@@ -107,10 +119,61 @@ namespace dat
 			return Spot{ gridValue0, gridValue1 };
 		}
 
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << '\n';
+			}
+			oss << "Grid:"
+				<< " span[0]: " << theSpanGrids[0]
+				<< " span[1]: " << theSpanGrids[1]
+				<< '\n';
+			oss << "Area:"
+				<< " span[0]: " << theSpanAreas[0]
+				<< " span[1]: " << theSpanAreas[1]
+				<< '\n';
+			return oss.str();
+		}
+
+
 	}; // SizeMap
 
 
 } // [dat]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::dat::SizeMap const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::dat::SizeMap const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
 
