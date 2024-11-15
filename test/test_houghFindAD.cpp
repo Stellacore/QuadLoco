@@ -161,7 +161,7 @@ auto const fmtAD
 	{ [] (quadloco::hough::ParmAD const & parmAD)
 		{
 			return std::format
-				("({:7.3},{:7.3})", parmAD.theAlpha, parmAD.theDelta);
+				("({:7.3},{:7.3})", parmAD.alpha(), parmAD.delta());
 		}
 	};
 std::cout << parmADs.infoStringContents("parmADs", fmtAD) << '\n';
