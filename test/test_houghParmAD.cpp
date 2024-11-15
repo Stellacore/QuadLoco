@@ -31,6 +31,7 @@
 #include "houghParmAD.hpp"
 
 #include <iostream>
+#include <set>
 #include <sstream>
 
 
@@ -115,6 +116,100 @@ namespace
 
 	}
 
+	//! Examples for documentation
+	void
+	test2
+		( std::ostream & oss
+		)
+	{
+		// useful test constants
+		constexpr std::size_t numSamps{ 32u };
+		constexpr float pi{ std::numbers::pi_v<float> };
+		constexpr float piHalf{ .5 * pi };
+		constexpr float piTwo{ 2. * pi };
+		constexpr float dtheta{ piTwo / (float)numSamps };
+		constexpr float drad{ 2.f / (float)numSamps };
+
+		// [DoxyExample02]
+
+		// bounding circle
+		quadloco::dat::Spot const center{ 0., 0. };
+		constexpr double radius{ 1. };
+		quadloco::dat::Circle const circle{ center, radius };
+
+		// raster edge element at center
+		quadloco::pix::Spot const pixLoc{ 0.f, 0.f };
+
+		// check that alpha values range [-pi <= alpha < pi)
+		std::set<float> gotAlphas;
+		// check that delta values range [0 <= alpha < 2.*pi)
+		std::set<float> gotDeltas;
+		for (float theta{0.f} ; theta < piTwo ; theta += dtheta)
+		{
+			using namespace quadloco;
+
+			// rotate gradient direction through full circle
+			pix::Grad const pixGrad
+				{ std::cosf(theta - piHalf)
+				, std::sinf(theta - piHalf)
+				};
+			pix::Edgel const edgel{ pixLoc, pixGrad };
+
+			// the Alpha,Delta parameters associate with the line segment
+			hough::ParmAD const gotParmAD
+				{ hough::ParmAD::from(edgel, circle) };
+
+			gotAlphas.insert(gotParmAD.alpha());
+
+			// adjust position in order to cover range of delta values
+			for (float rad{-1.f} ; rad < 1.f ; rad += drad)
+			{
+				quadloco::pix::Spot const dSpot{ rad, rad };
+				quadloco::pix::Spot const deltaLoc{ pixLoc + dSpot };
+				pix::Edgel const deltaEdgel{ deltaLoc, pixGrad };
+				hough::ParmAD const deltaParmAD
+					{ hough::ParmAD::from(deltaEdgel, circle) };
+				gotDeltas.insert(deltaParmAD.delta());
+
+std::cout
+	<< "theta,edgel,AD: " << engabra::g3::io::fixed(theta)
+	<< ' ' << edgel.theGrad
+	<< ' ' << deltaParmAD
+	<< '\n';
+
+			}
+
+		}
+
+		// [DoxyExample02]
+
+		// check if as many alpha values as samples (since alpha unique here)
+		if (! (numSamps == gotAlphas.size()))
+		{
+			oss << "Failure of gotAlphas size test\n";
+			oss << "exp: " << numSamps << '\n';
+			oss << "got: " << gotAlphas.size() << '\n';
+		}
+		if (! gotAlphas.empty())
+		{
+			float const maxAlpha{ *(gotAlphas.rbegin()) };
+			if (! (maxAlpha < pi))
+			{
+				oss << "Failure of maxAlpha test(2)\n";
+				oss << "     exp: should be strictly less than pi\n";
+				oss << "     got: "
+					<< engabra::g3::io::fixed(maxAlpha, 2u,8u) << '\n';
+				oss << "pi-alpha: "
+					<< engabra::g3::io::fixed(pi-maxAlpha, 2u,8u) << '\n';
+			}
+
+		}
+
+		// check delta values (should all be very near pi)
+			float const maxAlpha{ *(gotAlphas.rbegin()) };
+
+	}
+
 }
 
 //! Standard test case main wrapper
@@ -127,6 +222,7 @@ main
 
 	test0(oss);
 	test1(oss);
+	test2(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{
