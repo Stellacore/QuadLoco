@@ -50,7 +50,7 @@ namespace pix
 {
 
 	//! Edge element in raster space (location and gradient)
-	struct Edgel
+	class Edgel
 	{
 		//! Any point on the line
 		pix::Spot const theSpot{};
@@ -58,6 +58,35 @@ namespace pix
 		//! Direction of the (positive) gradient across the edge
 		pix::Grad const theGrad{};
 
+	public:
+
+		//! Constuct invalid (null) instance
+		inline
+		explicit
+		Edgel
+			() = default;
+
+		//! Value construction
+		inline
+		explicit
+		Edgel
+			( pix::Spot const & spot
+			, pix::Grad const & grad
+			)
+			: theSpot{ spot }
+			, theGrad{ grad }
+		{ }
+
+		//! Conversion from RowCol
+		inline
+		explicit
+		Edgel
+			( dat::RowCol const & rowcol
+			, pix::Grad const & grad
+			)
+			: theSpot{ cast::pixSpot(rowcol) }
+			, theGrad{ grad }
+		{ }
 
 		//! Location of this edgel
 		inline
