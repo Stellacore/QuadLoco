@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::fnd::ParmAD
+\brief Unit tests (and example) code for quadloco::hough::ParmAD
 */
 
 
-#include "fndParmAD.hpp"
+#include "houghParmAD.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -45,7 +45,7 @@ namespace
 		// [DoxyExample00]
 
 		// create a null instance
-		quadloco::fnd::ParmAD const aNull{};
+		quadloco::hough::ParmAD const aNull{};
 		bool const expValid{ false };
 		bool const gotValid{ isValid(aNull) };
 
@@ -53,7 +53,7 @@ namespace
 		quadloco::pix::Grad const gradDir{ 1., 0. };
 		quadloco::dat::Vec2D<double> const expLineDir{ 0., 1. }; // RH 1/4 turn
 		quadloco::dat::Vec2D<double> const gotLineDir
-			{ quadloco::fnd::ParmAD::lineDirFromEdgeDir(gradDir) };
+			{ quadloco::hough::ParmAD::lineDirFromEdgeDir(gradDir) };
 
 		// [DoxyExample00]
 
@@ -94,14 +94,14 @@ namespace
 
 		// the line segmeng of interest is perpendicular to edge gradient
 		quadloco::dat::Vec2D<double> const lineDir
-			{ quadloco::fnd::ParmAD::lineDirFromEdgeDir(edgel.gradient()) };
+			{ quadloco::hough::ParmAD::lineDirFromEdgeDir(edgel.gradient()) };
 
 		// the Alpha,Delta parameters associate with the line segment
 		static const double piHalf{ 2.*std::atan(1.) };
 		static const double pi{ 2.*piHalf };
-		quadloco::fnd::ParmAD const expParmAD{ -piHalf, pi };
-		quadloco::fnd::ParmAD const gotParmAD
-			{ quadloco::fnd::ParmAD::from(edgel, circle) };
+		quadloco::hough::ParmAD const expParmAD{ -piHalf, pi };
+		quadloco::hough::ParmAD const gotParmAD
+			{ quadloco::hough::ParmAD::from(edgel, circle) };
 
 
 		// [DoxyExample01]

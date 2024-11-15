@@ -45,7 +45,7 @@
 namespace quadloco
 {
 
-namespace fnd
+namespace hough
 {
 
 	/*! Hough line space "alpha,delta" parameter representation
@@ -196,7 +196,7 @@ namespace fnd
 	}; // ParmAD
 
 
-} // [fnd]
+} // [hough]
 
 } // [quadloco]
 
@@ -208,7 +208,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::fnd::ParmAD const & item
+		, quadloco::hough::ParmAD const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -219,7 +219,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::fnd::ParmAD const & item
+		( quadloco::hough::ParmAD const & item
 		)
 	{
 		return item.isValid();
@@ -229,8 +229,8 @@ namespace
 	inline
 	bool
 	nearlyEquals
-		( quadloco::fnd::ParmAD const & itemA
-		, quadloco::fnd::ParmAD const & itemB
+		( quadloco::hough::ParmAD const & itemA
+		, quadloco::hough::ParmAD const & itemB
 		, double const & tol = std::numeric_limits<double>::epsilon()
 		)
 	{

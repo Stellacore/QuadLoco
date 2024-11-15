@@ -24,7 +24,7 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::fndHoughAB
+\brief Unit tests (and example) code for quadloco::houghHoughAB
 */
 
 
@@ -33,8 +33,7 @@
 #include "datGrid.hpp"
 #include "datRowCol.hpp"
 #include "datSpot.hpp"
-#include "fndHoughAD.hpp"
-#include "fndParmAD.hpp"
+#include "houghParmAD.hpp"
 #include "pixEdgel.hpp"
 #include "pixGrad.hpp"
 #include "pixgrid.hpp"
@@ -49,7 +48,7 @@
 namespace quadloco
 {
 
-namespace fnd
+namespace hough
 {
 
 /*
@@ -185,7 +184,7 @@ namespace fnd
 		return std::move(pixGrid);
 	}
 
-} // [fnd]
+} // [hough]
 
 } // [quadloco]
 
@@ -198,7 +197,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::fnd::EdgeLine const & item
+		, quadloco::hough::EdgeLine const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -209,7 +208,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::fnd::EdgeLine const & item
+		( quadloco::hough::EdgeLine const & item
 		)
 	{
 		return item.isValid();
@@ -219,8 +218,8 @@ namespace
 	inline
 	bool
 	nearlyEquals
-		( quadloco::fnd::EdgeLine const & itemA
-		, quadloco::fnd::EdgeLine const & itemB
+		( quadloco::hough::EdgeLine const & itemA
+		, quadloco::hough::EdgeLine const & itemB
 		, double const & tol = std::numeric_limits<double>::epsilon()
 		)
 	{
@@ -250,13 +249,13 @@ namespace
 		// create an image with a strong edge
 		quadloco::dat::SizeHW const hwSize{ 7u, 10u };
 		quadloco::dat::Grid<float> const pixGrid
-			{ quadloco::fnd::gridWithEdge(hwSize, expEdgel) };
+			{ quadloco::hough::gridWithEdge(hwSize, expEdgel) };
 
 		// expected configuration
 		quadloco::dat::Circle const circle
 			{ quadloco::dat::Circle::circumScribing(pixGrid.hwSize()) };
-		quadloco::fnd::ParmAD const expMaxAD
-			{ quadloco::fnd::ParmAD::from(expEdgel, circle) };
+		quadloco::hough::ParmAD const expMaxAD
+			{ quadloco::hough::ParmAD::from(expEdgel, circle) };
 
 std::cout << '\n';
 std::cout << "hwSize: " << hwSize << '\n';
@@ -273,7 +272,7 @@ std::cout << '\n';
 		// accumulate Grad values into Hough A(lpha)-D(elta) buffer
 
 		// extract maximum AD value
-		quadloco::fnd::ParmAD const gotMaxAD
+		quadloco::hough::ParmAD const gotMaxAD
 			{ // TODO
 			};
 

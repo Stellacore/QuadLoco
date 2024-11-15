@@ -29,7 +29,7 @@
 
 
 #include "datCircle.hpp"
-#include "fndHoughAD.hpp"
+#include "houghParmAD.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -103,7 +103,7 @@ namespace
 			{ center + quadloco::dat::Spot{ dx, 0. } };
 		quadloco::pix::Grad const pixGrad{ 1., 0. };
 		quadloco::dat::Vec2D<double> const lineDir
-			{ quadloco::fnd::lineDirFromEdgeDir(pixGrad) };
+			{ quadloco::hough::ParmAD::lineDirFromEdgeDir(pixGrad) };
 
 		// circle intersection with vertical line
 		quadloco::dat::CircleIntersector const intersector{ circle };
@@ -191,7 +191,7 @@ namespace
 		// circle intersection with vertical line
 		quadloco::dat::CircleIntersector const intersector{ circle };
 		quadloco::dat::Vec2D<double> const lineDir
-			{ quadloco::fnd::lineDirFromEdgeDir(pixGrad) };
+			{ quadloco::hough::ParmAD::lineDirFromEdgeDir(pixGrad) };
 		std::pair<quadloco::dat::Spot, quadloco::dat::Spot> const gotPair
 			{ intersector(spotOnLine, lineDir) };
 

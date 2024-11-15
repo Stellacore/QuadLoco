@@ -28,7 +28,6 @@ set(unitTests
 	_  # test template
 	test_Version  # test project version info retrieval
 
-#	test_Quadlike  # assess the "quadness" of a pixel sampling
 	test_cast  # data type conversion operations
 	test_datArea  # a 2D range of values
 	test_datChipSpec  # a 2D sub region of a larger area
@@ -40,16 +39,16 @@ set(unitTests
 	test_datSpan  # half open interval (include start, excludes end)
 	test_datSpot  # 'continuous' raster cell locations
 	test_datVec2D  # support for 2D vector operations
-	test_fndHoughAD  # location via Hough alpha-delta parameter space
-	test_fndParmAD  # Hough "alpha,delta" parameter representation
+	test_houghHoughAD  # location via Hough alpha-delta parameter space
+	test_houghParmAD  # Hough "alpha,delta" parameter representation
 	test_imgCamera  # simplified ideal perspective camera
 	test_imgQuadTarget  # represent perspective image of obj::QuadTarget
 	test_io  # basic i/o support (e.g. pgm images)
 	test_objQuadTarget  # represent physical target object
+	test_pixEdgel  # individual pixel edge information (Spot and Grad)
 	test_pixGrad  # pixel Gradent element type and functions
 	test_pixgrid  # pixel/grid functions (e.g. image processing)
 	test_pix  # pixel image manipulations
-	test_pixEdgel  # individual pixel edge information (Spot and Grad)
 	test_pixSpot  # 'continuous' raster cell locations
 	test_prbGauss1D  # Gaussian probability density functions in 1D
 	test_prbquad  # probabilitic assessor of quad target pixel patterns

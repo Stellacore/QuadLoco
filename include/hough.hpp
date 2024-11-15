@@ -27,53 +27,24 @@
 
 
 /*! \file
- * \brief TODO
+ * \brief Top level file for quadloco::hough namespace
  *
  */
 
 
-#include "datVec2D.hpp"
-#include "pixGrad.hpp"
+// #include "TODO.hpp"
 
 
 namespace quadloco
 {
 
-namespace fnd
+/*! \brief Finder namespace
+ */
+namespace hough
 {
 
-	//! Direction perpendicular to gradient direction in right hand sense
-	inline
-	dat::Vec2D<double>
-	lineDirFromEdgeDir
-		( pix::Grad const & grad
-		)
-	{
-		return dat::Vec2D<double>
-			{ -(double)grad[1]
-			,  (double)grad[0]
-			};
-	}
 
-	//! Direction perpendicular to gradient direction in right hand sense
-	template <typename Type>
-	inline
-	dat::Vec2D<Type>
-	lineDirFromEdgeDir
-		( dat::Vec2D<Type> const & edgeGradient
-		)
-	{
-		return dat::Vec2D<Type>
-			{ -edgeGradient[1]
-			,  edgeGradient[0]
-			};
-	}
-
-
-
-
-
-} // [fnd]
+} // [hough]
 
 } // [quadloco]
 
