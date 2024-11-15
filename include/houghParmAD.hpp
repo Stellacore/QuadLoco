@@ -55,10 +55,10 @@ namespace hough
 	struct ParmAD
 	{
 		//! Angle position of line segment start point
-		double const theAlpha{ engabra::g3::null<double>() };
+		double theAlpha{ engabra::g3::null<double>() };
 
 		//! Difference in angular position of line end point from start point
-		double const theDelta{ engabra::g3::null<double>() };
+		double theDelta{ engabra::g3::null<double>() };
 
 
 		//! Double precision vector from pix::Spot

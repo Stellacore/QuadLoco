@@ -120,20 +120,23 @@ std::cout << "expEdgel: " << expEdgel << '\n';
 std::cout << "expMaxAD: " << expMaxAD << '\n';
 std::cout << '\n';
 
+		quadloco::dat::Grid<quadloco::hough::ParmAD> parmADs(grads.hwSize());
+		quadloco::dat::Grid<quadloco::hough::ParmAD>::iterator
+			iterAD{ parmADs.begin() };
 
 		// accumulate Grad values into Hough A(lpha)-D(elta) buffer
 		for (quadloco::dat::Grid<quadloco::pix::Grad>::const_iterator
-			iter{grads.cbegin()} ; grads.cend() != iter ; ++iter)
+			iter{grads.cbegin()} ; grads.cend() != iter ; ++iter, ++iterAD)
 		{
-//			quadloco::dat::RowCol const rowcol{ grads.datRowColFor(iter) };
+			quadloco::pix::Spot const spot
+				{ quadloco::cast::pixSpot(grads.datRowColFor(iter)) };
 			quadloco::pix::Grad const & grad = *iter;
-			quadloco::pix::Edgel const edgel
-				{ quadloco::cast::pixSpot(grads.datRowColFor(iter))
-				, grad
-				};
+			quadloco::pix::Edgel const edgel{ spot, grad };
 
 			quadloco::hough::ParmAD const parmAD
 				{ quadloco::hough::ParmAD::from(edgel, circle) };
+
+			*iterAD = parmAD;
 
 std::cout << "parmAD: " << parmAD << '\n';
 
@@ -154,6 +157,14 @@ std::cout << pixGrid.infoStringContents("pixGrid", "%11.2f") << '\n';
 std::cout << grads.infoStringContents
 	("grads", quadloco::pix::Grad::Formatter{}) << '\n';
 */
+auto const fmtAD
+	{ [] (quadloco::hough::ParmAD const & parmAD)
+		{
+			return std::format
+				("({:7.3},{:7.3})", parmAD.theAlpha, parmAD.theDelta);
+		}
+	};
+std::cout << parmADs.infoStringContents("parmADs", fmtAD) << '\n';
 
 		// [DoxyExample01]
 
