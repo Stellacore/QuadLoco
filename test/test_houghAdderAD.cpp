@@ -30,6 +30,8 @@
 
 #include "houghAdderAD.hpp"
 
+#include "cast.hpp"
+
 #include <iostream>
 #include <numbers>
 #include <sstream>
@@ -43,6 +45,10 @@ namespace
 		( std::ostream & oss
 		)
 	{
+		// useful constants
+		constexpr double pi{ std::numbers::pi_v<double> };
+		constexpr double piTwo{ 2. * std::numbers::pi_v<double> };
+
 		// [DoxyExample01]
 
 		// create adder into grid of hwSize spanning standard parameter
@@ -51,17 +57,25 @@ namespace
 		quadloco::hough::AdderAD adder(hwSize);
 
 		// define a parameter near the center of the last cell in adder grid
-		constexpr double pi{ std::numbers::pi_v<double> };
-		constexpr double piTwo{ 2. * std::numbers::pi_v<double> };
+		quadloco::dat::RowCol const expRowCol
+			{ hwSize.high()-1u, hwSize.wide()-1u };
 		quadloco::hough::ParmAD const parmAD
 			{ pi - 1./26.,  piTwo - 1./34. };
 
+		// grid location spot associated with parmAD
+		quadloco::dat::RowCol const gotRowCol
+			{ adder.datRowColFor(parmAD) };
+		// parameters associated with grid location
+		quadloco::hough::ParmAD const gotParmAD
+			{ adder.houghParmADFor(quadloco::cast::datSpot(expRowCol)) };
+
+		// add a gradient magnitude value into the AD grid
 		constexpr float gradMag{ 1.f };
 		adder.add(parmAD, gradMag);
 
 		// [DoxyExample01]
 
-		float const expSum{ 1.f };
+		float const expSum{ gradMag };
 		float const gotSum{ adder.grid()(hwSize.high()-1u, hwSize.wide()-1u) };
 
 		if (! (gotSum == expSum))
@@ -71,6 +85,25 @@ namespace
 			oss << "got: " << gotSum << '\n';
 			oss << adder.grid().infoStringContents("adder", "%4.2f") << '\n';
 		}
+
+		if (! nearlyEquals(gotRowCol, expRowCol))
+		{
+			oss << "Failure of gotRowCol test\n";
+			oss << "exp: " << expRowCol << '\n';
+			oss << "got: " << gotRowCol << '\n';
+		}
+
+		quadloco::hough::ParmAD const & expParmAD = parmAD;
+		double const tol
+			{ piTwo / (double)std::min(hwSize.high(), hwSize.wide()) };
+		if (! nearlyEquals(gotParmAD, expParmAD, .25))
+		{
+			oss << "Failure of gotParmAD test\n";
+			oss << "exp: " << expParmAD << '\n';
+			oss << "got: " << gotParmAD << '\n';
+			oss << "tol: " << tol << '\n';
+		}
+
 
 	}
 

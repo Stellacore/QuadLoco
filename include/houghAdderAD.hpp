@@ -39,6 +39,7 @@
 #include "datSpan.hpp"
 #include "datSpot.hpp"
 #include "houghParmAD.hpp"
+#include "pix.hpp"
 
 #include <algorithm>
 #include <numbers>
@@ -111,6 +112,51 @@ namespace hough
 			return theGridAD;
 		}
 
+		//! Row/column in accumulation grid associated with ParmAD values
+		inline
+		dat::Spot
+		datSpotFor
+			( hough::ParmAD const & parmAD
+			) const
+		{
+			// Get angles from parmAD and ensure within valid sizemap range
+			dat::Spot const parmSpot
+				{ angleInRange(parmAD.alpha(), -pi, pi)
+				, angleInRange(parmAD.delta(), 0., piTwo)
+				};
+			return dat::Spot{ theSizeMap.gridSpotForAreaSpot(parmSpot) };
+		}
+
+		//! Row/column in accumulation grid associated with ParmAD values
+		inline
+		dat::RowCol
+		datRowColFor
+			( hough::ParmAD const & parmAD
+			) const
+		{
+			dat::Spot const gridSpot{ datSpotFor(parmAD) };
+			return cast::datRowCol(gridSpot);
+		}
+
+		inline
+		hough::ParmAD
+		houghParmADFor
+			( dat::Spot const & gridSpot
+			) const
+		{
+			hough::ParmAD parmAD{};
+			if ( gridSpot.isValid()
+			  && ( gridSpot[0] < (double)theGridAD.high())
+			  && ( gridSpot[1] < (double)theGridAD.wide())
+			   )
+			{
+				dat::Spot const areaSpot
+					{ theSizeMap.areaSpotForGridSpot(gridSpot) };
+				parmAD = hough::ParmAD{ areaSpot[0], areaSpot[1] };
+			}
+			return parmAD;
+		}
+
 		//! Incorporate parmAD values into theGridAD with gridMag as weight
 		inline
 		void
@@ -119,18 +165,10 @@ namespace hough
 			, float const & gradMag
 			)
 		{
-			double const mainAlpha
-				{ angleInRange(parmAD.alpha(), -pi, pi) };
-			double const mainDelta
-				{ angleInRange(parmAD.delta(), 0., piTwo) };
-
-			dat::Spot const parmSpot{ mainAlpha, mainDelta };
-
-			dat::Spot const gridSpot
-				{ theSizeMap.gridSpotForAreaSpot(parmSpot) };
-
-			dat::RowCol const rowcolAD{ cast::datRowCol(gridSpot) };
-			theGridAD(rowcolAD) += gradMag;
+			if (pix::isValid(gradMag) && parmAD.isValid())
+			{
+				theGridAD(datRowColFor(parmAD)) += gradMag;
+			}
 		}
 
 	}; // AdderAD
