@@ -38,48 +38,12 @@
 #include "pixGrad.hpp"
 #include "pixgrid.hpp"
 #include "pix.hpp"
+#include "simgrid.hpp"
 
 #include <Engabra>
 
 #include <iostream>
 #include <sstream>
-
-
-namespace quadloco
-{
-
-namespace sim
-{
-
-	//! Create a grid with a strong edge that aligns with provided edgel
-	inline
-	dat::Grid<float>
-	gridWithEdge
-		( dat::SizeHW const & hwSize
-		, pix::Edgel const & edgel
-		)
-	{
-		dat::Grid<float> pixGrid(hwSize);
-		for (std::size_t row{0u} ; row < hwSize.high() ; ++row)
-		{
-			for (std::size_t col{0u} ; col < hwSize.wide() ; ++col)
-			{
-				dat::RowCol const rcLoc{ row, col };
-				float pixValue{ 0. };
-				if (edgel.rcInFront(rcLoc))
-				{
-					pixValue = 1.;
-				}
-				pixGrid(row, col) = pixValue;
-			}
-		}
-		return std::move(pixGrid);
-	}
-
-} // [sim]
-
-} // [quadloco]
-
 
 
 namespace
