@@ -48,118 +48,10 @@
 namespace quadloco
 {
 
-namespace hough
+namespace sim
 {
 
-/*
-	//! Description of line in raster space
-	struct EdgeLine
-	{
-		//! Any point on the line
-		dat::Spot const theAnyPntRC{};
-
-		//! Direction of the (positive) gradient across the edge
-		pix::Grad const theGradRC{};
-
-
-		//! True if both the point location and gradent direction are valid
-		inline
-		bool
-		isValid
-			() const
-		{
-			return
-				(  theAnyPntRC.isValid()
-				&& theGradRC.isValid()
-				);
-		}
-
-		//! True if location is in front of edge (relative to gradient)
-		inline
-		bool
-		rcInFront
-			( dat::Spot const & rcLoc
-			) const
-		{
-			return (! rcInBack(rcLoc));
-		}
-
-		//! True if location is behind the edge (relative to gradient)
-		inline
-		bool
-		rcInBack
-			( dat::Spot const & rcLoc
-			) const
-		{
-			// A bit wasteful to compute in 3D, but easy
-			using namespace engabra::g3;
-
-			using cast::vector;
-			Vector const delta{ vector(rcLoc) - vector(theAnyPntRC) };
-			double const rejection{ (delta* vector(theGradRC)).theSca[0] };
-			return (rejection < 0.);
-		}
-
-		//! True if location is in front of edge (relative to gradient)
-		inline
-		bool
-		rcInFront
-			( dat::RowCol const & rowcol
-			) const
-		{
-			return rcInFront	
-				(dat::Spot{ (double)rowcol.row(), (double)rowcol.col() });
-		}
-
-		//! True if location is behind the edge (relative to gradient)
-		inline
-		bool
-		rcInBack
-			( dat::RowCol const & rowcol
-			) const
-		{
-			return rcInBack
-				(dat::Spot{ (double)rowcol.row(), (double)rowcol.col() });
-		}
-
-		//! True if components are same as those of other within tol
-		inline
-		bool
-		nearlyEquals
-			( EdgeLine const & other
-			, double const & tol = std::numeric_limits<double>::epsilon()
-			) const
-		{
-			return
-				(  theAnyPntRC.nearlyEquals(other.theAnyPntRC)
-				&& theGradRC.nearlyEquals(other.theGradRC)
-				);
-		}
-
-		//! Descriptive information about this instance.
-		inline
-		std::string
-		infoString
-			( std::string const & title = {}
-			) const
-		{
-			std::ostringstream oss;
-			if (! title.empty())
-			{
-				oss << title << ' ';
-			}
-			oss
-				<< "theAnyPntRC: " << theAnyPntRC
-				<< ' '
-				<< "theGradRC: " << theGradRC
-				;
-
-			return oss.str();
-		}
-
-	}; // EdgeLine
-*/
-
+	//! Create a grid with a strong edge that aligns with provided edgel
 	inline
 	dat::Grid<float>
 	gridWithEdge
@@ -184,50 +76,10 @@ namespace hough
 		return std::move(pixGrid);
 	}
 
-} // [hough]
+} // [sim]
 
 } // [quadloco]
 
-
-/*
-namespace
-{
-	//! Put item.infoString() to stream
-	inline
-	std::ostream &
-	operator<<
-		( std::ostream & ostrm
-		, quadloco::hough::EdgeLine const & item
-		)
-	{
-		ostrm << item.infoString();
-		return ostrm;
-	}
-
-	//! True if item is not null
-	inline
-	bool
-	isValid
-		( quadloco::hough::EdgeLine const & item
-		)
-	{
-		return item.isValid();
-	}
-
-	//! True if both items have very nearly the same values
-	inline
-	bool
-	nearlyEquals
-		( quadloco::hough::EdgeLine const & itemA
-		, quadloco::hough::EdgeLine const & itemB
-		, double const & tol = std::numeric_limits<double>::epsilon()
-		)
-	{
-		return itemA.nearlyEquals(itemB, tol);
-	}
-
-} // [anon/global]
-*/
 
 
 namespace
@@ -246,14 +98,18 @@ namespace
 			, quadloco::pix::Grad{ 2., 4. }
 			};
 
-		// create an image with a strong edge
+		// simulate an image with a very strong edge
 		quadloco::dat::SizeHW const hwSize{ 7u, 10u };
 		quadloco::dat::Grid<float> const pixGrid
-			{ quadloco::hough::gridWithEdge(hwSize, expEdgel) };
+			{ quadloco::sim::gridWithEdge(hwSize, expEdgel) };
+
+		// compute Grad image
+		quadloco::dat::Grid<quadloco::pix::Grad> const grads
+			{ quadloco::pix::grid::gradientGridFor(pixGrid) };
 
 		// expected configuration
 		quadloco::dat::Circle const circle
-			{ quadloco::dat::Circle::circumScribing(pixGrid.hwSize()) };
+			{ quadloco::dat::Circle::circumScribing(grads.hwSize()) };
 		quadloco::hough::ParmAD const expMaxAD
 			{ quadloco::hough::ParmAD::from(expEdgel, circle) };
 
@@ -265,11 +121,23 @@ std::cout << "expMaxAD: " << expMaxAD << '\n';
 std::cout << '\n';
 
 
-		// compute Grad image
-		quadloco::dat::Grid<quadloco::pix::Grad> const grads
-			{ quadloco::pix::grid::gradientGridFor(pixGrid) };
-
 		// accumulate Grad values into Hough A(lpha)-D(elta) buffer
+		for (quadloco::dat::Grid<quadloco::pix::Grad>::const_iterator
+			iter{grads.cbegin()} ; grads.cend() != iter ; ++iter)
+		{
+//			quadloco::dat::RowCol const rowcol{ grads.datRowColFor(iter) };
+			quadloco::pix::Grad const & grad = *iter;
+			quadloco::pix::Edgel const edgel
+				{ quadloco::cast::pixSpot(grads.datRowColFor(iter))
+				, grad
+				};
+
+			quadloco::hough::ParmAD const parmAD
+				{ quadloco::hough::ParmAD::from(edgel, circle) };
+
+std::cout << "parmAD: " << parmAD << '\n';
+
+		}
 
 		// extract maximum AD value
 		quadloco::hough::ParmAD const gotMaxAD

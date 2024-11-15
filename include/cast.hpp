@@ -32,6 +32,7 @@
  */
 
 
+#include "pixSpot.hpp"
 #include "pixGrad.hpp"
 #include "datRowCol.hpp"
 #include "datSpot.hpp"
@@ -50,7 +51,7 @@ namespace quadloco
 namespace cast
 {
 	//
-	// 3D data from 2D
+	// To engabra::g3::Vector
 	//
 
 	//! Engabra Vector: [0,1] from (row(),col()) , [2] set to zero.
@@ -96,13 +97,13 @@ namespace cast
 
 
 	//
-	// 2D data from 3D
+	// To dat::RowCol
 	//
 
 	//! Integral values that are the std::floor values of vec[0,1]
 	inline
 	dat::RowCol
-	rowcol
+	datRowCol
 		( engabra::g3::Vector const & vec
 		)
 	{
@@ -112,21 +113,15 @@ namespace cast
 			};
 	}
 
-	//! The first two components, vec[0,1]
-	inline
-	dat::Spot
-	spot
-		( engabra::g3::Vector const & vec
-		)
-	{
-		return dat::Spot{ vec[0], vec[1] };
-	}
+	//
+	// To dat::Vec2D<Type>
+	//
 
 	//! The first two components, vec[0,1]
 	template <typename Type>
 	inline
 	dat::Vec2D<Type>
-	vec2D
+	datVec2D
 		( engabra::g3::Vector const & vec
 		)
 	{
@@ -136,10 +131,84 @@ namespace cast
 			};
 	}
 
+	//
+	// To dat::Spot
+	//
+
+	//! The first two components, vec[0,1]
+	inline
+	dat::Spot
+	datSpot
+		( engabra::g3::Vector const & vec
+		)
+	{
+		return dat::Spot{ vec[0], vec[1] };
+	}
+
+	//! The first two components, vec[0,1]
+	inline
+	dat::Spot
+	datSpot
+		( pix::Spot const & pixSpot
+		)
+	{
+		return dat::Spot
+			{ static_cast<double>(pixSpot[0])
+			, static_cast<double>(pixSpot[1])
+			};
+	}
+
+	//
+	// To pix::Spot
+	//
+
+	//! Float cast of the first two components, vec[0,1]
+	inline
+	pix::Spot
+	pixSpot
+		( engabra::g3::Vector const & vec
+		)
+	{
+		return pix::Spot
+			{ static_cast<float>(vec[0])
+			, static_cast<float>(vec[1])
+			};
+	}
+
+	//! Float cast of the first two components, vec[0,1]
+	inline
+	pix::Spot
+	pixSpot
+		( dat::RowCol const & rowcol
+		)
+	{
+		return pix::Spot
+			{ static_cast<float>(std::floor(rowcol.row()))
+			, static_cast<float>(std::floor(rowcol.col()))
+			};
+	}
+
+	//! Float cast of the first two components, vec[0,1]
+	inline
+	pix::Spot
+	pixSpot
+		( dat::Spot const & datSpot
+		)
+	{
+		return pix::Spot
+			{ static_cast<float>(datSpot[0])
+			, static_cast<float>(datSpot[1])
+			};
+	}
+
+	//
+	// To pix::Grad
+	//
+
 	//! Float cast of the first two components, vec[0,1]
 	inline
 	pix::Grad
-	grad
+	pixGrad
 		( engabra::g3::Vector const & vec
 		)
 	{

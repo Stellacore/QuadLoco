@@ -39,7 +39,7 @@ set(unitTests
 	test_datSpan  # half open interval (include start, excludes end)
 	test_datSpot  # 'continuous' raster cell locations
 	test_datVec2D  # support for 2D vector operations
-	test_houghHoughAD  # location via Hough alpha-delta parameter space
+	test_houghFindAD  # Find maxima in hough::ParmAD space
 	test_houghParmAD  # Hough "alpha,delta" parameter representation
 	test_imgCamera  # simplified ideal perspective camera
 	test_imgQuadTarget  # represent perspective image of obj::QuadTarget
