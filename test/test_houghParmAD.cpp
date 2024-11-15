@@ -159,23 +159,32 @@ namespace
 			hough::ParmAD const gotParmAD
 				{ hough::ParmAD::from(edgel, circle) };
 
-			gotAlphas.insert(gotParmAD.alpha());
+			if (isValid(gotParmAD))
+			{
+				gotAlphas.insert(gotParmAD.alpha());
+			}
 
 			// adjust position in order to cover range of delta values
 			for (float rad{-1.f} ; rad < 1.f ; rad += drad)
 			{
+				constexpr float rootHalf{ 1.f/std::numbers::sqrt2_v<float> };
 				quadloco::pix::Spot const dSpot{ rad, rad };
-				quadloco::pix::Spot const deltaLoc{ pixLoc + dSpot };
+				quadloco::pix::Spot const deltaLoc{ pixLoc + rootHalf*dSpot };
 				pix::Edgel const deltaEdgel{ deltaLoc, pixGrad };
 				hough::ParmAD const deltaParmAD
 					{ hough::ParmAD::from(deltaEdgel, circle) };
-				gotDeltas.insert(deltaParmAD.delta());
+				if (isValid(deltaParmAD))
+				{
+					gotDeltas.insert(deltaParmAD.delta());
+				}
 
-std::cout
-	<< "theta,edgel,AD: " << engabra::g3::io::fixed(theta)
-	<< ' ' << edgel.theGrad
-	<< ' ' << deltaParmAD
-	<< '\n';
+				/*
+				std::cout
+					<< "theta,edgel,AD: " << engabra::g3::io::fixed(theta)
+					<< ' ' << edgel.theGrad
+					<< ' ' << deltaParmAD
+					<< '\n';
+				*/
 
 			}
 
@@ -192,7 +201,7 @@ std::cout
 		}
 		if (! gotAlphas.empty())
 		{
-			float const maxAlpha{ *(gotAlphas.rbegin()) };
+			float const maxAlpha{ *(gotAlphas.crbegin()) };
 			if (! (maxAlpha < pi))
 			{
 				oss << "Failure of maxAlpha test(2)\n";
@@ -206,7 +215,20 @@ std::cout
 		}
 
 		// check delta values (should all be very near pi)
-			float const maxAlpha{ *(gotAlphas.rbegin()) };
+		float const minDelta{ *(gotDeltas.cbegin()) };
+		float const maxDelta{ *(gotDeltas.crbegin()) };
+		if ( (minDelta < 0.f))
+		{
+			oss << "Failure of minDelta test\n";
+			oss << "exp: " << 0.f << '\n';
+			oss << "got: " << minDelta << '\n';
+		}
+		if (! (maxDelta < 2.f*pi))
+		{
+			oss << "Failure of maxDelta test\n";
+			oss << "exp: " << (2.f*pi) << '\n';
+			oss << "got: " << maxDelta << '\n';
+		}
 
 	}
 
