@@ -175,6 +175,19 @@ namespace cast
 	inline
 	dat::Spot
 	datSpot
+		( dat::RowCol const & rowcol
+		)
+	{
+		return dat::Spot
+			{ static_cast<double>(rowcol.row())
+			, static_cast<double>(rowcol.col())
+			};
+	}
+
+	//! The first two components, vec[0,1]
+	inline
+	dat::Spot
+	datSpot
 		( pix::Spot const & pixSpot
 		)
 	{
