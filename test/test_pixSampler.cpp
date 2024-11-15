@@ -33,6 +33,7 @@
 #include "houghParmAD.hpp"
 #include "pixEdgel.hpp"
 #include "simgrid.hpp"
+#include "pixgrid.hpp" // TODO - temp
 
 #include <algorithm>
 #include <iostream>
@@ -81,50 +82,6 @@ namespace
 			}
 		}
 
-		// sort gradients by magnitude
-		using GradMag = double;
-		using Ndx = std::size_t;
-		std::vector<std::pair<GradMag, Ndx> > pairMagNdxs;
-		pairMagNdxs.reserve(pixEdgels.size());
-		for (std::size_t ndx{0u} ; ndx < pixEdgels.size() ; ++ndx)
-		{
-			quadloco::pix::Edgel const & pixEdgel = pixEdgels[ndx];
-			GradMag const mag{ magnitude(pixEdgel.gradient()) };
-			pairMagNdxs.emplace_back(std::make_pair(mag, ndx));
-		}
-		// sort with largest magnitude first
-		std::sort(pairMagNdxs.rbegin(), pairMagNdxs.rend());
-
-		// compute hough alpha,delta values for largest magnitude edgels
-		std::size_t const maxNdx{ (std::size_t)(hwSize.diagonal()) + 1u };
-		quadloco::dat::Circle const circle
-			{ quadloco::dat::Circle::circumScribing(hwSize) };
-std::cout << '\n';
-std::cout << "hwSize: " << hwSize << '\n';
-std::cout << "circle: " << circle << '\n';
-		for (std::size_t ndx{0u} ; ndx < maxNdx ; ++ndx)
-		{
-			std::pair<GradMag, Ndx> const & pairMagNdx = pairMagNdxs[ndx];
-			double const & edgelMag = pairMagNdx.first;
-			std::size_t const & edgelNdx = pairMagNdx.second;
-			quadloco::pix::Edgel const & edgel = pixEdgels[edgelNdx];
-
-			// hough alpha,delta values
-			quadloco::hough::ParmAD const parmAD 
-				{ quadloco::hough::ParmAD::from(edgel, circle) };
-
-std::cout
-	<< "edgelMag: " << std::fixed << edgelMag
-	<< ' ' 
-	<< "parmAD: " << parmAD
-	<< ' ' 
-	<< "edgel: " << edgel
-	<< '\n';
-
-		}
-
-
-
 		// [DoxyExample01]
 
 		std::size_t const gotSize{ pixEdgels.size() };
@@ -140,6 +97,31 @@ std::cout
 			oss << "exp: " << gotSize << '\n';
 			oss << "got: " << expSize << '\n';
 		}
+
+		// fetch entire gradient grid
+		quadloco::dat::Grid<quadloco::pix::Grad> const grads
+			{ quadloco::pix::grid::gradientGridFor(pixGrid) };
+		// check if extracted samples match
+		std::size_t sameCount{ 0u };
+		for (quadloco::pix::Edgel const & pixEdgel : pixEdgels)
+		{
+			quadloco::dat::RowCol const atRowCol
+				{ quadloco::cast::datRowCol(pixEdgel.location()) };
+			quadloco::pix::Grad const & expGrad = grads(atRowCol);
+			quadloco::pix::Grad const & gotGrad = pixEdgel.gradient();
+			if (nearlyEquals(gotGrad, expGrad))
+			{
+				++sameCount;
+			}
+		}
+
+		if (! (pixEdgels.size() == sameCount))
+		{
+			oss << "Failure of pixEdgels sameCount test\n";
+			oss << "exp: " << pixEdgels.size() << '\n';
+			oss << "got: " << sameCount << '\n';
+		}
+
 	}
 
 }
