@@ -116,6 +116,15 @@ namespace dat
 			return (theHighWide[0] * theHighWide[1]);
 		}
 
+		//! Length of perimeter in cells = 2u*(high()+wide())
+		inline
+		std::size_t
+		perimeter
+			() const
+		{
+			return (2u * (high() + wide()));
+		}
+
 		//! Subpixel precise length of the diagonal
 		inline
 		double
