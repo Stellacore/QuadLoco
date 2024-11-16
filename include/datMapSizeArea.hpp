@@ -32,6 +32,7 @@
  */
 
 
+#include "datArea.hpp"
 #include "datSizeHW.hpp"
 #include "datSpan.hpp"
 #include "datSpot.hpp"
@@ -46,8 +47,8 @@ namespace dat
 {
 	struct MapSizeArea
 	{
-		std::array<Span, 2u> const theSpanGrids{};
-		std::array<Span, 2u> const theSpanAreas{};
+		dat::Area theSize{};
+		dat::Area theArea{};
 
 		//! A mapping between "grid" space and "area" space
 		inline
@@ -57,11 +58,11 @@ namespace dat
 			, Span const & areaSpan0
 			, Span const & areaSpan1
 			)
-			: theSpanGrids
+			: theSize
 				{ Span{ 0., (double)hwGridSize.high() }
 				, Span{ 0., (double)hwGridSize.wide() }
 				}
-			, theSpanAreas
+			, theArea
 				{ areaSpan0
 				, areaSpan1
 				}
@@ -74,29 +75,21 @@ namespace dat
 			() const
 		{
 			return
-				(  theSpanGrids[0].isValid() && theSpanGrids[1].isValid()
-				&& theSpanAreas[0].isValid() && theSpanAreas[1].isValid()
+				(  theSize.isValid()
+				&& theArea.isValid()
 				);
 		}
 
-		//! Area spot associated with grid spot location
+		//! Area spot associated with size spot location
 		inline
 		Spot
 		areaSpotForGridSpot
-			( Spot const & gridSpot
+			( Spot const & sizeSpot
 			) const
 		{
-			double const frac0
-				{ theSpanGrids[0].fractionAtValue(gridSpot[0]) };
-			double const frac1
-				{ theSpanGrids[1].fractionAtValue(gridSpot[1]) };
-
-			double const areaValue0
-				{ theSpanAreas[0].valueAtFraction(frac0) };
-			double const areaValue1
-				{ theSpanAreas[1].valueAtFraction(frac1) };
-
-			return Spot{ areaValue0, areaValue1 };
+			Area::Dyad const fracSpot{ theSize.fractionDyadAtSpot(sizeSpot) };
+			dat::Spot const areaSpot{ theArea.spotAtFractionDyad(fracSpot) };
+			return areaSpot;
 		}
 
 		//! Grid spot location associated with area spot
@@ -106,17 +99,9 @@ namespace dat
 			( Spot const & areaSpot
 			) const
 		{
-			double const frac0
-				{ theSpanAreas[0].fractionAtValue(areaSpot[0]) };
-			double const frac1
-				{ theSpanAreas[1].fractionAtValue(areaSpot[1]) };
-
-			double const gridValue0
-				{ theSpanGrids[0].valueAtFraction(frac0) };
-			double const gridValue1
-				{ theSpanGrids[1].valueAtFraction(frac1) };
-
-			return Spot{ gridValue0, gridValue1 };
+			Area::Dyad const fracSpot{ theArea.fractionDyadAtSpot(areaSpot) };
+			dat::Spot const sizeSpot{ theSize.spotAtFractionDyad(fracSpot) };
+			return sizeSpot;
 		}
 
 		//! Descriptive information about this instance.
@@ -131,14 +116,8 @@ namespace dat
 			{
 				oss << title << '\n';
 			}
-			oss << "Grid:"
-				<< " span[0]: " << theSpanGrids[0]
-				<< " span[1]: " << theSpanGrids[1]
-				<< '\n';
-			oss << "Area:"
-				<< " span[0]: " << theSpanAreas[0]
-				<< " span[1]: " << theSpanAreas[1]
-				<< '\n';
+			oss << "Grid: " << theSize << '\n';
+			oss << "Area: " << theArea << '\n';
 			return oss.str();
 		}
 
