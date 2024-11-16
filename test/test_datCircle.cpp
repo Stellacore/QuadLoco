@@ -43,7 +43,6 @@ namespace
 	rejectFromCircle
 		( quadloco::dat::Spot const & loc
 		, quadloco::dat::Circle const & circle
-		, double const tol = std::numeric_limits<double>::epsilon()
 		)
 	{
 		double rej{ engabra::g3::null<double>() };
@@ -64,7 +63,6 @@ namespace
 		( quadloco::dat::Spot const & loc
 		, quadloco::dat::Spot const & linePnt
 		, quadloco::dat::Vec2D<double> const & lineDir
-		, double const tol = std::numeric_limits<double>::epsilon()
 		)
 	{
 		double rej{ engabra::g3::null<double>() };

@@ -193,8 +193,8 @@ namespace pix
 			) const
 		{
 			return
-				(  location().nearlyEquals(other.location())
-				&& gradient().nearlyEquals(other.gradient())
+				(  location().nearlyEquals(other.location(), tol)
+				&& gradient().nearlyEquals(other.gradient(), tol)
 				);
 		}
 

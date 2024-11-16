@@ -134,7 +134,7 @@ namespace
 		, float const & tol = std::numeric_limits<float>::epsilon()
 		)
 	{
-		return spotA.nearlyEquals(spotB);
+		return spotA.nearlyEquals(spotB, tol);
 	}
 
 } // [anon/global]

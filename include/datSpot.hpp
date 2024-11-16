@@ -159,7 +159,7 @@ namespace
 		, double const & tol = std::numeric_limits<double>::epsilon()
 		)
 	{
-		return spotA.nearlyEquals(spotB);
+		return spotA.nearlyEquals(spotB, tol);
 	}
 
 } // [anon/global]

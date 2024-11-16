@@ -108,9 +108,7 @@ namespace img
 			bool stable{ isValid() };
 			if (stable)
 			{
-				constexpr double tolA
-					{ std::numeric_limits<double>::epsilon() };
-				stable &= (tolA < std::abs(angleSizeYwX()));
+				stable &= (tol < std::abs(angleSizeYwX()));
 			}
 			return stable;
 		}
@@ -228,7 +226,7 @@ namespace
 		, double const tol = std::numeric_limits<double>::epsilon()
 		)
 	{
-		return itemA.nearlyEquals(itemB);
+		return itemA.nearlyEquals(itemB, tol);
 	}
 
 

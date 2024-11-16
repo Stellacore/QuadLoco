@@ -33,6 +33,7 @@
 #include "QuadLoco"
 
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <vector>
 
@@ -63,9 +64,11 @@ namespace
 		quadloco::dat::Spot const copySpot{ copySpots.back() };
 		msg << copySpot << '\n';
 
-		// approximate equivalence within tolerance
-		constexpr double tol{ 0. }; // here is exact since copy
-		bool const copySame{ nearlyEquals(origSpot, copySpot, tol) };
+		// order magnitude of data times machine eps
+		constexpr double tol{ 32. * std::numeric_limits<double>::epsilon() };
+
+		// approximate equivalence within tight tolerance
+		bool const copySame{ nearlyEquals(origSpot, copySpot, tol/32.) };
 
 		// basic arithmetic 
 		quadloco::dat::Spot const spotA{ 29., 23. };

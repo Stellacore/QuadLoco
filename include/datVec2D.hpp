@@ -124,8 +124,8 @@ namespace dat
 			) const
 		{
 			return
-				{  engabra::g3::nearlyEquals(theData[0], other.theData[0])
-				&& engabra::g3::nearlyEquals(theData[1], other.theData[1])
+				{  engabra::g3::nearlyEquals(theData[0], other.theData[0], tol)
+				&& engabra::g3::nearlyEquals(theData[1], other.theData[1], tol)
 				};
 		}
 
