@@ -42,6 +42,7 @@
 #include "pix.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <numbers>
 
 
@@ -115,7 +116,7 @@ namespace hough
 		//! Row/column in accumulation grid associated with ParmAD values
 		inline
 		dat::Spot
-		datSpotFor
+		datSpotForAD
 			( hough::ParmAD const & parmAD
 			) const
 		{
@@ -130,14 +131,15 @@ namespace hough
 		//! Row/column in accumulation grid associated with ParmAD values
 		inline
 		dat::RowCol
-		datRowColFor
+		datRowColForAD
 			( hough::ParmAD const & parmAD
 			) const
 		{
-			dat::Spot const gridSpot{ datSpotFor(parmAD) };
+			dat::Spot const gridSpot{ datSpotForAD(parmAD) };
 			return cast::datRowCol(gridSpot);
 		}
 
+		//! Hough alpha,delta parameter values at location gridSpot
 		inline
 		hough::ParmAD
 		houghParmADFor
@@ -157,6 +159,19 @@ namespace hough
 			return parmAD;
 		}
 
+		//! Bell curve like weighting function exp(-|fracSpot|^2).
+		inline
+		double
+		weightAt
+			( dat::Vec2D<double> const & fracSpot
+			, double const & sigma = 1.
+			)
+		{
+			double const radius{ magnitude(fracSpot) };
+			double const zVal{ radius / sigma };
+			return std::exp(-zVal*zVal);
+		}
+
 		//! Incorporate parmAD values into theGridAD with gridMag as weight
 		inline
 		void
@@ -167,7 +182,103 @@ namespace hough
 		{
 			if (pix::isValid(gradMag) && parmAD.isValid())
 			{
-				theGridAD(datRowColFor(parmAD)) += gradMag;
+
+/*
+s/LT/NN/g
+s/MT/ZN/g
+s/RT/PN/g
+s/LM/NZ/g
+s/MM/ZZ/g
+s/RM/PZ/g
+s/LB/NP/g
+s/MB/ZP/g
+s/RB/PP/g
+*/
+
+				static dat::Spot const dSpotLT{ -1., -1. };
+				static dat::Spot const dSpotMT{  0., -1. };
+				static dat::Spot const dSpotRT{  1., -1. };
+
+				static dat::Spot const dSpotLM{ -1.,  0. };
+				static dat::Spot const dSpotMM{  0.,  0. };
+				static dat::Spot const dSpotRM{  1.,  0. };
+
+				static dat::Spot const dSpotLB{ -1.,  1. };
+				static dat::Spot const dSpotMB{  0.,  1. };
+				static dat::Spot const dSpotRB{  1.,  1. };
+
+
+				dat::Spot const spot00{ datSpotForAD(parmAD) };
+
+				static dat::Spot const spotLT{ spot00 + dSpotLT };
+				static dat::Spot const spotMT{ spot00 + dSpotMT };
+				static dat::Spot const spotRT{ spot00 + dSpotRT };
+
+				static dat::Spot const spotLM{ spot00 + dSpotLM };
+				static dat::Spot const spotMM{ spot00 + dSpotMM };
+				static dat::Spot const spotRM{ spot00 + dSpotRM };
+
+				static dat::Spot const spotLB{ spot00 + dSpotLB };
+				static dat::Spot const spotMB{ spot00 + dSpotMB };
+				static dat::Spot const spotRB{ spot00 + dSpotRB };
+
+
+				dat::RowCol const rcLT{ cast::datRowCol(spotLT) };
+				dat::RowCol const rcMT{ cast::datRowCol(spotMT) };
+				dat::RowCol const rcRT{ cast::datRowCol(spotRT) };
+
+				dat::RowCol const rcLM{ cast::datRowCol(spotLM) };
+				dat::RowCol const rcMM{ cast::datRowCol(spotMM) };
+				dat::RowCol const rcRM{ cast::datRowCol(spotRM) };
+
+				dat::RowCol const rcLB{ cast::datRowCol(spotLB) };
+				dat::RowCol const rcMB{ cast::datRowCol(spotMB) };
+				dat::RowCol const rcRB{ cast::datRowCol(spotRB) };
+
+/*
+std::cout << '\n';
+
+std::cout << "rcLT: " << rcLT << '\n';
+std::cout << "rcMT: " << rcMT << '\n';
+std::cout << "rcRT: " << rcRT << '\n';
+
+std::cout << "rcLM: " << rcLM << '\n';
+std::cout << "rcMM: " << rcMM << '\n';
+std::cout << "rcRM: " << rcRM << '\n';
+
+std::cout << "rcLB: " << rcLB << '\n';
+std::cout << "rcMB: " << rcMB << '\n';
+std::cout << "rcRB: " << rcRB << '\n';
+*/
+
+
+				dat::Spot const fracMM{ spotMM - cast::datSpot(rcMM) };
+
+				double const weightLT{ weightAt(fracMM + dSpotLT) };
+				double const weightMT{ weightAt(fracMM + dSpotMT) };
+				double const weightRT{ weightAt(fracMM + dSpotRT) };
+
+				double const weightLM{ weightAt(fracMM + dSpotLM) };
+				double const weightMM{ weightAt(fracMM + dSpotMM) };
+				double const weightRM{ weightAt(fracMM + dSpotRM) };
+
+				double const weightLB{ weightAt(fracMM + dSpotLB) };
+				double const weightMB{ weightAt(fracMM + dSpotMB) };
+				double const weightRB{ weightAt(fracMM + dSpotRB) };
+
+
+				theGridAD(rcLT) += weightLT * gradMag;
+				theGridAD(rcMT) += weightMT * gradMag;
+				theGridAD(rcRT) += weightRT * gradMag;
+
+				theGridAD(rcLM) += weightLM * gradMag;
+				theGridAD(rcMM) += weightMM * gradMag;
+				theGridAD(rcRM) += weightRM * gradMag;
+
+				theGridAD(rcLB) += weightLB * gradMag;
+				theGridAD(rcMB) += weightMB * gradMag;
+				theGridAD(rcRB) += weightRB * gradMag;
+
 			}
 		}
 

@@ -32,7 +32,9 @@
 #include "datCircle.hpp"
 #include "datGrid.hpp"
 #include "datRowCol.hpp"
+#include "datSizeMap.hpp"
 #include "datSpot.hpp"
+#include "houghAdderAD.hpp"
 #include "houghParmAD.hpp"
 #include "pixEdgel.hpp"
 #include "pixGrad.hpp"
@@ -40,98 +42,97 @@
 #include "pix.hpp"
 #include "simgrid.hpp"
 
+#include "datSpan.hpp"
+
 #include <Engabra>
 
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 
 
 namespace
 {
+
 	//! Examples for documentation
 	void
 	test1
 		( std::ostream & oss
 		)
 	{
+		using namespace quadloco;
+
 		// [DoxyExample01]
 
-		// generate grid (image) with a well defined edge
-		quadloco::pix::Edgel const expEdgel
-			{ quadloco::pix::Spot{ 3., 4. }
-			, quadloco::pix::Grad{ 2., 4. }
+		using namespace quadloco;
+
+		// a well-defined edge for use in generating a simulated raster step
+		pix::Edgel const expEdgel
+			{ pix::Spot{ 3., 4. }
+			, pix::Grad{ 2., 4. }
 			};
 
-		// simulate an image with a very strong edge
-		quadloco::dat::SizeHW const hwSize{ 7u, 10u };
-		quadloco::dat::Grid<float> const pixGrid
-			{ quadloco::sim::gridWithEdge(hwSize, expEdgel) };
+		// simulate image with a very strong edge (constistent with expEdgel)
+		dat::SizeHW const hwSize{ 8u, 10u };
+		dat::Grid<float> const pixGrid
+			{ sim::gridWithEdge(hwSize, expEdgel) };
 
-		// compute Grad image
-		quadloco::dat::Grid<quadloco::pix::Grad> const grads
-			{ quadloco::pix::grid::gradientGridFor(pixGrid) };
+		// compute a full gradient grid - each cell has gradient of pixGrid
+		dat::Grid<pix::Grad> const gradGrid
+			{ pix::grid::gradientGridFor(pixGrid) };
 
 		// expected configuration
-		quadloco::dat::Circle const circle
-			{ quadloco::dat::Circle::circumScribing(grads.hwSize()) };
-		quadloco::hough::ParmAD const expMaxAD
-			{ quadloco::hough::ParmAD::from(expEdgel, circle) };
+		dat::Circle const boundingCircle
+			{ dat::Circle::circumScribing(gradGrid.hwSize()) };
+		hough::ParmAD const expMaxAD
+			{ hough::ParmAD::from(expEdgel, boundingCircle) };
 
-std::cout << '\n';
-std::cout << "hwSize: " << hwSize << '\n';
-std::cout << "circle: " << circle << '\n';
-std::cout << "expEdgel: " << expEdgel << '\n';
-std::cout << "expMaxAD: " << expMaxAD << '\n';
-std::cout << '\n';
+		// Determine accumulation buffer size (crudely)
+		std::size_t const sizeAD{ hwSize.perimeter() / 4u };
+		dat::SizeHW const adSize{ sizeAD, sizeAD };
 
-		quadloco::dat::Grid<quadloco::hough::ParmAD> parmADs(grads.hwSize());
-		quadloco::dat::Grid<quadloco::hough::ParmAD>::iterator
-			iterAD{ parmADs.begin() };
+		// Setup accumulator
+		hough::AdderAD adder(adSize);
 
 		// accumulate Grad values into Hough A(lpha)-D(elta) buffer
-		for (quadloco::dat::Grid<quadloco::pix::Grad>::const_iterator
-			iter{grads.cbegin()} ; grads.cend() != iter ; ++iter, ++iterAD)
+		for (dat::Grid<pix::Grad>::const_iterator
+			iter{gradGrid.cbegin()} ; gradGrid.cend() != iter ; ++iter)
 		{
-			quadloco::pix::Spot const spot
-				{ quadloco::cast::pixSpot(grads.datRowColFor(iter)) };
-			quadloco::pix::Grad const & grad = *iter;
-			quadloco::pix::Edgel const edgel{ spot, grad };
+			// note original grid row/col location and gradient
+			pix::Spot const spot
+				{ cast::pixSpot(gradGrid.datRowColFor(iter)) };
+			pix::Grad const & grad = *iter;
 
-			quadloco::hough::ParmAD const parmAD
-				{ quadloco::hough::ParmAD::from(edgel, circle) };
+			// construct Edgel and use to determine ParmAD values
+			pix::Edgel const edgel{ spot, grad };
+			hough::ParmAD const parmAD
+				{ hough::ParmAD::from(edgel, boundingCircle) };
 
-			*iterAD = parmAD;
-
-std::cout << "parmAD: " << parmAD << '\n';
-
+			// add edge magnitude into adGrid cell(s)
+			float const gradMag{ magnitude(edgel.gradient()) };
+			adder.add(parmAD, gradMag);
 		}
 
-		// extract maximum AD value
-		quadloco::hough::ParmAD const gotMaxAD
-			{ // TODO
-			};
-
-		// edge asociated with max AD peak
-		quadloco::pix::Edgel const gotEdgel
-			{ // TODO
-			};
-
-/*
-std::cout << pixGrid.infoStringContents("pixGrid", "%11.2f") << '\n';
-std::cout << grads.infoStringContents
-	("grads", quadloco::pix::Grad::Formatter{}) << '\n';
-*/
-auto const fmtAD
-	{ [] (quadloco::hough::ParmAD const & parmAD)
+		// find max value (for this test data, there's only one max
+		dat::Grid<float> const & gridAD = adder.grid();
+		dat::Grid<float>::const_iterator const itMax
+			{ std::max_element(gridAD.cbegin(), gridAD.cend()) };
+		dat::RowCol gotRowColMax{};
+		if (gridAD.cend() != itMax)
 		{
-			return std::format
-				("({:7.3},{:7.3})", parmAD.alpha(), parmAD.delta());
+			gotRowColMax = gridAD.datRowColFor(itMax);
 		}
-	};
-std::cout << parmADs.infoStringContents("parmADs", fmtAD) << '\n';
+		// this should be close to expected parameter values
+		dat::RowCol const expRowColMax{ adder.datRowColForAD(expMaxAD) };
 
 		// [DoxyExample01]
 
+
+		pix::Edgel const gotEdgel{ gotRowColMax, expEdgel.gradient() };
+		hough::ParmAD const gotMaxAD
+			{ hough::ParmAD::from(gotEdgel, boundingCircle) };
+//		hough::ParmAD const expMaxAD
+//			{ hough::ParmAD::from(expEdgel, boundingCircle) };
 		if (! nearlyEquals(gotEdgel, expEdgel))
 		{
 			oss << "Failure of Edgel test(1)\n";
@@ -139,10 +140,10 @@ std::cout << parmADs.infoStringContents("parmADs", fmtAD) << '\n';
 			oss << "got: " << gotEdgel << '\n';
 		}
 
-		if (! isValid(circle))
+		if (! isValid(boundingCircle))
 		{
-			oss << "Failure of valid circle test\n";
-			oss << "circle: " << circle << '\n';
+			oss << "Failure of valid boundingCircle test\n";
+			oss << "boundingCircle: " << boundingCircle << '\n';
 		}
 
 		if (! nearlyEquals(gotMaxAD, expMaxAD))
@@ -150,6 +151,15 @@ std::cout << parmADs.infoStringContents("parmADs", fmtAD) << '\n';
 			oss << "Failure of parmMaxAD test(1)\n";
 			oss << "exp: " << expMaxAD << '\n';
 			oss << "got: " << gotMaxAD << '\n';
+		}
+
+std::cout << adder.grid().infoStringContents("adder", "%2.1f") << '\n';
+
+		if (! (gotRowColMax == expRowColMax))
+		{
+			oss << "Failure of gotRowColMax test\n";
+			oss << "exp: " << expRowColMax << '\n';
+			oss << "got: " << gotRowColMax << '\n';
 		}
 
 	}

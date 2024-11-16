@@ -64,7 +64,7 @@ namespace
 
 		// grid location spot associated with parmAD
 		quadloco::dat::RowCol const gotRowCol
-			{ adder.datRowColFor(parmAD) };
+			{ adder.datRowColForAD(parmAD) };
 		// parameters associated with grid location
 		quadloco::hough::ParmAD const gotParmAD
 			{ adder.houghParmADFor(quadloco::cast::datSpot(expRowCol)) };
