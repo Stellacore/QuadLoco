@@ -114,6 +114,20 @@ namespace cast
 	}
 
 	//! Integral values that are the std::floor values of datSpot[0,1]
+	template <typename Type>
+	inline
+	dat::RowCol
+	datRowCol
+		( dat::Vec2D<Type> const & vec2D
+		)
+	{
+		return dat::RowCol
+			{ static_cast<std::size_t>(std::floor(vec2D[0]))
+			, static_cast<std::size_t>(std::floor(vec2D[1]))
+			};
+	}
+
+	//! Integral values that are the std::floor values of datSpot[0,1]
 	inline
 	dat::RowCol
 	datRowCol
