@@ -33,9 +33,9 @@
 
 
 #include "datGrid.hpp"
+#include "datMapSizeArea.hpp"
 #include "datRowCol.hpp"
 #include "datSizeHW.hpp"
-#include "datSizeMap.hpp"
 #include "datSpan.hpp"
 #include "datSpot.hpp"
 #include "houghParmAD.hpp"
@@ -58,7 +58,7 @@ namespace hough
 		static constexpr double pi{ std::numbers::pi_v<double> };
 		static constexpr double piTwo{ 2. * std::numbers::pi_v<double> };
 
-		dat::SizeMap const theSizeMap;
+		dat::MapSizeArea const theMapSizeArea;
 		dat::Grid<float> theGridAD{};
 
 		//! Add/subtract 2*pi if iAngle is under/over (min, max) range
@@ -94,7 +94,7 @@ namespace hough
 		AdderAD
 			( dat::SizeHW const & adSize
 			)
-			: theSizeMap
+			: theMapSizeArea
 				( adSize 
 				, dat::Span{ -pi, pi }
 				, dat::Span{ 0., piTwo }
@@ -125,7 +125,7 @@ namespace hough
 				{ angleInRange(parmAD.alpha(), -pi, pi)
 				, angleInRange(parmAD.delta(), 0., piTwo)
 				};
-			return dat::Spot{ theSizeMap.gridSpotForAreaSpot(parmSpot) };
+			return dat::Spot{ theMapSizeArea.gridSpotForAreaSpot(parmSpot) };
 		}
 
 		//! Row/column in accumulation grid associated with ParmAD values
@@ -153,7 +153,7 @@ namespace hough
 			   )
 			{
 				dat::Spot const areaSpot
-					{ theSizeMap.areaSpotForGridSpot(gridSpot) };
+					{ theMapSizeArea.areaSpotForGridSpot(gridSpot) };
 				parmAD = hough::ParmAD{ areaSpot[0], areaSpot[1] };
 			}
 			return parmAD;

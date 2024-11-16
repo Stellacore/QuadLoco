@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::dat::SizeMap
+ * \brief Declarations for quadloco::dat::MapSizeArea
  *
  */
 
@@ -44,7 +44,7 @@ namespace quadloco
 
 namespace dat
 {
-	struct SizeMap
+	struct MapSizeArea
 	{
 		std::array<Span, 2u> const theSpanGrids{};
 		std::array<Span, 2u> const theSpanAreas{};
@@ -52,7 +52,7 @@ namespace dat
 		//! A mapping between "grid" space and "area" space
 		inline
 		explicit
-		SizeMap
+		MapSizeArea
 			( SizeHW const & hwGridSize
 			, Span const & areaSpan0
 			, Span const & areaSpan1
@@ -143,7 +143,7 @@ namespace dat
 		}
 
 
-	}; // SizeMap
+	}; // MapSizeArea
 
 
 } // [dat]
@@ -158,7 +158,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::SizeMap const & item
+		, quadloco::dat::MapSizeArea const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -169,7 +169,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::dat::SizeMap const & item
+		( quadloco::dat::MapSizeArea const & item
 		)
 	{
 		return item.isValid();

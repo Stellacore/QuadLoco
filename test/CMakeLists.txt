@@ -34,9 +34,9 @@ set(unitTests
 	test_datCircle  # geometric circle (and line intersection)
 	test_datFence  # bounding region determination
 	test_datGrid  # general raster grid storage and access
+	test_datMapSizeArea  # raster cell to continous area mapping
 	test_datRowCol  # discete raster cell locations
 	test_datSizeHW  # basic "high/wide" area boundary (half open)
-	test_datSizeMap  # raster cell to continous area mapping
 	test_datSpan  # half open interval (include start, excludes end)
 	test_datSpot  # 'continuous' raster cell locations
 	test_datVec2D  # support for 2D vector operations

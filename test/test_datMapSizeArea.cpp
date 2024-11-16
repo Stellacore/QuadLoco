@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::dat::SizeMap
+\brief Unit tests (and example) code for quadloco::dat::MapSizeArea
 */
 
 
-#include "datSizeMap.hpp"
+#include "datMapSizeArea.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -48,7 +48,7 @@ namespace
 		quadloco::dat::Span const xSpan{ 17., 34. };
 		quadloco::dat::Span const ySpan{ 23., 69. };
 
-		quadloco::dat::SizeMap const cellMap(hwSize, xSpan, ySpan);
+		quadloco::dat::MapSizeArea const cellMap(hwSize, xSpan, ySpan);
 
 		quadloco::dat::Spot const gridSpotA{ 0., 0. };
 		quadloco::dat::Spot const expAreaA{ 17., 23. }; // from {x,y}Span

@@ -32,7 +32,6 @@
 #include "datCircle.hpp"
 #include "datGrid.hpp"
 #include "datRowCol.hpp"
-#include "datSizeMap.hpp"
 #include "datSpot.hpp"
 #include "houghAdderAD.hpp"
 #include "houghParmAD.hpp"
