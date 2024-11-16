@@ -183,101 +183,91 @@ namespace hough
 			if (pix::isValid(gradMag) && parmAD.isValid())
 			{
 
-/*
-s/LT/NN/g
-s/MT/ZN/g
-s/RT/PN/g
-s/LM/NZ/g
-s/MM/ZZ/g
-s/RM/PZ/g
-s/LB/NP/g
-s/MB/ZP/g
-s/RB/PP/g
-*/
-
-				static dat::Spot const dSpotLT{ -1., -1. };
-				static dat::Spot const dSpotMT{  0., -1. };
-				static dat::Spot const dSpotRT{  1., -1. };
-
-				static dat::Spot const dSpotLM{ -1.,  0. };
-				static dat::Spot const dSpotMM{  0.,  0. };
-				static dat::Spot const dSpotRM{  1.,  0. };
-
-				static dat::Spot const dSpotLB{ -1.,  1. };
-				static dat::Spot const dSpotMB{  0.,  1. };
-				static dat::Spot const dSpotRB{  1.,  1. };
-
-
 				dat::Spot const spot00{ datSpotForAD(parmAD) };
 
-				static dat::Spot const spotLT{ spot00 + dSpotLT };
-				static dat::Spot const spotMT{ spot00 + dSpotMT };
-				static dat::Spot const spotRT{ spot00 + dSpotRT };
+				static dat::Spot const dSpotNN{ -1., -1. };
+				static dat::Spot const dSpotZN{  0., -1. };
+				static dat::Spot const dSpotPN{  1., -1. };
 
-				static dat::Spot const spotLM{ spot00 + dSpotLM };
-				static dat::Spot const spotMM{ spot00 + dSpotMM };
-				static dat::Spot const spotRM{ spot00 + dSpotRM };
+				static dat::Spot const dSpotNZ{ -1.,  0. };
+				static dat::Spot const dSpotZZ{  0.,  0. };
+				static dat::Spot const dSpotPZ{  1.,  0. };
 
-				static dat::Spot const spotLB{ spot00 + dSpotLB };
-				static dat::Spot const spotMB{ spot00 + dSpotMB };
-				static dat::Spot const spotRB{ spot00 + dSpotRB };
+				static dat::Spot const dSpotNP{ -1.,  1. };
+				static dat::Spot const dSpotZP{  0.,  1. };
+				static dat::Spot const dSpotPP{  1.,  1. };
 
 
-				dat::RowCol const rcLT{ cast::datRowCol(spotLT) };
-				dat::RowCol const rcMT{ cast::datRowCol(spotMT) };
-				dat::RowCol const rcRT{ cast::datRowCol(spotRT) };
+				static dat::Spot const spotNN{ spot00 + dSpotNN };
+				static dat::Spot const spotZN{ spot00 + dSpotZN };
+				static dat::Spot const spotPN{ spot00 + dSpotPN };
 
-				dat::RowCol const rcLM{ cast::datRowCol(spotLM) };
-				dat::RowCol const rcMM{ cast::datRowCol(spotMM) };
-				dat::RowCol const rcRM{ cast::datRowCol(spotRM) };
+				static dat::Spot const spotNZ{ spot00 + dSpotNZ };
+				static dat::Spot const spotZZ{ spot00 + dSpotZZ };
+				static dat::Spot const spotPZ{ spot00 + dSpotPZ };
 
-				dat::RowCol const rcLB{ cast::datRowCol(spotLB) };
-				dat::RowCol const rcMB{ cast::datRowCol(spotMB) };
-				dat::RowCol const rcRB{ cast::datRowCol(spotRB) };
+				static dat::Spot const spotNP{ spot00 + dSpotNP };
+				static dat::Spot const spotZP{ spot00 + dSpotZP };
+				static dat::Spot const spotPP{ spot00 + dSpotPP };
+
+
+				dat::RowCol const rcNN{ cast::datRowCol(spotNN) };
+				dat::RowCol const rcZN{ cast::datRowCol(spotZN) };
+				dat::RowCol const rcPN{ cast::datRowCol(spotPN) };
+
+				dat::RowCol const rcNZ{ cast::datRowCol(spotNZ) };
+				dat::RowCol const rcZZ{ cast::datRowCol(spotZZ) };
+				dat::RowCol const rcPZ{ cast::datRowCol(spotPZ) };
+
+				dat::RowCol const rcNP{ cast::datRowCol(spotNP) };
+				dat::RowCol const rcZP{ cast::datRowCol(spotZP) };
+				dat::RowCol const rcPP{ cast::datRowCol(spotPP) };
 
 /*
 std::cout << '\n';
 
-std::cout << "rcLT: " << rcLT << '\n';
-std::cout << "rcMT: " << rcMT << '\n';
-std::cout << "rcRT: " << rcRT << '\n';
+std::cout << "rcNN: " << rcNN << '\n';
+std::cout << "rcZN: " << rcZN << '\n';
+std::cout << "rcPN: " << rcPN << '\n';
 
-std::cout << "rcLM: " << rcLM << '\n';
-std::cout << "rcMM: " << rcMM << '\n';
-std::cout << "rcRM: " << rcRM << '\n';
+std::cout << "rcNZ: " << rcNZ << '\n';
+std::cout << "rcZZ: " << rcZZ << '\n';
+std::cout << "rcPZ: " << rcPZ << '\n';
 
-std::cout << "rcLB: " << rcLB << '\n';
-std::cout << "rcMB: " << rcMB << '\n';
-std::cout << "rcRB: " << rcRB << '\n';
+std::cout << "rcNP: " << rcNP << '\n';
+std::cout << "rcZP: " << rcZP << '\n';
+std::cout << "rcPP: " << rcPP << '\n';
 */
 
 
-				dat::Spot const fracMM{ spotMM - cast::datSpot(rcMM) };
+				dat::Spot const fracZZ{ spotZZ - cast::datSpot(rcZZ) };
 
-				double const weightLT{ weightAt(fracMM + dSpotLT) };
-				double const weightMT{ weightAt(fracMM + dSpotMT) };
-				double const weightRT{ weightAt(fracMM + dSpotRT) };
+				double const weightNN{ weightAt(fracZZ + dSpotNN) };
+				double const weightZN{ weightAt(fracZZ + dSpotZN) };
+				double const weightPN{ weightAt(fracZZ + dSpotPN) };
 
-				double const weightLM{ weightAt(fracMM + dSpotLM) };
-				double const weightMM{ weightAt(fracMM + dSpotMM) };
-				double const weightRM{ weightAt(fracMM + dSpotRM) };
+				double const weightNZ{ weightAt(fracZZ + dSpotNZ) };
+				double const weightZZ{ weightAt(fracZZ + dSpotZZ) };
+				double const weightPZ{ weightAt(fracZZ + dSpotPZ) };
 
-				double const weightLB{ weightAt(fracMM + dSpotLB) };
-				double const weightMB{ weightAt(fracMM + dSpotMB) };
-				double const weightRB{ weightAt(fracMM + dSpotRB) };
+				double const weightNP{ weightAt(fracZZ + dSpotNP) };
+				double const weightZP{ weightAt(fracZZ + dSpotZP) };
+				double const weightPP{ weightAt(fracZZ + dSpotPP) };
+
+// TODO - need to wrap row/col coordinates back into the grid!
 
 
-				theGridAD(rcLT) += weightLT * gradMag;
-				theGridAD(rcMT) += weightMT * gradMag;
-				theGridAD(rcRT) += weightRT * gradMag;
+				theGridAD(rcNN) += weightNN * gradMag;
+				theGridAD(rcZN) += weightZN * gradMag;
+				theGridAD(rcPN) += weightPN * gradMag;
 
-				theGridAD(rcLM) += weightLM * gradMag;
-				theGridAD(rcMM) += weightMM * gradMag;
-				theGridAD(rcRM) += weightRM * gradMag;
+				theGridAD(rcNZ) += weightNZ * gradMag;
+				theGridAD(rcZZ) += weightZZ * gradMag;
+				theGridAD(rcPZ) += weightPZ * gradMag;
 
-				theGridAD(rcLB) += weightLB * gradMag;
-				theGridAD(rcMB) += weightMB * gradMag;
-				theGridAD(rcRB) += weightRB * gradMag;
+				theGridAD(rcNP) += weightNP * gradMag;
+				theGridAD(rcZP) += weightZP * gradMag;
+				theGridAD(rcPP) += weightPP * gradMag;
 
 			}
 		}
