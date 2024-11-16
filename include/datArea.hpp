@@ -51,6 +51,9 @@ namespace dat
 	{
 		std::array<Span, 2u> theSpans;
 
+		// for convenience in consuming code
+		typedef std::array<double, 2u> Dyad;
+
 		//! True if both coordinates are not null.
 		inline
 		bool
@@ -74,6 +77,30 @@ namespace dat
 				(  theSpans[0].contains(spot[0])
 				&& theSpans[1].contains(spot[1])
 				);
+		}
+
+		//! Dyad (std::array<double,2u>) of fractions in each direction at spot
+		inline
+		Dyad
+		fractionDyadAtSpot
+			( dat::Spot const & spot
+			) const
+		{
+			double const frac0{ theSpans[0].fractionAtValue(spot[0]) };
+			double const frac1{ theSpans[1].fractionAtValue(spot[1]) };
+			return std::array<double, 2u>{ frac0, frac1 };
+		}
+
+		//! Coordinate location at fractional values into the area.
+		inline
+		dat::Spot
+		spotAtFractionDyad
+			( Dyad const fracDyad
+			) const
+		{
+			double const value0{ theSpans[0].valueAtFraction(fracDyad[0]) };
+			double const value1{ theSpans[1].valueAtFraction(fracDyad[1]) };
+			return dat::Spot{ value0, value1 };
 		}
 
 		//! Descriptive information about this instance
