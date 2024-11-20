@@ -63,13 +63,42 @@ namespace sim
 		{
 			for (std::size_t col{0u} ; col < hwSize.wide() ; ++col)
 			{
-				dat::RowCol const rcLoc{ row, col };
-				float pixValue{ valueBackground };
-				if (edgel.rcInFront(rcLoc))
+				constexpr bool smoothEdge{ true };
+				if (smoothEdge)
 				{
-					pixValue = valueForeground;
+					float const mag{ magnitude(edgel.gradient()) };
+					constexpr float eps
+						{ std::numeric_limits<float>::epsilon() };
+					if ((256.f * eps) < mag)
+					{
+						pix::Spot const pixSpot{ (float)row, (float)col };
+						pix::Spot const relSpot{ pixSpot - edgel.location() };
+						float const delta{ dot(edgel.gradient(), relSpot) };
+						float const dist{ (1.f/mag) * delta };
+						float const mean
+							{ .5f * (valueBackground + valueForeground) };
+						float pixValue { mean + .5f*dist };
+						if (pixValue < valueBackground)
+						{
+							pixValue = valueBackground;
+						}
+						if (! (pixValue < valueForeground))
+						{
+							pixValue = valueForeground;
+						}
+						pixGrid(row, col) = pixValue;
+					}
 				}
-				pixGrid(row, col) = pixValue;
+				else // sharp edge
+				{
+					dat::RowCol const rcLoc{ row, col };
+					float pixValue{ valueBackground };
+					if (edgel.rcInFront(rcLoc))
+					{
+						pixValue = valueForeground;
+					}
+					pixGrid(row, col) = pixValue;
+				}
 			}
 		}
 		return std::move(pixGrid);
