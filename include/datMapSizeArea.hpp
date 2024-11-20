@@ -158,8 +158,10 @@ namespace dat
 			{
 				oss << title << '\n';
 			}
-			oss << "Grid: " << theSize << '\n';
-			oss << "Area: " << theArea << '\n';
+			oss << "Grid: " << theSize
+				<< '\n'
+				<< "Area: " << theArea
+				;
 			return oss.str();
 		}
 
