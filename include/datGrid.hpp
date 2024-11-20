@@ -176,6 +176,9 @@ namespace dat
 			if (theData)
 			{
 				delete [] theData;
+				theHigh = 0u;
+				theWide = 0u;
+				theData = nullptr;
 			}
 		}
 
