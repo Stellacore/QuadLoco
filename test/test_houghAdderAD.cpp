@@ -53,14 +53,18 @@ namespace
 
 		// create adder into grid of hwSize spanning standard parameter
 		// range of -pi <= alpha < pi, 0. <= delta < 2*pi
+		// NOTE: Test code below assumes size AT LEAST (1x1) or larger
 		quadloco::dat::SizeHW const hwSize{ 13u, 17u };
+//quadloco::dat::SizeHW const hwSize{  5u,  5u };
 		quadloco::hough::AdderAD adder(hwSize);
 
 		// define a parameter near the center of the last cell in adder grid
 		quadloco::dat::RowCol const expRowCol
 			{ hwSize.high()-1u, hwSize.wide()-1u };
 		quadloco::hough::ParmAD const parmAD
-			{ pi - 1./26.,  piTwo - 1./34. };
+			{  piTwo*(1. - 1./(double)hwSize.high()) - pi
+			,  piTwo*(1. - 1./(double)hwSize.wide())
+			};
 
 		// grid location spot associated with parmAD
 		quadloco::dat::RowCol const gotRowCol
@@ -68,6 +72,15 @@ namespace
 		// parameters associated with grid location
 		quadloco::hough::ParmAD const gotParmAD
 			{ adder.houghParmADFor(quadloco::cast::datSpot(expRowCol)) };
+
+/*
+std::cout << '\n';
+std::cout << "parmAD: " << parmAD << '\n';
+std::cout << "adder: " << adder << '\n';
+std::cout << "gotRowCol: " << gotRowCol << '\n';
+std::cout << "gotParmAD: " << gotParmAD << '\n';
+std::cout << '\n';
+*/
 
 		// add a gradient magnitude value into the AD grid
 		constexpr float gradMag{ 1.f };
@@ -77,13 +90,18 @@ namespace
 
 		float const expSum{ gradMag };
 		float const gotSum{ adder.grid()(hwSize.high()-1u, hwSize.wide()-1u) };
+/*
+std::cout << "expSum: " << expSum << '\n';
+std::cout << "gotSum: " << gotSum << '\n';
+std::cout << adder.grid().infoStringContents("adder", "%5.3f") << '\n';
+*/
 
 		if (! (gotSum == expSum))
 		{
 			oss << "Failure of gotSum test\n";
 			oss << "exp: " << expSum << '\n';
 			oss << "got: " << gotSum << '\n';
-			oss << adder.grid().infoStringContents("adder", "%4.2f") << '\n';
+			oss << adder.grid().infoStringContents("adder", "%5.3f") << '\n';
 		}
 
 		if (! nearlyEquals(gotRowCol, expRowCol))
@@ -103,8 +121,6 @@ namespace
 			oss << "got: " << gotParmAD << '\n';
 			oss << "tol: " << tol << '\n';
 		}
-
-
 	}
 
 }

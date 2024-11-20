@@ -58,8 +58,10 @@ namespace hough
 		static constexpr double pi{ std::numbers::pi_v<double> };
 		static constexpr double piTwo{ 2. * std::numbers::pi_v<double> };
 
-		dat::MapSizeArea const theMapSizeArea;
 		dat::Grid<float> theGridAD{};
+		dat::MapSizeArea const theMapSizeArea;
+		double const theDeltaA{ std::numeric_limits<double>::quiet_NaN() };
+		double const theDeltaD{ std::numeric_limits<double>::quiet_NaN() };
 
 		//! Add/subtract 2*pi if iAngle is under/over (min, max) range
 		inline
@@ -94,16 +96,28 @@ namespace hough
 		AdderAD
 			( dat::SizeHW const & adSize
 			)
-			: theMapSizeArea
-				( adSize 
+			: theGridAD(adSize)
+			, theMapSizeArea
+				( theGridAD.hwSize() 
 				, dat::Area
 					{ dat::Span{ -pi, pi }
 					, dat::Span{ 0., piTwo }
 					}
 				)
-			, theGridAD(adSize)
 		{
 			std::fill(theGridAD.begin(), theGridAD.end(), 0.f);
+		}
+
+		//! True if this instance contains valid data (is not null)
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  theMapSizeArea.isValid()
+				&& theGridAD.isValid()
+				);
 		}
 
 		//! Direct access to the accumulation grid
@@ -174,6 +188,74 @@ namespace hough
 			return std::exp(-zVal*zVal);
 		}
 
+		//! Value wrapped into range [0,maxValue]
+		inline
+		static
+		double
+		wrappedValue
+			( double const & anyValue
+			, double const & maxValue
+			)
+		{
+			double value{ anyValue };
+			while (value < 0.)
+			{
+				value += maxValue;
+			}
+			while (! (value < maxValue))
+			{
+				value -= maxValue;
+			}
+			return value;
+		}
+
+		//! Grid RowCol location associated with grid spot
+		inline
+		dat::RowCol
+		wrappedGridSpot
+			( dat::Spot const & gridSpot
+			) const
+		{
+			dat::RowCol rc{};
+
+			if (gridSpot.isValid())
+			{
+				double const dHigh{ (double)theGridAD.high() };
+				double const dubRow{ wrappedValue(gridSpot[0], dHigh) };
+
+				double const dWide{ (double)theGridAD.wide() };
+				double const dubCol{ wrappedValue(gridSpot[1], dWide) };
+
+				rc = dat::RowCol
+					{ static_cast<std::size_t>(std::floor(dubRow))
+					, static_cast<std::size_t>(std::floor(dubCol))
+					};
+
+				/*
+				dat::Spot const wrapSpot{ dubRow, dubCol };
+				bool err{ false };
+				if (! (rc.row() < theGridAD.high()))
+				{
+					err = true;
+				}
+				if (! (rc.col() < theGridAD.wide()))
+				{
+					err = true;
+				}
+				if (err)
+				{
+					std::cerr << "gridSpot: " << gridSpot << '\n';
+					std::cerr << "theGridAD: " << theGridAD << '\n';
+					std::cerr << "wrapSpot: " << wrapSpot << '\n';
+					std::cerr << "rc: " << rc << '\n';
+					exit(8);
+				}
+				*/
+			}
+
+			return rc;
+		}
+
 		//! Incorporate parmAD values into theGridAD with gridMag as weight
 		inline
 		void
@@ -182,9 +264,8 @@ namespace hough
 			, float const & gradMag
 			)
 		{
-			if (pix::isValid(gradMag) && parmAD.isValid())
+			if (isValid() && pix::isValid(gradMag) && parmAD.isValid())
 			{
-
 				dat::Spot const spot00{ datSpotForAD(parmAD) };
 
 				static dat::Spot const dSpotNN{ -1., -1. };
@@ -200,30 +281,45 @@ namespace hough
 				static dat::Spot const dSpotPP{  1.,  1. };
 
 
-				static dat::Spot const spotNN{ spot00 + dSpotNN };
-				static dat::Spot const spotZN{ spot00 + dSpotZN };
-				static dat::Spot const spotPN{ spot00 + dSpotPN };
+				dat::Spot const spotNN{ spot00 + dSpotNN };
+				dat::Spot const spotZN{ spot00 + dSpotZN };
+				dat::Spot const spotPN{ spot00 + dSpotPN };
 
-				static dat::Spot const spotNZ{ spot00 + dSpotNZ };
-				static dat::Spot const spotZZ{ spot00 + dSpotZZ };
-				static dat::Spot const spotPZ{ spot00 + dSpotPZ };
+				dat::Spot const spotNZ{ spot00 + dSpotNZ };
+				dat::Spot const spotZZ{ spot00 + dSpotZZ };
+				dat::Spot const spotPZ{ spot00 + dSpotPZ };
 
-				static dat::Spot const spotNP{ spot00 + dSpotNP };
-				static dat::Spot const spotZP{ spot00 + dSpotZP };
-				static dat::Spot const spotPP{ spot00 + dSpotPP };
+				dat::Spot const spotNP{ spot00 + dSpotNP };
+				dat::Spot const spotZP{ spot00 + dSpotZP };
+				dat::Spot const spotPP{ spot00 + dSpotPP };
 
+/*
+std::cout << '\n';
 
-				dat::RowCol const rcNN{ cast::datRowCol(spotNN) };
-				dat::RowCol const rcZN{ cast::datRowCol(spotZN) };
-				dat::RowCol const rcPN{ cast::datRowCol(spotPN) };
+std::cout << "spotNN: " << spotNN << '\n';
+std::cout << "spotZN: " << spotZN << '\n';
+std::cout << "spotPN: " << spotPN << '\n';
 
-				dat::RowCol const rcNZ{ cast::datRowCol(spotNZ) };
-				dat::RowCol const rcZZ{ cast::datRowCol(spotZZ) };
-				dat::RowCol const rcPZ{ cast::datRowCol(spotPZ) };
+std::cout << "spotNZ: " << spotNZ << '\n';
+std::cout << "spotZZ: " << spotZZ << '\n';
+std::cout << "spotPZ: " << spotPZ << '\n';
 
-				dat::RowCol const rcNP{ cast::datRowCol(spotNP) };
-				dat::RowCol const rcZP{ cast::datRowCol(spotZP) };
-				dat::RowCol const rcPP{ cast::datRowCol(spotPP) };
+std::cout << "spotNP: " << spotNP << '\n';
+std::cout << "spotZP: " << spotZP << '\n';
+std::cout << "spotPP: " << spotPP << '\n';
+*/
+
+				dat::RowCol const rcNN{ wrappedGridSpot(spotNN) };
+				dat::RowCol const rcZN{ wrappedGridSpot(spotZN) };
+				dat::RowCol const rcPN{ wrappedGridSpot(spotPN) };
+
+				dat::RowCol const rcNZ{ wrappedGridSpot(spotNZ) };
+				dat::RowCol const rcZZ{ wrappedGridSpot(spotZZ) };
+				dat::RowCol const rcPZ{ wrappedGridSpot(spotPZ) };
+
+				dat::RowCol const rcNP{ wrappedGridSpot(spotNP) };
+				dat::RowCol const rcZP{ wrappedGridSpot(spotZP) };
+				dat::RowCol const rcPP{ wrappedGridSpot(spotPP) };
 
 /*
 std::cout << '\n';
@@ -244,6 +340,41 @@ std::cout << "rcPP: " << rcPP << '\n';
 
 				dat::Spot const fracZZ{ spotZZ - cast::datSpot(rcZZ) };
 
+/*
+std::cout << '\n';
+std::cout << "fracZZ: " << fracZZ << '\n';
+*/
+
+				/*
+				dat::Spot const evalNN{ (fracZZ + dSpotNN) };
+				dat::Spot const evalZN{ (fracZZ + dSpotZN) };
+				dat::Spot const evalPN{ (fracZZ + dSpotPN) };
+
+				dat::Spot const evalNZ{ (fracZZ + dSpotNZ) };
+				dat::Spot const evalZZ{ (fracZZ + dSpotZZ) };
+				dat::Spot const evalPZ{ (fracZZ + dSpotPZ) };
+
+				dat::Spot const evalNP{ (fracZZ + dSpotNP) };
+				dat::Spot const evalZP{ (fracZZ + dSpotZP) };
+				dat::Spot const evalPP{ (fracZZ + dSpotPP) };
+				*/
+
+/*
+std::cout << '\n';
+
+std::cout << "evalNN: " << evalNN << '\n';
+std::cout << "evalZN: " << evalZN << '\n';
+std::cout << "evalPN: " << evalPN << '\n';
+
+std::cout << "evalNZ: " << evalNZ << '\n';
+std::cout << "evalZZ: " << evalZZ << '\n';
+std::cout << "evalPZ: " << evalPZ << '\n';
+
+std::cout << "evalNP: " << evalNP << '\n';
+std::cout << "evalZP: " << evalZP << '\n';
+std::cout << "evalPP: " << evalPP << '\n';
+*/
+
 				double const weightNN{ weightAt(fracZZ + dSpotNN) };
 				double const weightZN{ weightAt(fracZZ + dSpotZN) };
 				double const weightPN{ weightAt(fracZZ + dSpotPN) };
@@ -256,8 +387,21 @@ std::cout << "rcPP: " << rcPP << '\n';
 				double const weightZP{ weightAt(fracZZ + dSpotZP) };
 				double const weightPP{ weightAt(fracZZ + dSpotPP) };
 
-// TODO - need to wrap row/col coordinates back into the grid!
+/*
+std::cout << '\n';
 
+std::cout << "weightNN: " << weightNN << '\n';
+std::cout << "weightZN: " << weightZN << '\n';
+std::cout << "weightPN: " << weightPN << '\n';
+
+std::cout << "weightNZ: " << weightNZ << '\n';
+std::cout << "weightZZ: " << weightZZ << '\n';
+std::cout << "weightPZ: " << weightPZ << '\n';
+
+std::cout << "weightNP: " << weightNP << '\n';
+std::cout << "weightZP: " << weightZP << '\n';
+std::cout << "weightPP: " << weightPP << '\n';
+*/
 
 				theGridAD(rcNN) += weightNN * gradMag;
 				theGridAD(rcZN) += weightZN * gradMag;
@@ -270,9 +414,30 @@ std::cout << "rcPP: " << rcPP << '\n';
 				theGridAD(rcNP) += weightNP * gradMag;
 				theGridAD(rcZP) += weightZP * gradMag;
 				theGridAD(rcPP) += weightPP * gradMag;
-
 			}
 		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< " theGridAD: " << theGridAD
+				<< '\n'
+				<< "theMapSizeArea:\n" << theMapSizeArea
+				;
+
+			return oss.str();
+		}
+
 
 	}; // AdderAD
 
@@ -280,4 +445,31 @@ std::cout << "rcPP: " << rcPP << '\n';
 } // [hough]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::hough::AdderAD const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::hough::AdderAD const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
 
