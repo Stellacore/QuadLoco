@@ -32,6 +32,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 
 namespace
@@ -47,15 +48,17 @@ namespace
 		quadloco::dat::SizeHW const hwSize{ 17u, 23u };
 		quadloco::dat::Span const xSpan{ 17., 34. };
 		quadloco::dat::Span const ySpan{ 23., 69. };
+		quadloco::dat::Area const xyArea{ xSpan, ySpan };
 
-		quadloco::dat::MapSizeArea const cellMap(hwSize, xSpan, ySpan);
+		quadloco::dat::MapSizeArea const cellMap(hwSize, xyArea);
 
 		quadloco::dat::Spot const gridSpotA{ 0., 0. };
 		quadloco::dat::Spot const expAreaA{ 17., 23. }; // from {x,y}Span
 		quadloco::dat::Spot const gotAreaA
 			{ cellMap.areaSpotForGridSpot(gridSpotA) };
 
-		quadloco::dat::Spot const gridSpotB{ 17., 23. };
+		double const eps{ 32.*std::numeric_limits<double>::epsilon() };
+		quadloco::dat::Spot const gridSpotB{ 17.-eps, 23.-eps };
 		quadloco::dat::Spot const expAreaB{ 34., 69. }; // from {x,y}Span
 		quadloco::dat::Spot const gotAreaB
 			{ cellMap.areaSpotForGridSpot(gridSpotB) };
@@ -75,11 +78,13 @@ namespace
 			oss << "got: " << gotAreaA << '\n';
 		}
 
-		if (! nearlyEquals(gotAreaB, expAreaB))
+		if (! nearlyEquals(gotAreaB, expAreaB, eps))
 		{
+			quadloco::dat::Spot const difAreaB{ gotAreaB - expAreaB };
 			oss << "Failure of gotAreaB test\n";
 			oss << "exp: " << expAreaB << '\n';
 			oss << "got: " << gotAreaB << '\n';
+			oss << "dif: " << difAreaB << '\n';
 		}
 
 		if (! nearlyEquals(gotGridC, expGridC))
@@ -89,6 +94,60 @@ namespace
 			oss << "got: " << gotGridC << '\n';
 		}
 
+	}
+
+	//! Check boundary wrap-around mapping
+	void
+	test2
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample02]
+		using namespace quadloco;
+
+		dat::Area const areaFrom
+			{ dat::Span{ -10.,  -9.}
+			, dat::Span{   9.,  10.}
+			};
+		dat::Area const areaInto
+			{ dat::Span{ 10., 11.}
+			, dat::Span{ 10., 11.}
+			};
+
+		dat::MapSizeArea const map
+			(areaInto, areaFrom, dat::MapSizeArea::Wrap);
+
+		// From                         Into
+		//   (min,min) = { -10.,  9. }    (min,min) = {   0.,  1. }
+		//   (max,max) = {  -9., 10. }    (max,max) = {   0.,  1. }
+
+		using FromInto = std::pair<dat::Spot, dat::Spot>;
+		std::vector<FromInto> const pairFIs
+			{ { dat::Spot{ -10.0,   9.0 }, dat::Spot{  10.0,  10.0 } }
+				// (max,max) corner wraps back into (min,min)
+			, { dat::Spot{  -9.0,  10.0 }, dat::Spot{  10.0,  10.0 } }
+			, { dat::Spot{  -9.5,   9.5 }, dat::Spot{  10.5,  10.5 } }
+			, { dat::Spot{  -8.5,   8.5 }, dat::Spot{  10.5,  10.5 } }
+			};
+
+		for (FromInto const & pairFI : pairFIs)
+		{
+			dat::Spot const & from = pairFI.first;
+			dat::Spot const & expInto = pairFI.second;
+			dat::Spot const gotInto{ map.gridSpotForAreaSpot(from) };
+
+			if (! nearlyEquals(gotInto, expInto))
+			{
+				oss << "Failure of Wrap aroudn gridSpotForAreaSpot test\n";
+				oss << "pairFI:"
+					<< "  from: " << from
+					<< "  exp: " << expInto
+					<< "  got: " << gotInto
+					<< '\n';
+			}
+		}
+
+		// [DoxyExample02]
 	}
 
 }
@@ -103,6 +162,7 @@ main
 
 //	test0(oss);
 	test1(oss);
+	test2(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

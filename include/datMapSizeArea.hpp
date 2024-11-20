@@ -45,28 +45,51 @@ namespace quadloco
 
 namespace dat
 {
+	//!< A 2D scaling transformation between "Size" and "Area" spaces.
 	struct MapSizeArea
 	{
 		dat::Area theSize{};
 		dat::Area theArea{};
+
+		//! Interpretation at Area edges
+		enum EdgeMode
+			{ Clip //!< Return null for data outide of *theArea*
+			, Wrap //!< Wrap data into *theArea*
+			};
+
+		EdgeMode theEdgeMode{};
+
+		//! A mapping between "grid" space and "area" space
+		inline
+		explicit
+		MapSizeArea
+			( Area const & intoArea
+			, Area const & fromArea
+			, EdgeMode const & edgeMode = Clip
+			)
+			: theSize{ intoArea }
+			, theArea{ fromArea }
+			, theEdgeMode{ edgeMode }
+		{ }
 
 		//! A mapping between "grid" space and "area" space
 		inline
 		explicit
 		MapSizeArea
 			( SizeHW const & hwGridSize
-			, Span const & areaSpan0
-			, Span const & areaSpan1
+			, Area const & fromArea
+			, EdgeMode const & edgeMode = Clip
 			)
-			: theSize
-				{ Span{ 0., (double)hwGridSize.high() }
-				, Span{ 0., (double)hwGridSize.wide() }
-				}
-			, theArea
-				{ areaSpan0
-				, areaSpan1
-				}
+			: MapSizeArea
+				( dat::Area
+					{ Span{ 0., (double)hwGridSize.high() }
+					, Span{ 0., (double)hwGridSize.wide() }
+					}
+				, fromArea
+				, edgeMode
+				)
 		{ }
+
 
 		//! True if all data members are valid
 		inline
@@ -87,8 +110,13 @@ namespace dat
 			( Spot const & sizeSpot
 			) const
 		{
-			Area::Dyad const fracSpot{ theSize.fractionDyadAtSpot(sizeSpot) };
-			dat::Spot const areaSpot{ theArea.spotAtFractionDyad(fracSpot) };
+			dat::Spot areaSpot{};
+			if (theSize.contains(sizeSpot))
+			{
+				Area::Dyad const fracDyad
+					{ theSize.fractionDyadAtSpot(sizeSpot) };
+				areaSpot = theArea.spotAtFractionDyad(fracDyad);
+			}
 			return areaSpot;
 		}
 
@@ -99,8 +127,22 @@ namespace dat
 			( Spot const & areaSpot
 			) const
 		{
-			Area::Dyad const fracSpot{ theArea.fractionDyadAtSpot(areaSpot) };
-			dat::Spot const sizeSpot{ theSize.spotAtFractionDyad(fracSpot) };
+			dat::Spot sizeSpot{};
+			Area::Dyad const fracDyad{ theArea.fractionDyadAtSpot(areaSpot) };
+			if (Clip == theEdgeMode)
+			{
+				if (theArea.contains(areaSpot))
+				{
+					sizeSpot = theSize.spotAtFractionDyad(fracDyad);
+				}
+			}
+			else
+			if (Wrap == theEdgeMode)
+			{
+				Area::Dyad const pFracDyad
+					{ theArea.principalFractionDyad(fracDyad) };
+				sizeSpot = theSize.spotAtFractionDyad(pFracDyad);
+			}
 			return sizeSpot;
 		}
 

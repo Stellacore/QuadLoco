@@ -96,8 +96,10 @@ namespace hough
 			)
 			: theMapSizeArea
 				( adSize 
-				, dat::Span{ -pi, pi }
-				, dat::Span{ 0., piTwo }
+				, dat::Area
+					{ dat::Span{ -pi, pi }
+					, dat::Span{ 0., piTwo }
+					}
 				)
 			, theGridAD(adSize)
 		{
