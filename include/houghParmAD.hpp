@@ -49,7 +49,7 @@ namespace quadloco
 namespace hough
 {
 
-	/*! Hough line space "alpha,delta" parameter representation
+	/*! \brief Hough line space "alpha,delta" parameter representation.
 	 *
 	 * For description, refer to theory/HoughModel.lyx
 	 */
