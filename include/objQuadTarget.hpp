@@ -39,6 +39,7 @@
 
 #include <array>
 #include <cmath>
+#include <numbers>
 #include <random>
 
 
@@ -185,7 +186,8 @@ namespace obj
 		radiusOuter
 			() const
 		{
-			return (std::sqrt(.5) * theEdgeMag);
+			constexpr double rootHalf{ .5 * std::numbers::sqrt2_v<double> };
+			return (rootHalf * theEdgeMag);
 		}
 
 		//! Inscribing radius (e.g. hits midside background corners)
@@ -271,13 +273,16 @@ namespace obj
 
 			// generate a signal relative to val0
 			double delta{ 0. };
-			double const amp{ std::abs(theWhite - theBlack) };
-			double const frq{ engabra::g3::turnFull / radiusInner() };
+			double const amp{ .5 * std::abs(theWhite - theBlack) };
+			double const frq{ .5 * engabra::g3::turnFull / radiusInner() };
 			if (::isValid(spotOnQuad))
 			{
-				delta = 
-					( amp * std::cos(frq*spotOnQuad[0])
-					+ amp * std::sin(frq*spotOnQuad[1])
+				// ensure that delta is positive
+				// (to avoid introducing negative pixel values)
+				constexpr double rootHalf{ .5 * std::numbers::sqrt2_v<double> };
+				delta = amp * rootHalf *
+					( std::cos(frq*spotOnQuad[0])
+					+ std::sin(frq*spotOnQuad[1])
 					);
 			}
 
@@ -286,7 +291,9 @@ namespace obj
 			static std::normal_distribution<double> distro(.0, .125);
 			double const noise{ distro(gen) };
 
-			return (val0 + delta + noise);
+			// ensure positive value with fabs()
+			double const signal{ std::fabs(val0 + delta + noise) };
+			return signal;
 		}
 
 
@@ -300,12 +307,6 @@ namespace obj
 			// default to nan for outside of target area
 			double value{ std::numeric_limits<double>::quiet_NaN() };
 
-			// unless requested to filling surrounding area
-			if (theAddSurround)
-			{
-				value = surroundSignalAt(spotOnQuad);
-			}
-
 			if (theArea.contains(spotOnQuad))
 			{
 				// this code effectively defines the pattern
@@ -318,21 +319,28 @@ namespace obj
 				double const sign1{ (loc1 < 0.) ? -1. : 1. };
 				double const signEval{ sign0 * sign1 };
 				value = (signEval < 0.) ? theWhite : theBlack;
-			}
 
-			// introduce triangle clipping
-			if (theDoubleTriangle && (theBlack == value))
-			{
-				// apply foreground color to outer triangle areas
-				// of background signal to produce a double-triangle
-				// target signal
-				double const dot{ spotOnQuad[0] + spotOnQuad[1] };
-				double const diagLim{ radiusInner() };
-				if (diagLim < std::abs(dot))
+				// introduce triangle clipping
+				if (theDoubleTriangle && (theBlack == value))
 				{
-					value = theWhite;
+					// apply foreground color to outer triangle areas
+					// of background signal to produce a double-triangle
+					// target signal
+					double const dot{ spotOnQuad[0] + spotOnQuad[1] };
+					double const diagLim{ radiusInner() };
+					if (diagLim < std::abs(dot))
+					{
+						value = theWhite;
+					}
 				}
 			}
+			else
+			if (theAddSurround)
+			{
+				// requested to filling surrounding area
+				value = surroundSignalAt(spotOnQuad);
+			}
+
 			return value;
 		}
 
