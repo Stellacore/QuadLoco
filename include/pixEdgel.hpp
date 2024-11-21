@@ -53,10 +53,10 @@ namespace pix
 	class Edgel
 	{
 		//! Any point on the line
-		pix::Spot const theSpot{};
+		pix::Spot theSpot{};
 
 		//! Direction of the (positive) gradient across the edge
-		pix::Grad const theGrad{};
+		pix::Grad theGrad{};
 
 	public:
 
