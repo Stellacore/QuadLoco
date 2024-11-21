@@ -62,7 +62,7 @@ namespace hough
 		double theDelta{ engabra::g3::null<double>() };
 
 
-		//! Double precision vector from pix::Spot
+		//! Point that contains line segmenet (same point as pix::Spot)
 		inline
 		static
 		dat::Vec2D<double>
