@@ -149,47 +149,28 @@ namespace
 			oss << "boundingCircle: " << boundingCircle << '\n';
 		}
 
-		// the alpha parameters should be similar but can wrap around
-		// therefore compare components of a (unit) vector at angle alpha
-		dat::Spot const gotAlphaComps 
-			{ std::cos(gotParmAD.alpha())
-			, std::sin(gotParmAD.alpha())
-			};
-		dat::Spot const expAlphaComps 
-			{ std::cos(expParmAD.alpha())
-			, std::sin(expParmAD.alpha())
-			};
-		double const tolAlpha{ 1. / (.5 * hwSize.diagonal()) };
-		if (! nearlyEquals(gotAlphaComps, expAlphaComps, tolAlpha))
+		double const tolAD{ 2. / (.5 * hwSize.diagonal()) };
+		if (! nearlyEquals(gotParmAD, expParmAD, tolAD))
 		{
-			dat::Spot const difAlphaComps{ gotAlphaComps - expAlphaComps };
+			double const gotAlpha{ gotParmAD.alpha() };
+			double const expAlpha{ expParmAD.alpha() };
+			double const difAlpha{ gotAlpha - expAlpha };
+
+			double const gotDelta{ gotParmAD.delta() };
+			double const expDelta{ expParmAD.delta() };
+			double const difDelta{ gotDelta - expDelta };
+
 			using engabra::g3::io::fixed;
-			oss << "Failure of gotAlphaComps test\n";
-			oss << "gotAlpha: " << fixed(gotParmAD.alpha()) << '\n';
-			oss << "expAlpha: " << fixed(expParmAD.alpha()) << '\n';
-			oss << "gotAlphaComps: " << gotAlphaComps << '\n';
-			oss << "expAlphaComps: " << expAlphaComps << '\n';
-			oss << "difAlphaComps: " << difAlphaComps << '\n';
-			oss << "      ... mag: " << magnitude(difAlphaComps) << '\n';
-			oss << "      ... tol: " << fixed(tolAlpha) << '\n';
+			oss << "Failure of gotParmAD test\n";
+			oss << "expAlpha: " << fixed(expAlpha) << '\n';
+			oss << "gotAlpha: " << fixed(gotAlpha) << '\n';
+			oss << "expDelta: " << fixed(expDelta) << '\n';
+			oss << "gotDelta: " << fixed(gotDelta) << '\n';
+			oss << "difAlpha: " << fixed(difAlpha) << '\n';
+			oss << "difDelta: " << fixed(difDelta) << '\n';
+			oss << "   tolAD: " << fixed(tolAD) << '\n';
 		}
 
-		// the delta parameters shouldn't wrap around (for sane data)
-		// ??? not sure what this really should be ???
-		//     so just double alpha tolerance
-		double const gotDelta{ gotParmAD.delta() };
-		double const expDelta{ expParmAD.delta() };
-		double const tolDelta{ 2. / (.5 * hwSize.diagonal()) };
-		if (! engabra::g3::nearlyEquals(gotDelta, expDelta, tolDelta))
-		{
-			double const difDelta{ gotDelta - expDelta };
-			using engabra::g3::io::fixed;
-			oss << "Failure of gotDelta test\n";
-			oss << "exp: " << fixed(expDelta) << '\n';
-			oss << "got: " << fixed(gotDelta) << '\n';
-			oss << "dif: " << fixed(difDelta) << '\n';
-			oss << "tol: " << fixed(tolDelta) << '\n';
-		}
 	}
 
 }
