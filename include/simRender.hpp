@@ -115,7 +115,7 @@ namespace sim
 			return theSampler.imgQuadTarget();
 		}
 
-		//! Simulate an image through camera at position xCamWrtQuad
+		//! Simulate image through ctor's camera and orientation
 		inline
 		dat::Grid<float>
 		quadImage
@@ -129,7 +129,7 @@ namespace sim
 			return grid;
 		}
 
-		//! Simulate an image through camera at position xCamWrtQuad
+		//! Simulate image and set pixel values inside of provided grid
 		inline
 		void
 		injectTargetInto
@@ -140,7 +140,6 @@ namespace sim
 			) const
 		{
 			dat::Grid<float> & grid = *ptGrid;
-			constexpr double objDelta{ 1./1024. };
 
 /*
 double const & beg0 = theObjQuad.span0().theBeg;
