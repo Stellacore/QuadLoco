@@ -118,7 +118,7 @@ namespace pix
 			( double const & expoSeconds = 1.
 			) const
 		{
-			double const pixVal{ valueForNumE(eNumberDark()) };
+			double const pixVal{ valueForNumE(eNumberDark(expoSeconds)) };
 			return pixVal;
 		}
 
