@@ -136,10 +136,20 @@ namespace
 		, double const & tol = 0.
 		)
 	{
+		double const rA{ static_cast<double>(itemA.row()) };
+		double const rB{ static_cast<double>(itemB.row()) };
+		double const cA{ static_cast<double>(itemA.col()) };
+		double const cB{ static_cast<double>(itemB.col()) };
+		return
+			(  (! (tol < std::abs(rA - rB)))
+			&& (! (tol < std::abs(cA - cB)))
+			);
+		/*
 		return
 			(  (itemA.row() == itemB.row())
 			&& (itemA.col() == itemB.col())
 			);
+		*/
 	}
 
 } // [anon/global]
