@@ -100,15 +100,21 @@ namespace pix
 			( double const & intensityValue
 			) const
 		{
-			double const fullNumE{ theElectPerValue * intensityValue };
-			double const rootNumE{ std::sqrtf(fullNumE) };
-			std::size_t const distroMean{ static_cast<std::size_t>(rootNumE) };
+			double eShot{ 0. };
+			if (0. < intensityValue)
+			{
+				double const fullNumE{ theElectPerValue * intensityValue };
+				double const rootNumE{ std::sqrtf(fullNumE) };
+				std::size_t const distroMean
+					{ static_cast<std::size_t>(rootNumE) };
 
-			// distribution proportional to meanIntensity
-			std::poisson_distribution<std::size_t> distro(distroMean);
+				// distribution proportional to meanIntensity
+				std::poisson_distribution<std::size_t> distro(distroMean);
 
-			// noise electrons
-			return distro(prn::sGen);
+				// noise electrons
+				eShot = distro(prn::sGen);
+			}
+			return eShot;
 		}
 
 		//! Dark current noise approximation (ignoring temperature dependency)
