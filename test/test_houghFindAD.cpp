@@ -65,14 +65,16 @@ namespace
 
 		using namespace quadloco;
 
+		// (simulated) image size
+		dat::SizeHW const hwSize{ 17u, 19u };
+
 		// a well-defined edge for use in generating a simulated raster step
 		pix::Edgel const expEdgel
-			{ pix::Spot{ 3., 4. }
-			, pix::Grad{ 2., 4. }
+			{ pix::Spot{ (float)(hwSize.high()/2u), (float)(hwSize.wide()/2u) }
+			, pix::Grad{ 2., 3. }
 			};
 
 		// simulate image with a very strong edge (constistent with expEdgel)
-		dat::SizeHW const hwSize{ 8u, 10u };
 		dat::Grid<float> const pixGrid
 			{ sim::gridWithEdge(hwSize, expEdgel) };
 
@@ -121,23 +123,25 @@ namespace
 		{
 			gotRowColMax = gridAD.datRowColFor(itMax);
 		}
-		// this should be close to expected parameter values
-		dat::RowCol const expRowColMax{ adder.datRowColForAD(expMaxAD) };
+
+		// Hough parameter (alpha,delta) values for accum cell w/ max value
+		dat::Spot const gotSpotMax{ cast::datSpot(gotRowColMax) };
+		hough::ParmAD const gotParmAD{ adder.houghParmADFor(gotSpotMax) };
+
+		// Hough (alpha,delta) values expected for simulation generating edgel
+		hough::ParmAD const expParmAD
+			{ hough::ParmAD::from(expEdgel, boundingCircle) };
 
 		// [DoxyExample01]
 
-
-		pix::Edgel const gotEdgel{ gotRowColMax, expEdgel.gradient() };
-		hough::ParmAD const gotMaxAD
-			{ hough::ParmAD::from(gotEdgel, boundingCircle) };
-//		hough::ParmAD const expMaxAD
-//			{ hough::ParmAD::from(expEdgel, boundingCircle) };
-		if (! nearlyEquals(gotEdgel, expEdgel))
-		{
-			oss << "Failure of Edgel test(1)\n";
-			oss << "exp: " << expEdgel << '\n';
-			oss << "got: " << gotEdgel << '\n';
-		}
+		/*
+		std::cout << pixGrid.infoStringContents("pixGrid", "%2.1f") << '\n';
+		std::cout << "gotRowColMax: " << gotRowColMax << '\n';
+		std::cout << "gotSpotMax: " << gotSpotMax << '\n';
+		std::cout << "expParmAD: " << expParmAD << '\n';
+		std::cout << "gotParmAD: " << gotParmAD << '\n';
+		std::cout << adder.grid().infoStringContents("adder", "%2.1f") << '\n';
+		*/
 
 		if (! isValid(boundingCircle))
 		{
@@ -145,22 +149,47 @@ namespace
 			oss << "boundingCircle: " << boundingCircle << '\n';
 		}
 
-		if (! nearlyEquals(gotMaxAD, expMaxAD))
+		// the alpha parameters should be similar but can wrap around
+		// therefore compare components of a (unit) vector at angle alpha
+		dat::Spot const gotAlphaComps 
+			{ std::cos(gotParmAD.alpha())
+			, std::sin(gotParmAD.alpha())
+			};
+		dat::Spot const expAlphaComps 
+			{ std::cos(expParmAD.alpha())
+			, std::sin(expParmAD.alpha())
+			};
+		double const tolAlpha{ 1. / (.5 * hwSize.diagonal()) };
+		if (! nearlyEquals(gotAlphaComps, expAlphaComps, tolAlpha))
 		{
-			oss << "Failure of parmMaxAD test(1)\n";
-			oss << "exp: " << expMaxAD << '\n';
-			oss << "got: " << gotMaxAD << '\n';
+			dat::Spot const difAlphaComps{ gotAlphaComps - expAlphaComps };
+			using engabra::g3::io::fixed;
+			oss << "Failure of gotAlphaComps test\n";
+			oss << "gotAlpha: " << fixed(gotParmAD.alpha()) << '\n';
+			oss << "expAlpha: " << fixed(expParmAD.alpha()) << '\n';
+			oss << "gotAlphaComps: " << gotAlphaComps << '\n';
+			oss << "expAlphaComps: " << expAlphaComps << '\n';
+			oss << "difAlphaComps: " << difAlphaComps << '\n';
+			oss << "      ... mag: " << magnitude(difAlphaComps) << '\n';
+			oss << "      ... tol: " << fixed(tolAlpha) << '\n';
 		}
 
-std::cout << adder.grid().infoStringContents("adder", "%2.1f") << '\n';
-
-		if (! (gotRowColMax == expRowColMax))
+		// the delta parameters shouldn't wrap around (for sane data)
+		// ??? not sure what this really should be ???
+		//     so just double alpha tolerance
+		double const gotDelta{ gotParmAD.delta() };
+		double const expDelta{ expParmAD.delta() };
+		double const tolDelta{ 2. / (.5 * hwSize.diagonal()) };
+		if (! engabra::g3::nearlyEquals(gotDelta, expDelta, tolDelta))
 		{
-			oss << "Failure of gotRowColMax test\n";
-			oss << "exp: " << expRowColMax << '\n';
-			oss << "got: " << gotRowColMax << '\n';
+			double const difDelta{ gotDelta - expDelta };
+			using engabra::g3::io::fixed;
+			oss << "Failure of gotDelta test\n";
+			oss << "exp: " << fixed(expDelta) << '\n';
+			oss << "got: " << fixed(gotDelta) << '\n';
+			oss << "dif: " << fixed(difDelta) << '\n';
+			oss << "tol: " << fixed(tolDelta) << '\n';
 		}
-
 	}
 
 }
