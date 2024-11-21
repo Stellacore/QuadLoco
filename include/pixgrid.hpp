@@ -225,7 +225,6 @@ namespace grid
 	 * NOTE: the stepHalf pixels around the boarder are set to null!!
 	 */
 	inline
-	static
 	dat::Grid<pix::Grad>
 	gradientGridFor
 		( dat::Grid<float> const & inGrid
