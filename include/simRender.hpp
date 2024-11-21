@@ -50,15 +50,6 @@ namespace sim
 	//! Functor for rendering simulated quadrant images
 	class Render
 	{
-		//! Camera with which to render image geometry and intensities
-		img::Camera const theCamera{};
-
-		//! Exterior orientation of camera w.r.t. quad target
-		rigibra::Transform const theCamWrtQuad{};
-
-		//! Quad target geometry in object space
-		obj::QuadTarget const theObjQuad{};
-
 		//! Cached data - must be set in ctor
 		Sampler const theSampler;
 
@@ -80,10 +71,7 @@ namespace sim
 				)
 				//!< XOR of quadloco::sim::Sampler::OptionFlags
 			)
-			: theCamera{ camera }
-			, theCamWrtQuad{ xCamWrtQuad }
-			, theObjQuad{ objQuad }
-			, theSampler(theCamera, theCamWrtQuad, theObjQuad, samplerOptions)
+			: theSampler(camera, xCamWrtQuad, objQuad, samplerOptions)
 		{ }
 
 		//! Construct rendering engine to simulate quad target images
@@ -112,12 +100,7 @@ namespace sim
 		isValid
 			() const
 		{
-			return
-				(  theCamera.isValid()
-				&& rigibra::isValid(theCamWrtQuad)
-				&& theObjQuad.isValid()
-				&& theSampler.isValid()
-				);
+			return (theSampler.isValid());
 		}
 
 		//! Geometry of perspective image created by quadImage()
@@ -137,7 +120,7 @@ namespace sim
 				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
 			) const
 		{
-			dat::Grid<float> grid(theCamera.theFormat);
+			dat::Grid<float> grid(theSampler.format());
 			std::fill(grid.begin(), grid.end(), engabra::g3::null<float>());
 			injectTargetInto(&grid, numOverSamp);
 			return grid;
@@ -194,13 +177,7 @@ double const & end1 = theObjQuad.span1().theEnd;
 				oss << title << ' ';
 			}
 			oss
-				<< "theCamera: " << theCamera
-				<< '\n'
-				<< "theCamWrtQuad: " << theCamWrtQuad
-				<< '\n'
-				<< "theObjQuad: " << theObjQuad
-				<< '\n'
-				<< "theSampler: " << theSampler
+				<< "theSampler:\n" << theSampler
 				;
 
 			return oss.str();

@@ -155,6 +155,15 @@ namespace sim
 				);
 		}
 
+		//! Grid (pixel) format for simulation
+		inline
+		dat::SizeHW
+		format
+			() const
+		{
+			return theCamera.theFormat;
+		}
+
 		//! Location on QuadTarget (in quad frame) associated with detSpot
 		inline
 		engabra::g3::Vector
@@ -366,11 +375,11 @@ namespace sim
 				oss << title << ' ';
 			}
 			oss
-				<< "theCamera: " << theCamera
+				<< "    theCamera: " << theCamera
 				<< '\n'
 				<< "theCamWrtQuad: " << theCamWrtQuad
 				<< '\n'
-				<< "theObjQuad: " << theObjQuad
+				<< "   theObjQuad: " << theObjQuad
 				<< '\n'
 				<< "theNoiseModel: " << theNoiseModel
 				;
