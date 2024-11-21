@@ -126,7 +126,7 @@ namespace obj
 				( AddSurround
 			//	| DoubleTriangle
 				)
-				//!< Specify rendering options (or'd OptionFlags value)
+				//!< Or'd combo of quadloco::obj::QuadTarget::OptionFlags
 			)
 			: theEdgeMag{ fullEdgeLength }
 			, theArea{ areaFor(theEdgeMag) }
@@ -275,10 +275,10 @@ namespace obj
 			double const frq{ engabra::g3::turnFull / radiusInner() };
 			if (::isValid(spotOnQuad))
 			{
-				double delta
-					{ amp * std::cos(frq*spotOnQuad[0])
+				delta = 
+					( amp * std::cos(frq*spotOnQuad[0])
 					+ amp * std::sin(frq*spotOnQuad[1])
-					};
+					);
 			}
 
 			// noise to add
