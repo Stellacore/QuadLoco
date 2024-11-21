@@ -157,8 +157,6 @@ namespace pix
 				}
 			}
 		}
-std::cout << "validMinMax(B): "
-	<< minmax.first << ' ' << minmax.second << '\n';
 		return minmax;
 	}
 
