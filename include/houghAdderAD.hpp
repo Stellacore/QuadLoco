@@ -88,7 +88,41 @@ namespace hough
 			return oAngle;
 		}
 
+		//! Value wrapped into range [0,maxValue]
+		inline
+		static
+		double
+		wrappedValue
+			( double const & anyValue
+			, double const & maxValue
+			)
+		{
+			double value{ anyValue };
+			while (value < 0.)
+			{
+				value += maxValue;
+			}
+			while (! (value < maxValue))
+			{
+				value -= maxValue;
+			}
+			return value;
+		}
+
 	public:
+
+		//! Useful size for AD accumulation grid for given pixel grid input
+		inline
+		static
+		dat::SizeHW
+		adSizeHintFor
+			( dat::SizeHW const & hwPixGrid
+			)
+		{
+			std::size_t const sizeAD{ hwPixGrid.perimeter() / 4u };
+			return dat::SizeHW{ sizeAD, sizeAD };
+		}
+
 
 		//! Construct accumulation grid with dimension adSize
 		inline
@@ -186,27 +220,6 @@ namespace hough
 			double const radius{ magnitude(fracSpot) };
 			double const zVal{ radius / sigma };
 			return std::exp(-zVal*zVal);
-		}
-
-		//! Value wrapped into range [0,maxValue]
-		inline
-		static
-		double
-		wrappedValue
-			( double const & anyValue
-			, double const & maxValue
-			)
-		{
-			double value{ anyValue };
-			while (value < 0.)
-			{
-				value += maxValue;
-			}
-			while (! (value < maxValue))
-			{
-				value -= maxValue;
-			}
-			return value;
 		}
 
 		//! Grid RowCol location associated with grid spot
