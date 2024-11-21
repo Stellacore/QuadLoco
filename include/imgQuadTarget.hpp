@@ -78,7 +78,6 @@ namespace img
 		isValid
 			() const
 		{
-			constexpr double tolA{ std::numeric_limits<double>::epsilon() };
 			return
 				(  engabra::g3::isValid(theCenter)
 				&& engabra::g3::isValid(theDirX)
