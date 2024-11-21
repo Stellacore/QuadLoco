@@ -218,9 +218,20 @@ namespace hough
 			, double const & tol = std::numeric_limits<double>::epsilon()
 			) const
 		{
+			// The alpha value testing needs to consider wrap around
+			// e.g. for alpha values near +/- pi
+			// Unitary magnitude vectors: angle tolerance ~= vector tolerance
+			dat::Spot const spotA
+				{ std::cos(theAlpha)
+				, std::sin(theAlpha)
+				};
+			dat::Spot const spotB
+				{ std::cos(other.theAlpha)
+				, std::sin(other.theAlpha)
+				};
 			return
-				(  engabra::g3::nearlyEquals(theAlpha, other.theAlpha, tol)
-				&& engabra::g3::nearlyEquals(theDelta, other.theDelta, tol)
+				(  spotA.nearlyEquals(spotB, tol)
+				&& engabra::g3::nearlyEqualsAbs(theDelta, other.theDelta, tol)
 				);
 		}
 
