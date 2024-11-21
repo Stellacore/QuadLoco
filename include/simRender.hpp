@@ -106,6 +106,20 @@ namespace sim
 				)
 		{ }
 
+		//! True if this instance contains valid data
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  theCamera.isValid()
+				&& rigibra::isValid(theCamWrtQuad)
+				&& theObjQuad.isValid()
+				&& theSampler.isValid()
+				);
+		}
+
 		//! Geometry of perspective image created by quadImage()
 		inline
 		img::QuadTarget
@@ -167,9 +181,61 @@ double const & end1 = theObjQuad.span1().theEnd;
 			}
 		}
 
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "theCamera: " << theCamera
+				<< '\n'
+				<< "theCamWrtQuad: " << theCamWrtQuad
+				<< '\n'
+				<< "theObjQuad: " << theObjQuad
+				<< '\n'
+				<< "theSampler: " << theSampler
+				;
+
+			return oss.str();
+		}
+
 	}; // Render
 
 } // [sim]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::sim::Render const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::sim::Render const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
 

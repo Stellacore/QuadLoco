@@ -44,7 +44,10 @@
 #include <Rigibra>
 
 #include <functional>
+#include <iostream>
 #include <random>
+#include <sstream>
+#include <string>
 
 
 namespace quadloco
@@ -139,6 +142,19 @@ namespace sim
 			, theUseImageNoise{ isSet(optionsMask, UseImageNoise) }
 		{ }
 
+		//! True if this instance contains valid data
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  theCamera.isValid()
+				&& rigibra::isValid(theCamWrtQuad)
+				&& theObjQuad.isValid()
+				);
+		}
+
 		//! Location on QuadTarget (in quad frame) associated with detSpot
 		inline
 		engabra::g3::Vector
@@ -196,7 +212,7 @@ namespace sim
 			double intenSample{ engabra::g3::null<double>() };
 
 			engabra::g3::Vector const pntInQuad{ quadLocFor(detSpot) };
-			if (isValid(pntInQuad))
+			if (engabra::g3::isValid(pntInQuad))
 			{
 				// sample intensity from quad target
 				dat::Spot const spotInQuad{ pntInQuad[0], pntInQuad[1] };
@@ -235,7 +251,7 @@ namespace sim
 				}
 
 				dat::Spot const useSpot{ detSpot + halfSpot + delta };
-				if (isValid(useSpot))
+				if (::isValid(useSpot))
 				{
 					double const qSig{ quadSignalFor(useSpot) };
 					if (engabra::g3::isValid(qSig))
@@ -337,6 +353,31 @@ namespace sim
 			return intenSample;
 		}
 
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "theCamera: " << theCamera
+				<< '\n'
+				<< "theCamWrtQuad: " << theCamWrtQuad
+				<< '\n'
+				<< "theObjQuad: " << theObjQuad
+				<< '\n'
+				<< "theNoiseModel: " << theNoiseModel
+				;
+
+			return oss.str();
+		}
+
 	}; // Sampler
 
 
@@ -344,4 +385,31 @@ namespace sim
 } // [sim]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::sim::Sampler const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::sim::Sampler const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
 

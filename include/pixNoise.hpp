@@ -151,6 +151,27 @@ namespace pix
 			return (pixValDark + pixValShot);
 		}
 
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "theElectPerValue: " << theElectPerValue
+				<< ' '
+				<< "theValuePerElect: " << theValuePerElect
+				;
+
+			return oss.str();
+		}
+
 
 	}; // Noise
 
@@ -158,4 +179,33 @@ namespace pix
 } // [pix]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::pix::Noise const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	/*
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::pix::Noise const & item
+		)
+	{
+		return item.isValid();
+	}
+	*/
+
+} // [anon/global]
 
