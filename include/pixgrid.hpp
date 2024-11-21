@@ -144,10 +144,10 @@ namespace grid
 
 		// fill columns (as contiguous values over end(row) and start(row+1)
 		std::size_t const midSkip{ hwSize.wide() - 2*nPad };
-		std::size_t const rowBeg{ nPad };
+		std::size_t const rowBeg{ nPad - 1u};
 		std::size_t const rowEnd{ hwSize.high() - nPad };
 		std::size_t const rowDelta{ hwSize.wide() };
-		for (std::size_t row{nPad-1u} ; row < rowEnd ; ++row)
+		for (std::size_t row{rowBeg} ; row < rowEnd ; ++row)
 		{
 			FwdIter const itBeg{ beg + (row*rowDelta) + nPad + midSkip };
 			FwdIter const itEnd{ itBeg + 2*nPad };
