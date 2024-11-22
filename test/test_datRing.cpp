@@ -58,18 +58,18 @@ namespace
 		bool const gotIsValid{ isValid(aNull) };
 
 		// principal angle - in exact half open interval [-pi,+pi)
-		using quadloco::dat::principalAngle;
-		double const expMain0{ -quadloco::dat::piOne() };
+		using quadloco::ang::principalAngle;
+		double const expMain0{ -quadloco::ang::piOne() };
 		double const gotMain1 // start of interval
-			{ principalAngle(-quadloco::dat::piOne()) };
+			{ principalAngle(-quadloco::ang::piOne()) };
 		double const gotMain2 // end wraps back to start
-			{ principalAngle(quadloco::dat::piOne()) };
+			{ principalAngle(quadloco::ang::piOne()) };
 
 		// non-negative angle - in exact half open interval [0,+2pi)
-		using quadloco::dat::nonNegativeAngle;
-		double const expPos1{ quadloco::dat::piOne() };
-		double const gotPos1{ nonNegativeAngle(-quadloco::dat::piOne()) };
-		double const expPos2{ quadloco::dat::piTwo() - .5 };
+		using quadloco::ang::nonNegativeAngle;
+		double const expPos1{ quadloco::ang::piOne() };
+		double const gotPos1{ nonNegativeAngle(-quadloco::ang::piOne()) };
+		double const expPos2{ quadloco::ang::piTwo() - .5 };
 		double const gotPos2{ nonNegativeAngle(-.5) };
 
 		// check angleDelta() and size relationship
@@ -86,26 +86,26 @@ namespace
 			oss << "aNull: " << aNull << '\n';
 		}
 
-		if (! quadloco::dat::nearlySameAngle(gotMain1, expMain0))
+		if (! quadloco::ang::nearlySameAngle(gotMain1, expMain0))
 		{
 			oss << "Failure of gotMain1 test\n";
 			oss << "exp: " << expMain0 << '\n';
 			oss << "got: " << gotMain1 << '\n';
 		}
-		if (! quadloco::dat::nearlySameAngle(gotMain2, expMain0))
+		if (! quadloco::ang::nearlySameAngle(gotMain2, expMain0))
 		{
 			oss << "Failure of gotMain2 test\n";
 			oss << "exp: " << expMain0 << '\n';
 			oss << "got: " << gotMain2 << '\n';
 		}
 
-		if (! quadloco::dat::nearlySameAngle(gotPos1, expPos1))
+		if (! quadloco::ang::nearlySameAngle(gotPos1, expPos1))
 		{
 			oss << "Failure of gotPos1 test\n";
 			oss << "exp: " << expPos1 << '\n';
 			oss << "got: " << gotPos1 << '\n';
 		}
-		if (! quadloco::dat::nearlySameAngle(gotPos2, expPos2))
+		if (! quadloco::ang::nearlySameAngle(gotPos2, expPos2))
 		{
 			oss << "Failure of gotPos2 test\n";
 			oss << "exp: " << expPos2 << '\n';
@@ -171,7 +171,7 @@ namespace
 			std::size_t const gotNdx{ ring.indexFor(angle) };
 
 			double const mainAngle
-				{ quadloco::dat::principalAngle(angle) };
+				{ quadloco::ang::principalAngle(angle) };
 
 			gotTCs.emplace_back(TestCase{ angle, mainAngle, gotNdx });
 		}
@@ -189,7 +189,7 @@ namespace
 			double const & testAngle = gotTC.theTestAngle;
 			double const & gotMainAngle = gotTC.theMainAngle;
 			double const expMainAngle
-				{ quadloco::dat::atan2
+				{ quadloco::ang::atan2
 					(std::sin(testAngle), std::cos(testAngle))
 				};
 			double const distFromStart{ (expMainAngle + piOne) };
@@ -251,38 +251,38 @@ namespace
 		quadloco::dat::Ring const ring(numParts);
 
 		double const gotAng0{ ring.angleAt(0u) };
-		double const expAng0{ -quadloco::dat::piOne() };
+		double const expAng0{ -quadloco::ang::piOne() };
 
 		double const gotAng1{ ring.angleAt(1u) };
-		double const expAng1{ -.5*quadloco::dat::piOne() };
+		double const expAng1{ -.5*quadloco::ang::piOne() };
 
 		double const gotAng2{ ring.angleAt(2u) };
 		double const expAng2{ 0. };
 
 		double const gotAng3{ ring.angleAt(3u) };
-		double const expAng3{  .5*quadloco::dat::piOne() };
+		double const expAng3{  .5*quadloco::ang::piOne() };
 
 		// [DoxyExample02]
 
-		if (! quadloco::dat::nearlySameAngle(gotAng0, expAng0))
+		if (! quadloco::ang::nearlySameAngle(gotAng0, expAng0))
 		{
 			oss << "Failure of gotAng0 test\n";
 			oss << "exp: " << expAng0 << '\n';
 			oss << "got: " << gotAng0 << '\n';
 		}
-		if (! quadloco::dat::nearlySameAngle(gotAng1, expAng1))
+		if (! quadloco::ang::nearlySameAngle(gotAng1, expAng1))
 		{
 			oss << "Failure of gotAng1 test\n";
 			oss << "exp: " << expAng1 << '\n';
 			oss << "got: " << gotAng1 << '\n';
 		}
-		if (! quadloco::dat::nearlySameAngle(gotAng2, expAng2))
+		if (! quadloco::ang::nearlySameAngle(gotAng2, expAng2))
 		{
 			oss << "Failure of gotAng2 test\n";
 			oss << "exp: " << expAng2 << '\n';
 			oss << "got: " << gotAng2 << '\n';
 		}
-		if (! quadloco::dat::nearlySameAngle(gotAng3, expAng3))
+		if (! quadloco::ang::nearlySameAngle(gotAng3, expAng3))
 		{
 			oss << "Failure of gotAng3 test\n";
 			oss << "exp: " << expAng3 << '\n';
@@ -387,7 +387,7 @@ namespace
 		std::cout << "ndxMax: " << ndxMax << '\n';
 		*/
 
-		if (! dat::nearlySameAngle(gotAngle, expAngle, tol))
+		if (! ang::nearlySameAngle(gotAngle, expAngle, tol))
 		{
 			oss << "Failure of gotAngle buffer test\n";
 			oss << "exp: " << expAngle << '\n';
