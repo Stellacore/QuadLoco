@@ -153,6 +153,221 @@ namespace pix
 	}
 
 
+	//! Attributes of single Edgel
+	struct EdgeInfo
+	{
+		pix::Edgel const theEdgel;
+		pix::Spot const theSpot;
+		pix::Grad const theGrad;
+		double const theGradMag;
+		pix::Grad const theGradDir;
+
+		inline
+		explicit
+		EdgeInfo
+			( pix::Edgel const & edgel
+			)
+			: theSpot{ edgel.location() }
+			, theGrad{ edgel.gradient() }
+			, theGradMag{ magnitude(theGrad) }
+			, theGradDir{ (float)(1./theGradMag) * theGrad }
+		{ }
+
+		//! Angle of gradient direciont
+		inline
+		double
+		angleOfGrad
+			() const
+		{
+			return atan2(theGrad[1], theGrad[0]);
+		}
+
+	}; // EdgeInfo
+
+	//! Edgel pair attributes for candidates on opposite radial edges
+	class EdgePair
+	{
+		std::size_t theNdx1;
+		std::size_t theNdx2;
+		double theDotAlign; // negative dot product of edge gradients
+		double theWgtFacing; // pseudo prop of oppositely directed edges
+		double theLineGapDist; // distance between edge line segments
+		double theWgtLineGap; // pseudo prop of edgels being collinear
+
+		//! Negative of dot product between the two gradient edges
+		inline
+		static
+		double
+		dotGradDirs
+			( std::size_t const & ndx1
+			, std::size_t const & ndx2
+			, std::vector<EdgeInfo> const & edgeInfos
+			)
+		{
+			EdgeInfo const & ei1 = edgeInfos[ndx1];
+			EdgeInfo const & ei2 = edgeInfos[ndx2];
+			return dot(ei1.theGradDir, ei2.theGradDir);
+		}
+
+		//! Average distance of other edge location from own edge line.
+		inline
+		static
+		double
+		lineGapDist
+			( std::size_t const & ndx1
+			, std::size_t const & ndx2
+			, std::vector<EdgeInfo> const & edgeInfos
+			)
+		{
+			// separation of the two lines
+			EdgeInfo const & ei1 = edgeInfos[ndx1];
+			EdgeInfo const & ei2 = edgeInfos[ndx2];
+			pix::Spot const & spot1 = ei1.theSpot;
+			pix::Spot const & spot2 = ei2.theSpot;
+			pix::Grad const & dir1 = ei1.theGradDir;
+			pix::Grad const & dir2 = ei2.theGradDir;
+			double const dist2from1{ dot((spot2 - spot1), dir1) };
+			double const dist1from2{ dot((spot1 - spot2), dir2) };
+			double const distBetween{ .5 * (dist2from1 + dist1from2) };
+			return distBetween;
+		}
+
+		/*! \brief Pseudo-probability that edges are facing each other.
+		 *
+		 * (arbitrarily) use cos()^N as weighting function for which
+		 * N=30 approximates exp(-(x/.25)^2) which is a Gaussian
+		 * with (0.25 == sigma) or about +/- 15deg for 1-sigma, and
+		 * +/- 45 deg for 3-sigma excursions
+		 */
+		inline
+		static
+		double
+		weightFacing
+			( double const & dotAlign
+				//!< Negative of dot product of the two edgel gradients
+			)
+		{
+			return std::pow(dotAlign, 30.);
+		}
+
+		//! Pseudo-probability of being on the same line given sigma
+		inline
+		static
+		double
+		weightLineGap
+			( double const & lineGapDist
+				//!< Separation of lines between two edgels
+			, double const & lineGapSigma
+				//!< Uncertainty in collinearity (tolerance is 3x this)
+			, double const & theDotAlign
+				//!< Relative (anti)alignment used to qualify computation
+			, double const & theDotAlignMin = .75
+			)
+		{
+			double wgt{ 0. };
+			if (theDotAlignMin < theDotAlign)
+			{
+				double const lineGapMax{ 4. * lineGapSigma };
+				if (lineGapDist < lineGapMax)
+				{
+					// assign pseudo weight on collinearity
+					double const arg{ lineGapDist / lineGapSigma };
+					double const wgtLineGap{ std::exp(-arg*arg) };
+					wgt = wgtLineGap;
+				}
+			}
+			return wgt;
+		}
+
+	public:
+
+		inline
+		explicit
+		EdgePair
+			( std::size_t const & ndx1
+			, std::size_t const & ndx2
+			, std::vector<EdgeInfo> const & edgeInfos
+			, double const & lineGapSigma = 2.
+			)
+			: theNdx1{ ndx1 }
+			, theNdx2{ ndx2 }
+			, theDotAlign{ -dotGradDirs(theNdx1, theNdx2, edgeInfos) }
+			, theWgtFacing{ weightFacing(theDotAlign) }
+				// Average distance of other pixel to own edge line seg
+			, theLineGapDist{ lineGapDist(theNdx1, theNdx2, edgeInfos) }
+			, theWgtLineGap
+				{ weightLineGap(theLineGapDist, lineGapSigma, theDotAlign) }
+		{ }
+
+		//! Pseudo-probability of edges facing each other
+		inline
+		double
+		weightFacing
+			() const
+		{
+			double wgt{ 0. };
+			if (0. < theDotAlign)
+			{
+				wgt = theWgtFacing;
+			}
+			return wgt;
+		}
+
+		//! Pseudo-probability of being on the same line given sigma
+		inline
+		double const &
+		weightLineGap
+			() const
+		{
+			return theWgtLineGap;
+		}
+
+		/*! \brief Pseudo-probability edgels are on opposite radial edges.
+		 *
+		 * Assign pseudo probability of radial edge pair requiring:
+		 * \arg Oppositing gradient directions (for +/- radius)
+		 * \arg Approx collinearity of spots perp to edge grads
+		 */
+		inline
+		double
+		weightRadialPair
+			() const
+		{
+			return (weightFacing() * weightLineGap());
+		}
+
+		//! Gradient associated with pair of edgels
+		inline
+		pix::Grad
+		meanDir
+			( std::vector<EdgeInfo> const & edgeInfos
+			) const
+		{
+			EdgeInfo const & ei1 = edgeInfos[theNdx1];
+			EdgeInfo const & ei2 = edgeInfos[theNdx2];
+			pix::Grad const & dir1 = ei1.theGradDir;
+			pix::Grad const & dir2 = ei2.theGradDir;
+			//
+			// NOTE: treat dir1 as positive direction and negate dir2
+			//
+			pix::Grad const sum{ dir1 - dir2 };
+			float const mag{ magnitude(sum) };
+			pix::Grad const mean{ (1.f/mag) * sum };
+			return mean;
+		}
+
+		//! Angle associated with dir
+		inline
+		double
+		angle
+			( pix::Grad const & dir
+			) const
+		{
+			return std::atan2(dir[1], dir[0]);
+		}
+
+	}; // EdgePair
+
 } // [pix]
 
 } // [quadloco]
@@ -183,112 +398,74 @@ main
 		std::vector<pix::Edgel> pixEdgels
 			{ edgelsFromGradGrid(gradGrid) };
 
-		// find the strongest edges
-		std::sort
-			( pixEdgels.rbegin(), pixEdgels.rend()
-			, [] (pix::Edgel const & e1, pix::Edgel const & e2)
-				{ return magnitude(e1.gradient()) < magnitude(e2.gradient()) ; }
-			);
-
 		// estimate a reasonable number of edge pixels to expect
 		// (assume target nearly filling diagaonals and with 2 pix edges)
 		double const diag{ pixGrid.hwSize().diagonal() };
 		std::size_t const numToUse{ static_cast<std::size_t>(8. * diag) };
 
-std::ofstream ofs("./lineSeg.dat");
+		// find the strongest edges
+		std::vector<pix::Edgel>::iterator const iterToUse
+			{ pixEdgels.begin() + numToUse };
+		std::partial_sort
+			( pixEdgels.begin(), iterToUse, pixEdgels.end()
+			, [] (pix::Edgel const & e1, pix::Edgel const & e2)
+				{ return magnitude(e2.gradient()) < magnitude(e1.gradient()) ; }
+			);
 
+
+		// Individual edge properties
+		std::vector<pix::EdgeInfo> edgeInfos;
+		edgeInfos.reserve(numToUse);
+
+		// compute useful properties for individual edges
+		for (std::size_t ndx{0u} ; ndx < numToUse ; ++ndx)
+		{
+			pix::Edgel const & edgel = pixEdgels[ndx];
+			edgeInfos.emplace_back(pix::EdgeInfo(edgel));
+		}
+
+
+		// Candidate edgel pairs for opposite radial edges
+		std::vector<pix::EdgePair> edgePairs;
+		std::size_t const numWorstCase{ (numToUse * (numToUse - 1u)) / 2u };
+		edgePairs.reserve(numWorstCase);
+
+		// find pairs of edgels likely on opposite radial edges
 		for (std::size_t ndx1{0u} ; ndx1 < numToUse ; ++ndx1)
 		{
-			pix::Edgel const & e1 = pixEdgels[ndx1];
-			pix::Spot const & spot1 = e1.location();
-			pix::Grad const & grad1 = e1.gradient();
-			double const gMag1{ magnitude(grad1) };
-			float const scale1{ (float)(1. / gMag1) };
-			pix::Grad const dir1{ scale1 * grad1 };
-
 			for (std::size_t ndx2{ndx1+1} ; ndx2 < numToUse ; ++ndx2)
 			{
-				pix::Edgel const & e2 = pixEdgels[ndx2];
-				pix::Spot const & spot2 = e2.location();
-				pix::Grad const & grad2 = e2.gradient();
-				double const gMag2{ magnitude(grad2) };
-				float const scale2{ (float)(1. / gMag2) };
-				pix::Grad const dir2{ scale2 * grad2 };
+				// remember the interesting edges
+				pix::EdgePair const edgePair(ndx1, ndx2, edgeInfos);
 
-				// check for edgels with opposite gradient directions
-				double const dirDot{ -dot(dir1, dir2) };
-				if (0. < dirDot)
+				// assign pseudo probability of radial edge pair
+				// which requires:
+				// - oppositing gradient directions (for +/- radius)
+				// - approx collinearity of spots perp to edge grads
+				double const wgtRadial{ edgePair.weightRadialPair() };
+
+				if (.15 < wgtRadial)
 				{
-					// N=100 approximates exp(-(x/.1)^2) Gaussian
-					// (arbitrarily) use cos()^N as weighting function
-					double const wgtFacingDir{ std::pow(dirDot, 100.) };
-
-					// separation of the two lines
-					double const dist2from1{ dot((spot2 - spot1), dir1) };
-					double const dist1from2{ dot((spot1 - spot2), dir2) };
-					double const distBetween{ .5 * (dist2from1 + dist1from2) };
-
-					constexpr double distSigma{ 1.5 }; // [pix]
-					constexpr double distMaxBetween{ 3. * distSigma };
-					if (distMaxBetween< distBetween)
-					{
-						continue;
-					}
-
-					// assign pseudo weight - higher for more colinear
-					double const arg{ distBetween / distSigma };
-					double const wgtLineGap{ std::exp(-arg*arg) };
-
-
-					double const wgtRadial{ wgtFacingDir * wgtLineGap };
-
-					// gradient intensity for use in accumulation weights
-					double const wgtGradMag{ gMag1 * gMag2 };
-
-
-					// mean gradient direction with +x component
-//					pix::Grad meanGrad{ .5f * (grad1 - grad2) };
-//					if (meanGrad[0] < 0.f)
-//					{
-//						meanGrad = pix::Grad{ -1.f * meanGrad };
-//					}
-
-					// mean gradient direction with +x component
-					pix::Grad meanDir{ .5f * (dir1 - dir2) };
-//					if (meanDir[0] < 0.f)
-//					{
-//						meanDir = pix::Grad{ -1.f * meanDir };
-//					}
-
-					// spot midway between edgels
-					pix::Spot const meanSpot{ .5f * (spot1 + spot2) };
-
-
-if (.15 < wgtRadial)
-{
-					double const angle1{ atan2(meanDir[1], meanDir[0]) };
-					constexpr double pi{ std::numbers::pi_v<double> };
-					double const angle2{ angle1 + pi };
-
-using engabra::g3::io::fixed;
-ofs
-	<< ' ' << meanSpot  // 1,2
-	<< ' ' << meanDir  // 3,4
-	<< ' ' << fixed(angle1)  // 5
-	<< ' ' << fixed(angle2)  // 6
-	<< ' ' << fixed(wgtFacingDir)  // 7
-	<< ' ' << fixed(wgtLineGap) // 8
-	<< ' ' << fixed(wgtRadial) // 9 FacingDir*LineGap
-	<< ' ' << fixed(wgtGradMag) // 10
-	<< '\n';
-
-}
-
-//					pix::Edgel const meanEdgel{ meanSpot, meanGrad };
+					edgePairs.emplace_back(edgePair);
 				}
 			}
 		}
 
+std::cout << "numWorstCase: " << numWorstCase << '\n';
+std::ofstream ofs("./lineSeg.dat");
+
+		for (pix::EdgePair const & edgePair : edgePairs)
+		{
+			pix::Grad const meanDir{ edgePair.meanDir(edgeInfos) };
+			using engabra::g3::io::fixed;
+			ofs
+				<< ' ' << meanDir                            // 1,2
+				<< ' ' << edgePair.angle(meanDir)            // 3
+				<< ' ' << fixed(edgePair.weightFacing())     // 4
+				<< ' ' << fixed(edgePair.weightLineGap())    // 5
+				<< ' ' << fixed(edgePair.weightRadialPair()) // 6
+				<< '\n';
+		}
 
 
 		// draw strongest pixels into grid (for development feedback)
