@@ -183,6 +183,15 @@ namespace dat
 			return theNumBins;
 		}
 
+		//! Angle span of a single bin (2*pi == size()*angleDelta())
+		inline
+		double const &
+		angleDelta
+			() const
+		{
+			return theAngPerBin;
+		}
+
 		//! Bin index associated with angle value
 		inline
 		std::size_t
@@ -195,6 +204,25 @@ namespace dat
 			double const dubBin{ theBinPerAng * deltaAngle };
 			std::size_t const ndx
 				{ static_cast<std::size_t>(std::floor(dubBin)) };
+			return ndx;
+		}
+
+		//! Index that is (+/-)ndxDelta bins away in (circular)buffer.
+		inline
+		std::size_t
+		indexRelativeTo
+			( std::size_t const & refNdx
+			, int const & deltaNdx
+			) const
+		{
+			int advance{ deltaNdx };
+			// if previous: advance increment by buffer size until positive
+			while (advance < 0)
+			{
+				advance += size();
+			}
+			// for positive increment advance modulo buffer size
+			std::size_t const ndx{ (refNdx + advance) % size() };
 			return ndx;
 		}
 

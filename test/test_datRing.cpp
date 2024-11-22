@@ -28,13 +28,16 @@
 */
 
 
-#include <iostream>
 #include "datRing.hpp"
+#include "datSpot.hpp"
+#include "prbGauss1D.hpp"
 
 #include <Engabra>
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <random>
 #include <sstream>
 #include <vector>
 
@@ -69,6 +72,12 @@ namespace
 		double const expPos2{ quadloco::dat::piTwo() - .5 };
 		double const gotPos2{ nonNegativeAngle(-.5) };
 
+		// check angleDelta() and size relationship
+		constexpr std::size_t nBins{ 5u };
+		quadloco::dat::Ring const ring(nBins);
+		double const gotFullTurn{ ring.angleDelta() * (double)ring.size() };
+		double const expFullTurn{ 2. * std::numbers::pi_v<double> };
+
 		// [DoxyExample00]
 
 		if (! (gotIsValid == expIsValid))
@@ -101,6 +110,31 @@ namespace
 			oss << "Failure of gotPos2 test\n";
 			oss << "exp: " << expPos2 << '\n';
 			oss << "got: " << gotPos2 << '\n';
+		}
+
+		if (! engabra::g3::nearlyEquals(gotFullTurn, expFullTurn))
+		{
+			using engabra::g3::io::fixed;
+			oss << "Failure of gotFullTurn angle test\n";
+			oss << "exp: " << fixed(expFullTurn) << '\n';
+			oss << "got: " << fixed(gotFullTurn) << '\n';
+		}
+
+		// constexpr std::size_t nBins{ 5u };
+		// quadloco::dat::Ring const ring(nBins);
+		std::size_t const ndxCurr{};
+		std::size_t const ndxWrap4{ ring.indexRelativeTo(0u, -1) }; // exp 4
+		std::size_t const ndxWrap0{ ring.indexRelativeTo(0u,  5) }; // exp 0
+		std::size_t const ndxWrap1{ ring.indexRelativeTo(0u, -4) }; // exp 1
+		if ( (! (4 == ndxWrap4))
+		  || (! (0 == ndxWrap0))
+		  || (! (1 == ndxWrap1))
+		   )
+		{
+			oss << "Failure of ndxWrap test\n";
+			oss << "ndxWrap4: " << ndxWrap4 << '\n';
+			oss << "ndxWrap0: " << ndxWrap0 << '\n';
+			oss << "ndxWrap1: " << ndxWrap1 << '\n';
 		}
 	}
 
@@ -257,6 +291,110 @@ namespace
 
 	}
 
+	inline
+	std::vector<quadloco::dat::Spot>
+	spotsAbout
+		( quadloco::dat::Spot const & meanSpot
+		, double const & sigma
+		, std::size_t const & numSpots
+		)
+	{
+		std::vector<quadloco::dat::Spot> spots;
+		static std::mt19937 gen{ 77588584u };
+		static std::normal_distribution<double> dist0(meanSpot[0], sigma);
+		static std::normal_distribution<double> dist1(meanSpot[1], sigma);
+		for (std::size_t nn{0u} ; nn < numSpots ; ++nn)
+		{
+			quadloco::dat::Spot const spot{ dist0(gen), dist1(gen) };
+			spots.emplace_back(spot);
+		}
+		return spots;
+	}
+
+	inline
+	std::vector<double>
+	anglesFromSpots
+		( std::vector<quadloco::dat::Spot> const & spots
+		)
+	{
+		std::vector<double> angles;
+		angles.reserve(spots.size());
+		for (quadloco::dat::Spot const & spot : spots)
+		{
+			angles.emplace_back(std::atan2(spot[1], spot[0]));
+		}
+		return angles;
+	}
+
+	//! Check use as an accumulation buffer
+	void
+	test3
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample03]
+
+		using namespace quadloco;
+
+		// generate (normaly distributed) random samples about expSpot
+		// and convert to angles
+		dat::Spot const expSpot{ -1., 2. };
+		double const sigma{ magnitude(expSpot) };
+		constexpr std::size_t numSpots{ 16u*1024u }; // many for smooth peak
+		std::vector<dat::Spot> const spots
+			{ spotsAbout(expSpot, sigma, numSpots) };
+		std::vector<double> const angles{ anglesFromSpots(spots) };
+		double const expAngle{ std::atan2(expSpot[1], expSpot[0]) };
+
+		// accumulate angles into ring buffer
+		std::size_t const numBins{ 32u };
+		dat::Ring const ring(numBins);
+		std::vector<double> binSums(numBins, 0.);
+		for (double const & angle : angles)
+		{
+			// use buffer index manipulation functions
+			std::size_t const ndxCurr{ ring.indexFor(angle) };
+			std::size_t const ndxPrev{ ring.indexRelativeTo(ndxCurr, -1) };
+			std::size_t const ndxNext{ ring.indexRelativeTo(ndxCurr, 1) };
+			// use gaussian function to distribute in adjacent bins
+			static prb::Gauss1D const gauss(0., ring.angleDelta());
+			// distance into current bin
+			double const offset{ angle - ring.angleAt(ndxCurr) };
+			binSums[ndxPrev] += gauss(offset - ring.angleDelta());
+			binSums[ndxCurr] += gauss(offset);
+			binSums[ndxNext] += gauss(offset + ring.angleDelta());
+		}
+
+		// find bin with maximum accumulation value
+		std::vector<double>::const_iterator const itMax
+			{ std::max_element(binSums.cbegin(), binSums.cend()) };
+		std::size_t const ndxMax
+			{ (std::size_t)std::distance(binSums.cbegin(), itMax) };
+		double const gotAngle{ ring.angleAt(ndxMax) };
+		double const tol{ ring.angleDelta() };
+
+		// [DoxyExample03]
+
+		/*
+		for (std::size_t ndx{0u} ; ndx < binSums.size() ; ++ndx)
+		{
+			std::cout << "binSum:"
+				<< ' ' << std::setw(3u) << ndx
+				<< ' ' << engabra::g3::io::fixed(binSums[ndx])
+				<< ' ' << engabra::g3::io::fixed(ring.angleAt(ndx))
+				<< '\n';
+		}
+		std::cout << "ndxMax: " << ndxMax << '\n';
+		*/
+
+		if (! dat::nearlySameAngle(gotAngle, expAngle, tol))
+		{
+			oss << "Failure of gotAngle buffer test\n";
+			oss << "exp: " << expAngle << '\n';
+			oss << "got: " << gotAngle << '\n';
+		}
+
+	}
 }
 
 //! Standard test case main wrapper
@@ -270,6 +408,7 @@ main
 	test0(oss);
 	test1(oss);
 	test2(oss);
+	test3(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{
