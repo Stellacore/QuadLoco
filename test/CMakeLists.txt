@@ -35,6 +35,7 @@ set(unitTests
 	test_datFence  # bounding region determination
 	test_datGrid  # general raster grid storage and access
 	test_datMapSizeArea  # raster cell to continous area mapping
+	test_datRing  # wrap around data structures e.g. for angles
 	test_datRowCol  # discete raster cell locations
 	test_datSizeHW  # basic "high/wide" area boundary (half open)
 	test_datSpan  # half open interval (include start, excludes end)
