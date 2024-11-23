@@ -28,7 +28,9 @@
 */
 
 
+#include "ang.hpp"
 #include "cast.hpp"
+#include "datRing.hpp"
 #include "houghAdderAD.hpp"
 #include "imgCamera.hpp"
 #include "imgQuadTarget.hpp"
@@ -36,6 +38,7 @@
 #include "objQuadTarget.hpp"
 #include "pixEdgel.hpp"
 #include "pixgrid.hpp"
+#include "prbGauss1D.hpp"
 #include "simRender.hpp"
 
 #include <Engabra>
@@ -179,7 +182,7 @@ namespace pix
 		angleOfGrad
 			() const
 		{
-			return atan2(theGrad[1], theGrad[0]);
+			return quadloco::ang::atan2(theGrad[1], theGrad[0]);
 		}
 
 	}; // EdgeInfo
@@ -373,6 +376,7 @@ namespace pix
 } // [quadloco]
 
 
+
 /*! \brief Find center location in simulated quad images
 */
 int
@@ -444,14 +448,136 @@ main
 				// - approx collinearity of spots perp to edge grads
 				double const wgtRadial{ edgePair.weightRadialPair() };
 
-				if (.15 < wgtRadial)
+				// remember pairs which are likely to be on opposite edges
+				if (.75 < wgtRadial)
 				{
 					edgePairs.emplace_back(edgePair);
 				}
 			}
 		}
 
+		//! Accumulation buffer
+		struct AngleProbs
+		{
+			dat::Ring const theRing{};
+			std::vector<double> theBinSums{};
+
+			inline
+			explicit
+			AngleProbs
+				( std::size_t const & numAngBins
+				)
+				: theRing(numAngBins)
+				, theBinSums(numAngBins, 0.)
+			{ }
+
+			//! Number of bins in accumulation buffer.
+			inline
+			std::size_t
+			size
+				() const
+			{
+				return theBinSums.size();
+			}
+
+			//! Incorporate weighted angle value into ring buffer
+			inline
+			void
+			add
+				( double const & angle
+					//!< Angle value at which to add weighted contributions
+				, double const & weight = 1.
+					//!< Overall weight with which to accumulate this angle
+				, std::size_t const & halfBinSpread = 1u
+					//!< Spread weighting over into this many bins on each side
+				)
+			{
+				double const binDelta{ theRing.angleDelta() };
+				static prb::Gauss1D const gauss(0., binDelta);
+
+				// add largest weight into main bin
+				std::size_t const ndxCurr{ theRing.indexFor(angle) };
+				double const offset{ angle - theRing.angleAt(ndxCurr) };
+				theBinSums[ndxCurr] += weight * gauss(offset);
+
+				// add decreasing weights into (circularly) adjacent bins
+				for (std::size_t dn{0u} ; dn < halfBinSpread ; ++dn)
+				{
+					double const angDelta{ binDelta * (double)dn };
+
+					int const dnPos{ (int)dn };
+					std::size_t const ndxPos
+						{ theRing.indexRelativeTo(ndxCurr, dnPos) };
+					theBinSums[ndxPos] += weight * gauss(offset + angDelta);
+
+					int const dnNeg{ -dnPos };
+					std::size_t const ndxNeg
+						{ theRing.indexRelativeTo(ndxCurr, dnNeg) };
+					theBinSums[ndxNeg] += weight * gauss(offset - angDelta);
+				}
+			}
+
+			//! Descriptive information about this instance.
+			inline
+			std::string
+			infoString
+				( std::string const & title = {}
+				) const
+			{
+				std::ostringstream oss;
+				if (! title.empty())
+				{
+					oss << title << ' ';
+				}
+				oss
+					<< "theRing: " << theRing
+					<< ' '
+					<< "binSize: " << size()
+					<< '\n';
+				return oss.str();
+			}
+
+			//! Description of the buffer contents
+			inline
+			std::string
+			infoStringContents
+				( std::string const & title = {}
+				) const
+			{
+				std::ostringstream oss;
+				oss << infoString(title) << '\n';
+				for (std::size_t nbin{0u} ; nbin < theBinSums.size() ; ++nbin)
+				{
+					using engabra::g3::io::fixed;
+					std::cout
+						<< std::setw(3u) << nbin
+						<< ' ' << fixed(theRing.angleAt(nbin), 6u, 6u)
+						<< ' ' << fixed(theBinSums[nbin], 6u, 6u)
+						<< '\n';
+				}
+				return oss.str();
+			}
+
+		}; // AngleProbs
+
+
+		// create angle value accumulation (circular-wrapping) buffer
+		std::size_t const numAngBins{ 32u };
+		AngleProbs angleProbs(numAngBins);
+		for (pix::EdgePair const & edgePair : edgePairs)
+		{
+			pix::Grad const meanDir{ edgePair.meanDir(edgeInfos) };
+			double const angle{ edgePair.angle(meanDir) };
+			double const weight{ edgePair.weightRadialPair() };
+			angleProbs.add(angle, weight);
+		}
+
+
+std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
+
+std::cout << '\n';
 std::cout << "numWorstCase: " << numWorstCase << '\n';
+std::cout << "     numUsed: " << edgePairs.size() << '\n';
 std::ofstream ofs("./lineSeg.dat");
 
 		for (pix::EdgePair const & edgePair : edgePairs)
