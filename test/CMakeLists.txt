@@ -56,6 +56,7 @@ set(unitTests
 	test_pixSpot  # 'continuous' raster cell locations
 	test_prbGauss1D  # Gaussian probability density functions in 1D
 	test_prbquad  # probabilitic assessor of quad target pixel patterns
+	test_sigPeakFinder  # peak finding in an array
 	test_simRender  # simulation of perspective images of quad target
 	test_simSampler  # simulation of image intensity sampling
 
