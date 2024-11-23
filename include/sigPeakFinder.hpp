@@ -52,6 +52,7 @@ namespace sig
 	//! Utility for finding inflection peaks in array of data
 	struct PeakFinder
 	{
+		//! Data value transition type (current pixel w.r.t. prevous pixel)
 		enum Flag
 		{
 			  Drop = 0
@@ -60,6 +61,7 @@ namespace sig
 
 		}; // Flag
 
+		//! 
 		struct NdxFlag
 		{
 			std::size_t theNdx;
@@ -87,27 +89,22 @@ namespace sig
 		template <typename FwdIter>
 		inline
 		static
-		std::vector<Flag>
-		flagsFor
+		std::vector<NdxFlag>
+		ndxFlagsFor
 			( FwdIter const & itBeg
 			, FwdIter const & itEnd
 			)
 		{
-			std::vector<Flag> flags;
 			std::vector<NdxFlag> ndxFlags;
 
 			std::size_t const numElem
 				{ (std::size_t)std::distance(itBeg, itEnd) };
 
-			std::vector<std::set<std::size_t> > peakNdxSets;
-			peakNdxSets.reserve(numElem);
-
-			if (1u < numElem)
+			if (0u < numElem)
 			{
 				std::size_t const numLast{ numElem - 1u };
-				flags.resize(numElem);
+				ndxFlags.reserve(numElem);
 
-				std::vector<Flag>::iterator itFlag{ flags.begin() };
 				FwdIter itPrev{ itBeg + numLast };
 				FwdIter itCurr{ itBeg };
 				for (std::size_t nn{0u} ; nn < numElem ; ++nn)
@@ -126,7 +123,6 @@ namespace sig
 					{
 						flag = Drop;
 					}
-					flags.emplace_back(flag);
 					ndxFlags.emplace_back(NdxFlag{ nn, flag });
 
 					// increment iterators and wrap at end
@@ -136,23 +132,50 @@ namespace sig
 					if (itEnd == itCurr) { itCurr = itBeg; }
 				}
 
+			} // (1u < numElem)
+
+			return ndxFlags;
+		}
+
+		//! Return collections of indices associated with data peaks
+		template <typename FwdIter>
+		inline
+		static
+		std::vector<std::set<std::size_t> >
+		peakIndexSets
+			( FwdIter const & itBeg
+			, FwdIter const & itEnd
+			)
+		{
+			std::vector<std::set<std::size_t> > peakNdxSets;
+			std::size_t const numElem
+				{ (std::size_t)std::distance(itBeg, itEnd) };
+
+			if (0u < numElem)
+			{
+				std::size_t const numLast{ numElem - 1u };
+
+				// compute transition flags for each element in collection
+				std::vector<NdxFlag> const ndxFlags
+					{ ndxFlagsFor(itBeg, itEnd) };
+
+				// gather indices assocaited with peaks
+				peakNdxSets.reserve(numElem); // impossible worst case
 				bool trackingPeak{ false };
-				std::size_t ndxA{ std::numeric_limits<std::size_t>::max() };
-				std::set<std::size_t> peakNdxs;
+				std::set<std::size_t> currPeakNdxs;
 			//	std::string dnote;
 			//	std::string unote;
 			//	std::string tnote;
 				for (std::size_t nn{0u} ; nn < numElem ; ++nn)
 				{
 					std::size_t const nnRev{ numLast - nn };
+					std::size_t const & ndx = nnRev;
 
-					NdxFlag const & ndxFlag = ndxFlags[nnRev];
-					std::size_t const & ndx = ndxFlag.theNdx;
-					Flag const & flag = ndxFlag.theFlag;
+					Flag const & flag = ndxFlags[ndx].theFlag;
 
 					if (trackingPeak)
 					{
-						peakNdxs.insert(ndx);
+						currPeakNdxs.insert(ndx);
 					}
 
 					// when hitting drop (from reverse direction) is
@@ -164,7 +187,7 @@ namespace sig
 						// start MAYBE peak tracking (pending an up encounter)
 					//	dnote = "d-start";
 						trackingPeak = true;
-						peakNdxs.clear();
+						currPeakNdxs.clear();
 					}
 
 					// hitting a rise signals the (reverse direction) end
@@ -176,14 +199,14 @@ namespace sig
 						{
 							// all currently tracked indices are part of peak
 						//	unote = "u-PEAK ";
-							peakNdxSets.emplace_back(peakNdxs);
+							peakNdxSets.emplace_back(currPeakNdxs);
 							trackingPeak = false;
 						}
 						else
 						{
 							// spurious 'rise' encountered outside of peak
 						//	unote = "u-end  ";
-							peakNdxs.clear();
+							currPeakNdxs.clear();
 						}
 					}
 
@@ -195,36 +218,20 @@ namespace sig
 					}
 					std::cout
 						<< "ndx: " << std::setw(3u) << ndxFlag.theNdx
-						<< ' '
-						<< "flag: " << stringFor(ndxFlag.theFlag)
-						<< ' '
-						<< dnote
-						<< ' '
-						<< tnote
-						<< ' '
-						<< unote
+						<< ' ' << "flag: " << stringFor(ndxFlag.theFlag)
+						<< ' ' << dnote
+						<< ' ' << tnote
+						<< ' ' << unote
 						<< '\n'
 						;
 					*/
 
 				}
+			}
 
-				for (std::set<std::size_t> const & peakNdxSet : peakNdxSets)
-				{
-					std::cout << "peakNdxSet: ";
-					for (std::set<std::size_t>::const_iterator
-						iter{peakNdxSet.cbegin()}
-						; peakNdxSet.cend() != iter ; ++iter)
-					{
-						std::cout << ' ' << *iter;
-					}
-					std::cout << '\n';
-				}
-
-			} // (1u < numElem)
-
-			return flags;
+			return peakNdxSets;
 		}
+
 
 	}; // PeakFinder
 

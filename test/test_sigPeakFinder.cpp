@@ -30,6 +30,7 @@
 #include "sigPeakFinder.hpp"
 
 #include <iostream>
+#include <set>
 #include <sstream>
 #include <vector>
 
@@ -44,12 +45,14 @@ namespace
 	{
 		// [DoxyExample01]
 
-		// an arbitrary sequence of data
+		// An arbitrary sequence of data with many local peaks
 		std::vector<int> const values
 			{ 8, 5, 5, 5, 6, 5, 7, 8, 8, 9, 9, 5, 5, 4, 6, 3, 4, 6, 7, 7
 			, 7, 5, 6, 7, 8, 8, 6, 5, 7, 4, 3, 5, 4, 3, 3, 2, 1, 3, 2, 4
 			};
-		// peaks are any location for which before/after are both NOT larger
+		// Peaks are any location for which before/after are both NOT larger.
+		// Grouping on lines below corresponds with content of sets to be
+		// returned by PeakFinder::peakIndexSets() function.
 		std::vector<std::size_t> const expNdxPeaks
 			{ 0u  // single peak at start of (wrapped) data stream
 			, 4u
@@ -62,67 +65,80 @@ namespace
 			, 37u
 			};
 
-		// quadloco::sig::PeakFinder const pf;
-		std::vector<quadloco::sig::PeakFinder::Flag> const flags
-			{ quadloco::sig::PeakFinder::flagsFor
+		// Find peaks in data value sequence (with wrap around)
+		// If 
+		std::vector<std::set<std::size_t> > const peakNdxSets
+			{ quadloco::sig::PeakFinder::peakIndexSets
 				(values.cbegin(), values.cend())
 			};
+
+		// [DoxyExample01]
+
+		// raw classifications of data changes
 		/*
+		// quadloco::sig::PeakFinder const pf;
+		std::vector<quadloco::sig::PeakFinder::NdxFlag> const ndxFlags
+			{ quadloco::sig::PeakFinder::ndxFlagsFor
+				(values.cbegin(), values.cend())
+			};
 		for (quadloco::sig::PeakFinder::Flag const & flag : flags)
 		{
 			std::cout << "flag: " << flag << '\n';
 		}
 		*/
 
-		// [DoxyExample01]
-
-		std::vector<std::size_t> gotNdxPeaks;
-		gotNdxPeaks.reserve(values.size());
-		std::size_t const vSize{ values.size() };
-		std::size_t const vFore{ 1u };
-		std::size_t const vBack{ vSize - 1u };
-		for (std::size_t ndxCurr{0u} ; ndxCurr < values.size() ; ++ndxCurr)
+		// Evaluate individual peaks
+		std::set<std::size_t> gotNdxs;
+		std::ostringstream msg;
+		for (std::set<std::size_t> const & peakNdxSet : peakNdxSets)
 		{
-			// brute force logic
-			std::size_t const ndxPrev{ (ndxCurr + vBack) % vSize };
-			std::size_t const ndxNext{ (ndxCurr + vFore) % vSize };
-			int const & valPrev = values[ndxPrev];
-			int const & valCurr = values[ndxCurr];
-			int const & valNext = values[ndxNext];
-
-			bool const prevNotLarger{ ! (valCurr < valPrev) };
-			bool const nextNotLarger{ ! (valCurr < valNext) };
-			bool const isPeak{ prevNotLarger && nextNotLarger };
-
-			if (isPeak)
+			msg << "peakNdxSet: ";
+			for (std::set<std::size_t>::const_iterator
+				iter{peakNdxSet.cbegin()}
+				; peakNdxSet.cend() != iter ; ++iter)
 			{
-				gotNdxPeaks.emplace_back(ndxCurr);
+				gotNdxs.insert(*iter);
+				msg << ' ' << *iter;
 			}
-/*
-std::cout
-	<< "ndxCurr,value: " << ndxCurr << ' ' << valCurr
-	<< "   prevNot: " << prevNotLarger
-	<< "   nextNot: " << nextNotLarger
-	<< "    isPeak: " << isPeak
-	<< '\n';
-*/
-
+			msg << '\n';
 		}
-
-		/*
-		for (std::size_t const & gotNdxPeak : gotNdxPeaks)
+		constexpr bool showPeakSet{ false };
+		if (showPeakSet)
 		{
-			std::cout << "gotNdxPeak: " << gotNdxPeak << '\n';
+			std::cout << msg.str() << '\n';
 		}
-		*/
 
-		// TODO replace this with real test code
-		std::string const fname(__FILE__);
-		bool const isTemplate{ (std::string::npos != fname.find("/_.cpp")) };
-		if (! isTemplate)
+		// check if all (and only) expected peaks were found
+		std::set<std::size_t> const expNdxs
+			(expNdxPeaks.cbegin(), expNdxPeaks.cend());
+
+		if (! (gotNdxs.size() == expNdxs.size()))
 		{
-			oss << "Failure to implement real test\n";
+			oss << "Failure of peak gotNdxs.size() test\n";
+			oss << "expNdxs.size(): " << expNdxs.size() << '\n';
+			oss << "gotNdxs.size(): " << gotNdxs.size() << '\n';
 		}
+		else
+		{
+			std::set<std::size_t> sharedNdxs;
+			std::set_intersection
+				( gotNdxs.cbegin(), gotNdxs.cend()
+				, expNdxs.cbegin(), expNdxs.cend()
+				, std::inserter(sharedNdxs, sharedNdxs.end())
+				);
+			if (! (sharedNdxs.size() == expNdxs.size()))
+			{
+				oss << "Failure of peak sharedNdx intersection test\n";
+				for (std::set<std::size_t>::const_iterator
+					iter{sharedNdxs.cbegin()}
+					; sharedNdxs.cend() != iter ; ++iter
+					)
+				{
+					oss << "sharedNdx: " << *iter << '\n';
+				}
+			}
+		}
+
 	}
 
 }
