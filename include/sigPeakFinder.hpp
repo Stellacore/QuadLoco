@@ -37,7 +37,6 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
-#include <set>
 #include <vector>
 
 
@@ -52,6 +51,8 @@ namespace sig
 	//! Utility for finding inflection peaks in array of data
 	struct PeakFinder
 	{
+		std::vector<std::vector<std::size_t> > const thePeakNdxGrps{};
+
 		//! Data value transition type (current pixel w.r.t. prevous pixel)
 		enum Flag
 		{
@@ -174,13 +175,13 @@ namespace sig
 		template <typename FwdIter>
 		inline
 		static
-		std::vector<std::set<std::size_t> >
-		peakIndexSets
+		std::vector<std::vector<std::size_t> >
+		peakIndexGroups
 			( FwdIter const & itBeg
 			, FwdIter const & itEnd
 			)
 		{
-			std::vector<std::set<std::size_t> > peakNdxSets;
+			std::vector<std::vector<std::size_t> > peakNdxGrps;
 			std::size_t const numElem
 				{ (std::size_t)std::distance(itBeg, itEnd) };
 
@@ -189,9 +190,9 @@ namespace sig
 				std::size_t const numLast{ numElem - 1u };
 
 				// gather indices assocaited with peaks
-				peakNdxSets.reserve(numElem); // impossible worst case
+				peakNdxGrps.reserve(numElem); // impossible worst case
 				bool trackingPeak{ false };
-				std::set<std::size_t> currPeakNdxs;
+				std::vector<std::size_t> currPeakNdxs;
 			//	std::string dnote;
 			//	std::string unote;
 			//	std::string tnote;
@@ -205,7 +206,7 @@ namespace sig
 
 					if (trackingPeak)
 					{
-						currPeakNdxs.insert(ndx);
+						currPeakNdxs.emplace_back(ndx);
 					}
 
 					// when hitting drop (from reverse direction) is
@@ -229,7 +230,7 @@ namespace sig
 						{
 							// all currently tracked indices are part of peak
 						//	unote = "u-PEAK ";
-							peakNdxSets.emplace_back(currPeakNdxs);
+							peakNdxGrps.emplace_back(currPeakNdxs);
 							trackingPeak = false;
 						}
 						else
@@ -259,7 +260,39 @@ namespace sig
 				}
 			}
 
-			return peakNdxSets;
+			return peakNdxGrps;
+		}
+
+		//! Construct collections of peaks from data values
+		template <typename FwdIter>
+		inline
+		explicit
+		PeakFinder
+			( FwdIter const & itBeg
+			, FwdIter const & itEnd
+			)
+			: thePeakNdxGrps{ peakIndexGroups(itBeg, itEnd) }
+		{ }
+
+		//! Location of peaks (midpoint of flat-top peaks)
+		inline
+		std::vector<std::size_t>
+		peakIndices
+			() const
+		{
+			std::vector<std::size_t> peakNdxs;
+			peakNdxs.reserve(thePeakNdxGrps.size());
+			for (std::vector<std::vector<std::size_t> >::const_reverse_iterator
+				itR{thePeakNdxGrps.crbegin()}
+				; thePeakNdxGrps.crend() != itR ; ++itR)
+			{
+				std::vector<std::size_t> const & peakNdxGrp = *itR;
+				// NOTE: Indices in group are reversed (largest to smallest)
+				//       For lowest index in even sizes, pick back-most one
+				std::size_t const midNdx{ peakNdxGrp.size() / 2u };
+				peakNdxs.emplace_back(peakNdxGrp[midNdx]);
+			}
+			return peakNdxs;
 		}
 
 
