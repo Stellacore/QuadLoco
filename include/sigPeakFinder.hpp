@@ -85,7 +85,7 @@ namespace sig
 			return flagNames[(std::size_t)flag];
 		}
 
-		//! Convert data stream into stream of flags
+		//! Convert data stream into stream of value transition flags
 		template <typename FwdIter>
 		inline
 		static
@@ -137,6 +137,39 @@ namespace sig
 			return ndxFlags;
 		}
 
+		//! Determine value transition flag at ndxCurr from itBeg
+		template <typename FwdIter>
+		inline
+		static
+		Flag
+		flagForIndex
+			( std::size_t const & ndxCurr
+			, std::size_t const & numElem
+			, FwdIter const & itBeg
+			)
+		{
+			FwdIter const itCurr{ itBeg + ndxCurr };
+			std::size_t const ndxPrev{ (ndxCurr + (numElem - 1u)) % numElem };
+			FwdIter const itPrev{ itBeg + ndxPrev };
+
+			using Type = FwdIter::value_type;
+			Type const & valPrev = *itPrev;
+			Type const & valCurr = *itCurr;
+
+			Flag flag{ Flat };
+			if (valPrev < valCurr)
+			{
+				flag = Rise;
+			}
+			else
+			if (valCurr < valPrev)
+			{
+				flag = Drop;
+			}
+
+			return flag;
+		}
+
 		//! Return collections of indices associated with data peaks
 		template <typename FwdIter>
 		inline
@@ -155,10 +188,6 @@ namespace sig
 			{
 				std::size_t const numLast{ numElem - 1u };
 
-				// compute transition flags for each element in collection
-				std::vector<NdxFlag> const ndxFlags
-					{ ndxFlagsFor(itBeg, itEnd) };
-
 				// gather indices assocaited with peaks
 				peakNdxSets.reserve(numElem); // impossible worst case
 				bool trackingPeak{ false };
@@ -171,7 +200,8 @@ namespace sig
 					std::size_t const nnRev{ numLast - nn };
 					std::size_t const & ndx = nnRev;
 
-					Flag const & flag = ndxFlags[ndx].theFlag;
+					// NOTE: Could compute transition flags here as needed.
+					Flag const flag{ flagForIndex(ndx, numElem, itBeg) };
 
 					if (trackingPeak)
 					{
