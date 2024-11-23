@@ -28,6 +28,7 @@ set(unitTests
 	_  # test template
 	test_Version  # test project version info retrieval
 
+	test_angLikely  # angular value likelihood estimation
 	test_cast  # data type conversion operations
 	test_datArea  # a 2D range of values
 	test_datChipSpec  # a 2D sub region of a larger area
