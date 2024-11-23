@@ -377,6 +377,96 @@ namespace pix
 
 } // [quadloco]
 
+namespace tmp
+{
+	using namespace quadloco;
+
+	//! Membership of Edgel into an implicit group
+	struct Member
+	{
+		//! Index into collection of edgels
+		std::size_t theNdxEdge{ 0u };
+
+		//! Pseudo-probablility of edge belonging to this group
+		double theProb{ 0. };
+	};
+
+	using GroupMembers = std::vector<Member>;
+
+	//! Spot locations for each angle
+	inline
+	std::vector<dat::Spot>
+	spotLocsFor
+		( std::vector<double> const & angles
+		)
+	{
+		std::vector<dat::Spot> spotLocs;
+		spotLocs.reserve(angles.size());
+		for (double const & angle : angles)
+		{
+			dat::Spot const spotLoc{ std::cos(angle), std::sin(angle) };
+			spotLocs.emplace_back(spotLoc);
+		}
+		return spotLocs;
+	}
+
+
+	/*! Groups (of edgeInfo indices) corresponding with peakAngle indices.
+	 *
+	 * Each element of the return vectors corresponds with peakAngle indices:
+	 * \arg returnValue.size() == peakAngles.size()
+	 *
+	 * The indices within each group, are indices into edgeInfos vector.
+	 */
+	inline
+	std::vector<GroupMembers>
+	lineIndexGroups
+		( std::vector<double> const & peakAngles
+		, std::vector<pix::EdgeInfo> const & edgeInfos
+		, double const & angleSigma = 3.14*(10./180.)
+		)
+	{
+		std::size_t const numEdges{ edgeInfos.size() };
+		std::size_t const numGroups{ peakAngles.size() };
+
+		std::vector<GroupMembers> groups(numGroups, GroupMembers{});
+
+		// spot locations for each angle
+		std::vector<dat::Spot> const spotLocs{ spotLocsFor(peakAngles) };
+
+		// determine closest spot for each edge direction
+		for (std::size_t ndxEdge{0u} ; ndxEdge < numEdges ; ++ndxEdge)
+		{
+			pix::EdgeInfo const & edgeInfo = edgeInfos[ndxEdge];
+			pix::Grad const & gradDir = edgeInfo.theGradDir;
+
+			// treat directions as spot locations (on unit circle)
+			dat::Spot const gradSpot{ gradDir[0], gradDir[1] };
+
+			// determine group closest to this edge direction
+			double distMin{ 8. }; // much larger than unit circle diameter
+			std::size_t ndxMin{ 0u };
+			for (std::size_t ndxGroup{0u} ; ndxGroup < numGroups ; ++ndxGroup)
+			{
+				dat::Spot const & spotLoc = spotLocs[ndxGroup];
+				double const dist{ magnitude(gradSpot - spotLoc) };
+				if (dist < distMin)
+				{
+					distMin = dist;
+					ndxMin = ndxGroup;
+				}
+			}
+
+			// add edge index to closest group
+			double const arg{ distMin / angleSigma };
+			double const prob{ std::exp(-arg*arg) };
+			groups[ndxMin].emplace_back(tmp::Member{ndxEdge, prob});
+		}
+
+		return groups;
+	}
+
+} // [tmp]
 
 
 /*! \brief Find center location in simulated quad images
@@ -469,21 +559,57 @@ main
 			angleProbs.add(angle, weight, 2);
 		}
 
-		std::vector<std::size_t> const peakNdxs{ angleProbs.indicesOfPeaks() };
+		// get peaks from angular accumulation buffer
 		std::vector<double> const peakAngles{ angleProbs.anglesOfPeaks() };
+
+		struct LineGrouper
+		{
+			std::vector<pix::EdgeInfo> * const ptEdgeInfos{ nullptr };
+			std::vector<double> * const ptPeakAngles{ nullptr };
+
+		}; // Foo
+
+		// classify original edgels by proximity to peak angles
+		std::vector<tmp::GroupMembers> const lineGroups
+			{ tmp::lineIndexGroups(peakAngles, edgeInfos) };
 
 std::cout << '\n';
 std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
 std::cout << angleProbs.infoString("angleProbs") << '\n';
 std::cout << "numWorstCase: " << numWorstCase << '\n';
 std::cout << "     numUsed: " << edgePairs.size() << '\n';
-for (std::size_t const & peakNdx : peakNdxs)
-{
-	std::cout << "peakNdx: " << peakNdx << '\n';
-}
 for (double const & peakAngle : peakAngles)
 {
 	std::cout << "peakAngle: " << engabra::g3::io::fixed(peakAngle) << '\n';
+}
+
+std::ofstream ofsGroup("./foo.dat");
+for (std::size_t ndxGroup{0u} ; ndxGroup < lineGroups.size() ; ++ndxGroup)
+{
+	tmp::GroupMembers const & lineGroup = lineGroups[ndxGroup];
+
+	ofsGroup << "\n\n";
+	for (tmp::Member const & member : lineGroup)
+	{
+		std::size_t const & ndxEdge = member.theNdxEdge;
+		double const & prob = member.theProb;
+		pix::EdgeInfo const & ei = edgeInfos[ndxEdge];
+		ofsGroup
+			<< "edgeSpot,Group:"
+			<< ' ' << ei.theSpot
+			<< ' ' << engabra::g3::io::fixed(prob)
+			<< ' ' << ndxGroup
+			<< '\n';
+			;
+
+		/* EdgeInfo
+		pix::Edgel const theEdgel;
+		pix::Spot const theSpot;
+		pix::Grad const theGrad;
+		double const theGradMag;
+		pix::Grad const theGradDir;
+		*/
+	}
 }
 
 		//
