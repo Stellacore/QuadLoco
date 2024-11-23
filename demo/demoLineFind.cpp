@@ -409,7 +409,7 @@ main
 		double const diag{ pixGrid.hwSize().diagonal() };
 		std::size_t const numToUse{ static_cast<std::size_t>(8. * diag) };
 
-		// find the strongest edges
+		// gather the strongest edges at start of collection
 		std::vector<pix::Edgel>::iterator const iterToUse
 			{ pixEdgels.begin() + numToUse };
 		std::partial_sort
@@ -486,7 +486,18 @@ for (double const & peakAngle : peakAngles)
 	std::cout << "peakAngle: " << engabra::g3::io::fixed(peakAngle) << '\n';
 }
 
-std::ofstream ofs("./lineSeg.dat");
+		//
+		// Write edge pair data to file for diagnostic use
+		//
+
+		std::string const datName{ std::format("./sample{:02d}dat.pgm", nn) };
+		std::string const pixName{ std::format("./sample{:02d}pix.pgm", nn) };
+		std::string const magName{ std::format("./sample{:02d}mag.pgm", nn) };
+
+		std::ofstream ofs(datName);
+		ofs << "#\n";
+		ofs << "# MeanDir[0,1] angle wgtFacing wgtLineGab wgtRadialPair\n";
+		ofs << "#\n";
 
 		for (pix::EdgePair const & edgePair : edgePairs)
 		{
@@ -494,7 +505,7 @@ std::ofstream ofs("./lineSeg.dat");
 			using engabra::g3::io::fixed;
 			ofs
 				<< ' ' << meanDir                            // 1,2
-				<< ' ' << edgePair.angle(meanDir)            // 3
+				<< ' ' << fixed(edgePair.angle(meanDir))     // 3
 				<< ' ' << fixed(edgePair.weightFacing())     // 4
 				<< ' ' << fixed(edgePair.weightLineGap())    // 5
 				<< ' ' << fixed(edgePair.weightRadialPair()) // 6
@@ -506,13 +517,12 @@ std::ofstream ofs("./lineSeg.dat");
 		dat::Grid<float> const magGrid
 			(edgeMagGridFor(pixGrid.hwSize(), pixEdgels, numToUse));
 
-		std::string const pixName{ std::format("./sample{:02d}pix.pgm", nn) };
-		std::string const magName{ std::format("./sample{:02d}mag.pgm", nn) };
 		io::writeStretchPGM(pixName, pixGrid);
 		io::writeStretchPGM(magName, magGrid);
 
 		std::cout << '\n';
 		std::cout << "pixEdgels.size: " << pixEdgels.size() << '\n';
+		std::cout << "Linedata written to '" << datName << "'\n";
 		std::cout << "Pix data written to '" << pixName << "'\n";
 		std::cout << "Mag data written to '" << magName << "'\n";
 
