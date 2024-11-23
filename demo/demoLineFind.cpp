@@ -86,7 +86,6 @@ namespace sim
 			using namespace rigibra;
 			using namespace engabra::g3;
 			double dist{ .15 + .2*(double)(nn) };
-std::cout << "dist: " << dist << '\n';
 			double const da{ .125 * (double)nn };
 			double const dx{ dist * da };
 			Transform const xCamWrtQuad
@@ -109,6 +108,64 @@ std::cout << "dist: " << dist << '\n';
 namespace pix
 {
 	using namespace quadloco;
+
+	//! Compute edge elements from gradient grid
+	inline
+	std::vector<pix::Edgel>
+	connectedEdgelsFromGradGrid
+		( dat::Grid<pix::Grad> const & gradGrid
+		)
+	{
+		std::vector<pix::Edgel> pixEdgels{};
+		pixEdgels.reserve(gradGrid.size());
+
+		std::size_t const rowLast{ gradGrid.high() - 1u };
+		std::size_t const colLast{ gradGrid.wide() - 1u };
+
+		// leave room to compute with neighbors
+		// could skip unset edge rows
+		for (std::size_t row{1u} ; row < rowLast ; ++row)
+		{
+			for (std::size_t col{1u} ; col < colLast ; ++col)
+			{
+				// gradient at center
+				pix::Grad const & gradCenter = gradGrid(row, col);
+				if (gradCenter.isValid())
+				{
+					// sum gradients for neighbor hood
+					pix::Grad const gradHoodSum
+						{ gradGrid(row - 1u, col - 1u)
+						+ gradGrid(row - 1u, col     )
+						+ gradGrid(row - 1u, col + 1u)
+						+ gradGrid(row     , col - 1u)
+						+ gradGrid(row     , col + 1u)
+						+ gradGrid(row + 1u, col - 1u)
+						+ gradGrid(row + 1u, col     )
+						+ gradGrid(row + 1u, col + 1u)
+						};
+					if (gradHoodSum.isValid())
+					{
+						pix::Grad const gradSum{ gradHoodSum + gradCenter };
+
+						float const gMag{ magnitude(gradCenter) };
+						pix::Grad const gDir{ (1.f/gMag) * gradCenter };
+						float const projDist{ dot(gradSum, gDir) };
+
+						constexpr float kTol{ 2.5};
+						if (kTol < projDist)
+						{
+							pix::Edgel const edgel
+								(dat::RowCol{ row, col }, gradCenter);
+							pixEdgels.push_back(edgel);
+						}
+					}
+				}
+			}
+		}
+
+		return pixEdgels;
+	}
+
 
 	//! Compute edge elements from gradient grid
 	inline
@@ -166,6 +223,7 @@ namespace pix
 		pix::Grad const theGrad;
 		double const theGradMag;
 		pix::Grad const theGradDir;
+		double theWeightSum{ 0. };
 
 		inline
 		explicit
@@ -177,6 +235,24 @@ namespace pix
 			, theGradMag{ magnitude(theGrad) }
 			, theGradDir{ (float)(1./theGradMag) * theGrad }
 		{ }
+
+		//! Multiple prob into running probability
+		inline
+		void
+		addWeight
+			( double const & weight
+			)
+		{
+			theWeightSum += weight;
+		}
+
+		inline
+		double const &
+		weight
+			() const
+		{
+			return theWeightSum;
+		}
 
 		//! Angle of gradient direciont
 		inline
@@ -426,41 +502,47 @@ namespace tmp
 		, double const & angleSigma = 3.14*(10./180.)
 		)
 	{
+		std::vector<GroupMembers> groups{};
+
 		std::size_t const numEdges{ edgeInfos.size() };
 		std::size_t const numGroups{ peakAngles.size() };
 
-		std::vector<GroupMembers> groups(numGroups, GroupMembers{});
-
-		// spot locations for each angle
-		std::vector<dat::Spot> const spotLocs{ spotLocsFor(peakAngles) };
-
-		// determine closest spot for each edge direction
-		for (std::size_t ndxEdge{0u} ; ndxEdge < numEdges ; ++ndxEdge)
+		if (0u < numGroups)
 		{
-			pix::EdgeInfo const & edgeInfo = edgeInfos[ndxEdge];
-			pix::Grad const & gradDir = edgeInfo.theGradDir;
+			groups = std::vector<GroupMembers>(numGroups, GroupMembers{});
 
-			// treat directions as spot locations (on unit circle)
-			dat::Spot const gradSpot{ gradDir[0], gradDir[1] };
+			// spot locations for each angle
+			std::vector<dat::Spot> const spotLocs{ spotLocsFor(peakAngles) };
 
-			// determine group closest to this edge direction
-			double distMin{ 8. }; // much larger than unit circle diameter
-			std::size_t ndxMin{ 0u };
-			for (std::size_t ndxGroup{0u} ; ndxGroup < numGroups ; ++ndxGroup)
+			// determine closest spot for each edge direction
+			for (std::size_t ndxEdge{0u} ; ndxEdge < numEdges ; ++ndxEdge)
 			{
-				dat::Spot const & spotLoc = spotLocs[ndxGroup];
-				double const dist{ magnitude(gradSpot - spotLoc) };
-				if (dist < distMin)
-				{
-					distMin = dist;
-					ndxMin = ndxGroup;
-				}
-			}
+				pix::EdgeInfo const & edgeInfo = edgeInfos[ndxEdge];
+				pix::Grad const & gradDir = edgeInfo.theGradDir;
 
-			// add edge index to closest group
-			double const arg{ distMin / angleSigma };
-			double const prob{ std::exp(-arg*arg) };
-			groups[ndxMin].emplace_back(tmp::Member{ndxEdge, prob});
+				// treat directions as spot locations (on unit circle)
+				dat::Spot const gradSpot{ gradDir[0], gradDir[1] };
+
+				// determine group closest to this edge direction
+				double distMin{ 8. }; // much larger than unit circle diameter
+				std::size_t ndxMin{ 0u };
+				for (std::size_t
+					ndxGroup{0u} ; ndxGroup < numGroups ; ++ndxGroup)
+				{
+					dat::Spot const & spotLoc = spotLocs[ndxGroup];
+					double const dist{ magnitude(gradSpot - spotLoc) };
+					if (dist < distMin)
+					{
+						distMin = dist;
+						ndxMin = ndxGroup;
+					}
+				}
+
+				// add edge index to closest group
+				double const arg{ distMin / angleSigma };
+				double const prob{ std::exp(-arg*arg) };
+				groups[ndxMin].emplace_back(tmp::Member{ndxEdge, prob});
+			}
 		}
 
 		return groups;
@@ -491,8 +573,10 @@ main
 			{ pix::grid::gradientGridFor(pixGrid) };
 
 		// assemble collection of edge elements from gradient grid
+	//	std::vector<pix::Edgel> pixEdgels
+	//		{ edgelsFromGradGrid(gradGrid) };
 		std::vector<pix::Edgel> pixEdgels
-			{ edgelsFromGradGrid(gradGrid) };
+			{ connectedEdgelsFromGradGrid(gradGrid) };
 
 		// estimate a reasonable number of edge pixels to expect
 		// (assume target nearly filling diagaonals and with 2 pix edges)
@@ -508,7 +592,6 @@ main
 				{ return magnitude(e2.gradient()) < magnitude(e1.gradient()) ; }
 			);
 
-
 		// Individual edge properties
 		std::vector<pix::EdgeInfo> edgeInfos;
 		edgeInfos.reserve(numToUse);
@@ -519,7 +602,6 @@ main
 			pix::Edgel const & edgel = pixEdgels[ndx];
 			edgeInfos.emplace_back(pix::EdgeInfo(edgel));
 		}
-
 
 		// Candidate edgel pairs for opposite radial edges
 		std::vector<pix::EdgePair> edgePairs;
@@ -544,6 +626,12 @@ main
 				if (.75 < wgtRadial)
 				{
 					edgePairs.emplace_back(edgePair);
+
+					// update probability of individual edges
+					pix::EdgeInfo & ei1 = edgeInfos[ndx1];
+					pix::EdgeInfo & ei2 = edgeInfos[ndx2];
+					ei1.addWeight(wgtRadial);
+					ei2.addWeight(wgtRadial);
 				}
 			}
 		}
@@ -562,63 +650,59 @@ main
 		// get peaks from angular accumulation buffer
 		std::vector<double> const peakAngles{ angleProbs.anglesOfPeaks() };
 
-		struct LineGrouper
-		{
-			std::vector<pix::EdgeInfo> * const ptEdgeInfos{ nullptr };
-			std::vector<double> * const ptPeakAngles{ nullptr };
-
-		}; // Foo
 
 		// classify original edgels by proximity to peak angles
 		std::vector<tmp::GroupMembers> const lineGroups
 			{ tmp::lineIndexGroups(peakAngles, edgeInfos) };
 
-std::cout << '\n';
-std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
-std::cout << angleProbs.infoString("angleProbs") << '\n';
-std::cout << "numWorstCase: " << numWorstCase << '\n';
-std::cout << "     numUsed: " << edgePairs.size() << '\n';
-for (double const & peakAngle : peakAngles)
-{
-	std::cout << "peakAngle: " << engabra::g3::io::fixed(peakAngle) << '\n';
-}
+		//
+		// Display various values and results
+		//
 
-std::ofstream ofsGroup("./foo.dat");
-for (std::size_t ndxGroup{0u} ; ndxGroup < lineGroups.size() ; ++ndxGroup)
-{
-	tmp::GroupMembers const & lineGroup = lineGroups[ndxGroup];
-
-	ofsGroup << "\n\n";
-	for (tmp::Member const & member : lineGroup)
-	{
-		std::size_t const & ndxEdge = member.theNdxEdge;
-		double const & prob = member.theProb;
-		pix::EdgeInfo const & ei = edgeInfos[ndxEdge];
-		ofsGroup
-			<< "edgeSpot,Group:"
-			<< ' ' << ei.theSpot
-			<< ' ' << engabra::g3::io::fixed(prob)
-			<< ' ' << ndxGroup
-			<< '\n';
-			;
-
-		/* EdgeInfo
-		pix::Edgel const theEdgel;
-		pix::Spot const theSpot;
-		pix::Grad const theGrad;
-		double const theGradMag;
-		pix::Grad const theGradDir;
-		*/
-	}
-}
+		// Angle buffer
+		std::cout << '\n';
+		std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
+		std::cout << angleProbs.infoString("angleProbs") << '\n';
+		std::cout << "numWorstCase: " << numWorstCase << '\n';
+		std::cout << "     numUsed: " << edgePairs.size() << '\n';
+		for (double const & peakAngle : peakAngles)
+		{
+			std::cout << "peakAngle: "
+				<< engabra::g3::io::fixed(peakAngle) << '\n';
+		}
 
 		//
 		// Write edge pair data to file for diagnostic use
 		//
 
-		std::string const datName{ std::format("./sample{:02d}dat.pgm", nn) };
+		std::string const grpName{ std::format("./sample{:02d}grp.txt", nn) };
+		std::string const datName{ std::format("./sample{:02d}dat.txt", nn) };
 		std::string const pixName{ std::format("./sample{:02d}pix.pgm", nn) };
 		std::string const magName{ std::format("./sample{:02d}mag.pgm", nn) };
+
+		std::ofstream ofsGroup(grpName);
+		for (std::size_t
+			ndxGroup{0u} ; ndxGroup < lineGroups.size() ; ++ndxGroup)
+		{
+			tmp::GroupMembers const & lineGroup = lineGroups[ndxGroup];
+			ofsGroup << "\n\n";
+			for (tmp::Member const & member : lineGroup)
+			{
+				std::size_t const & ndxEdge = member.theNdxEdge;
+				double const & classMemberProb = member.theProb;
+				pix::EdgeInfo const & ei = edgeInfos[ndxEdge];
+				ofsGroup
+					<< "edge:Spot: " << ei.theSpot
+					<< ' '
+					<< "classProb: " << engabra::g3::io::fixed(classMemberProb)
+					<< ' '
+					<< "radialWeight: " << engabra::g3::io::fixed(ei.weight())
+					<< ' '
+					<< "groupId: " << ndxGroup
+					<< '\n';
+					;
+			}
+		}
 
 		std::ofstream ofs(datName);
 		ofs << "#\n";
