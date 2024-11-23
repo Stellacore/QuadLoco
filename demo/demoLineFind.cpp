@@ -39,6 +39,7 @@
 #include "pixEdgel.hpp"
 #include "pixgrid.hpp"
 #include "prbGauss1D.hpp"
+#include "sigPeakFinder.hpp"
 #include "simRender.hpp"
 
 #include <Engabra>
@@ -523,28 +524,76 @@ main
 			indicesOfPeaks
 				() const
 			{
-				std::vector<std::size_t> peakNdxs;
-				peakNdxs.reserve(size());
-				std::size_t const ndxEnd{ size() };
-				for (std::size_t ndxCurr{0u} ; ndxCurr < ndxEnd ; ++ndxCurr)
+				sig::PeakFinder const peakFinder
+					(theBinSums.cbegin(), theBinSums.cend());
+				return peakFinder.peakIndices();
+			}
+
+			//! Angle at ndxCurr adjusted to reflect theBinSum of neighbors
+			inline
+			double
+			weightedAngleAt
+				( std::size_t const & ndxCurr
+				) const
+			{
+				// compute weighted peak - self and two adjacent ones
+				std::size_t const ndxPrev
+					{ theRing.indexRelativeTo(ndxCurr, -1) };
+				std::size_t const ndxNext
+					{ theRing.indexRelativeTo(ndxCurr,  1) };
+
+				// get angle and neighbor angle values
+				double const anglePrev{ theRing.angleAt(ndxPrev) };
+				double const angleCurr{ theRing.angleAt(ndxCurr) };
+				double const angleNext{ theRing.angleAt(ndxNext) };
+
+				// do math with vectors to avoid phase wrap problems
+				dat::Spot const spotPrev
+					{ std::cos(anglePrev), std::sin(anglePrev) };
+				dat::Spot const spotCurr
+					{ std::cos(angleCurr), std::sin(angleCurr) };
+				dat::Spot const spotNext
+					{ std::cos(angleNext), std::sin(angleNext) };
+
+				// use accumulation buffer as weights
+				double const wgtPrev{ theBinSums[ndxPrev] };
+				double const wgtCurr{ theBinSums[ndxCurr] };
+				double const wgtNext{ theBinSums[ndxNext] };
+
+				// compute weighted average location
+				dat::Spot const wSpotSum
+					{ wgtPrev * spotPrev
+					+ wgtCurr * spotCurr
+					+ wgtNext * spotNext
+					};
+				double const wSum
+					{ wgtPrev
+					+ wgtCurr
+					+ wgtNext
+					};
+				// if there's a peak here, at least one of the weights
+				// must be greater than zero - so okay to divide
+				dat::Spot const wSpot{ (1./wSum) * wSpotSum };
+
+				// convert weighted spot location to angle
+				double const wgtAngle{ ang::atan2(wSpot[1], wSpot[0]) };
+				return wgtAngle;
+			}
+
+			//! Angles for local peaks (near middle for plateaus)
+			inline
+			std::vector<double>
+			anglesOfPeaks
+				() const
+			{
+				std::vector<double> peakAngles;
+				std::vector<std::size_t> const ndxs{ indicesOfPeaks() };
+				peakAngles.reserve(ndxs.size());
+				for (std::size_t const & ndx : ndxs)
 				{
-					std::size_t const ndxPrev
-						{ theRing.indexRelativeTo(ndxCurr, -1) };
-					std::size_t const ndxNext
-						{ theRing.indexRelativeTo(ndxCurr,  1) };
-					double const & valPrev = theBinSums[ndxPrev];
-					double const & valCurr = theBinSums[ndxCurr];
-					double const & valNext = theBinSums[ndxNext];
-					bool const maybePeak
-						{  (! (valCurr < valPrev))
-						&& (! (valCurr < valNext))
-						};
-					if (maybePeak)
-					{
-						peakNdxs.emplace_back(valCurr);
-					}
+					peakAngles.emplace_back(weightedAngleAt(ndx));
 				}
-				return peakNdxs;
+				return peakAngles;
 			}
 
 			//! Descriptive information about this instance.
@@ -563,7 +612,7 @@ main
 					<< "theRing: " << theRing
 					<< ' '
 					<< "binSize: " << size()
-					<< '\n';
+					;
 				return oss.str();
 			}
 
@@ -575,15 +624,16 @@ main
 				) const
 			{
 				std::ostringstream oss;
-				oss << infoString(title) << '\n';
+				oss << infoString(title);
 				for (std::size_t nbin{0u} ; nbin < theBinSums.size() ; ++nbin)
 				{
 					using engabra::g3::io::fixed;
-					std::cout
+					oss
+						<< '\n'
 						<< std::setw(3u) << nbin
 						<< ' ' << fixed(theRing.angleAt(nbin), 6u, 6u)
 						<< ' ' << fixed(theBinSums[nbin], 6u, 6u)
-						<< '\n';
+						;
 				}
 				return oss.str();
 			}
@@ -603,13 +653,22 @@ main
 		}
 
 		std::vector<std::size_t> const peakNdxs{ angleProbs.indicesOfPeaks() };
-
-
-std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
+		std::vector<double> const peakAngles{ angleProbs.anglesOfPeaks() };
 
 std::cout << '\n';
+std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
+std::cout << angleProbs.infoString("angleProbs") << '\n';
 std::cout << "numWorstCase: " << numWorstCase << '\n';
 std::cout << "     numUsed: " << edgePairs.size() << '\n';
+for (std::size_t const & peakNdx : peakNdxs)
+{
+	std::cout << "peakNdx: " << peakNdx << '\n';
+}
+for (double const & peakAngle : peakAngles)
+{
+	std::cout << "peakAngle: " << engabra::g3::io::fixed(peakAngle) << '\n';
+}
+
 std::ofstream ofs("./lineSeg.dat");
 
 		for (pix::EdgePair const & edgePair : edgePairs)
