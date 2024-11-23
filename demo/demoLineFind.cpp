@@ -517,6 +517,36 @@ main
 				}
 			}
 
+			//! Local peaks in angle data buffer
+			inline
+			std::vector<std::size_t>
+			indicesOfPeaks
+				() const
+			{
+				std::vector<std::size_t> peakNdxs;
+				peakNdxs.reserve(size());
+				std::size_t const ndxEnd{ size() };
+				for (std::size_t ndxCurr{0u} ; ndxCurr < ndxEnd ; ++ndxCurr)
+				{
+					std::size_t const ndxPrev
+						{ theRing.indexRelativeTo(ndxCurr, -1) };
+					std::size_t const ndxNext
+						{ theRing.indexRelativeTo(ndxCurr,  1) };
+					double const & valPrev = theBinSums[ndxPrev];
+					double const & valCurr = theBinSums[ndxCurr];
+					double const & valNext = theBinSums[ndxNext];
+					bool const maybePeak
+						{  (! (valCurr < valPrev))
+						&& (! (valCurr < valNext))
+						};
+					if (maybePeak)
+					{
+						peakNdxs.emplace_back(valCurr);
+					}
+				}
+				return peakNdxs;
+			}
+
 			//! Descriptive information about this instance.
 			inline
 			std::string
@@ -569,8 +599,10 @@ main
 			pix::Grad const meanDir{ edgePair.meanDir(edgeInfos) };
 			double const angle{ edgePair.angle(meanDir) };
 			double const weight{ edgePair.weightRadialPair() };
-			angleProbs.add(angle, weight);
+			angleProbs.add(angle, weight, 2);
 		}
+
+		std::vector<std::size_t> const peakNdxs{ angleProbs.indicesOfPeaks() };
 
 
 std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
