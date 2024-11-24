@@ -50,23 +50,24 @@ o   sim:  simgrid.hpp
 
 b   xfm:  datMapSizeArea.hpp -> xfm::MapChipArea
 
-xx cast.hpp -> (utl::cast)
+n   utl:: cast.hpp -> utlcast.hpp
+n   utl:: io.hpp -> utlio.hpp
+
 xx dat.hpp
-xx datline.hpp
 xx hough.hpp 
-xx io.hpp -> (utl::io)
 
 # namespace headers
+ok   ang.hpp
+ok   img.hpp
+ok   obj.hpp
 new: ops.hpp
+ok   pix.hpp
+ok   prb.hpp
 new: ras.hpp
 new: sig.hpp
+ok   sim.hpp
+new: utl.hpp
 new: xfm.hpp
-ok - ang.hpp
-ok - img.hpp
-ok - obj.hpp
-ok - pix.hpp
-ok - prb.hpp
-ok - sim.hpp
 
 # Development
 ok - _.hpp
