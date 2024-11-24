@@ -32,8 +32,8 @@
  */
 
 
-#include "datSpot.hpp"
-#include "datSizeHW.hpp"
+#include "imgSpot.hpp"
+#include "rasSizeHW.hpp"
 
 #include <Engabra>
 
@@ -73,7 +73,7 @@ namespace img
 	struct Camera
 	{
 		//! Detector format size in [pixels]
-		dat::SizeHW const theFormat{};
+		ras::SizeHW const theFormat{};
 
 		//! Principal distance in [pix] - assume centered on format
 		double const thePD{ engabra::g3::null<double>() };
@@ -93,23 +93,23 @@ namespace img
 
 		//! Spot at center of the format
 		inline
-		dat::Spot
+		img::Spot
 		formatCenter
 			() const
 		{
 			double const highDub{ (double)theFormat.high() };
 			double const wideDub{ (double)theFormat.wide() };
-			return dat::Spot{ (.5 * highDub), (.5 * wideDub) };
+			return img::Spot{ (.5 * highDub), (.5 * wideDub) };
 		}
 
 		//! External direction in camera exterior (exit=entrance) frame
 		inline
 		engabra::g3::Vector
 		directionForDetSpot
-			( dat::Spot const & detSpot
+			( img::Spot const & detSpot
 			) const
 		{
-			dat::Spot const rcFromCenter{ detSpot - formatCenter() };
+			img::Spot const rcFromCenter{ detSpot - formatCenter() };
 			double const imgX{  rcFromCenter[1] };
 			double const imgY{ -rcFromCenter[0] };
 			using namespace engabra::g3;
@@ -121,12 +121,12 @@ namespace img
 
 		//! Projected spot in camera detector frame (but maybe out of bounds)
 		inline
-		dat::Spot
+		img::Spot
 		projectedSpotFor
 			( engabra::g3::Vector const & locInExt
 			) const
 		{
-			dat::Spot spot{};
+			img::Spot spot{};
 			if (engabra::g3::isValid(locInExt) && isValid())
 			{
 				double const & zInExt = locInExt[2];
@@ -137,12 +137,12 @@ namespace img
 					double const scalePixPerObj{ imgDist / objDist };
 					double const dX{ scalePixPerObj * locInExt[0] };
 					double const dY{ scalePixPerObj * locInExt[1] };
-					dat::Spot const dRowCol
+					img::Spot const dRowCol
 						{ -dY  // Row value gets less for larger object 'y'
 						,  dX  // Col value tracks object 'x' values
 						};
 					// candidate location
-					spot = dat::Spot{ formatCenter() + dRowCol };
+					spot = img::Spot{ formatCenter() + dRowCol };
 				}
 			}
 			return spot;
@@ -150,13 +150,13 @@ namespace img
 
 		//! Detector location expressed on camera detector
 		inline
-		dat::Spot
+		img::Spot
 		detectorSpotFor
 			( engabra::g3::Vector const & locInExt
 			) const
 		{
-			dat::Spot spot{};
-			dat::Spot const aSpot{ projectedSpotFor(locInExt) };
+			img::Spot spot{};
+			img::Spot const aSpot{ projectedSpotFor(locInExt) };
 			if (aSpot.isValid())
 			{
 				// check if candidate is inside detector format
@@ -211,7 +211,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::img::Camera const & obj
+		, quadloco::obj::Camera const & obj
 		)
 	{
 		ostrm << obj.infoString();

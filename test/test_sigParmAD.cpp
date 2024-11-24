@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::hough::ParmAD
+\brief Unit tests (and example) code for quadloco::sig::ParmAD
 */
 
 
-#include "houghParmAD.hpp"
+#include "sigParmAD.hpp"
 
 #include <iostream>
 #include <set>
@@ -46,15 +46,15 @@ namespace
 		// [DoxyExample00]
 
 		// create a null instance
-		quadloco::hough::ParmAD const aNull{};
+		quadloco::sig::ParmAD const aNull{};
 		bool const expValid{ false };
 		bool const gotValid{ isValid(aNull) };
 
 		// orthogonal line direction (e.g. lineDir is 1/4 RH turn from gradDir)
-		quadloco::pix::Grad const gradDir{ 1., 0. };
-		quadloco::dat::Vec2D<double> const expLineDir{ 0., 1. }; // RH 1/4 turn
-		quadloco::dat::Vec2D<double> const gotLineDir
-			{ quadloco::hough::ParmAD::lineDirFromEdgeDir(gradDir) };
+		quadloco::img::Grad const gradDir{ 1., 0. };
+		quadloco::img::Vec2D<double> const expLineDir{ 0., 1. }; // RH 1/4 turn
+		quadloco::img::Vec2D<double> const gotLineDir
+			{ quadloco::sig::ParmAD::lineDirFromEdgeDir(gradDir) };
 
 		// [DoxyExample00]
 
@@ -83,9 +83,9 @@ namespace
 		// [DoxyExample01]
 
 		// bounding circle
-		quadloco::dat::Spot const center{ 10., 20. };
+		quadloco::img::Spot const center{ 10., 20. };
 		constexpr double radius{ 10. };
-		quadloco::dat::Circle const circle{ center, radius };
+		quadloco::img::Circle const circle{ center, radius };
 
 		// raster edge element
 		using namespace quadloco::pix;
@@ -94,15 +94,15 @@ namespace
 		Edgel const edgel{ pixLoc, pixGrad };
 
 		// the line segmeng of interest is perpendicular to edge gradient
-		quadloco::dat::Vec2D<double> const lineDir
-			{ quadloco::hough::ParmAD::lineDirFromEdgeDir(edgel.gradient()) };
+		quadloco::img::Vec2D<double> const lineDir
+			{ quadloco::sig::ParmAD::lineDirFromEdgeDir(edgel.gradient()) };
 
 		// the Alpha,Delta parameters associate with the line segment
 		static const double piHalf{ 2.*std::atan(1.) };
 		static const double pi{ 2.*piHalf };
-		quadloco::hough::ParmAD const expParmAD{ -piHalf, pi };
-		quadloco::hough::ParmAD const gotParmAD
-			{ quadloco::hough::ParmAD::from(edgel, circle) };
+		quadloco::sig::ParmAD const expParmAD{ -piHalf, pi };
+		quadloco::sig::ParmAD const gotParmAD
+			{ quadloco::sig::ParmAD::from(edgel, circle) };
 
 
 		// [DoxyExample01]
@@ -133,9 +133,9 @@ namespace
 		// [DoxyExample02]
 
 		// bounding circle
-		quadloco::dat::Spot const center{ 0., 0. };
+		quadloco::img::Spot const center{ 0., 0. };
 		constexpr double radius{ 1. };
-		quadloco::dat::Circle const circle{ center, radius };
+		quadloco::img::Circle const circle{ center, radius };
 
 		// raster edge element at center
 		quadloco::pix::Spot const pixLoc{ 0.f, 0.f };
@@ -149,15 +149,15 @@ namespace
 			using namespace quadloco;
 
 			// rotate gradient direction through full circle
-			pix::Grad const pixGrad
+			img::Grad const pixGrad
 				{ std::cosf(theta - piHalf)
 				, std::sinf(theta - piHalf)
 				};
-			pix::Edgel const edgel{ pixLoc, pixGrad };
+			img::Edgel const edgel{ pixLoc, pixGrad };
 
 			// the Alpha,Delta parameters associate with the line segment
-			hough::ParmAD const gotParmAD
-				{ hough::ParmAD::from(edgel, circle) };
+			sig::ParmAD const gotParmAD
+				{ sig::ParmAD::from(edgel, circle) };
 
 			if (isValid(gotParmAD))
 			{
@@ -170,9 +170,9 @@ namespace
 				constexpr float rootHalf{ 1.f/std::numbers::sqrt2_v<float> };
 				quadloco::pix::Spot const dSpot{ rad, rad };
 				quadloco::pix::Spot const deltaLoc{ pixLoc + rootHalf*dSpot };
-				pix::Edgel const deltaEdgel{ deltaLoc, pixGrad };
-				hough::ParmAD const deltaParmAD
-					{ hough::ParmAD::from(deltaEdgel, circle) };
+				img::Edgel const deltaEdgel{ deltaLoc, pixGrad };
+				sig::ParmAD const deltaParmAD
+					{ sig::ParmAD::from(deltaEdgel, circle) };
 				if (isValid(deltaParmAD))
 				{
 					gotDeltas.insert(deltaParmAD.delta());

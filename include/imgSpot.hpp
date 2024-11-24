@@ -27,12 +27,12 @@
 
 
 /*! \file
- * \brief Declarations for dat::Spot
+ * \brief Declarations for img::Spot
  *
  */
 
 
-#include "datVec2D.hpp"
+#include "imgVec2D.hpp"
 
 // #include <Engabra>
 
@@ -51,13 +51,13 @@ namespace dat
 {
 
 	//! Discrete grid location in row,colum order.
-	struct Spot : public dat::Vec2D<double>
+	struct Spot : public img::Vec2D<double>
 	{
 		inline
 		explicit
 		Spot
 			()
-			: dat::Vec2D<double>{}
+			: img::Vec2D<double>{}
 		{ }
 
 		inline
@@ -66,15 +66,15 @@ namespace dat
 			( double const val0
 			, double const val1
 			)
-			: dat::Vec2D<double>{ val0, val1 }
+			: img::Vec2D<double>{ val0, val1 }
 		{ }
 
 		inline
 		explicit
 		Spot
-			( dat::Vec2D<double> const vec2D
+			( img::Vec2D<double> const vec2D
 			)
-			: dat::Vec2D<double>{ vec2D.theData }
+			: img::Vec2D<double>{ vec2D.theData }
 		{ }
 
 		inline
@@ -133,7 +133,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::Spot const & obj
+		, quadloco::img::Spot const & obj
 		)
 	{
 		ostrm << obj.infoString();
@@ -144,7 +144,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::dat::Spot const & spot
+		( quadloco::img::Spot const & spot
 		)
 	{
 		return spot.isValid();
@@ -154,8 +154,8 @@ namespace
 	inline
 	bool
 	nearlyEquals
-		( quadloco::dat::Spot const & spotA
-		, quadloco::dat::Spot const & spotB
+		( quadloco::img::Spot const & spotA
+		, quadloco::img::Spot const & spotB
 		, double const & tol = std::numeric_limits<double>::epsilon()
 		)
 	{

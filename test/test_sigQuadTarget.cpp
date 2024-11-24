@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::img::QuadTarget
+\brief Unit tests (and example) code for quadloco::sig::QuadTarget
 */
 
 
-#include "imgQuadTarget.hpp"
+#include "sigQuadTarget.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -44,7 +44,7 @@ namespace
 	{
 		// [DoxyExample00]
 
-		quadloco::img::QuadTarget const aNull{};
+		quadloco::sig::QuadTarget const aNull{};
 
 		// [DoxyExample00]
 
@@ -79,7 +79,7 @@ namespace
 		Vector const dirY{ direction(Vector{ cos(angleY), sin(angleY), 0. }) };
 
 		// construct a quad
-		quadloco::img::QuadTarget const imgQuad{ center,  dirX,  dirY };
+		quadloco::sig::QuadTarget const imgQuad{ center,  dirX,  dirY };
 
 		// get (image space) angle from X to Y
 		double expAngleYwX{ angleY - angleX };
@@ -87,8 +87,8 @@ namespace
 std::cout << "gotAngleYwX: " << gotAngleYwX << '\n';
 
 		// the (ideal) images are symmetric under half turn rotation
-		quadloco::img::QuadTarget const imgQuadA{ imgQuad }; // copy ctor
-		quadloco::img::QuadTarget const imgQuadB{ center, -dirX, -dirY };
+		quadloco::sig::QuadTarget const imgQuadA{ imgQuad }; // copy ctor
+		quadloco::sig::QuadTarget const imgQuadB{ center, -dirX, -dirY };
 		bool const expSame{ true };
 		bool const gotSame{ nearlyEquals(imgQuadA, imgQuadB) };
 

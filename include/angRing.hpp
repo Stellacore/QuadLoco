@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::dat::Ring
+ * \brief Declarations for quadloco::ang::Ring
  *
  */
 
@@ -193,7 +193,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::Ring const & item
+		, quadloco::ang::Ring const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -204,7 +204,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::dat::Ring const & item
+		( quadloco::ang::Ring const & item
 		)
 	{
 		return item.isValid();

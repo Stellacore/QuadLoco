@@ -24,13 +24,13 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::pix::Grad
+\brief Unit tests (and example) code for quadloco::img::Grad
 */
 
 
-#include "datGrid.hpp"
-#include "pixGrad.hpp"
-#include "pixgrid.hpp"
+#include "rasGrid.hpp"
+#include "imgGrad.hpp"
+#include "rasgrid.hpp"
 
 #include <algorithm>
 #include <format>
@@ -49,12 +49,12 @@ namespace
 		// [DoxyExample00]
 
 		// null pixel gradient element
-		quadloco::pix::Grad const aNull{};
+		quadloco::img::Grad const aNull{};
 		bool const expNull{ false };
 		bool const gotNull{ isValid(aNull) };
 
 		// valid pixel gradent element
-		quadloco::pix::Grad const aOkay{ 1.25, -2.15 };
+		quadloco::img::Grad const aOkay{ 1.25, -2.15 };
 		bool const expOkay{ true };
 		bool const gotOkay{ isValid(aOkay) };
 
@@ -62,7 +62,7 @@ namespace
 
 		if (! (gotOkay == expOkay))
 		{
-			oss << "Failure of Okay pix::Grad element test(0)\n";
+			oss << "Failure of Okay img::Grad element test(0)\n";
 			oss << "exp: " << expOkay << '\n';
 			oss << "got: " << gotOkay << '\n';
 			oss << "aOkay: " << aOkay << '\n';
@@ -70,7 +70,7 @@ namespace
 
 		if (! (gotNull == expNull))
 		{
-			oss << "Failure of Null pix::Grad element test(0)\n";
+			oss << "Failure of Null img::Grad element test(0)\n";
 			oss << "exp: " << expNull << '\n';
 			oss << "got: " << gotNull << '\n';
 			oss << "aNull: " << aNull << '\n';

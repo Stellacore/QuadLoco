@@ -48,7 +48,7 @@ namespace
 		quadloco::pix::Spot const aNull{};
 		bool const nullIsOkay{ (false == isValid(aNull)) };
 
-		// inherits most methods from dat::Vec2D<float>
+		// inherits most methods from img::Vec2D<float>
 		// with a few name convenience forwards
 		constexpr float expRow{ 2.5f };
 		constexpr float expCol{ -1.75f };

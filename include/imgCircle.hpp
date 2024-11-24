@@ -27,15 +27,15 @@
 
 
 /*! \file
- * \brief Declaration for quadloco::dat::Circle
+ * \brief Declaration for quadloco::img::Circle
  *
  */
 
 
 #include "cast.hpp"
-#include "datSizeHW.hpp"
-#include "datSpot.hpp"
-#include "datVec2D.hpp"
+#include "rasSizeHW.hpp"
+#include "imgSpot.hpp"
+#include "imgVec2D.hpp"
 
 #include <Engabra>
 
@@ -56,7 +56,7 @@ namespace dat
 	struct Circle
 	{
 		//! Circle center location (in [pix])
-		dat::Spot const theCenter{};
+		img::Spot const theCenter{};
 
 		//! Circle radius (in [pix])
 		double const theRadius{ engabra::g3::null<double>() };
@@ -66,10 +66,10 @@ namespace dat
 		static
 		Circle
 		circumScribing
-			( dat::SizeHW const & hwSize
+			( ras::SizeHW const & hwSize
 			)
 		{
-			dat::Spot const center{ hwSize.centerSpot() };
+			img::Spot const center{ hwSize.centerSpot() };
 			double const radius{ .5*hwSize.diagonal() };
 			return Circle{ center, radius };
 		}
@@ -137,15 +137,15 @@ namespace dat
 		 *       a quarter turn into line direction).
 		 */
 		inline
-		std::pair<dat::Spot, dat::Spot>
+		std::pair<img::Spot, dat::Spot>
 		operator()
-			( dat::Vec2D<double> const & linePnt
+			( img::Vec2D<double> const & linePnt
 				//!< Any arbirary point on the line
-			, dat::Vec2D<double> const & lineDir
+			, img::Vec2D<double> const & lineDir
 				//!< Positive direction along line
 			) const
 		{
-			using dat::Spot;
+			using img::Spot;
 			std::pair<Spot, Spot> solnPair{ Spot{}, Spot{} };
 
 			// use engabra vectors for coding convenience
@@ -212,7 +212,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::Circle const & item
+		, quadloco::img::Circle const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -223,7 +223,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::dat::Circle const & item
+		( quadloco::img::Circle const & item
 		)
 	{
 		return item.isValid();
@@ -233,8 +233,8 @@ namespace
 	inline
 	bool
 	nearlyEquals
-		( quadloco::dat::Circle const & itemA
-		, quadloco::dat::Circle const & itemB
+		( quadloco::img::Circle const & itemA
+		, quadloco::img::Circle const & itemB
 		, double const & tol = std::numeric_limits<double>::epsilon()
 		)
 	{

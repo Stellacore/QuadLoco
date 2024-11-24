@@ -24,12 +24,12 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::pix::Edgel
+\brief Unit tests (and example) code for quadloco::img::Edgel
 */
 
 
-#include "datSizeHW.hpp"
-#include "pixEdgel.hpp"
+#include "rasSizeHW.hpp"
+#include "imgEdgel.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -46,7 +46,7 @@ namespace
 		// [DoxyExample00]
 
 		// null instance management
-		quadloco::pix::Edgel const aNull{};
+		quadloco::img::Edgel const aNull{};
 		bool const expValid{ false };
 		bool const gotValid{ isValid(aNull) };
 
@@ -69,11 +69,11 @@ namespace
 		// [DoxyExample01]
 
 		// Edge element (assume in middle of raster)
-		constexpr quadloco::dat::SizeHW hwSize{ 1024u, 2048u };
-		quadloco::pix::Edgel const edgel
+		constexpr quadloco::ras::SizeHW hwSize{ 1024u, 2048u };
+		quadloco::img::Edgel const edgel
 			{ quadloco::pix::Spot{ 500.25f, 1000.75f } // edge location
-//			, quadloco::pix::Grad{ 1.75f, 2.25f }  // gradient at that loc
-			, quadloco::pix::Grad{ 1.00f, 0.00f }  // gradient at that loc
+//			, quadloco::img::Grad{ 1.75f, 2.25f }  // gradient at that loc
+			, quadloco::img::Grad{ 1.00f, 0.00f }  // gradient at that loc
 			};
 
 		// with a gradient facing right/lower-right
@@ -81,7 +81,7 @@ namespace
 		// expect hwSize(high(),wide()) to be "in front of" the gradient
 		// expect location of gradient edge itself to be "in-front"
 		quadloco::pix::Spot const spotBack{ 0.f, 0.f };
-		quadloco::dat::RowCol const rcFront
+		quadloco::ras::RowCol const rcFront
 			{ hwSize.high()-1u, hwSize.wide()-1u };
 		bool const expBack{ false };
 		bool const gotBack{ edgel.rcInFront(spotBack) };

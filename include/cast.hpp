@@ -33,10 +33,10 @@
 
 
 #include "pixSpot.hpp"
-#include "pixGrad.hpp"
-#include "datRowCol.hpp"
-#include "datSpot.hpp"
-#include "datVec2D.hpp"
+#include "imgGrad.hpp"
+#include "rasRowCol.hpp"
+#include "imgSpot.hpp"
+#include "imgVec2D.hpp"
 
 #include <Engabra>
 
@@ -58,7 +58,7 @@ namespace cast
 	inline
 	engabra::g3::Vector
 	vector
-		( dat::RowCol const & rowcol
+		( ras::RowCol const & rowcol
 		)
 	{
 		return engabra::g3::Vector
@@ -69,7 +69,7 @@ namespace cast
 	inline
 	engabra::g3::Vector
 	vector
-		( dat::Spot const & spot
+		( img::Spot const & spot
 		)
 	{
 		return engabra::g3::Vector{ spot[0], spot[1], 0. };
@@ -79,7 +79,7 @@ namespace cast
 	inline
 	engabra::g3::Vector
 	vector
-		( dat::Vec2D<double> const & vec
+		( img::Vec2D<double> const & vec
 		)
 	{
 		return engabra::g3::Vector{ vec[0], vec[1], 0. };
@@ -89,7 +89,7 @@ namespace cast
 	inline
 	engabra::g3::Vector
 	vector
-		( pix::Grad const & grad
+		( img::Grad const & grad
 		)
 	{
 		return engabra::g3::Vector{ grad[0], grad[1], 0. };
@@ -97,17 +97,17 @@ namespace cast
 
 
 	//
-	// To dat::RowCol
+	// To ras::RowCol
 	//
 
 	//! Integral values that are the std::floor values of vec[0,1]
 	inline
-	dat::RowCol
+	ras::RowCol
 	datRowCol
 		( engabra::g3::Vector const & vec
 		)
 	{
-		return dat::RowCol
+		return ras::RowCol
 			{ static_cast<std::size_t>(std::floor(vec[0]))
 			, static_cast<std::size_t>(std::floor(vec[1]))
 			};
@@ -116,12 +116,12 @@ namespace cast
 	//! Integral values that are the std::floor values of datSpot[0,1]
 	template <typename Type>
 	inline
-	dat::RowCol
+	ras::RowCol
 	datRowCol
-		( dat::Vec2D<Type> const & vec2D
+		( img::Vec2D<Type> const & vec2D
 		)
 	{
-		return dat::RowCol
+		return ras::RowCol
 			{ static_cast<std::size_t>(std::floor(vec2D[0]))
 			, static_cast<std::size_t>(std::floor(vec2D[1]))
 			};
@@ -129,12 +129,12 @@ namespace cast
 
 	//! Integral values that are the std::floor values of datSpot[0,1]
 	inline
-	dat::RowCol
+	ras::RowCol
 	datRowCol
-		( dat::Spot const & datSpot
+		( img::Spot const & datSpot
 		)
 	{
-		return dat::RowCol
+		return ras::RowCol
 			{ static_cast<std::size_t>(std::floor(datSpot[0]))
 			, static_cast<std::size_t>(std::floor(datSpot[1]))
 			};
@@ -142,57 +142,57 @@ namespace cast
 
 	//! Integral values that are the std::floor values of pixSpot[0,1]
 	inline
-	dat::RowCol
+	ras::RowCol
 	datRowCol
 		( pix::Spot const & pixSpot
 		)
 	{
-		return dat::RowCol
+		return ras::RowCol
 			{ static_cast<std::size_t>(std::floorf(pixSpot[0]))
 			, static_cast<std::size_t>(std::floorf(pixSpot[1]))
 			};
 	}
 
 	//
-	// To dat::Vec2D<Type>
+	// To img::Vec2D<Type>
 	//
 
 	//! The first two components, vec[0,1]
 	template <typename Type>
 	inline
-	dat::Vec2D<Type>
+	img::Vec2D<Type>
 	datVec2D
 		( engabra::g3::Vector const & vec
 		)
 	{
-		return dat::Vec2D<Type>
+		return img::Vec2D<Type>
 			{ vec[0]
 			, vec[1]
 			};
 	}
 
 	//
-	// To dat::Spot
+	// To img::Spot
 	//
 
 	//! The first two components, vec[0,1]
 	inline
-	dat::Spot
+	img::Spot
 	datSpot
 		( engabra::g3::Vector const & vec
 		)
 	{
-		return dat::Spot{ vec[0], vec[1] };
+		return img::Spot{ vec[0], vec[1] };
 	}
 
 	//! The first two components, vec[0,1]
 	inline
-	dat::Spot
+	img::Spot
 	datSpot
-		( dat::RowCol const & rowcol
+		( ras::RowCol const & rowcol
 		)
 	{
-		return dat::Spot
+		return img::Spot
 			{ static_cast<double>(rowcol.row())
 			, static_cast<double>(rowcol.col())
 			};
@@ -200,12 +200,12 @@ namespace cast
 
 	//! The first two components, vec[0,1]
 	inline
-	dat::Spot
+	img::Spot
 	datSpot
 		( pix::Spot const & pixSpot
 		)
 	{
-		return dat::Spot
+		return img::Spot
 			{ static_cast<double>(pixSpot[0])
 			, static_cast<double>(pixSpot[1])
 			};
@@ -232,7 +232,7 @@ namespace cast
 	inline
 	pix::Spot
 	pixSpot
-		( dat::RowCol const & rowcol
+		( ras::RowCol const & rowcol
 		)
 	{
 		return pix::Spot
@@ -245,7 +245,7 @@ namespace cast
 	inline
 	pix::Spot
 	pixSpot
-		( dat::Spot const & datSpot
+		( img::Spot const & datSpot
 		)
 	{
 		return pix::Spot
@@ -255,17 +255,17 @@ namespace cast
 	}
 
 	//
-	// To pix::Grad
+	// To img::Grad
 	//
 
 	//! Float cast of the first two components, vec[0,1]
 	inline
-	pix::Grad
+	img::Grad
 	pixGrad
 		( engabra::g3::Vector const & vec
 		)
 	{
-		return pix::Grad
+		return img::Grad
 			{ static_cast<float>(vec[0])
 			, static_cast<float>(vec[1])
 			};

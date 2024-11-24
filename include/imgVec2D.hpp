@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::dat::Vec2D class template
+ * \brief Declarations for quadloco::img::Vec2D class template
  *
  */
 
@@ -262,7 +262,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::Vec2D<Type> const & item
+		, quadloco::img::Vec2D<Type> const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -274,7 +274,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::dat::Vec2D<Type> const & item
+		( quadloco::img::Vec2D<Type> const & item
 		)
 	{
 		return item.isValid();
@@ -285,8 +285,8 @@ namespace
 	inline
 	bool
 	nearlyEquals
-		( quadloco::dat::Vec2D<Type> const & itemA
-		, quadloco::dat::Vec2D<Type> const & itemB
+		( quadloco::img::Vec2D<Type> const & itemA
+		, quadloco::img::Vec2D<Type> const & itemB
 		, Type const tol = std::numeric_limits<Type>::epsilon()
 		)
 	{

@@ -32,10 +32,10 @@
  */
 
 
-#include "datGrid.hpp"
-#include "datSpot.hpp"
-#include "imgQuadTarget.hpp"
-#include "pixgrid.hpp"
+#include "rasGrid.hpp"
+#include "imgSpot.hpp"
+#include "sigQuadTarget.hpp"
+#include "rasgrid.hpp"
 #include "prbStats.hpp"
 
 #include <limits>
@@ -79,8 +79,8 @@ namespace prb
 		static
 		SquareRadiiSamples
 		from
-			( dat::Grid<Type> const & pixGrid
-			, img::QuadTarget const & imgQuad
+			( ras::Grid<Type> const & pixGrid
+			, sig::QuadTarget const & imgQuad
 			)
 		{
 			std::vector<Type> ppVals{};
@@ -128,10 +128,10 @@ namespace prb
 				Vector const pnLoc{ .5 * (xpLoc + ynLoc) };
 
 				// radial flat sample spots (cast from Vector)
-				dat::Spot const ppSpot{ ppLoc[0], ppLoc[1] };
-				dat::Spot const npSpot{ npLoc[0], npLoc[1] };
-				dat::Spot const nnSpot{ nnLoc[0], nnLoc[1] };
-				dat::Spot const pnSpot{ pnLoc[0], pnLoc[1] };
+				img::Spot const ppSpot{ ppLoc[0], ppLoc[1] };
+				img::Spot const npSpot{ npLoc[0], npLoc[1] };
+				img::Spot const nnSpot{ nnLoc[0], nnLoc[1] };
+				img::Spot const pnSpot{ pnLoc[0], pnLoc[1] };
 
 
 				std::size_t numValid{ 0u };
@@ -265,8 +265,8 @@ namespace prb
 	inline
 	double
 	isQuadlike
-		( dat::Grid<Type> const & pixGrid
-		, img::QuadTarget const & imgQuad
+		( ras::Grid<Type> const & pixGrid
+		, sig::QuadTarget const & imgQuad
 		, std::ostream * const & ptMessages = nullptr
 		)
 	{

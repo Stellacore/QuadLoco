@@ -43,7 +43,7 @@ set(unitTests
 	test_datSpot  # 'continuous' raster cell locations
 	test_datVec2D  # support for 2D vector operations
 	test_houghAdderAD  # accumulatio buffer for hough alpha,delta parms
-	test_houghFindAD  # find maxima in hough::ParmAD space
+	test_houghFindAD  # find maxima in sig::ParmAD space
 	test_houghParmAD  # Hough "alpha,delta" parameter representation
 	test_imgCamera  # simplified ideal perspective camera
 	test_imgQuadTarget  # represent perspective image of obj::QuadTarget

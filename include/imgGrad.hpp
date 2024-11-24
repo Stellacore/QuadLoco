@@ -27,12 +27,12 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::pix::Grad
+ * \brief Declarations for quadloco::img::Grad
  *
  */
 
 
-#include "datVec2D.hpp"
+#include "imgVec2D.hpp"
 
 #include <iostream>
 
@@ -45,17 +45,17 @@ namespace pix
 
 	/*! \brief GRADent ELement structure representing a directed edge gradient.
 	 *
-	 * \note For computing gradient values over entire dat::Grid instances
-	 * refer to functions in pixgrid.hpp (e.g. gradientGridFor()).
+	 * \note For computing gradient values over entire ras::Grid instances
+	 * refer to functions in rasgrid.hpp (e.g. gradientGridFor()).
 	 */
-	struct Grad : public dat::Vec2D<float>
+	struct Grad : public img::Vec2D<float>
 	{
 
 		inline
 		explicit
 		Grad
 			()
-			: dat::Vec2D<float>{}
+			: img::Vec2D<float>{}
 		{ }
 
 		inline
@@ -64,15 +64,15 @@ namespace pix
 			( float const val0
 			, float const val1
 			)
-			: dat::Vec2D<float>{ val0, val1 }
+			: img::Vec2D<float>{ val0, val1 }
 		{ }
 
 		inline
 		explicit
 		Grad
-			( dat::Vec2D<float> const vec2D
+			( img::Vec2D<float> const vec2D
 			)
-			: dat::Vec2D<float>{ vec2D.theData }
+			: img::Vec2D<float>{ vec2D.theData }
 		{ }
 
 		inline
@@ -133,7 +133,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::pix::Grad const & item
+		, quadloco::img::Grad const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -144,7 +144,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::pix::Grad const & item
+		( quadloco::img::Grad const & item
 		)
 	{
 		return item.isValid();
@@ -154,8 +154,8 @@ namespace
 	inline
 	bool
 	nearlyEquals
-		( quadloco::pix::Grad const & itemA
-		, quadloco::pix::Grad const & itemB
+		( quadloco::img::Grad const & itemA
+		, quadloco::img::Grad const & itemB
 		, float const & tol = std::numeric_limits<float>::epsilon()
 		)
 	{

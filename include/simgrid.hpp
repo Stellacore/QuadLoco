@@ -32,10 +32,10 @@
  */
 
 
-#include "datGrid.hpp"
-#include "datRowCol.hpp"
-#include "datSizeHW.hpp"
-#include "pixEdgel.hpp"
+#include "rasGrid.hpp"
+#include "rasRowCol.hpp"
+#include "rasSizeHW.hpp"
+#include "imgEdgel.hpp"
 
 
 namespace quadloco
@@ -46,11 +46,11 @@ namespace sim
 
 	//! Grid with a strong edge defined by provided edgel
 	inline
-	dat::Grid<float>
+	ras::Grid<float>
 	gridWithEdge
-		( dat::SizeHW const & hwSize
+		( ras::SizeHW const & hwSize
 			//!< Size of grid to create
-		, pix::Edgel const & edgel
+		, img::Edgel const & edgel
 			//!< Location and direction of edge to create
 		, float const & valueBackground = 0.f
 			//!< Value to assign behind the edge
@@ -58,7 +58,7 @@ namespace sim
 			//!< Value to assign in front of the edge
 		)
 	{
-		dat::Grid<float> pixGrid(hwSize);
+		ras::Grid<float> pixGrid(hwSize);
 		for (std::size_t row{0u} ; row < hwSize.high() ; ++row)
 		{
 			for (std::size_t col{0u} ; col < hwSize.wide() ; ++col)
@@ -91,7 +91,7 @@ namespace sim
 				}
 				else // sharp edge
 				{
-					dat::RowCol const rcLoc{ row, col };
+					ras::RowCol const rcLoc{ row, col };
 					float pixValue{ valueBackground };
 					if (edgel.rcInFront(rcLoc))
 					{

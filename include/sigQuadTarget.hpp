@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::img::QuadTarget
+ * \brief Declarations for quadloco::sig::QuadTarget
  *
  */
 
@@ -129,7 +129,7 @@ namespace img
 		inline
 		bool
 		nearlyEquals
-			( quadloco::img::QuadTarget const & other
+			( quadloco::sig::QuadTarget const & other
 			, double const tol = std::numeric_limits<double>::epsilon()
 			) const
 		{
@@ -199,7 +199,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::img::QuadTarget const & item
+		, quadloco::sig::QuadTarget const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -210,7 +210,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::img::QuadTarget const & item
+		( quadloco::sig::QuadTarget const & item
 		)
 	{
 		return item.isValid();
@@ -220,8 +220,8 @@ namespace
 	inline
 	bool
 	nearlyEquals
-		( quadloco::img::QuadTarget const & itemA
-		, quadloco::img::QuadTarget const & itemB
+		( quadloco::sig::QuadTarget const & itemA
+		, quadloco::sig::QuadTarget const & itemB
 		, double const tol = std::numeric_limits<double>::epsilon()
 		)
 	{

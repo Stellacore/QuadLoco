@@ -27,18 +27,18 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::hough::AdderAD
+ * \brief Declarations for quadloco::ops::AdderAD
  *
  */
 
 
-#include "datGrid.hpp"
-#include "datMapSizeArea.hpp"
-#include "datRowCol.hpp"
-#include "datSizeHW.hpp"
-#include "datSpan.hpp"
-#include "datSpot.hpp"
-#include "houghParmAD.hpp"
+#include "rasGrid.hpp"
+#include "xfmMapSizeArea.hpp"
+#include "rasRowCol.hpp"
+#include "rasSizeHW.hpp"
+#include "sigSpan.hpp"
+#include "imgSpot.hpp"
+#include "sigParmAD.hpp"
 #include "pix.hpp"
 
 #include <algorithm>
@@ -58,8 +58,8 @@ namespace hough
 		static constexpr double pi{ std::numbers::pi_v<double> };
 		static constexpr double piTwo{ 2. * std::numbers::pi_v<double> };
 
-		dat::Grid<float> theGridAD{};
-		dat::MapSizeArea const theMapSizeArea;
+		ras::Grid<float> theGridAD{};
+		xfm::MapSizeArea const theMapSizeArea;
 		double const theDeltaA{ std::numeric_limits<double>::quiet_NaN() };
 		double const theDeltaD{ std::numeric_limits<double>::quiet_NaN() };
 
@@ -114,13 +114,13 @@ namespace hough
 		//! Useful size for AD accumulation grid for given pixel grid input
 		inline
 		static
-		dat::SizeHW
+		ras::SizeHW
 		adSizeHintFor
-			( dat::SizeHW const & hwPixGrid
+			( ras::SizeHW const & hwPixGrid
 			)
 		{
 			std::size_t const sizeAD{ hwPixGrid.perimeter() / 4u };
-			return dat::SizeHW{ sizeAD, sizeAD };
+			return ras::SizeHW{ sizeAD, sizeAD };
 		}
 
 
@@ -128,14 +128,14 @@ namespace hough
 		inline
 		explicit
 		AdderAD
-			( dat::SizeHW const & adSize
+			( ras::SizeHW const & adSize
 			)
 			: theGridAD(adSize)
 			, theMapSizeArea
 				( theGridAD.hwSize() 
-				, dat::Area
-					{ dat::Span{ -pi, pi }
-					, dat::Span{ 0., piTwo }
+				, img::Area
+					{ sig::Span{ -pi, pi }
+					, sig::Span{ 0., piTwo }
 					}
 				)
 		{
@@ -156,7 +156,7 @@ namespace hough
 
 		//! Direct access to the accumulation grid
 		inline
-		dat::Grid<float> const &
+		ras::Grid<float> const &
 		grid
 			() const
 		{
@@ -165,46 +165,46 @@ namespace hough
 
 		//! Row/column in accumulation grid associated with ParmAD values
 		inline
-		dat::Spot
+		img::Spot
 		datSpotForAD
-			( hough::ParmAD const & parmAD
+			( sig::ParmAD const & parmAD
 			) const
 		{
 			// Get angles from parmAD and ensure within valid sizemap range
-			dat::Spot const parmSpot
+			img::Spot const parmSpot
 				{ angleInRange(parmAD.alpha(), -pi, pi)
 				, angleInRange(parmAD.delta(), 0., piTwo)
 				};
-			return dat::Spot{ theMapSizeArea.gridSpotForAreaSpot(parmSpot) };
+			return img::Spot{ theMapSizeArea.gridSpotForAreaSpot(parmSpot) };
 		}
 
 		//! Row/column in accumulation grid associated with ParmAD values
 		inline
-		dat::RowCol
+		ras::RowCol
 		datRowColForAD
-			( hough::ParmAD const & parmAD
+			( sig::ParmAD const & parmAD
 			) const
 		{
-			dat::Spot const gridSpot{ datSpotForAD(parmAD) };
+			img::Spot const gridSpot{ datSpotForAD(parmAD) };
 			return cast::datRowCol(gridSpot);
 		}
 
 		//! Hough alpha,delta parameter values at location gridSpot
 		inline
-		hough::ParmAD
+		sig::ParmAD
 		houghParmADFor
-			( dat::Spot const & gridSpot
+			( img::Spot const & gridSpot
 			) const
 		{
-			hough::ParmAD parmAD{};
+			sig::ParmAD parmAD{};
 			if ( gridSpot.isValid()
 			  && ( gridSpot[0] < (double)theGridAD.high())
 			  && ( gridSpot[1] < (double)theGridAD.wide())
 			   )
 			{
-				dat::Spot const areaSpot
+				img::Spot const areaSpot
 					{ theMapSizeArea.areaSpotForGridSpot(gridSpot) };
-				parmAD = hough::ParmAD{ areaSpot[0], areaSpot[1] };
+				parmAD = sig::ParmAD{ areaSpot[0], areaSpot[1] };
 			}
 			return parmAD;
 		}
@@ -213,7 +213,7 @@ namespace hough
 		inline
 		double
 		weightAt
-			( dat::Vec2D<double> const & fracSpot
+			( img::Vec2D<double> const & fracSpot
 			, double const & sigma = 1.
 			)
 		{
@@ -224,12 +224,12 @@ namespace hough
 
 		//! Grid RowCol location associated with grid spot
 		inline
-		dat::RowCol
+		ras::RowCol
 		wrappedGridSpot
-			( dat::Spot const & gridSpot
+			( img::Spot const & gridSpot
 			) const
 		{
-			dat::RowCol rc{};
+			ras::RowCol rc{};
 
 			if (gridSpot.isValid())
 			{
@@ -239,13 +239,13 @@ namespace hough
 				double const dWide{ (double)theGridAD.wide() };
 				double const dubCol{ wrappedValue(gridSpot[1], dWide) };
 
-				rc = dat::RowCol
+				rc = ras::RowCol
 					{ static_cast<std::size_t>(std::floor(dubRow))
 					, static_cast<std::size_t>(std::floor(dubCol))
 					};
 
 				/*
-				dat::Spot const wrapSpot{ dubRow, dubCol };
+				img::Spot const wrapSpot{ dubRow, dubCol };
 				bool err{ false };
 				if (! (rc.row() < theGridAD.high()))
 				{
@@ -273,38 +273,38 @@ namespace hough
 		inline
 		void
 		add
-			( hough::ParmAD const & parmAD
+			( sig::ParmAD const & parmAD
 			, float const & gradMag
 			)
 		{
 			if (isValid() && pix::isValid(gradMag) && parmAD.isValid())
 			{
-				dat::Spot const spot00{ datSpotForAD(parmAD) };
+				img::Spot const spot00{ datSpotForAD(parmAD) };
 
-				static dat::Spot const dSpotNN{ -1., -1. };
-				static dat::Spot const dSpotZN{  0., -1. };
-				static dat::Spot const dSpotPN{  1., -1. };
+				static img::Spot const dSpotNN{ -1., -1. };
+				static img::Spot const dSpotZN{  0., -1. };
+				static img::Spot const dSpotPN{  1., -1. };
 
-				static dat::Spot const dSpotNZ{ -1.,  0. };
-				static dat::Spot const dSpotZZ{  0.,  0. };
-				static dat::Spot const dSpotPZ{  1.,  0. };
+				static img::Spot const dSpotNZ{ -1.,  0. };
+				static img::Spot const dSpotZZ{  0.,  0. };
+				static img::Spot const dSpotPZ{  1.,  0. };
 
-				static dat::Spot const dSpotNP{ -1.,  1. };
-				static dat::Spot const dSpotZP{  0.,  1. };
-				static dat::Spot const dSpotPP{  1.,  1. };
+				static img::Spot const dSpotNP{ -1.,  1. };
+				static img::Spot const dSpotZP{  0.,  1. };
+				static img::Spot const dSpotPP{  1.,  1. };
 
 
-				dat::Spot const spotNN{ spot00 + dSpotNN };
-				dat::Spot const spotZN{ spot00 + dSpotZN };
-				dat::Spot const spotPN{ spot00 + dSpotPN };
+				img::Spot const spotNN{ spot00 + dSpotNN };
+				img::Spot const spotZN{ spot00 + dSpotZN };
+				img::Spot const spotPN{ spot00 + dSpotPN };
 
-				dat::Spot const spotNZ{ spot00 + dSpotNZ };
-				dat::Spot const spotZZ{ spot00 + dSpotZZ };
-				dat::Spot const spotPZ{ spot00 + dSpotPZ };
+				img::Spot const spotNZ{ spot00 + dSpotNZ };
+				img::Spot const spotZZ{ spot00 + dSpotZZ };
+				img::Spot const spotPZ{ spot00 + dSpotPZ };
 
-				dat::Spot const spotNP{ spot00 + dSpotNP };
-				dat::Spot const spotZP{ spot00 + dSpotZP };
-				dat::Spot const spotPP{ spot00 + dSpotPP };
+				img::Spot const spotNP{ spot00 + dSpotNP };
+				img::Spot const spotZP{ spot00 + dSpotZP };
+				img::Spot const spotPP{ spot00 + dSpotPP };
 
 /*
 std::cout << '\n';
@@ -322,17 +322,17 @@ std::cout << "spotZP: " << spotZP << '\n';
 std::cout << "spotPP: " << spotPP << '\n';
 */
 
-				dat::RowCol const rcNN{ wrappedGridSpot(spotNN) };
-				dat::RowCol const rcZN{ wrappedGridSpot(spotZN) };
-				dat::RowCol const rcPN{ wrappedGridSpot(spotPN) };
+				ras::RowCol const rcNN{ wrappedGridSpot(spotNN) };
+				ras::RowCol const rcZN{ wrappedGridSpot(spotZN) };
+				ras::RowCol const rcPN{ wrappedGridSpot(spotPN) };
 
-				dat::RowCol const rcNZ{ wrappedGridSpot(spotNZ) };
-				dat::RowCol const rcZZ{ wrappedGridSpot(spotZZ) };
-				dat::RowCol const rcPZ{ wrappedGridSpot(spotPZ) };
+				ras::RowCol const rcNZ{ wrappedGridSpot(spotNZ) };
+				ras::RowCol const rcZZ{ wrappedGridSpot(spotZZ) };
+				ras::RowCol const rcPZ{ wrappedGridSpot(spotPZ) };
 
-				dat::RowCol const rcNP{ wrappedGridSpot(spotNP) };
-				dat::RowCol const rcZP{ wrappedGridSpot(spotZP) };
-				dat::RowCol const rcPP{ wrappedGridSpot(spotPP) };
+				ras::RowCol const rcNP{ wrappedGridSpot(spotNP) };
+				ras::RowCol const rcZP{ wrappedGridSpot(spotZP) };
+				ras::RowCol const rcPP{ wrappedGridSpot(spotPP) };
 
 /*
 std::cout << '\n';
@@ -351,7 +351,7 @@ std::cout << "rcPP: " << rcPP << '\n';
 */
 
 
-				dat::Spot const fracZZ{ spotZZ - cast::datSpot(rcZZ) };
+				img::Spot const fracZZ{ spotZZ - cast::datSpot(rcZZ) };
 
 /*
 std::cout << '\n';
@@ -359,17 +359,17 @@ std::cout << "fracZZ: " << fracZZ << '\n';
 */
 
 				/*
-				dat::Spot const evalNN{ (fracZZ + dSpotNN) };
-				dat::Spot const evalZN{ (fracZZ + dSpotZN) };
-				dat::Spot const evalPN{ (fracZZ + dSpotPN) };
+				img::Spot const evalNN{ (fracZZ + dSpotNN) };
+				img::Spot const evalZN{ (fracZZ + dSpotZN) };
+				img::Spot const evalPN{ (fracZZ + dSpotPN) };
 
-				dat::Spot const evalNZ{ (fracZZ + dSpotNZ) };
-				dat::Spot const evalZZ{ (fracZZ + dSpotZZ) };
-				dat::Spot const evalPZ{ (fracZZ + dSpotPZ) };
+				img::Spot const evalNZ{ (fracZZ + dSpotNZ) };
+				img::Spot const evalZZ{ (fracZZ + dSpotZZ) };
+				img::Spot const evalPZ{ (fracZZ + dSpotPZ) };
 
-				dat::Spot const evalNP{ (fracZZ + dSpotNP) };
-				dat::Spot const evalZP{ (fracZZ + dSpotZP) };
-				dat::Spot const evalPP{ (fracZZ + dSpotPP) };
+				img::Spot const evalNP{ (fracZZ + dSpotNP) };
+				img::Spot const evalZP{ (fracZZ + dSpotZP) };
+				img::Spot const evalPP{ (fracZZ + dSpotPP) };
 				*/
 
 /*
@@ -467,7 +467,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::hough::AdderAD const & item
+		, quadloco::ops::AdderAD const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -478,7 +478,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::hough::AdderAD const & item
+		( quadloco::ops::AdderAD const & item
 		)
 	{
 		return item.isValid();

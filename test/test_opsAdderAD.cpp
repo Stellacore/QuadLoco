@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::hough::AdderAD
+\brief Unit tests (and example) code for quadloco::ops::AdderAD
 */
 
 
-#include "houghAdderAD.hpp"
+#include "opsAdderAD.hpp"
 
 #include "cast.hpp"
 
@@ -54,23 +54,23 @@ namespace
 		// create adder into grid of hwSize spanning standard parameter
 		// range of -pi <= alpha < pi, 0. <= delta < 2*pi
 		// NOTE: Test code below assumes size AT LEAST (1x1) or larger
-		quadloco::dat::SizeHW const hwSize{ 13u, 17u };
-//quadloco::dat::SizeHW const hwSize{  5u,  5u };
-		quadloco::hough::AdderAD adder(hwSize);
+		quadloco::ras::SizeHW const hwSize{ 13u, 17u };
+//quadloco::ras::SizeHW const hwSize{  5u,  5u };
+		quadloco::ops::AdderAD adder(hwSize);
 
 		// define a parameter near the center of the last cell in adder grid
-		quadloco::dat::RowCol const expRowCol
+		quadloco::ras::RowCol const expRowCol
 			{ hwSize.high()-1u, hwSize.wide()-1u };
-		quadloco::hough::ParmAD const parmAD
+		quadloco::sig::ParmAD const parmAD
 			{  piTwo*(1. - 1./(double)hwSize.high()) - pi
 			,  piTwo*(1. - 1./(double)hwSize.wide())
 			};
 
 		// grid location spot associated with parmAD
-		quadloco::dat::RowCol const gotRowCol
+		quadloco::ras::RowCol const gotRowCol
 			{ adder.datRowColForAD(parmAD) };
 		// parameters associated with grid location
-		quadloco::hough::ParmAD const gotParmAD
+		quadloco::sig::ParmAD const gotParmAD
 			{ adder.houghParmADFor(quadloco::cast::datSpot(expRowCol)) };
 
 /*
@@ -111,7 +111,7 @@ std::cout << adder.grid().infoStringContents("adder", "%5.3f") << '\n';
 			oss << "got: " << gotRowCol << '\n';
 		}
 
-		quadloco::hough::ParmAD const & expParmAD = parmAD;
+		quadloco::sig::ParmAD const & expParmAD = parmAD;
 		double const tol
 			{ piTwo / (double)std::min(hwSize.high(), hwSize.wide()) };
 		if (! nearlyEquals(gotParmAD, expParmAD, .25))

@@ -32,9 +32,9 @@
  */
 
 
-#include "datGrid.hpp"
-#include "imgCamera.hpp"
-#include "imgQuadTarget.hpp"
+#include "rasGrid.hpp"
+#include "objCamera.hpp"
+#include "sigQuadTarget.hpp"
 #include "objQuadTarget.hpp"
 #include "simConfig.hpp"
 #include "simSampler.hpp"
@@ -59,7 +59,7 @@ namespace sim
 		inline
 		explicit
 		Render
-			( img::Camera const & camera
+			( obj::Camera const & camera
 				//!< Camera geometry with which to render image
 			, rigibra::Transform const & xCamWrtQuad
 				//!< Orientation of camera (exterior) frame w.r.t. objQuad
@@ -105,7 +105,7 @@ namespace sim
 
 		//! Geometry of perspective image created by quadImage()
 		inline
-		img::QuadTarget
+		sig::QuadTarget
 		imgQuadTarget
 			() const
 		{
@@ -114,13 +114,13 @@ namespace sim
 
 		//! Simulate image through ctor's camera and orientation
 		inline
-		dat::Grid<float>
+		ras::Grid<float>
 		quadImage
 			( std::size_t const & numOverSamp = 64u
 				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
 			) const
 		{
-			dat::Grid<float> grid(theSampler.format());
+			ras::Grid<float> grid(theSampler.format());
 			std::fill(grid.begin(), grid.end(), engabra::g3::null<float>());
 			injectTargetInto(&grid, numOverSamp);
 			return grid;
@@ -130,13 +130,13 @@ namespace sim
 		inline
 		void
 		injectTargetInto
-			( dat::Grid<float> * const & ptGrid
+			( ras::Grid<float> * const & ptGrid
 				//!< Destination into which to render image
 			, std::size_t const & numOverSamp
 				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
 			) const
 		{
-			dat::Grid<float> & grid = *ptGrid;
+			ras::Grid<float> & grid = *ptGrid;
 
 /*
 double const & beg0 = theObjQuad.span0().theBeg;
@@ -152,7 +152,7 @@ double const & end1 = theObjQuad.span1().theEnd;
 				{
 					double const subRow{ (double)row };
 					double const subCol{ (double)col };
-					dat::Spot const detSpot{ subRow, subCol };
+					img::Spot const detSpot{ subRow, subCol };
 
 					float const inten
 						{ (float)theSampler.intensityAt(detSpot, numOverSamp) };

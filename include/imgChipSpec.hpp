@@ -27,14 +27,14 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::dat::ChipSpec
+ * \brief Declarations for quadloco::img::ChipSpec
  *
  */
 
 
-#include "datGrid.hpp"
-#include "datRowCol.hpp"
-#include "datSizeHW.hpp"
+#include "rasGrid.hpp"
+#include "rasRowCol.hpp"
+#include "rasSizeHW.hpp"
 
 
 namespace quadloco
@@ -186,8 +186,8 @@ namespace dat
 		inline
 		bool
 		fillChipFromFull
-			( dat::Grid<Type> * const ptChipData
-			, dat::Grid<Type> const & fullData
+			( ras::Grid<Type> * const ptChipData
+			, ras::Grid<Type> const & fullData
 			) const
 		{
 			bool okay{ ptChipData && fitsInto(fullData.hwSize()) };
@@ -213,8 +213,8 @@ namespace dat
 		inline
 		bool
 		fillFullFromChip
-			( dat::Grid<Type> * const ptFullData
-			, dat::Grid<Type> const & chipData
+			( ras::Grid<Type> * const ptFullData
+			, ras::Grid<Type> const & chipData
 			) const
 		{
 			bool okay {ptFullData && fitsInto(ptFullData->hwSize()) };
@@ -270,7 +270,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::ChipSpec const & item
+		, quadloco::img::ChipSpec const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -281,7 +281,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::dat::ChipSpec const & item
+		( quadloco::img::ChipSpec const & item
 		)
 	{
 		return item.isValid();

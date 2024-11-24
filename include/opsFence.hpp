@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::dat::Fence
+ * \brief Declarations for quadloco::ops::Fence
  *
  */
 
@@ -137,7 +137,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::Fence<Type> const & item
+		, quadloco::ops::Fence<Type> const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -149,7 +149,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::dat::Fence<Type> const & item
+		( quadloco::ops::Fence<Type> const & item
 		)
 	{
 		return item.isValid();

@@ -32,7 +32,7 @@
  */
 
 
-#include "datVec2D.hpp"
+#include "imgVec2D.hpp"
 
 #include <iostream>
 
@@ -44,13 +44,13 @@ namespace pix
 {
 
 	//! Discrete grid location in row,colum order.
-	struct Spot : public dat::Vec2D<float>
+	struct Spot : public img::Vec2D<float>
 	{
 		inline
 		explicit
 		Spot
 			()
-			: dat::Vec2D<float>{}
+			: img::Vec2D<float>{}
 		{ }
 
 		inline
@@ -59,15 +59,15 @@ namespace pix
 			( float const val0
 			, float const val1
 			)
-			: dat::Vec2D<float>{ val0, val1 }
+			: img::Vec2D<float>{ val0, val1 }
 		{ }
 
 		inline
 		explicit
 		Spot
-			( dat::Vec2D<float> const vec2D
+			( img::Vec2D<float> const vec2D
 			)
-			: dat::Vec2D<float>{ vec2D.theData }
+			: img::Vec2D<float>{ vec2D.theData }
 		{ }
 
 		inline

@@ -27,13 +27,13 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::pix::Edgel
+ * \brief Declarations for quadloco::img::Edgel
  *
  */
 
 
 #include "cast.hpp"
-#include "pixGrad.hpp"
+#include "imgGrad.hpp"
 #include "pixSpot.hpp"
 
 #include <Engabra>
@@ -56,7 +56,7 @@ namespace pix
 		pix::Spot theSpot{};
 
 		//! Direction of the (positive) gradient across the edge
-		pix::Grad theGrad{};
+		img::Grad theGrad{};
 
 	public:
 
@@ -71,7 +71,7 @@ namespace pix
 		explicit
 		Edgel
 			( pix::Spot const & spot
-			, pix::Grad const & grad
+			, img::Grad const & grad
 			)
 			: theSpot{ spot }
 			, theGrad{ grad }
@@ -81,8 +81,8 @@ namespace pix
 		inline
 		explicit
 		Edgel
-			( dat::RowCol const & rowcol
-			, pix::Grad const & grad
+			( ras::RowCol const & rowcol
+			, img::Grad const & grad
 			)
 			: theSpot{ cast::pixSpot(rowcol) }
 			, theGrad{ grad }
@@ -99,7 +99,7 @@ namespace pix
 
 		//! Gradient at this edgel location
 		inline
-		pix::Grad const &
+		img::Grad const &
 		gradient
 			() const
 		{
@@ -122,7 +122,7 @@ namespace pix
 		inline
 		bool
 		rcInFront
-			( dat::Spot const & rcDatSpot
+			( img::Spot const & rcDatSpot
 			) const
 		{
 			return (! rcInBack(rcDatSpot));
@@ -132,7 +132,7 @@ namespace pix
 		inline
 		bool
 		rcInBack
-			( dat::Spot const & rcDatSpot
+			( img::Spot const & rcDatSpot
 			) const
 		{
 			return rcInBack
@@ -147,7 +147,7 @@ namespace pix
 			) const
 		{
 			return rcInFront	
-				(dat::Spot{ (double)rcPixSpot.row(), (double)rcPixSpot.col() });
+				(img::Spot{ (double)rcPixSpot.row(), (double)rcPixSpot.col() });
 		}
 
 		//! True if location is behind the edge (relative to gradient)
@@ -166,7 +166,7 @@ namespace pix
 		inline
 		bool
 		rcInFront
-			( dat::RowCol const & rowcol
+			( ras::RowCol const & rowcol
 			) const
 		{
 			return rcInFront	
@@ -177,7 +177,7 @@ namespace pix
 		inline
 		bool
 		rcInBack
-			( dat::RowCol const & rowcol
+			( ras::RowCol const & rowcol
 			) const
 		{
 			return rcInBack
@@ -232,7 +232,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::pix::Edgel const & item
+		, quadloco::img::Edgel const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -243,7 +243,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::pix::Edgel const & item
+		( quadloco::img::Edgel const & item
 		)
 	{
 		return item.isValid();
@@ -253,8 +253,8 @@ namespace
 	inline
 	bool
 	nearlyEquals
-		( quadloco::pix::Edgel const & itemA
-		, quadloco::pix::Edgel const & itemB
+		( quadloco::img::Edgel const & itemA
+		, quadloco::img::Edgel const & itemB
 		, double const & tol = std::numeric_limits<double>::epsilon()
 		)
 	{

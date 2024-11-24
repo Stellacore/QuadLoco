@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::dat::Fence
+\brief Unit tests (and example) code for quadloco::ops::Fence
 */
 
 
-#include "datFence.hpp"
+#include "opsFence.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -44,7 +44,7 @@ namespace
 	{
 		// [DoxyExample01]
 
-		quadloco::dat::Fence<int> fence;
+		quadloco::ops::Fence<int> fence;
 		fence.include(3);
 		fence.include(7);
 		fence.include(-5);

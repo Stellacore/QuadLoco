@@ -28,12 +28,12 @@
 */
 
 
-#include "pixgrid.hpp"
+#include "rasgrid.hpp"
 
-#include "datChipSpec.hpp"
-#include "datGrid.hpp"
-#include "pixGrad.hpp"
-#include "pixgrid.hpp"
+#include "imgChipSpec.hpp"
+#include "rasGrid.hpp"
+#include "imgGrad.hpp"
+#include "rasgrid.hpp"
 
 #include <algorithm>
 #include <complex>
@@ -54,7 +54,7 @@ namespace
 		// [DoxyExample00]
 
 		// define arbitrary grid
-		quadloco::dat::Grid<char> grid(10u, 7u);
+		quadloco::ras::Grid<char> grid(10u, 7u);
 		std::fill(grid.begin(), grid.end(), '.');
 
 		// fill outer two rows and outer two columns
@@ -123,10 +123,10 @@ namespace
 		// using tiny data grids for easy test data inspection
 		constexpr std::size_t ndxHalf{ 4u };
 		constexpr std::size_t ndxFull{ 2u*ndxHalf };
-		quadloco::dat::SizeHW const hwSize{ ndxFull, ndxFull };
+		quadloco::ras::SizeHW const hwSize{ ndxFull, ndxFull };
 		// one with vertical, one with horizontal edges
-		quadloco::dat::Grid<float> tbPixels(hwSize); // Top-to-Bot edge
-		quadloco::dat::Grid<float> lrPixels(hwSize); // Lft-to-Rgt edge
+		quadloco::ras::Grid<float> tbPixels(hwSize); // Top-to-Bot edge
+		quadloco::ras::Grid<float> lrPixels(hwSize); // Lft-to-Rgt edge
 		constexpr float backVal{ -15.25f };
 		constexpr float foreVal{  -5.25f };
 		// initialize both grids to background values
@@ -139,25 +139,25 @@ namespace
 
 		// set foreground for bottom half of the horizontal edge grid
 		std::fill(tbPixels.beginRow(ndxHalf), tbPixels.end(), foreVal);
-		quadloco::pix::Grad const tbExpGrad{ 10./(double)stepFull, 0. };
+		quadloco::img::Grad const tbExpGrad{ 10./(double)stepFull, 0. };
 
 		// Use ChipSpec to set right half foreground for vertical edge grid
-		quadloco::dat::ChipSpec const lrFillSpec
-			{ quadloco::dat::RowCol{ 0u, lrPixels.wide()/2u }
-			, quadloco::dat::SizeHW{ lrPixels.high(), lrPixels.wide()/2u }
+		quadloco::img::ChipSpec const lrFillSpec
+			{ quadloco::ras::RowCol{ 0u, lrPixels.wide()/2u }
+			, quadloco::ras::SizeHW{ lrPixels.high(), lrPixels.wide()/2u }
 			};
 		quadloco::pix::grid::setSubGridValues(&lrPixels, lrFillSpec, foreVal);
-		quadloco::pix::Grad const lrExpGrad{ 0., 10./(double)stepFull };
+		quadloco::img::Grad const lrExpGrad{ 0., 10./(double)stepFull };
 
 		// Compute edge gradient across stepFull pixels
 
 		// gradient magnitude prop to:
 		// [gridVal(rc + stepHalf) - gridVal(rc - stepHalf)] / (2*stepHalf)
 		// Vertical grid gradients
-		quadloco::dat::Grid<quadloco::pix::Grad> const lrGrads
+		quadloco::ras::Grid<quadloco::img::Grad> const lrGrads
 			{ quadloco::pix::grid::gradientGridFor(lrPixels, stepHalf) };
 		// Horizontal grid gradients
-		quadloco::dat::Grid<quadloco::pix::Grad> const tbGrads
+		quadloco::ras::Grid<quadloco::img::Grad> const tbGrads
 			{ quadloco::pix::grid::gradientGridFor(tbPixels, stepHalf) };
 
 		// [DoxyExample01]
@@ -246,8 +246,8 @@ namespace
 		// [DoxyExample02]
 
 		// grid of samples (minimum example here)
-		quadloco::dat::SizeHW const hwSize{ 4u, 5u };
-		quadloco::dat::Grid<double> values{ hwSize };
+		quadloco::ras::SizeHW const hwSize{ 4u, 5u };
+		quadloco::ras::Grid<double> values{ hwSize };
 		std::fill(values.begin(), values.end(), quadloco::pix::null<double>());
 		constexpr std::size_t rowNdx1{ 1u };
 		constexpr std::size_t rowNdx2{ rowNdx1 + 1u };
@@ -259,7 +259,7 @@ namespace
 		values(rowNdx2, colNdx2) = 29.;
 
 		// sample at arbitrary location (inside the grid, else returns null)
-		quadloco::dat::Spot const at
+		quadloco::img::Spot const at
 			{ .25 + (double)rowNdx1
 			, .75 + (double)rowNdx2
 			};
@@ -267,7 +267,7 @@ namespace
 
 		// [DoxyExample02]
 
-		quadloco::dat::Spot const out
+		quadloco::img::Spot const out
 			{ 2.25 + (double)rowNdx1
 			,  .75 + (double)rowNdx2
 			};
@@ -321,7 +321,7 @@ namespace
 		using namespace quadloco;
 		using namespace quadloco::dat;
 		using namespace quadloco::pix::grid;
-		dat::Grid<std::complex<double> > cplxGrid(4u, 5u);
+		ras::Grid<std::complex<double> > cplxGrid(4u, 5u);
 		std::complex<double> const expValue{ 100., -200. };
 		std::fill	
 			( cplxGrid.begin(), cplxGrid.end()

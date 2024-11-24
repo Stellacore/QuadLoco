@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::dat::Grid
+\brief Unit tests (and example) code for quadloco::ras::Grid
 */
 
 
-#include "datGrid.hpp"
+#include "rasGrid.hpp"
 
 #include "QuadLoco"
 
@@ -61,7 +61,7 @@ namespace
 				return std::string("WhatEver");
 			}
 		};
-		quadloco::dat::Grid<SomeType> const someGrid(5u, 6u);
+		quadloco::ras::Grid<SomeType> const someGrid(5u, 6u);
 
 		// output contents with custom formatting function
 		// note that default separator between fields is a space
@@ -101,8 +101,8 @@ namespace
 		// [DoxyExample01]
 
 		// general raster grid storage and access - tiny image example
-		quadloco::dat::SizeHW const hwSize{ 2u, 3u };
-		quadloco::dat::Grid<float> grid(hwSize);
+		quadloco::ras::SizeHW const hwSize{ 2u, 3u };
+		quadloco::ras::Grid<float> grid(hwSize);
 
 		// use iterators to fill values
 		constexpr float fillVal{ 17.f/8.f };
@@ -110,13 +110,13 @@ namespace
 
 		// set a couple cell values explicitly
 		constexpr float dVal{ 2.5f };
-		using quadloco::dat::RowCol;
+		using quadloco::ras::RowCol;
 		grid(RowCol{ 0u, 0u }) = dVal;
 		grid(1u, 1u) = dVal;
 		grid(0u, 2u) = grid(0u, 0u);
 
 		// make a deep copy (in place of op==() or copy ctor())
-		using FGrid = quadloco::dat::Grid<float>;
+		using FGrid = quadloco::ras::Grid<float>;
 		FGrid const copy{ FGrid::copyOf(grid) };
 
 		// constant iterator access
@@ -164,9 +164,9 @@ namespace
 		iss >> high >> wide;
 		iss >> txt;  // skip "Cells,Bytes" label
 		iss >> nc >> nb;  // skip cell and byte size values
-		quadloco::dat::SizeHW const hwLoad{ high, wide };
-		quadloco::dat::Grid<double> load(hwLoad); // create data container
-		quadloco::dat::Grid<double>::iterator inIter{ load.begin() };
+		quadloco::ras::SizeHW const hwLoad{ high, wide };
+		quadloco::ras::Grid<double> load(hwLoad); // create data container
+		quadloco::ras::Grid<double>::iterator inIter{ load.begin() };
 		for (std::size_t nCell{0u} ; nCell < load.size() ; ++nCell)
 		{
 			iss >> *inIter++;

@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::dat::Vec2D
+\brief Unit tests (and example) code for quadloco::img::Vec2D
 */
 
 
-#include "datVec2D.hpp"
+#include "imgVec2D.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -43,7 +43,7 @@ namespace
 		)
 	{
 		using namespace quadloco;
-		constexpr dat::Vec2D<double> const aNull{};
+		constexpr img::Vec2D<double> const aNull{};
 		if ( isValid(aNull))
 		{
 			oss << "Failure of aNull test(0)\n";
@@ -107,7 +107,7 @@ namespace
 		)
 	{
 		using namespace quadloco;
-		constexpr dat::Vec2D<float> const aNull{};
+		constexpr img::Vec2D<float> const aNull{};
 
 		// [DoxyExample01]
 

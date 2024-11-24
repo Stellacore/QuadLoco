@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for dat::RowCol
+ * \brief Declarations for ras::RowCol
  *
  */
 
@@ -120,7 +120,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::RowCol const & obj
+		, quadloco::ras::RowCol const & obj
 		)
 	{
 		ostrm << obj.infoString();
@@ -131,8 +131,8 @@ namespace
 	inline
 	bool
 	nearlyEquals
-		( quadloco::dat::RowCol const & itemA
-		, quadloco::dat::RowCol const & itemB
+		( quadloco::ras::RowCol const & itemA
+		, quadloco::ras::RowCol const & itemB
 		, double const & tol = 0.
 		)
 	{

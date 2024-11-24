@@ -27,13 +27,13 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::dat::Area
+ * \brief Declarations for quadloco::img::Area
  *
  */
 
 
-#include "datSpan.hpp"
-#include "datSpot.hpp"
+#include "sigSpan.hpp"
+#include "imgSpot.hpp"
 
 #include <array>
 #include <sstream>
@@ -121,7 +121,7 @@ namespace dat
 		inline
 		Dyad
 		fractionDyadAtSpot
-			( dat::Spot const & spot
+			( img::Spot const & spot
 			) const
 		{
 			double const frac0{ theSpans[0].fractionAtValue(spot[0]) };
@@ -131,14 +131,14 @@ namespace dat
 
 		//! Coordinate location at fractional values into the area.
 		inline
-		dat::Spot
+		img::Spot
 		spotAtFractionDyad
 			( Dyad const fracDyad
 			) const
 		{
 			double const value0{ theSpans[0].valueAtFraction(fracDyad[0]) };
 			double const value1{ theSpans[1].valueAtFraction(fracDyad[1]) };
-			return dat::Spot{ value0, value1 };
+			return img::Spot{ value0, value1 };
 		}
 
 		//! Descriptive information about this instance
@@ -176,7 +176,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::Area const & item
+		, quadloco::img::Area const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -187,7 +187,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::dat::Area const & item
+		( quadloco::img::Area const & item
 		)
 	{
 		return item.isValid();

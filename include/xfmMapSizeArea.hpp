@@ -27,15 +27,15 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::dat::MapSizeArea
+ * \brief Declarations for quadloco::xfm::MapSizeArea
  *
  */
 
 
-#include "datArea.hpp"
-#include "datSizeHW.hpp"
-#include "datSpan.hpp"
-#include "datSpot.hpp"
+#include "imgArea.hpp"
+#include "rasSizeHW.hpp"
+#include "sigSpan.hpp"
+#include "imgSpot.hpp"
 
 #include <array>
 
@@ -48,8 +48,8 @@ namespace dat
 	//!< A 2D scaling transformation between "Size" and "Area" spaces.
 	struct MapSizeArea
 	{
-		dat::Area theSize{};
-		dat::Area theArea{};
+		img::Area theSize{};
+		img::Area theArea{};
 
 		//! Interpretation at Area edges
 		enum EdgeMode
@@ -81,7 +81,7 @@ namespace dat
 			, EdgeMode const & edgeMode = Clip
 			)
 			: MapSizeArea
-				( dat::Area
+				( img::Area
 					{ Span{ 0., (double)hwGridSize.high() }
 					, Span{ 0., (double)hwGridSize.wide() }
 					}
@@ -110,7 +110,7 @@ namespace dat
 			( Spot const & sizeSpot
 			) const
 		{
-			dat::Spot areaSpot{};
+			img::Spot areaSpot{};
 			if (theSize.contains(sizeSpot))
 			{
 				Area::Dyad const fracDyad
@@ -127,7 +127,7 @@ namespace dat
 			( Spot const & areaSpot
 			) const
 		{
-			dat::Spot sizeSpot{};
+			img::Spot sizeSpot{};
 			Area::Dyad const fracDyad{ theArea.fractionDyadAtSpot(areaSpot) };
 			if (Clip == theEdgeMode)
 			{
@@ -181,7 +181,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::MapSizeArea const & item
+		, quadloco::xfm::MapSizeArea const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -192,7 +192,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::dat::MapSizeArea const & item
+		( quadloco::xfm::MapSizeArea const & item
 		)
 	{
 		return item.isValid();

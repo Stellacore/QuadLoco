@@ -24,16 +24,16 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::pix::Sampler
+\brief Unit tests (and example) code for quadloco::img::Sampler
 */
 
 
-#include "pixSampler.hpp"
+#include "imgSampler.hpp"
 
-#include "houghParmAD.hpp"
-#include "pixEdgel.hpp"
+#include "sigParmAD.hpp"
+#include "imgEdgel.hpp"
 #include "simgrid.hpp"
-#include "pixgrid.hpp" // TODO - temp
+#include "rasgrid.hpp" // TODO - temp
 
 #include <algorithm>
 #include <iostream>
@@ -50,33 +50,33 @@ namespace
 		)
 	{
 		// generate grid (image) with a well defined edge
-		quadloco::dat::SizeHW const hwSize{ 7u, 10u };
-		quadloco::pix::Edgel const expEdgel
+		quadloco::ras::SizeHW const hwSize{ 7u, 10u };
+		quadloco::img::Edgel const expEdgel
 			{ quadloco::pix::Spot{ 3., 4. }
-			, quadloco::pix::Grad{ 2., 4. }
+			, quadloco::img::Grad{ 2., 4. }
 			};
 
 		// [DoxyExample01]
 
 		// simulate grid with a strongly defined intensity edge
-		quadloco::dat::Grid<float> const pixGrid
+		quadloco::ras::Grid<float> const pixGrid
 			{ quadloco::sim::gridWithEdge(hwSize, expEdgel) };
 
 		// collect gradient samples from image (one by one in this test)
-		std::vector<quadloco::pix::Edgel> pixEdgels;
+		std::vector<quadloco::img::Edgel> pixEdgels;
 
 		// sample gradient at various locations
 		// NOTE: be sure pixGrid persists for scope of sampler
-		quadloco::pix::Sampler const sampler(& pixGrid);
+		quadloco::img::Sampler const sampler(& pixGrid);
 		for (std::size_t row{0u} ; row < pixGrid.high() ; ++row)
 		{
 			for (std::size_t col{0u} ; col < pixGrid.wide() ; ++col)
 			{
-				quadloco::dat::RowCol const rc{ row, col };
-				quadloco::pix::Grad const pixGrad{ sampler.pixGradAt(rc) };
+				quadloco::ras::RowCol const rc{ row, col };
+				quadloco::img::Grad const pixGrad{ sampler.pixGradAt(rc) };
 				if (isValid(pixGrad)) // e.g. not too near image edge
 				{
-					quadloco::pix::Edgel const edgel{ rc, pixGrad };
+					quadloco::img::Edgel const edgel{ rc, pixGrad };
 					pixEdgels.emplace_back(edgel);
 				}
 			}
@@ -99,16 +99,16 @@ namespace
 		}
 
 		// fetch entire gradient grid
-		quadloco::dat::Grid<quadloco::pix::Grad> const grads
+		quadloco::ras::Grid<quadloco::img::Grad> const grads
 			{ quadloco::pix::grid::gradientGridFor(pixGrid) };
 		// check if extracted samples match
 		std::size_t sameCount{ 0u };
-		for (quadloco::pix::Edgel const & pixEdgel : pixEdgels)
+		for (quadloco::img::Edgel const & pixEdgel : pixEdgels)
 		{
-			quadloco::dat::RowCol const atRowCol
+			quadloco::ras::RowCol const atRowCol
 				{ quadloco::cast::datRowCol(pixEdgel.location()) };
-			quadloco::pix::Grad const & expGrad = grads(atRowCol);
-			quadloco::pix::Grad const & gotGrad = pixEdgel.gradient();
+			quadloco::img::Grad const & expGrad = grads(atRowCol);
+			quadloco::img::Grad const & gotGrad = pixEdgel.gradient();
 			if (nearlyEquals(gotGrad, expGrad))
 			{
 				++sameCount;

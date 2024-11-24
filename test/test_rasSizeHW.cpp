@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::dat::SizeHW
+\brief Unit tests (and example) code for quadloco::ras::SizeHW
 */
 
 
-#include "datSizeHW.hpp"
+#include "rasSizeHW.hpp"
 
 #include "QuadLoco"
 
@@ -49,20 +49,20 @@ namespace
 		// value construction
 		std::size_t const expHigh{ 23u };
 		std::size_t const expWide{ 27u };
-		quadloco::dat::SizeHW const hwOrig{ expHigh, expWide };
+		quadloco::ras::SizeHW const hwOrig{ expHigh, expWide };
 		std::size_t const expSize{ expHigh * expWide };
-		quadloco::dat::Spot const expCenter
+		quadloco::img::Spot const expCenter
 			{ .5*(double)expHigh, .5*(double)expWide };
 
 		// copy construction
-		quadloco::dat::SizeHW const hwCopy(hwOrig);
+		quadloco::ras::SizeHW const hwCopy(hwOrig);
 		bool const copyIsSame{ hwCopy == hwOrig };
 
 		// attributes
 		std::size_t const gotHigh{ hwOrig.high() };
 		std::size_t const gotWide{ hwOrig.wide() };
 		std::size_t const gotSize{ hwOrig.size() };
-		quadloco::dat::Spot const gotCenter{ hwOrig.centerSpot() };
+		quadloco::img::Spot const gotCenter{ hwOrig.centerSpot() };
 
 		// [DoxyExample01]
 

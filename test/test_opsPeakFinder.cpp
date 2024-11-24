@@ -23,11 +23,11 @@
 //
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::sig::PeakFinder
+\brief Unit tests (and example) code for quadloco::ops::PeakFinder
 */
 
 
-#include "sigPeakFinder.hpp"
+#include "opsPeakFinder.hpp"
 
 #include <iostream>
 #include <set>
@@ -68,7 +68,7 @@ namespace
 		// Find peaks in data value sequence (with wrap around)
 		// (For peak w/o wrap, ignore ndx==0, ndx==size()-1u results)
 		std::vector<std::vector<std::size_t> > const peakNdxGrps
-			{ quadloco::sig::PeakFinder::peakIndexGroups
+			{ quadloco::ops::PeakFinder::peakIndexGroups
 				(values.cbegin(), values.cend())
 			};
 
@@ -76,12 +76,12 @@ namespace
 
 		// raw classifications of data changes
 		/*
-		// quadloco::sig::PeakFinder const pf;
-		std::vector<quadloco::sig::PeakFinder::NdxFlag> const ndxFlags
-			{ quadloco::sig::PeakFinder::ndxFlagsFor
+		// quadloco::ops::PeakFinder const pf;
+		std::vector<quadloco::ops::PeakFinder::NdxFlag> const ndxFlags
+			{ quadloco::ops::PeakFinder::ndxFlagsFor
 				(values.cbegin(), values.cend())
 			};
-		for (quadloco::sig::PeakFinder::Flag const & flag : flags)
+		for (quadloco::ops::PeakFinder::Flag const & flag : flags)
 		{
 			std::cout << "flag: " << flag << '\n';
 		}
@@ -174,7 +174,7 @@ namespace
 
 		// Construct peak finder (assuming data wrap around)
 		// (For peak w/o wrap, ignore ndx==0, ndx==size()-1u results)
-		quadloco::sig::PeakFinder const peakFinder
+		quadloco::ops::PeakFinder const peakFinder
 				(values.cbegin(), values.cend());
 
 		// Retrieve index at middle of each peak group

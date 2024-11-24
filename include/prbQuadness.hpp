@@ -32,9 +32,9 @@
  */
 
 
-#include "datGrid.hpp"
-#include "datSpot.hpp"
-#include "imgQuadTarget.hpp"
+#include "rasGrid.hpp"
+#include "imgSpot.hpp"
+#include "sigQuadTarget.hpp"
 #include "pix.hpp"
 #include "prbGauss1D.hpp"
 
@@ -87,7 +87,7 @@ namespace prb
 		static
 		double
 		sigmaFor
-			( dat::Span const & edgeMagSpan
+			( sig::Span const & edgeMagSpan
 			)
 		{
 			// compute a 'sigma value' from each end point that makes
@@ -106,7 +106,7 @@ namespace prb
 		inline
 		explicit
 		Sorter
-			( dat::Span const & edgeMagSpan
+			( sig::Span const & edgeMagSpan
 			)
 			: theFlatProbs{ Gauss1D(edgeMagSpan.min(), sigmaFor(edgeMagSpan)) }
 			, theEdgeProbs{ Gauss1D(edgeMagSpan.max(), sigmaFor(edgeMagSpan)) }
@@ -200,23 +200,23 @@ namespace prb
 	//! TODO -- Experimental Code -- TODO
 	struct QuadStats
 	{
-		dat::Grid<Edge> const theEdgeGrads{};
-		dat::Grid<double> const theEdgeMags{};
-		dat::Span const theEdgeMagSpan{};
+		ras::Grid<Edge> const theEdgeGrads{};
+		ras::Grid<double> const theEdgeMags{};
+		sig::Span const theEdgeMagSpan{};
 		Sorter const theSorterFlatEdge{};
-		dat::Grid<double> const theFlatProbs{};
-		dat::Grid<double> const theEdgeProbs{};
+		ras::Grid<double> const theFlatProbs{};
+		ras::Grid<double> const theEdgeProbs{};
 
 		inline
 		static
-		dat::Grid<double>
+		ras::Grid<double>
 		edgeMagsFor
-			( dat::Grid<Edge> const & grads
+			( ras::Grid<Edge> const & grads
 			)
 		{
-			dat::Grid<double> mags(grads.hwSize());
-			using InIter = dat::Grid<Edge>::const_iterator;
-			using OutIter = dat::Grid<double>::iterator;
+			ras::Grid<double> mags(grads.hwSize());
+			using InIter = ras::Grid<Edge>::const_iterator;
+			using OutIter = ras::Grid<double>::iterator;
 			InIter inIter{ grads.cbegin() };
 			for (OutIter outIter{mags.begin()} ; mags.end() != outIter
 				; ++outIter, ++inIter)
@@ -229,15 +229,15 @@ namespace prb
 
 		inline
 		static
-		dat::Grid<double>
+		ras::Grid<double>
 		flatGridFor
-			( dat::Grid<double> const & edgeMags
+			( ras::Grid<double> const & edgeMags
 			, Sorter const & sorterFlatEdge
 			)
 		{
-			dat::Grid<double> flatProbs(edgeMags.hwSize());
-			using InIter = dat::Grid<double>::const_iterator;
-			using OutIter = dat::Grid<double>::iterator;
+			ras::Grid<double> flatProbs(edgeMags.hwSize());
+			using InIter = ras::Grid<double>::const_iterator;
+			using OutIter = ras::Grid<double>::iterator;
 			InIter inIter{ edgeMags.cbegin() };
 			for (OutIter outIter{flatProbs.begin()}
 				; flatProbs.end() != outIter ; ++outIter, ++inIter)
@@ -251,15 +251,15 @@ namespace prb
 
 		inline
 		static
-		dat::Grid<double>
+		ras::Grid<double>
 		edgeGridFor
-			( dat::Grid<double> const & edgeMags
+			( ras::Grid<double> const & edgeMags
 			, Sorter const & sorterFlatEdge
 			)
 		{
-			dat::Grid<double> edgeProbs(edgeMags.hwSize());
-			using InIter = dat::Grid<double>::const_iterator;
-			using OutIter = dat::Grid<double>::iterator;
+			ras::Grid<double> edgeProbs(edgeMags.hwSize());
+			using InIter = ras::Grid<double>::const_iterator;
+			using OutIter = ras::Grid<double>::iterator;
 			InIter inIter{ edgeMags.cbegin() };
 			for (OutIter outIter{edgeProbs.begin()}
 				; edgeProbs.end() != outIter ; ++outIter, ++inIter)
@@ -273,18 +273,18 @@ namespace prb
 
 		inline
 		static
-		dat::Grid<Edge>
+		ras::Grid<Edge>
 		edgeGradsFor
-			( dat::Grid<float> const & pixGrid
+			( ras::Grid<float> const & pixGrid
 			)
 		{
-			dat::Grid<Edge> edgeGrid{};
+			ras::Grid<Edge> edgeGrid{};
 
 			// need at least one useful pixel after eliminating edges
 			if ((3u < pixGrid.high()) && (3u < pixGrid.wide()))
 			{
 				// allocate space
-				edgeGrid = dat::Grid<Edge>(pixGrid.hwSize());
+				edgeGrid = ras::Grid<Edge>(pixGrid.hwSize());
 
 				// TODO - could be optimized to just set edges
 				std::fill(edgeGrid.begin(), edgeGrid.end(), sNullEdge);
@@ -334,7 +334,7 @@ namespace prb
 		inline
 		explicit
 		QuadStats
-			( dat::Grid<float> const & pixGrid
+			( ras::Grid<float> const & pixGrid
 			)
 			: theEdgeGrads{ edgeGradsFor(pixGrid) }
 			, theEdgeMags{ edgeMagsFor(theEdgeGrads) }
@@ -366,12 +366,12 @@ namespace prb
 				<< "theSorterFlatEdge:\n" << theSorterFlatEdge
 				<< '\n';
 		/*
-		dat::Grid<Edge> const theEdgeGrads{};
-		dat::Grid<double> const theEdgeMags{};
-		dat::Span const theEdgeMagSpan{};
+		ras::Grid<Edge> const theEdgeGrads{};
+		ras::Grid<double> const theEdgeMags{};
+		sig::Span const theEdgeMagSpan{};
 		Sorter const theSorterFlatEdge{};
-		dat::Grid<double> const theFlatProbs{};
-		dat::Grid<double> const theEdgeProbs{};
+		ras::Grid<double> const theFlatProbs{};
+		ras::Grid<double> const theEdgeProbs{};
 		*/
 
 			return oss.str();
@@ -426,7 +426,7 @@ namespace prb
 	struct Quadness
 	{
 		//! Detection parameters of suspected quad target image
-		img::QuadTarget const theImgQuad{};
+		sig::QuadTarget const theImgQuad{};
 
 
 		//! True if this instance contains valid data
@@ -442,7 +442,7 @@ namespace prb
 		inline
 		bool
 		isLikelyQuad
-			( dat::Grid<float> const & pixGrid
+			( ras::Grid<float> const & pixGrid
 				//!< Pixels maybe containing quad target (perspective)image
 			, double const & confidenceFrac = .90
 				//!< Confidence threshold to apply to decision

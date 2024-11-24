@@ -28,7 +28,7 @@
 */
 
 
-#include "datGrid.hpp"
+#include "rasGrid.hpp"
 #include "io.hpp"
 #include "prbquad.hpp"
 #include "simConfig.hpp"
@@ -51,12 +51,12 @@ namespace
 		// [DoxyExample01]
 
 		// setup simulation configuration
-		constexpr quadloco::dat::SizeHW hwChip{ 60u, 40u };
+		constexpr quadloco::ras::SizeHW hwChip{ 60u, 40u };
 		quadloco::obj::QuadTarget const objQuad(2.100);
 
-		quadloco::dat::SizeHW const format{ 128u, 128u };
+		quadloco::ras::SizeHW const format{ 128u, 128u };
 		double const pd{ 128. };
-		quadloco::img::Camera const camera{ format, pd };
+		quadloco::obj::Camera const camera{ format, pd };
 
 		using namespace engabra::g3;
 		using namespace rigibra;
@@ -104,11 +104,11 @@ namespace
 				// None, UseSceneBias, UseImageNoise
 				, opt::None | opt::UseImageNoise
 				);
-			quadloco::dat::Grid<float> const pixGrid{ render.quadImage() };
+			quadloco::ras::Grid<float> const pixGrid{ render.quadImage() };
 			//quadloco::io::writeStretchPGM("sample.pgm", pixGrid);
 
 			// retrieve geometry of the simulated image
-			quadloco::img::QuadTarget const expImgQuad
+			quadloco::sig::QuadTarget const expImgQuad
 				{ render.imgQuadTarget() };
 			std::ostringstream msg;
 			double const quadProb

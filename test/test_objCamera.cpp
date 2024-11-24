@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::img::Camera
+\brief Unit tests (and example) code for quadloco::obj::Camera
 */
 
 
-#include "imgCamera.hpp"
+#include "objCamera.hpp"
 
 #include <Engabra>
 
@@ -47,13 +47,13 @@ namespace
 		// [DoxyExample01]
 
 		// A default null camera
-		quadloco::img::Camera const nullCam{};
+		quadloco::obj::Camera const nullCam{};
 		bool const nullIsOkay{ (false == nullCam.isValid()) };
 
 		// Ideal perspective camera by detector format and principal distance
-		constexpr quadloco::dat::SizeHW format{ 128u, 256u };
+		constexpr quadloco::ras::SizeHW format{ 128u, 256u };
 		constexpr double pd{ 300. };
-		quadloco::img::Camera const camera{ format, pd };
+		quadloco::obj::Camera const camera{ format, pd };
 
 		// output to stream
 		std::ostringstream msg;
@@ -71,7 +71,7 @@ namespace
 		engabra::g3::Vector const botPntInExt{  0., -2., -30. };
 
 		// project locations onto detector frame
-		using quadloco::dat::Spot;
+		using quadloco::img::Spot;
 		// naming relative to raster row/col as displayed on typical screen
 		// ('row' down, 'y' to right, 'z' toward viewer)
 		Spot const rgtOnDet{ camera.detectorSpotFor(rgtPntInExt) };

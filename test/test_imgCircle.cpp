@@ -24,12 +24,12 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::dat::Circle
+\brief Unit tests (and example) code for quadloco::img::Circle
 */
 
 
-#include "datCircle.hpp"
-#include "houghParmAD.hpp"
+#include "imgCircle.hpp"
+#include "sigParmAD.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -41,12 +41,12 @@ namespace
 	inline
 	double
 	rejectFromCircle
-		( quadloco::dat::Spot const & loc
-		, quadloco::dat::Circle const & circle
+		( quadloco::img::Spot const & loc
+		, quadloco::img::Circle const & circle
 		)
 	{
 		double rej{ engabra::g3::null<double>() };
-		quadloco::dat::Spot const delta{ loc - circle.theCenter };
+		quadloco::img::Spot const delta{ loc - circle.theCenter };
 		double const magSq
 			{ delta[0] * delta[0]
 			+ delta[1] * delta[1]
@@ -60,15 +60,15 @@ namespace
 	inline
 	double
 	rejectFromLine
-		( quadloco::dat::Spot const & loc
-		, quadloco::dat::Spot const & linePnt
-		, quadloco::dat::Vec2D<double> const & lineDir
+		( quadloco::img::Spot const & loc
+		, quadloco::img::Spot const & linePnt
+		, quadloco::img::Vec2D<double> const & lineDir
 		)
 	{
 		double rej{ engabra::g3::null<double>() };
 		using namespace quadloco;
-		dat::Spot const delta{ loc - linePnt };
-		dat::Vec2D<double> const unitDir{ direction(lineDir) };
+		img::Spot const delta{ loc - linePnt };
+		img::Vec2D<double> const unitDir{ direction(lineDir) };
 		rej = dat::outer(lineDir, unitDir);
 		return rej;
 	}
@@ -80,7 +80,7 @@ namespace
 		( std::ostream & oss
 		)
 	{
-		quadloco::dat::Circle const aNull{};
+		quadloco::img::Circle const aNull{};
 		if ( isValid(aNull))
 		{
 			oss << "Failure of null Circle instance test\n";
@@ -90,28 +90,28 @@ namespace
 		// [DoxyExample00]
 
 		// a circle at some location
-		quadloco::dat::Spot const center{ 10., 20. };
+		quadloco::img::Spot const center{ 10., 20. };
 		constexpr double rho{ 2. };
 		constexpr double radius{ rho };
-		quadloco::dat::Circle const circle{ center, radius };
+		quadloco::img::Circle const circle{ center, radius };
 
 		// simple intersection test - with vertical line
 		constexpr double dx{ 1. };
-		quadloco::dat::Spot const spotOnLine
-			{ center + quadloco::dat::Spot{ dx, 0. } };
-		quadloco::pix::Grad const pixGrad{ 1., 0. };
-		quadloco::dat::Vec2D<double> const lineDir
-			{ quadloco::hough::ParmAD::lineDirFromEdgeDir(pixGrad) };
+		quadloco::img::Spot const spotOnLine
+			{ center + quadloco::img::Spot{ dx, 0. } };
+		quadloco::img::Grad const pixGrad{ 1., 0. };
+		quadloco::img::Vec2D<double> const lineDir
+			{ quadloco::sig::ParmAD::lineDirFromEdgeDir(pixGrad) };
 
 		// circle intersection with vertical line
-		quadloco::dat::CircleIntersector const intersector{ circle };
-		std::pair<quadloco::dat::Spot, quadloco::dat::Spot> const gotPair
+		quadloco::img::CircleIntersector const intersector{ circle };
+		std::pair<quadloco::img::Spot, quadloco::dat::Spot> const gotPair
 			{ intersector(spotOnLine, lineDir) };
 
 		// intersection points are symmetric above/below the test point
-		std::pair<quadloco::dat::Spot, quadloco::dat::Spot> const expPair
-			{ quadloco::dat::Spot{ 11., 20. - std::sqrt(rho*rho-dx*dx) }
-			, quadloco::dat::Spot{ 11., 20. + std::sqrt(rho*rho-dx*dx) }
+		std::pair<quadloco::img::Spot, quadloco::dat::Spot> const expPair
+			{ quadloco::img::Spot{ 11., 20. - std::sqrt(rho*rho-dx*dx) }
+			, quadloco::img::Spot{ 11., 20. + std::sqrt(rho*rho-dx*dx) }
 			};
 
 		// [DoxyExample00]
@@ -178,19 +178,19 @@ namespace
 		// [DoxyExample00]
 
 		// a circle at some location
-		quadloco::dat::Spot const center{ 10., 20. };
+		quadloco::img::Spot const center{ 10., 20. };
 		constexpr double radius{ 5.25 };
-		quadloco::dat::Circle const circle{ center, radius };
+		quadloco::img::Circle const circle{ center, radius };
 
 		// simple intersection test - with vertical line
-		quadloco::dat::Spot const spotOnLine{ 12., 18. };
-		quadloco::pix::Grad const pixGrad{ -1.25, 1.75 };
+		quadloco::img::Spot const spotOnLine{ 12., 18. };
+		quadloco::img::Grad const pixGrad{ -1.25, 1.75 };
 
 		// circle intersection with vertical line
-		quadloco::dat::CircleIntersector const intersector{ circle };
-		quadloco::dat::Vec2D<double> const lineDir
-			{ quadloco::hough::ParmAD::lineDirFromEdgeDir(pixGrad) };
-		std::pair<quadloco::dat::Spot, quadloco::dat::Spot> const gotPair
+		quadloco::img::CircleIntersector const intersector{ circle };
+		quadloco::img::Vec2D<double> const lineDir
+			{ quadloco::sig::ParmAD::lineDirFromEdgeDir(pixGrad) };
+		std::pair<quadloco::img::Spot, quadloco::dat::Spot> const gotPair
 			{ intersector(spotOnLine, lineDir) };
 
 		// [DoxyExample00]

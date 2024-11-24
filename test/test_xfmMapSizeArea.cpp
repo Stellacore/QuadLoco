@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::dat::MapSizeArea
+\brief Unit tests (and example) code for quadloco::xfm::MapSizeArea
 */
 
 
-#include "datMapSizeArea.hpp"
+#include "xfmMapSizeArea.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -45,27 +45,27 @@ namespace
 	{
 		// [DoxyExample01]
 
-		quadloco::dat::SizeHW const hwSize{ 17u, 23u };
-		quadloco::dat::Span const xSpan{ 17., 34. };
-		quadloco::dat::Span const ySpan{ 23., 69. };
-		quadloco::dat::Area const xyArea{ xSpan, ySpan };
+		quadloco::ras::SizeHW const hwSize{ 17u, 23u };
+		quadloco::sig::Span const xSpan{ 17., 34. };
+		quadloco::sig::Span const ySpan{ 23., 69. };
+		quadloco::img::Area const xyArea{ xSpan, ySpan };
 
-		quadloco::dat::MapSizeArea const cellMap(hwSize, xyArea);
+		quadloco::xfm::MapSizeArea const cellMap(hwSize, xyArea);
 
-		quadloco::dat::Spot const gridSpotA{ 0., 0. };
-		quadloco::dat::Spot const expAreaA{ 17., 23. }; // from {x,y}Span
-		quadloco::dat::Spot const gotAreaA
+		quadloco::img::Spot const gridSpotA{ 0., 0. };
+		quadloco::img::Spot const expAreaA{ 17., 23. }; // from {x,y}Span
+		quadloco::img::Spot const gotAreaA
 			{ cellMap.areaSpotForGridSpot(gridSpotA) };
 
 		double const eps{ 32.*std::numeric_limits<double>::epsilon() };
-		quadloco::dat::Spot const gridSpotB{ 17.-eps, 23.-eps };
-		quadloco::dat::Spot const expAreaB{ 34., 69. }; // from {x,y}Span
-		quadloco::dat::Spot const gotAreaB
+		quadloco::img::Spot const gridSpotB{ 17.-eps, 23.-eps };
+		quadloco::img::Spot const expAreaB{ 34., 69. }; // from {x,y}Span
+		quadloco::img::Spot const gotAreaB
 			{ cellMap.areaSpotForGridSpot(gridSpotB) };
 
-		quadloco::dat::Spot const areaSpotC{ .5*(17.+34.), .5*(23.+69.) };
-		quadloco::dat::Spot const expGridC{ .5*(0.+17.), .5*(0.+23.) };
-		quadloco::dat::Spot const gotGridC
+		quadloco::img::Spot const areaSpotC{ .5*(17.+34.), .5*(23.+69.) };
+		quadloco::img::Spot const expGridC{ .5*(0.+17.), .5*(0.+23.) };
+		quadloco::img::Spot const gotGridC
 			{ cellMap.gridSpotForAreaSpot(areaSpotC) };
 
 		// [DoxyExample01]
@@ -80,7 +80,7 @@ namespace
 
 		if (! nearlyEquals(gotAreaB, expAreaB, eps))
 		{
-			quadloco::dat::Spot const difAreaB{ gotAreaB - expAreaB };
+			quadloco::img::Spot const difAreaB{ gotAreaB - expAreaB };
 			oss << "Failure of gotAreaB test\n";
 			oss << "exp: " << expAreaB << '\n';
 			oss << "got: " << gotAreaB << '\n';
@@ -105,36 +105,36 @@ namespace
 		// [DoxyExample02]
 		using namespace quadloco;
 
-		dat::Area const areaFrom
-			{ dat::Span{ -10.,  -9.}
-			, dat::Span{   9.,  10.}
+		img::Area const areaFrom
+			{ sig::Span{ -10.,  -9.}
+			, sig::Span{   9.,  10.}
 			};
-		dat::Area const areaInto
-			{ dat::Span{ 10., 11.}
-			, dat::Span{ 10., 11.}
+		img::Area const areaInto
+			{ sig::Span{ 10., 11.}
+			, sig::Span{ 10., 11.}
 			};
 
-		dat::MapSizeArea const map
-			(areaInto, areaFrom, dat::MapSizeArea::Wrap);
+		xfm::MapSizeArea const map
+			(areaInto, areaFrom, xfm::MapSizeArea::Wrap);
 
 		// From                         Into
 		//   (min,min) = { -10.,  9. }    (min,min) = {   0.,  1. }
 		//   (max,max) = {  -9., 10. }    (max,max) = {   0.,  1. }
 
-		using FromInto = std::pair<dat::Spot, dat::Spot>;
+		using FromInto = std::pair<img::Spot, dat::Spot>;
 		std::vector<FromInto> const pairFIs
-			{ { dat::Spot{ -10.0,   9.0 }, dat::Spot{  10.0,  10.0 } }
+			{ { img::Spot{ -10.0,   9.0 }, dat::Spot{  10.0,  10.0 } }
 				// (max,max) corner wraps back into (min,min)
-			, { dat::Spot{  -9.0,  10.0 }, dat::Spot{  10.0,  10.0 } }
-			, { dat::Spot{  -9.5,   9.5 }, dat::Spot{  10.5,  10.5 } }
-			, { dat::Spot{  -8.5,   8.5 }, dat::Spot{  10.5,  10.5 } }
+			, { img::Spot{  -9.0,  10.0 }, dat::Spot{  10.0,  10.0 } }
+			, { img::Spot{  -9.5,   9.5 }, dat::Spot{  10.5,  10.5 } }
+			, { img::Spot{  -8.5,   8.5 }, dat::Spot{  10.5,  10.5 } }
 			};
 
 		for (FromInto const & pairFI : pairFIs)
 		{
-			dat::Spot const & from = pairFI.first;
-			dat::Spot const & expInto = pairFI.second;
-			dat::Spot const gotInto{ map.gridSpotForAreaSpot(from) };
+			img::Spot const & from = pairFI.first;
+			img::Spot const & expInto = pairFI.second;
+			img::Spot const gotInto{ map.gridSpotForAreaSpot(from) };
 
 			if (! nearlyEquals(gotInto, expInto))
 			{

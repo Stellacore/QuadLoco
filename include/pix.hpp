@@ -32,8 +32,8 @@
  */
 
 
-#include "datGrid.hpp"
-#include "datSpan.hpp"
+#include "rasGrid.hpp"
+#include "sigSpan.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -43,7 +43,7 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced functions and utilities for pixel (dat::Grid) elements.
+/*! \brief Namespaced functions and utilities for pixel (ras::Grid) elements.
  */
 namespace pix
 {
@@ -163,9 +163,9 @@ namespace pix
 	//! Span with begin/end at smallest/largest (valid) values in fGrid
 	template <typename PixType>
 	inline
-	dat::Span
+	sig::Span
 	fullSpanFor
-		( dat::Grid<PixType> const & fGrid
+		( ras::Grid<PixType> const & fGrid
 		)
 	{
 		std::pair<PixType, PixType> const fMinMax
@@ -176,7 +176,7 @@ namespace pix
 		PixType const delta{ fMax - fMin };
 		constexpr PixType eps{ std::numeric_limits<PixType>::epsilon() };
 		PixType const useMax{ fMax * (1.f + delta * eps) };
-		return quadloco::dat::Span{ (double)fMin, (double)useMax };
+		return quadloco::sig::Span{ (double)fMin, (double)useMax };
 	}
 
 	//! uint8_t value corresponding to fpix value within fSpan range
@@ -184,8 +184,8 @@ namespace pix
 	uint8_t
 	uPix8
 		( fpix_t const & fpix
-		, dat::Span const & fSpan
-		, dat::Span const & uSpan
+		, sig::Span const & fSpan
+		, sig::Span const & uSpan
 		)
 	{
 		uint8_t upix{ u8Null };
@@ -210,17 +210,17 @@ namespace pix
 	 * An fgrid value at fSpan.begin() maps to u8Dark
 	 */
 	inline
-	dat::Grid<uint8_t>
+	ras::Grid<uint8_t>
 	uGrid8
-		( dat::Grid<fpix_t> const & fgrid
-		, dat::Span const & fSpan
+		( ras::Grid<fpix_t> const & fgrid
+		, sig::Span const & fSpan
 		)
 	{
-		dat::Grid<uint8_t> ugrid{ fgrid.hwSize() };
+		ras::Grid<uint8_t> ugrid{ fgrid.hwSize() };
 
-		constexpr dat::Span uSpan{ (double)u8Dark, (double)u8Over };
-		dat::Grid<fpix_t>::const_iterator itIn{ fgrid.cbegin() };
-		dat::Grid<uint8_t>::iterator itOut{ ugrid.begin() };
+		constexpr sig::Span uSpan{ (double)u8Dark, (double)u8Over };
+		ras::Grid<fpix_t>::const_iterator itIn{ fgrid.cbegin() };
+		ras::Grid<uint8_t>::iterator itOut{ ugrid.begin() };
 		while (ugrid.end() != itOut)
 		{
 			*itOut++ = uPix8(*itIn++, fSpan, uSpan);

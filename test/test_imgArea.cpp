@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::dat::Area
+\brief Unit tests (and example) code for quadloco::img::Area
 */
 
 
-#include "datArea.hpp"
+#include "imgArea.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -46,22 +46,22 @@ namespace
 		// [DoxyExample01]
 
 		// null area
-		quadloco::dat::Area const nullArea{};
+		quadloco::img::Area const nullArea{};
 		bool const nullIsOkay{ (false == nullArea.isValid()) };
 
 		//! construct from two Spans
-		quadloco::dat::Span const span0{ 17., 19. };
-		quadloco::dat::Span const span1{ 23., 29. };
-		quadloco::dat::Area const anArea{ span0, span1 };
+		quadloco::sig::Span const span0{ 17., 19. };
+		quadloco::sig::Span const span1{ 23., 29. };
+		quadloco::img::Area const anArea{ span0, span1 };
 
 		// stream output
 		std::ostringstream msg;
 		msg << anArea << '\n';
 
-		// the 'containing rules' are those of dat::Span independently
-		quadloco::dat::Spot const spotIn{ 18., 24. };
-		quadloco::dat::Spot const spotOut0{ 16., 24. };
-		quadloco::dat::Spot const spotOut1{ 18., 30. };
+		// the 'containing rules' are those of sig::Span independently
+		quadloco::img::Spot const spotIn{ 18., 24. };
+		quadloco::img::Spot const spotOut0{ 16., 24. };
+		quadloco::img::Spot const spotOut1{ 18., 30. };
 		bool const expContainsA{ true };
 		bool const gotContainsA{ anArea.contains(spotIn) };
 		bool const expContainsB{ false };
@@ -157,7 +157,7 @@ namespace
 		for (WrapData const & wrap : wraps)
 		{
 			double const & expInto = wrap.theInto;
-			double const gotInto{ dat::Area::principalFraction(wrap.theFrom) };
+			double const gotInto{ img::Area::principalFraction(wrap.theFrom) };
 			wrap.check(oss, gotInto);
 		}
 	}

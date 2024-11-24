@@ -61,13 +61,13 @@ namespace
 		constexpr double expRadInner{ halfEdgeMag };
 		double const gotRadInner{ origQuadTgt.radiusInner() };
 		// center at origin
-		quadloco::dat::Spot const expCenter{ 0., 0. };
-		quadloco::dat::Spot const gotCenter{ origQuadTgt.centerSpot() };
-		quadloco::dat::Spot const gotPosX{ origQuadTgt.midSidePosX() };
-		quadloco::dat::Spot const gotPosY{ origQuadTgt.midSidePosY() };
-		quadloco::dat::Spot const gotNegX{ origQuadTgt.midSideNegX() };
-		quadloco::dat::Spot const gotNegY{ origQuadTgt.midSideNegY() };
-		std::array<quadloco::dat::Spot, 4u>
+		quadloco::img::Spot const expCenter{ 0., 0. };
+		quadloco::img::Spot const gotCenter{ origQuadTgt.centerSpot() };
+		quadloco::img::Spot const gotPosX{ origQuadTgt.midSidePosX() };
+		quadloco::img::Spot const gotPosY{ origQuadTgt.midSidePosY() };
+		quadloco::img::Spot const gotNegX{ origQuadTgt.midSideNegX() };
+		quadloco::img::Spot const gotNegY{ origQuadTgt.midSideNegY() };
+		std::array<quadloco::img::Spot, 4u>
 			const gotCornerLocs{ origQuadTgt.cornerLocs() };
 
 		// copy construction
@@ -81,10 +81,10 @@ namespace
 
 		// get radiometric values from inside the target
 		constexpr double partEdgeMag{ .8 * halfEdgeMag };
-		quadloco::dat::Spot const spotRT{  partEdgeMag,  partEdgeMag };
-		quadloco::dat::Spot const spotLT{ -partEdgeMag,  partEdgeMag };
-		quadloco::dat::Spot const spotLB{ -partEdgeMag, -partEdgeMag };
-		quadloco::dat::Spot const spotRB{  partEdgeMag, -partEdgeMag };
+		quadloco::img::Spot const spotRT{  partEdgeMag,  partEdgeMag };
+		quadloco::img::Spot const spotLT{ -partEdgeMag,  partEdgeMag };
+		quadloco::img::Spot const spotLB{ -partEdgeMag, -partEdgeMag };
+		quadloco::img::Spot const spotRB{  partEdgeMag, -partEdgeMag };
 		double const expValInRT{ 0. };
 		double const expValInLT{ 1. };
 		double const expValInLB{ 0. };
@@ -131,8 +131,8 @@ namespace
 			oss << "gotNegY: " << gotNegY << '\n';
 		}
 
-		using quadloco::dat::Spot;
-		using quadloco::dat::Vec2D;
+		using quadloco::img::Spot;
+		using quadloco::img::Vec2D;
 		std::array<Vec2D<double>, 4u> gotDiffs;
 		for (std::size_t nn{0u} ; nn < 4u ; ++nn)
 		{

@@ -29,19 +29,19 @@
 
 
 #include "cast.hpp"
-#include "datCircle.hpp"
-#include "datGrid.hpp"
-#include "datRowCol.hpp"
-#include "datSpot.hpp"
-#include "houghAdderAD.hpp"
-#include "houghParmAD.hpp"
-#include "pixEdgel.hpp"
-#include "pixGrad.hpp"
-#include "pixgrid.hpp"
+#include "imgCircle.hpp"
+#include "rasGrid.hpp"
+#include "rasRowCol.hpp"
+#include "imgSpot.hpp"
+#include "opsAdderAD.hpp"
+#include "sigParmAD.hpp"
+#include "imgEdgel.hpp"
+#include "imgGrad.hpp"
+#include "rasgrid.hpp"
 #include "pix.hpp"
 #include "simgrid.hpp"
 
-#include "datSpan.hpp"
+#include "sigSpan.hpp"
 
 #include <Engabra>
 
@@ -66,48 +66,48 @@ namespace
 		using namespace quadloco;
 
 		// (simulated) image size
-		dat::SizeHW const hwSize{ 17u, 19u };
+		ras::SizeHW const hwSize{ 17u, 19u };
 
 		// a well-defined edge for use in generating a simulated raster step
-		pix::Edgel const expEdgel
+		img::Edgel const expEdgel
 			{ pix::Spot{ (float)(hwSize.high()/2u), (float)(hwSize.wide()/2u) }
-			, pix::Grad{ 2., 3. }
+			, img::Grad{ 2., 3. }
 			};
 
 		// simulate image with a very strong edge (constistent with expEdgel)
-		dat::Grid<float> const pixGrid
+		ras::Grid<float> const pixGrid
 			{ sim::gridWithEdge(hwSize, expEdgel) };
 
 		// compute a full gradient grid - each cell has gradient of pixGrid
-		dat::Grid<pix::Grad> const gradGrid
+		ras::Grid<img::Grad> const gradGrid
 			{ pix::grid::gradientGridFor(pixGrid) };
 
 		// expected configuration
-		dat::Circle const boundingCircle
-			{ dat::Circle::circumScribing(gradGrid.hwSize()) };
-		hough::ParmAD const expMaxAD
-			{ hough::ParmAD::from(expEdgel, boundingCircle) };
+		img::Circle const boundingCircle
+			{ img::Circle::circumScribing(gradGrid.hwSize()) };
+		sig::ParmAD const expMaxAD
+			{ sig::ParmAD::from(expEdgel, boundingCircle) };
 
 		// Determine accumulation buffer size (crudely)
 		std::size_t const sizeAD{ hwSize.perimeter() / 4u };
-		dat::SizeHW const adSize{ sizeAD, sizeAD };
+		ras::SizeHW const adSize{ sizeAD, sizeAD };
 
 		// Setup accumulator
-		hough::AdderAD adder(adSize);
+		ops::AdderAD adder(adSize);
 
 		// accumulate Grad values into Hough A(lpha)-D(elta) buffer
-		for (dat::Grid<pix::Grad>::const_iterator
+		for (ras::Grid<img::Grad>::const_iterator
 			iter{gradGrid.cbegin()} ; gradGrid.cend() != iter ; ++iter)
 		{
 			// note original grid row/col location and gradient
 			pix::Spot const spot
 				{ cast::pixSpot(gradGrid.datRowColFor(iter)) };
-			pix::Grad const & grad = *iter;
+			img::Grad const & grad = *iter;
 
 			// construct Edgel and use to determine ParmAD values
-			pix::Edgel const edgel{ spot, grad };
-			hough::ParmAD const parmAD
-				{ hough::ParmAD::from(edgel, boundingCircle) };
+			img::Edgel const edgel{ spot, grad };
+			sig::ParmAD const parmAD
+				{ sig::ParmAD::from(edgel, boundingCircle) };
 
 			// add edge magnitude into adGrid cell(s)
 			float const gradMag{ magnitude(edgel.gradient()) };
@@ -115,22 +115,22 @@ namespace
 		}
 
 		// find max value (for this test data, there's only one max
-		dat::Grid<float> const & gridAD = adder.grid();
-		dat::Grid<float>::const_iterator const itMax
+		ras::Grid<float> const & gridAD = adder.grid();
+		ras::Grid<float>::const_iterator const itMax
 			{ std::max_element(gridAD.cbegin(), gridAD.cend()) };
-		dat::RowCol gotRowColMax{};
+		ras::RowCol gotRowColMax{};
 		if (gridAD.cend() != itMax)
 		{
 			gotRowColMax = gridAD.datRowColFor(itMax);
 		}
 
 		// Hough parameter (alpha,delta) values for accum cell w/ max value
-		dat::Spot const gotSpotMax{ cast::datSpot(gotRowColMax) };
-		hough::ParmAD const gotParmAD{ adder.houghParmADFor(gotSpotMax) };
+		img::Spot const gotSpotMax{ cast::datSpot(gotRowColMax) };
+		sig::ParmAD const gotParmAD{ adder.houghParmADFor(gotSpotMax) };
 
 		// Hough (alpha,delta) values expected for simulation generating edgel
-		hough::ParmAD const expParmAD
-			{ hough::ParmAD::from(expEdgel, boundingCircle) };
+		sig::ParmAD const expParmAD
+			{ sig::ParmAD::from(expEdgel, boundingCircle) };
 
 		// [DoxyExample01]
 

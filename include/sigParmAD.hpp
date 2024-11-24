@@ -32,9 +32,9 @@
  */
 
 
-#include "datCircle.hpp"
-#include "datSpot.hpp"
-#include "pixEdgel.hpp"
+#include "imgCircle.hpp"
+#include "imgSpot.hpp"
+#include "imgEdgel.hpp"
 
 #include <Engabra>
 
@@ -65,12 +65,12 @@ namespace hough
 		//! Point that contains line segmenet (same point as pix::Spot)
 		inline
 		static
-		dat::Vec2D<double>
+		img::Vec2D<double>
 		linePntFromEdgeLoc
 			( pix::Spot const & spot
 			)
 		{
-			return dat::Vec2D<double>
+			return img::Vec2D<double>
 				{ (double)spot[0]
 				, (double)spot[1]
 				};
@@ -79,12 +79,12 @@ namespace hough
 		//! Direction perpendicular to gradient direction in right hand sense
 		inline
 		static
-		dat::Vec2D<double>
+		img::Vec2D<double>
 		lineDirFromEdgeDir
-			( pix::Grad const & grad
+			( img::Grad const & grad
 			)
 		{
-			return dat::Vec2D<double>
+			return img::Vec2D<double>
 				{ -(double)grad[1]
 				,  (double)grad[0]
 				};
@@ -119,8 +119,8 @@ namespace hough
 		static
 		double
 		alphaFor
-			( dat::Spot const & spotOnCircle
-			, dat::Circle const & circle
+			( img::Spot const & spotOnCircle
+			, img::Circle const & circle
 			)
 		{
 			double const dx{ spotOnCircle[0] - circle.theCenter[0] };
@@ -134,8 +134,8 @@ namespace hough
 		static
 		double
 		deltaFor
-			( dat::Spot const & spotOnCircle
-			, dat::Circle const & circle
+			( img::Spot const & spotOnCircle
+			, img::Circle const & circle
 			, double const & alpha
 			)
 		{
@@ -159,13 +159,13 @@ namespace hough
 		static
 		ParmAD
 		from
-			( pix::Edgel const & edgel
-			, dat::Circle const & circle
+			( img::Edgel const & edgel
+			, img::Circle const & circle
 			)
 		{
 			// compute intersection points on circle
-			dat::CircleIntersector const intersector{ circle };
-			std::pair<dat::Spot, dat::Spot> const solnPair
+			img::CircleIntersector const intersector{ circle };
+			std::pair<img::Spot, dat::Spot> const solnPair
 				{ intersector
 					( linePntFromEdgeLoc(edgel.location())
 					, lineDirFromEdgeDir(edgel.gradient())
@@ -221,11 +221,11 @@ namespace hough
 			// The alpha value testing needs to consider wrap around
 			// e.g. for alpha values near +/- pi
 			// Unitary magnitude vectors: angle tolerance ~= vector tolerance
-			dat::Spot const spotA
+			img::Spot const spotA
 				{ std::cos(theAlpha)
 				, std::sin(theAlpha)
 				};
-			dat::Spot const spotB
+			img::Spot const spotB
 				{ std::cos(other.theAlpha)
 				, std::sin(other.theAlpha)
 				};
@@ -272,7 +272,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::hough::ParmAD const & item
+		, quadloco::sig::ParmAD const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -283,7 +283,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::hough::ParmAD const & item
+		( quadloco::sig::ParmAD const & item
 		)
 	{
 		return item.isValid();
@@ -293,8 +293,8 @@ namespace
 	inline
 	bool
 	nearlyEquals
-		( quadloco::hough::ParmAD const & itemA
-		, quadloco::hough::ParmAD const & itemB
+		( quadloco::sig::ParmAD const & itemA
+		, quadloco::sig::ParmAD const & itemB
 		, double const & tol = std::numeric_limits<double>::epsilon()
 		)
 	{

@@ -28,8 +28,8 @@
 */
 
 
-#include "datChipSpec.hpp"
-#include "datGrid.hpp"
+#include "imgChipSpec.hpp"
+#include "rasGrid.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -47,7 +47,7 @@ namespace tst
 	std::size_t
 	checkNdxGrid
 		( std::ostream & oss
-		, quadloco::dat::Grid<NdxRC> const & ndxGrid
+		, quadloco::ras::Grid<NdxRC> const & ndxGrid
 		, std::size_t const & expNum
 		, std::string const & tname
 		)
@@ -144,10 +144,10 @@ namespace
 		// [DoxyExample01]
 
 		// arbitrary "full-size" area
-		quadloco::dat::SizeHW const fullHW{ 2160u, 4096u };
+		quadloco::ras::SizeHW const fullHW{ 2160u, 4096u };
 
 		// set a couple location values (for testing below)
-		quadloco::dat::Grid<std::string> fullData(fullHW);
+		quadloco::ras::Grid<std::string> fullData(fullHW);
 		std::fill(fullData.begin(), fullData.end(), "");
 		std::string const expTL("Full:1000,2000"); // TL of raster chip
 		std::string const expBL("Full:1039,2000"); // BL of raster chip
@@ -159,9 +159,9 @@ namespace
 		fullData(1000u, 2059u) = expTR;
 
 		// define a chip with which to access a sub area
-		quadloco::dat::RowCol const chipRC{ 1000u, 2000u };
-		quadloco::dat::SizeHW const chipHW{ 40u, 60u };
-		quadloco::dat::ChipSpec const chipSpec{ chipRC, chipHW };
+		quadloco::ras::RowCol const chipRC{ 1000u, 2000u };
+		quadloco::ras::SizeHW const chipHW{ 40u, 60u };
+		quadloco::img::ChipSpec const chipSpec{ chipRC, chipHW };
 
 		// full pixel access via chipSpec index lookup
 		// use chip for read cell access from the underlying full image
@@ -203,11 +203,11 @@ namespace
 		// [DoxyExample02]
 
 		// arbitrary "full-size" area
-		quadloco::dat::SizeHW const fullHW{ 10u, 15u };
+		quadloco::ras::SizeHW const fullHW{ 10u, 15u };
 
 		// construct a full size raster
 		using NdxRC = std::pair<std::size_t, std::size_t>;
-		quadloco::dat::Grid<NdxRC> fullData(fullHW);
+		quadloco::ras::Grid<NdxRC> fullData(fullHW);
 		// fill full data with (rowFullNdx,colFullNdx) pairs
 		for (std::size_t rFull{0u} ; rFull < fullHW.high() ; ++rFull)
 		{
@@ -218,15 +218,15 @@ namespace
 		}
 
 		// specify a chip raster relative to the full size grid
-		quadloco::dat::RowCol const chipRC{ 3u, 8u }; // starting here
-		quadloco::dat::SizeHW const chipHW{ 4u, 6u }; // of this size
-		quadloco::dat::ChipSpec const chipSpec{ chipRC, chipHW };
+		quadloco::ras::RowCol const chipRC{ 3u, 8u }; // starting here
+		quadloco::ras::SizeHW const chipHW{ 4u, 6u }; // of this size
+		quadloco::img::ChipSpec const chipSpec{ chipRC, chipHW };
 
 		// true if chip fits inside full size
 		bool const isContained{ chipSpec.fitsInto(fullHW) };
 
 		// fill chip raster with data from the full size grid
-		quadloco::dat::Grid<NdxRC> chipData(chipHW);
+		quadloco::ras::Grid<NdxRC> chipData(chipHW);
 		bool const okayFill
 			{ chipSpec.fillChipFromFull(&chipData, fullData) };
 
@@ -246,8 +246,8 @@ namespace
 		// at this point, chipData grid is full of full index NdxRC values
 		// therefore, subtract the starting point (expRow0,expCol0) in
 		// order to compare NdxValues directly with access row,col position
-		quadloco::dat::SizeHW const testHW{ chipData.hwSize() };
-		quadloco::dat::Grid<NdxRC> testData(testHW);
+		quadloco::ras::SizeHW const testHW{ chipData.hwSize() };
+		quadloco::ras::Grid<NdxRC> testData(testHW);
 		for (std::size_t testRow{0u} ; testRow < testHW.high() ; ++testRow)
 		{
 			for (std::size_t testCol{0u} ; testCol < testHW.wide() ; ++testCol)
@@ -289,24 +289,24 @@ namespace
 		// [DoxyExample03]
 
 		// arbitrary "full-size" area
-		quadloco::dat::SizeHW const fullHW{ 10u, 15u };
+		quadloco::ras::SizeHW const fullHW{ 10u, 15u };
 
 		// construct a full size raster
 		using NdxRC = std::pair<std::size_t, std::size_t>;
 		constexpr NdxRC nullNdxRC{ -1, -1 };
-		quadloco::dat::Grid<NdxRC> fullData(fullHW);
+		quadloco::ras::Grid<NdxRC> fullData(fullHW);
 		std::fill(fullData.begin(), fullData.end(), nullNdxRC);
 
 		// specify a chip raster relative to the full size grid
-		quadloco::dat::RowCol const chipRC{ 3u, 8u }; // starting here
-		quadloco::dat::SizeHW const chipHW{ 4u, 6u }; // of this size
-		quadloco::dat::ChipSpec const chipSpec{ chipRC, chipHW };
+		quadloco::ras::RowCol const chipRC{ 3u, 8u }; // starting here
+		quadloco::ras::SizeHW const chipHW{ 4u, 6u }; // of this size
+		quadloco::img::ChipSpec const chipSpec{ chipRC, chipHW };
 
 		// true if chip fits inside full size
 		bool const isContained{ chipSpec.fitsInto(fullHW) };
 
 		// create a chip ...
-		quadloco::dat::Grid<NdxRC> chipData(chipHW);
+		quadloco::ras::Grid<NdxRC> chipData(chipHW);
 		// ... and fill with data that should match fullData row/col
 		for (std::size_t chipRow{0u} ; chipRow < chipHW.high() ; ++chipRow)
 		{

@@ -24,12 +24,12 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::dat::Ring
+\brief Unit tests (and example) code for quadloco::ang::Ring
 */
 
 
-#include "datRing.hpp"
-#include "datSpot.hpp"
+#include "angRing.hpp"
+#include "imgSpot.hpp"
 #include "prbGauss1D.hpp"
 
 #include <Engabra>
@@ -53,7 +53,7 @@ namespace
 		// [DoxyExample00]
 
 		// construct a null instance
-		quadloco::dat::Ring const aNull{};
+		quadloco::ang::Ring const aNull{};
 		bool const expIsValid{ false };
 		bool const gotIsValid{ isValid(aNull) };
 
@@ -74,7 +74,7 @@ namespace
 
 		// check angleDelta() and size relationship
 		constexpr std::size_t nBins{ 5u };
-		quadloco::dat::Ring const ring(nBins);
+		quadloco::ang::Ring const ring(nBins);
 		double const gotFullTurn{ ring.angleDelta() * (double)ring.size() };
 		double const expFullTurn{ 2. * std::numbers::pi_v<double> };
 
@@ -121,7 +121,7 @@ namespace
 		}
 
 		// constexpr std::size_t nBins{ 5u };
-		// quadloco::dat::Ring const ring(nBins);
+		// quadloco::ang::Ring const ring(nBins);
 		std::size_t const ndxCurr{};
 		std::size_t const ndxWrap4{ ring.indexRelativeTo(0u, -1) }; // exp 4
 		std::size_t const ndxWrap0{ ring.indexRelativeTo(0u,  5) }; // exp 0
@@ -147,7 +147,7 @@ namespace
 		// [DoxyExample01]
 
 		std::size_t const numParts{ 4u };
-		quadloco::dat::Ring const ring(numParts);
+		quadloco::ang::Ring const ring(numParts);
 		constexpr double piOne{      std::numbers::pi_v<double> };
 		constexpr double piTwo{ 2. * std::numbers::pi_v<double> };
 		double const binDelta{ piTwo / (double)numParts };
@@ -248,7 +248,7 @@ namespace
 		// [DoxyExample02]
 
 		std::size_t const numParts{ 4u };
-		quadloco::dat::Ring const ring(numParts);
+		quadloco::ang::Ring const ring(numParts);
 
 		double const gotAng0{ ring.angleAt(0u) };
 		double const expAng0{ -quadloco::ang::piOne() };
@@ -292,20 +292,20 @@ namespace
 	}
 
 	inline
-	std::vector<quadloco::dat::Spot>
+	std::vector<quadloco::img::Spot>
 	spotsAbout
-		( quadloco::dat::Spot const & meanSpot
+		( quadloco::img::Spot const & meanSpot
 		, double const & sigma
 		, std::size_t const & numSpots
 		)
 	{
-		std::vector<quadloco::dat::Spot> spots;
+		std::vector<quadloco::img::Spot> spots;
 		static std::mt19937 gen{ 77588584u };
 		static std::normal_distribution<double> dist0(meanSpot[0], sigma);
 		static std::normal_distribution<double> dist1(meanSpot[1], sigma);
 		for (std::size_t nn{0u} ; nn < numSpots ; ++nn)
 		{
-			quadloco::dat::Spot const spot{ dist0(gen), dist1(gen) };
+			quadloco::img::Spot const spot{ dist0(gen), dist1(gen) };
 			spots.emplace_back(spot);
 		}
 		return spots;
@@ -314,12 +314,12 @@ namespace
 	inline
 	std::vector<double>
 	anglesFromSpots
-		( std::vector<quadloco::dat::Spot> const & spots
+		( std::vector<quadloco::img::Spot> const & spots
 		)
 	{
 		std::vector<double> angles;
 		angles.reserve(spots.size());
-		for (quadloco::dat::Spot const & spot : spots)
+		for (quadloco::img::Spot const & spot : spots)
 		{
 			angles.emplace_back(std::atan2(spot[1], spot[0]));
 		}
@@ -338,17 +338,17 @@ namespace
 
 		// generate (normaly distributed) random samples about expSpot
 		// and convert to angles
-		dat::Spot const expSpot{ -1., 2. };
+		img::Spot const expSpot{ -1., 2. };
 		double const sigma{ magnitude(expSpot) };
 		constexpr std::size_t numSpots{ 16u*1024u }; // many for smooth peak
-		std::vector<dat::Spot> const spots
+		std::vector<img::Spot> const spots
 			{ spotsAbout(expSpot, sigma, numSpots) };
 		std::vector<double> const angles{ anglesFromSpots(spots) };
 		double const expAngle{ std::atan2(expSpot[1], expSpot[0]) };
 
 		// accumulate angles into ring buffer
 		std::size_t const numBins{ 32u };
-		dat::Ring const ring(numBins);
+		ang::Ring const ring(numBins);
 		std::vector<double> binSums(numBins, 0.);
 		for (double const & angle : angles)
 		{

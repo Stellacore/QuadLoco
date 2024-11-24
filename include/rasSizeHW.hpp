@@ -32,7 +32,7 @@
  */
 
 
-#include "datSpot.hpp"
+#include "imgSpot.hpp"
 
 #include <array>
 #include <iomanip>
@@ -137,11 +137,11 @@ namespace dat
 
 		//! Subpixel precise location of hwSize's center (in row,col frame)
 		inline
-		dat::Spot
+		img::Spot
 		centerSpot
 			() const
 		{
-			return dat::Spot
+			return img::Spot
 				{ .5 * (double)high()
 				, .5 * (double)wide()
 				};
@@ -192,7 +192,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::SizeHW const & obj
+		, quadloco::ras::SizeHW const & obj
 		)
 	{
 		ostrm << obj.infoString();

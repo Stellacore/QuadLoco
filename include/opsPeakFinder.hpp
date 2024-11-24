@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::sig::PeakFinder
+ * \brief Declarations for quadloco::ops::PeakFinder
  *
  */
 

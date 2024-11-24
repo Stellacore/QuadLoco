@@ -32,10 +32,10 @@
  */
 
 
-#include "datChipSpec.hpp"
-#include "datGrid.hpp"
-#include "datSpot.hpp"
-#include "pixGrad.hpp"
+#include "imgChipSpec.hpp"
+#include "rasGrid.hpp"
+#include "imgSpot.hpp"
+#include "imgGrad.hpp"
 #include "pix.hpp"
 
 #include <algorithm>
@@ -59,7 +59,7 @@ namespace grid
 	void
 	fillInitRows
 		( FwdIter const & beg
-		, dat::SizeHW const & hwSize
+		, ras::SizeHW const & hwSize
 		, std::size_t const & nRows
 		, Type const & value
 		)
@@ -77,7 +77,7 @@ namespace grid
 	void
 	fillLastRows
 		( FwdIter const & beg
-		, dat::SizeHW const & hwSize
+		, ras::SizeHW const & hwSize
 		, std::size_t const & nCols
 		, Type const & value
 		)
@@ -95,7 +95,7 @@ namespace grid
 	void
 	fillInitCols
 		( FwdIter const & beg
-		, dat::SizeHW const & hwSize
+		, ras::SizeHW const & hwSize
 		, std::size_t const & nCols
 		, Type const & value
 		)
@@ -114,7 +114,7 @@ namespace grid
 	void
 	fillLastCols
 		( FwdIter const & beg
-		, dat::SizeHW const & hwSize
+		, ras::SizeHW const & hwSize
 		, std::size_t const & nCols
 		, Type const & value
 		)
@@ -134,7 +134,7 @@ namespace grid
 	void
 	fillBorder
 		( FwdIter const & beg
-		, dat::SizeHW const & hwSize
+		, ras::SizeHW const & hwSize
 		, std::size_t const & nPad
 		, Type const & value
 		)
@@ -163,8 +163,8 @@ namespace grid
 	inline
 	void
 	setSubGridValues
-		( dat::Grid<Type> * const & ptFull
-		, dat::ChipSpec const & chipSpec
+		( ras::Grid<Type> * const & ptFull
+		, img::ChipSpec const & chipSpec
 		, Type const & value
 		)
 	{
@@ -173,7 +173,7 @@ namespace grid
 			for (std::size_t colChip{0u} ; colChip < chipSpec.wide()
 				; ++colChip)
 			{
-				dat::RowCol const rcChip{ rowChip, colChip };
+				ras::RowCol const rcChip{ rowChip, colChip };
 				(*ptFull)(chipSpec.rcFullForChipRC(rcChip)) = value;
 			}
 		}
@@ -182,20 +182,20 @@ namespace grid
 	//! Copy of fullGrid pixels defined by chip spec region
 	template <typename Type>
 	inline
-	dat::Grid<Type>
+	ras::Grid<Type>
 	subGridValuesFrom
-		( dat::Grid<Type> const & fullGrid
-		, dat::ChipSpec const & chipSpec
+		( ras::Grid<Type> const & fullGrid
+		, img::ChipSpec const & chipSpec
 		)
 	{
-		dat::Grid<Type> values(chipSpec.hwSize());
+		ras::Grid<Type> values(chipSpec.hwSize());
 		for (std::size_t rowChip{0u} ; rowChip < chipSpec.high() ; ++rowChip)
 		{
 			for (std::size_t colChip{0u} ; colChip < chipSpec.wide()
 				; ++colChip)
 			{
-				dat::RowCol const rcChip{ rowChip, colChip };
-				dat::RowCol const rcFull{ chipSpec.rcFullForChipRC(rcChip) };
+				ras::RowCol const rcChip{ rowChip, colChip };
+				ras::RowCol const rcFull{ chipSpec.rcFullForChipRC(rcChip) };
 				values(rcChip) = fullGrid(rcFull);
 			}
 		}
@@ -203,7 +203,7 @@ namespace grid
 	}
 
 
-	/*! Compute pix::Grad for each pixel location (except at edges)
+	/*! Compute img::Grad for each pixel location (except at edges)
 	 *
 	 * The stepHalf determine how wide an increment is used to estimate
 	 * the edge in each direction. E.g., for a one dimensional signal
@@ -212,7 +212,7 @@ namespace grid
 	 * grad1D = (gVal[ndx+stepHalf] - gVal[ndx-stepHalf]) / (2.*stepHalf)
 	 * \endverbatim
 	 *
-	 * For 2D grid, the pix::Grad components are computed similarly for
+	 * For 2D grid, the img::Grad components are computed similarly for
 	 * each direction. Note that this is NOT a classic window computation
 	 * but rather two indpenendent evaluations done in each index. E.g.,
 	 * at location (row,col), the computed gradient is:
@@ -225,21 +225,21 @@ namespace grid
 	 * NOTE: the stepHalf pixels around the boarder are set to null!!
 	 */
 	inline
-	dat::Grid<pix::Grad>
+	ras::Grid<img::Grad>
 	gradientGridFor
-		( dat::Grid<float> const & inGrid
+		( ras::Grid<float> const & inGrid
 		, std::size_t const & stepHalf = 1u
 		)
 	{
-		dat::Grid<pix::Grad> grads;
+		ras::Grid<img::Grad> grads;
 
 		// check if there is enough room to process anything
 		std::size_t const stepFull{ 2u * stepHalf };
 		if ((stepFull < inGrid.high()) && (stepFull < inGrid.wide()))
 		{
 			// allocate space
-			dat::SizeHW const hwSize{ inGrid.hwSize() };
-			grads = dat::Grid<pix::Grad>(hwSize);
+			ras::SizeHW const hwSize{ inGrid.hwSize() };
+			grads = ras::Grid<img::Grad>(hwSize);
 
 			//! Determine start and end indices
 			std::size_t const rowNdxBeg{ stepHalf };
@@ -283,8 +283,8 @@ namespace grid
 	inline
 	Type
 	bilinValueAt
-		( dat::Grid<Type> const & grid
-		, dat::Spot const & at
+		( ras::Grid<Type> const & grid
+		, img::Spot const & at
 		)
 	{
 		Type value{ pix::null<Type>() };

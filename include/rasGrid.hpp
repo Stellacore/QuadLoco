@@ -27,13 +27,13 @@
 
 
 /*! \file
- * \brief Definitions for dat::Grid<> raster data structure
+ * \brief Definitions for ras::Grid<> raster data structure
  *
  */
 
 
-#include "datRowCol.hpp"
-#include "datSizeHW.hpp"
+#include "rasRowCol.hpp"
+#include "rasSizeHW.hpp"
 
 #include <functional>
 #include <string>
@@ -262,7 +262,7 @@ namespace dat
 		inline
 		Type const &
 		operator()
-			( dat::RowCol const & rowcol
+			( ras::RowCol const & rowcol
 			) const
 		{
 			return operator()(rowcol.row(), rowcol.col());
@@ -272,7 +272,7 @@ namespace dat
 		inline
 		Type &
 		operator()
-			( dat::RowCol const & rowcol
+			( ras::RowCol const & rowcol
 			)
 		{
 			return operator()(rowcol.row(), rowcol.col());
@@ -414,13 +414,13 @@ namespace dat
 
 		//! Row/Colum indices associated with iter value
 		inline
-		dat::RowCol
+		ras::RowCol
 		datRowColFor
 			( const_iterator const & iter
 			) const
 		{
 			size_t const dist(std::distance(cbegin(), iter));
-			return dat::RowCol
+			return ras::RowCol
 				{ dist / hwSize().wide()
 				, dist % hwSize().wide()
 				};
@@ -547,7 +547,7 @@ namespace dat
 		//! Cast to different element type
 		template <typename OutType>
 		inline
-		dat::Grid<OutType>
+		ras::Grid<OutType>
 		castGrid
 			() const;
 
@@ -592,7 +592,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::Grid<Type> const & obj
+		, quadloco::ras::Grid<Type> const & obj
 		)
 	{
 		ostrm << obj.infoString();

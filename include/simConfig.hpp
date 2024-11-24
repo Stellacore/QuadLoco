@@ -32,9 +32,9 @@
  */
 
 
-#include "datFence.hpp"
-#include "datSizeHW.hpp"
-#include "imgCamera.hpp"
+#include "opsFence.hpp"
+#include "rasSizeHW.hpp"
+#include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 
 #include <Rigibra>
@@ -60,7 +60,7 @@ namespace sim
 		obj::QuadTarget const theObjQuad{};
 
 		//! Camera for producing perspective image of target
-		img::Camera const theCamera{};
+		obj::Camera const theCamera{};
 
 		//! Camera station (exterior frame) w.r.t. #theObjQuad own frame
 		rigibra::Transform const theStaWrtQuad{};
@@ -77,7 +77,7 @@ namespace sim
 
 		//! Camera associated with this configuration
 		inline
-		img::Camera const &
+		obj::Camera const &
 		camera
 			() const
 		{
@@ -109,9 +109,9 @@ namespace sim
 			// create a 1:1 camera geometry
 			// * pd == high() == wide()
 			//
-			quadloco::dat::SizeHW const format{ numPixHW, numPixHW };
+			quadloco::ras::SizeHW const format{ numPixHW, numPixHW };
 			double const pdToMatch{ (double)numPixHW };
-			quadloco::img::Camera const camera{ format, pdToMatch };
+			quadloco::obj::Camera const camera{ format, pdToMatch };
 
 			//
 			// exterior orientation - fit to obj quad target size

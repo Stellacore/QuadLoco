@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::dat::Spot
+\brief Unit tests (and example) code for quadloco::img::Spot
 */
 
 
-#include "datSpot.hpp"
+#include "imgSpot.hpp"
 
 #include "QuadLoco"
 
@@ -49,19 +49,19 @@ namespace
 		// [DoxyExample01]
 
 		// construct a null instance
-		quadloco::dat::Spot const nullSpot{};
+		quadloco::img::Spot const nullSpot{};
 		bool const nullIsOkay{ (false == isValid(nullSpot)) };
 
 		// construct with subpixel row,col order
-		quadloco::dat::Spot const origSpot{ 1.125, 2.250 };
+		quadloco::img::Spot const origSpot{ 1.125, 2.250 };
 
 		// copy construction
-		std::vector<quadloco::dat::Spot> const copySpots
+		std::vector<quadloco::img::Spot> const copySpots
 			{ origSpot, origSpot, origSpot };
 
 		// output operations
 		std::ostringstream msg;
-		quadloco::dat::Spot const copySpot{ copySpots.back() };
+		quadloco::img::Spot const copySpot{ copySpots.back() };
 		msg << copySpot << '\n';
 
 		// order magnitude of data times machine eps
@@ -71,14 +71,14 @@ namespace
 		bool const copySame{ nearlyEquals(origSpot, copySpot, tol/32.) };
 
 		// basic arithmetic 
-		quadloco::dat::Spot const spotA{ 29., 23. };
-		quadloco::dat::Spot const spotB{  2.,  5. };
-		quadloco::dat::Spot const gotSum{ spotA + spotB };
-		quadloco::dat::Spot const expSum{ 29.+2., 23.+5. };
-		quadloco::dat::Spot const expDif{ 29.-2., 23.-5. };
-		quadloco::dat::Spot const gotDif{ spotA - spotB };
-		quadloco::dat::Spot const expMul{ 7.*2., 7.*5. };
-		quadloco::dat::Spot const gotMul{ 7.*spotB };
+		quadloco::img::Spot const spotA{ 29., 23. };
+		quadloco::img::Spot const spotB{  2.,  5. };
+		quadloco::img::Spot const gotSum{ spotA + spotB };
+		quadloco::img::Spot const expSum{ 29.+2., 23.+5. };
+		quadloco::img::Spot const expDif{ 29.-2., 23.-5. };
+		quadloco::img::Spot const gotDif{ spotA - spotB };
+		quadloco::img::Spot const expMul{ 7.*2., 7.*5. };
+		quadloco::img::Spot const gotMul{ 7.*spotB };
 
 		// [DoxyExample01]
 
@@ -122,7 +122,7 @@ namespace
 
 }
 
-//! Check behavior of dat::Spot
+//! Check behavior of img::Spot
 int
 main
 	()

@@ -27,14 +27,14 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::pix::Sampler
+ * \brief Declarations for quadloco::img::Sampler
  *
  */
 
 
-#include "datGrid.hpp"
-#include "datRowCol.hpp"
-#include "pixGrad.hpp"
+#include "rasGrid.hpp"
+#include "rasRowCol.hpp"
+#include "imgGrad.hpp"
 
 #include <limits>
 
@@ -48,7 +48,7 @@ namespace pix
 	//! Extract derived data from grid
 	class Sampler
 	{
-		dat::Grid<float> const * const thePtGrid{ nullptr };
+		ras::Grid<float> const * const thePtGrid{ nullptr };
 		std::size_t const theStepHalf{ 1u };
 		std::size_t const theStepFull{ 2u };
 		float const theScale{ std::numeric_limits<float>::quiet_NaN() };
@@ -59,7 +59,7 @@ namespace pix
 		inline
 		explicit
 		Sampler
-			( dat::Grid<float> const * const ptGrid = nullptr
+			( ras::Grid<float> const * const ptGrid = nullptr
 			, std::size_t const stepHalf = 1u
 			)
 			: thePtGrid{ ptGrid }
@@ -70,13 +70,13 @@ namespace pix
 
 		//! Gradient computed at individual pixel - NO bounds checking
 		inline
-		pix::Grad
+		img::Grad
 		pixGradAt
-			( dat::RowCol const & rowcol
+			( ras::RowCol const & rowcol
 				//!< Assumed to be inside extents of attached grid
 			) const
 		{
-			pix::Grad grad;
+			img::Grad grad;
 			if (thePtGrid)
 			{
 				//! Determine start and end indices
@@ -89,7 +89,7 @@ namespace pix
 				std::size_t const colNdxEnd
 					{ colNdxBeg + thePtGrid->hwSize().wide() - theStepFull };
 
-				dat::Grid<float> const & inGrid = *thePtGrid;
+				ras::Grid<float> const & inGrid = *thePtGrid;
 				float const & scl = theScale;
 
 				std::size_t const & row = rowcol.row();

@@ -47,11 +47,11 @@ namespace
 		using namespace quadloco;
 
 		// 2D data types
-		dat::RowCol const srcRowCol
+		ras::RowCol const srcRowCol
 			{ 7u, 3u };
-		dat::Spot const srcSpot
+		img::Spot const srcSpot
 			{ 7.5, 3.75 };
-		pix::Grad const srcGrad
+		img::Grad const srcGrad
 			{ (float)srcSpot.row(), (float)srcSpot.col() };
 
 		// Casting into 3D vectors (add a 3rd component identically zero)
@@ -61,9 +61,9 @@ namespace
 		engabra::g3::Vector const vecGrad{ cast::vector(srcGrad) };
 
 		// Casting back into 2D (ignores the third component)
-		dat::RowCol const dstRowCol{ cast::datRowCol(vecRowCol) };
-		dat::Spot const dstSpot{ cast::datSpot(vecSpot) };
-		pix::Grad const dstGrad{ cast::pixGrad(vecSpot) };
+		ras::RowCol const dstRowCol{ cast::datRowCol(vecRowCol) };
+		img::Spot const dstSpot{ cast::datSpot(vecSpot) };
+		img::Grad const dstGrad{ cast::pixGrad(vecSpot) };
 
 		// [DoxyExample01]
 

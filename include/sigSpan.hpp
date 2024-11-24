@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for dat::Span
+ * \brief Declarations for sig::Span
  *
  */
 
@@ -165,7 +165,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::dat::Span const & item
+		, quadloco::sig::Span const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -176,7 +176,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::dat::Span const & item
+		( quadloco::sig::Span const & item
 		)
 	{
 		return item.isValid();

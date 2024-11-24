@@ -28,7 +28,7 @@
 */
 
 
-#include "datGrid.hpp"
+#include "rasGrid.hpp"
 #include "pix.hpp"
 
 #include <iostream>
@@ -47,7 +47,7 @@ namespace
 
 		// create a small simple floating point imag
 		using quadloco::pix::fpix_t;
-		quadloco::dat::Grid<fpix_t> fGrid(quadloco::dat::SizeHW{ 5u, 1u });
+		quadloco::ras::Grid<fpix_t> fGrid(quadloco::ras::SizeHW{ 5u, 1u });
 		fGrid(0, 0) = 100.;
 		fGrid(1, 0) = 101.;
 		fGrid(2, 0) = 300.;
@@ -55,14 +55,14 @@ namespace
 		fGrid(4, 0) = 500.;
 
 		// expected working span of input imagery (for test case)
-		quadloco::dat::Span const testSpan{ 101., 500. };
+		quadloco::sig::Span const testSpan{ 101., 500. };
 
 		// full span (that ensures all pixels are valid)
-		quadloco::dat::Span const fullSpan
+		quadloco::sig::Span const fullSpan
 			{ quadloco::pix::fullSpanFor(fGrid) };
 
 		// convert to classic uint8_t image
-		quadloco::dat::Grid<uint8_t> const uGrid
+		quadloco::ras::Grid<uint8_t> const uGrid
 			{ quadloco::pix::uGrid8(fGrid, testSpan) };
 
 		//
@@ -86,7 +86,7 @@ namespace
 		// [DoxyExample01]
 
 		// check if full span contains all pixels
-		using FIter = quadloco::dat::Grid<fpix_t>::const_iterator;
+		using FIter = quadloco::ras::Grid<fpix_t>::const_iterator;
 		bool allIn{ true };
 		for (FIter iter{fGrid.cbegin()} ; fGrid.cend() != iter ; ++iter)
 		{

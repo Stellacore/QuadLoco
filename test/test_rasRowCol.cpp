@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::dat::RowCol
+\brief Unit tests (and example) code for quadloco::ras::RowCol
 */
 
 
-#include "datRowCol.hpp"
+#include "rasRowCol.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -45,14 +45,14 @@ namespace
 		// [DoxyExample01]
 
 		// location in (row,col) order
-		quadloco::dat::RowCol const rcOrig{ 100u, 200u };
+		quadloco::ras::RowCol const rcOrig{ 100u, 200u };
 
 		// output operator
 		std::ostringstream msg;
 		msg << rcOrig << '\n';
 
 		// copy
-		quadloco::dat::RowCol const rcCopy{ rcOrig };
+		quadloco::ras::RowCol const rcCopy{ rcOrig };
 
 		// can test (exact) equality
 		bool const copyIsSame{ rcOrig == rcCopy };

@@ -33,10 +33,10 @@
 
 
 #include "cast.hpp"
-#include "datSpot.hpp"
-#include "datVec2D.hpp"
-#include "imgCamera.hpp"
-#include "imgQuadTarget.hpp"
+#include "imgSpot.hpp"
+#include "imgVec2D.hpp"
+#include "objCamera.hpp"
+#include "sigQuadTarget.hpp"
 #include "objQuadTarget.hpp"
 #include "pixNoise.hpp"
 
@@ -60,7 +60,7 @@ namespace sim
 	class Sampler
 	{
 		//! Camera geometry to use in sampling process (simulated imaging)
-		img::Camera const theCamera{};
+		obj::Camera const theCamera{};
 
 		//! Orientation (pose) of camera exterior frame w.r.t. quad target
 		rigibra::Transform const theCamWrtQuad{};
@@ -129,7 +129,7 @@ namespace sim
 		inline
 		explicit
 		Sampler
-			( img::Camera const & camera
+			( obj::Camera const & camera
 			, rigibra::Transform const & xCamWrtQuad
 			, obj::QuadTarget const & objQuad
 			, unsigned const & optionsMask = (UseSceneBias | UseImageNoise)
@@ -157,7 +157,7 @@ namespace sim
 
 		//! Grid (pixel) format for simulation
 		inline
-		dat::SizeHW
+		ras::SizeHW
 		format
 			() const
 		{
@@ -168,7 +168,7 @@ namespace sim
 		inline
 		engabra::g3::Vector
 		quadLocFor
-			( dat::Spot const & detSpot
+			( img::Spot const & detSpot
 			) const
 		{
 			using engabra::g3::Vector;
@@ -192,7 +192,7 @@ namespace sim
 		inline
 		double
 		noiseBias
-			( dat::Spot const & spotInQuad
+			( img::Spot const & spotInQuad
 			) const
 		{
 			using namespace engabra::g3;
@@ -215,7 +215,7 @@ namespace sim
 		inline
 		double
 		quadSignalFor
-			( dat::Spot const & detSpot
+			( img::Spot const & detSpot
 			) const
 		{
 			double intenSample{ engabra::g3::null<double>() };
@@ -224,7 +224,7 @@ namespace sim
 			if (engabra::g3::isValid(pntInQuad))
 			{
 				// sample intensity from quad target
-				dat::Spot const spotInQuad{ pntInQuad[0], pntInQuad[1] };
+				img::Spot const spotInQuad{ pntInQuad[0], pntInQuad[1] };
 				// target signal intensity
 				intenSample = theObjQuad.quadSignalAt(spotInQuad);
 			}
@@ -237,7 +237,7 @@ namespace sim
 		inline
 		double
 		pureSignalIntensity
-			( dat::Spot const & detSpot
+			( img::Spot const & detSpot
 				//!< Location at which to evaluate object quad signal
 			, std::size_t const & numOverSamps
 				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
@@ -252,14 +252,14 @@ namespace sim
 			for (std::size_t nn{0u} ; nn < numSamps ; ++nn)
 			{
 				// place first spot on exact pixel location
-				dat::Spot const halfSpot{ .5, .5 };
-				dat::Spot delta{ 0., 0. };
+				img::Spot const halfSpot{ .5, .5 };
+				img::Spot delta{ 0., 0. };
 				if (0u < nn)
 				{
-					delta = dat::Spot{ distro(gen), distro(gen) };
+					delta = img::Spot{ distro(gen), distro(gen) };
 				}
 
-				dat::Spot const useSpot{ detSpot + halfSpot + delta };
+				img::Spot const useSpot{ detSpot + halfSpot + delta };
 				if (::isValid(useSpot))
 				{
 					double const qSig{ quadSignalFor(useSpot) };
@@ -279,7 +279,7 @@ namespace sim
 
 		//! Geometry of perspective image created by quadImage()
 		inline
-		img::QuadTarget
+		sig::QuadTarget
 		imgQuadTarget
 			() const
 		{
@@ -293,11 +293,11 @@ namespace sim
 			Vector const yMidInExt
 				{ theCamWrtQuad(cast::vector(theObjQuad.midSidePosY())) };
 
-			dat::Vec2D const centerInDet
+			img::Vec2D const centerInDet
 				{ theCamera.projectedSpotFor(centerInExt) };
-			dat::Vec2D const xMidInDet
+			img::Vec2D const xMidInDet
 				{ theCamera.projectedSpotFor(xMidInExt) };
-			dat::Vec2D const yMidInDet
+			img::Vec2D const yMidInDet
 				{ theCamera.projectedSpotFor(yMidInExt) };
 
 			Vector const center{ cast::vector(centerInDet) };
@@ -306,7 +306,7 @@ namespace sim
 			Vector const yDir
 				{ direction(cast::vector(yMidInDet - centerInDet)) };
 
-			img::QuadTarget const imgQuad{ center, xDir, yDir };
+			sig::QuadTarget const imgQuad{ center, xDir, yDir };
 			return imgQuad;
 		}
 
@@ -315,7 +315,7 @@ namespace sim
 		inline
 		double
 		intensityAt
-			( dat::Spot const & detSpot
+			( img::Spot const & detSpot
 				//!< Location at which to simulate intensity
 			, std::size_t const & numOverSamps
 				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
@@ -336,7 +336,7 @@ namespace sim
 				// quad boundary, but is close enough to use for scene
 				// illumination bias
 				engabra::g3::Vector const pntInQuad{ quadLocFor(detSpot) };
-				dat::Spot const spotInQuad{ pntInQuad[0], pntInQuad[1] };
+				img::Spot const spotInQuad{ pntInQuad[0], pntInQuad[1] };
 
 				// illumination bias across target
 				double valueBias{ 0. };

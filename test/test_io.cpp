@@ -28,7 +28,7 @@
 */
 
 
-#include "datGrid.hpp"
+#include "rasGrid.hpp"
 #include "io.hpp"
 #include "pix.hpp"
 
@@ -50,18 +50,18 @@ namespace
 
 		// example starting with a floating point grid
 		using namespace quadloco;
-		dat::SizeHW const hwSize{ 2u, 3u };
-		dat::Grid<pix::fpix_t> fGrid{ hwSize };
+		ras::SizeHW const hwSize{ 2u, 3u };
+		ras::Grid<pix::fpix_t> fGrid{ hwSize };
 		fGrid(0, 0) = -1.75;
 		fGrid(0, 1) = -1.50;
 		fGrid(0, 2) = -1.25;
 		fGrid(1, 0) =  1.25;
 		fGrid(1, 1) =  1.50;
 		fGrid(1, 2) =  1.75;
-		dat::Span const fSpan{ -2., 2. };
+		sig::Span const fSpan{ -2., 2. };
 
 		// convert to classic uint8_t image
-		dat::Grid<uint8_t> const uGridExp{ pix::uGrid8(fGrid, fSpan) };
+		ras::Grid<uint8_t> const uGridExp{ pix::uGrid8(fGrid, fSpan) };
 
 		// write to PGM file
 //		std::filesystem::path tmpFnamePgm("/tmp/quadloco_test_io.pgm");
@@ -69,7 +69,7 @@ std::filesystem::path tmpFnamePgm("./quadloco_test_io.pgm");
 		bool const okayWrite{ io::writePGM(tmpFnamePgm, uGridExp) };
 
 		// read from PGM file
-		dat::Grid<uint8_t> const uGridGot{ io::readPGM(tmpFnamePgm) };
+		ras::Grid<uint8_t> const uGridGot{ io::readPGM(tmpFnamePgm) };
 		bool const okayRead{ uGridGot.isValid() };
 
 		// [DoxyExample01]
