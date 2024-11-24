@@ -50,7 +50,7 @@ namespace dat
 	struct RowCol
 	{
 		//! Aggregate type row/col index data.
-		std::array<std::size_t, 2u>  const theRowCol
+		std::array<std::size_t, 2u> theRowCol
 			{ std::numeric_limits<std::size_t>::max()
 			, std::numeric_limits<std::size_t>::max()
 			};
@@ -125,6 +125,31 @@ namespace
 	{
 		ostrm << obj.infoString();
 		return ostrm;
+	}
+
+	//! True if the two items are identical (mostly for template compatibility)
+	inline
+	bool
+	nearlyEquals
+		( quadloco::dat::RowCol const & itemA
+		, quadloco::dat::RowCol const & itemB
+		, double const & tol = 0.
+		)
+	{
+		double const rA{ static_cast<double>(itemA.row()) };
+		double const rB{ static_cast<double>(itemB.row()) };
+		double const cA{ static_cast<double>(itemA.col()) };
+		double const cB{ static_cast<double>(itemB.col()) };
+		return
+			(  (! (tol < std::abs(rA - rB)))
+			&& (! (tol < std::abs(cA - cB)))
+			);
+		/*
+		return
+			(  (itemA.row() == itemB.row())
+			&& (itemA.col() == itemB.col())
+			);
+		*/
 	}
 
 } // [anon/global]

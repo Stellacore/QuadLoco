@@ -24,7 +24,7 @@
 
 
 /*! \file
-\brief Main app to generate edge direction data as function of phi,delta parms.
+\brief Generate edge direction data as function of alhpa,delta parms.
 */
 
 
@@ -37,37 +37,29 @@
 
 namespace
 {
-	/*! \brief Projection of edge direction (for phi,delta) onto posRefDir
-	 *
-	 * The parameters phi,delta (location and arc on bounding circle)
-	 * indirectly specify a line segment with a well defined edge
-	 * direction. This function, returns the vector-vector dot product
-	 * of the edge direction and the provided posRefDir direction.
-	 */
-	double
-	edgeDirDotValueFor
-		( double const & phi
+	//! \brief Direction of image edge (pixel gradient dir) for alpha,delta
+	inline
+	engabra::g3::Vector
+	gradientDirFor
+		( double const & alpha
 		, double const & delta
-		, engabra::g3::Vector const & posRefDir
 		)
 	{
 		using namespace engabra::g3;
+
 		// line segment defined by end points on unit circle
-		double const begAngle{ phi };
-		double const endAngle{ phi + delta };
+		double const begAngle{ alpha };
+		double const endAngle{ alpha + delta };
 		Vector const begPnt{ cos(begAngle), sin(begAngle), 0. };
 		Vector const endPnt{ cos(endAngle), sin(endAngle), 0. };
+
 		// directed line tangent direction is between end points
-		Vector const segDir{ direction(endPnt - begPnt) };
-		double edgeDirDot{ 0. };
-		if (isValid(segDir))
-		{
-			// edge direction is orthogonal to line segment dir (in R.H. sense)
-			Vector const edgeDir{ (segDir * e12).theVec };
-			// dot product with positive alignment direction
-			edgeDirDot = (edgeDir * posRefDir).theSca[0];
-		}
-		return edgeDirDot;
+		Vector const lineDir{ direction(endPnt - begPnt) };
+
+		// edge direction is perpendicular to this (in *NEGATIVE* e12 dir)
+		Vector const edgeDir{ (e12 * lineDir).theVec };
+
+		return edgeDir;
 	}
 
 } // [anon]
@@ -75,16 +67,16 @@ namespace
 
 /*! \brief Evaluate Hough space for the bounding circle reference convention.
 
-Loop over Hough space locations with specified angle delta. For each
-location determine the line segment running through sample space. For
-each segment, compute the segment direction (SegDir) and dot that with
-the positive reference axis. Assign the dot product value to the starting
-Hough space location cell.
+Loop over Hough space locations with specified start and difference angles.
+For each angle pair combination, determine the line segment running through
+sample space and compute the associated edge pixel direction (perpendicular
+to the line segment). Report the teo edge direction components as a function
+of alpha,delta angle values.
 
 Write result data to ascii file with records including:
 
 	```
-	Phi Delta EdgDirDotValue
+	Alpha Delta EdgeGrad[0] EdgeGrad[1]
 	```
 */
 
@@ -94,16 +86,15 @@ main
 {
 	constexpr double pi{ 1.*engabra::g3::pi };
 
-	constexpr double begPhi{ -pi };
-	constexpr double endPhi{  pi };
+	constexpr double begAlpha{ -pi };
+	constexpr double endAlpha{  pi };
 	constexpr double begDelta{ 0 };
 	constexpr double endDelta{  2.*pi };
 
-	constexpr double da{ 1./512. * (endPhi - begPhi) };
-	static engabra::g3::Vector const posRefDir{ engabra::g3::e2 };
+	constexpr double da{ 1./512. * (endAlpha - begAlpha) };
 
 	// loop over length of arc on bounding circle
-	static std::string const fname("foo.dat");
+	static std::string const fname("/tmp/foo_demoEdgeDirAD.dat");
 	std::ofstream ofs(fname);
 	for (double delta{begDelta} ; delta < endDelta ; delta += da)
 	{
@@ -111,24 +102,25 @@ main
 		ofs << "\n\n# delta: = " << fixed(delta);
 
 		// loop over starting point on bounding circle
-		for (double phi{begPhi} ; phi < endPhi ; phi += da)
+		for (double alpha{begAlpha} ; alpha < endAlpha ; alpha += da)
 		{
-			// dot product between edge direction and posRefDir axis
-			double const edgDirDot
-				{ edgeDirDotValueFor(phi, delta, posRefDir) };
+			engabra::g3::Vector const gradDir{ gradientDirFor(alpha, delta) };
 			ofs
-				<< fixed(phi) << ' ' << fixed(delta)
-				<< fixed(edgDirDot)
+				<< fixed(alpha)
+				<< ' ' 
+				<< fixed(delta)
+				<< ' ' 
+				<< fixed(gradDir[0])
+				<< ' ' 
+				<< fixed(gradDir[0])
 				<< '\n';
 		}
 	}
 
 	std::cout
-		<< 
-		"\nData written to file '" << fname << "'"
-		"\nRecord format is"
-		"\n <phi> <delta> <edgeDirDot>"
-		"\n(reference direction is: " << posRefDir
+		<< "\nData written to file '" << fname << "'"
+		<< "\nRecord format is"
+		<< "\n <alpha> <delta> <gradDir[0]> <gradDir[1]>"
 		<< "\n\n";
 
 	return 0;

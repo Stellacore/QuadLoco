@@ -27,7 +27,8 @@ set(ProgNames
 	# _  # template for demo programs
 
 	demo_version
-	demoSegDir
+	demoLineFind
+	demoEdgeDirAD
 
 	)
 
@@ -59,7 +60,8 @@ foreach(ProgName ${ProgNames})
 	target_link_libraries(
 		${ProgName}
 		PRIVATE
-			${thisProjLib}
+			${thisProjLib}::${thisProjLib}
+			Rigibra::Rigibra
 			Engabra::Engabra
 		)
 

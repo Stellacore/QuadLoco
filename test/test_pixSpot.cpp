@@ -24,60 +24,18 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::pix::Gradel
+\brief Unit tests (and example) code for quadloco::pix::Spot
 */
 
 
-#include "datGrid.hpp"
-#include "pixGradel.hpp"
-#include "pixgrid.hpp"
+#include "pixSpot.hpp"
 
-#include <algorithm>
-#include <format>
 #include <iostream>
 #include <sstream>
 
 
 namespace
 {
-	//! Check null/valid instances
-	void
-	test0
-		( std::ostream & oss
-		)
-	{
-		// [DoxyExample00]
-
-		// null pixel gradient element
-		quadloco::pix::Gradel const aNull{};
-		bool const expNull{ false };
-		bool const gotNull{ isValid(aNull) };
-
-		// valid pixel gradent element
-		quadloco::pix::Gradel const aOkay{ 1.25, -2.15 };
-		bool const expOkay{ true };
-		bool const gotOkay{ isValid(aOkay) };
-
-		// [DoxyExample00]
-
-		if (! (gotOkay == expOkay))
-		{
-			oss << "Failure of Okay gradel element test(0)\n";
-			oss << "exp: " << expOkay << '\n';
-			oss << "got: " << gotOkay << '\n';
-			oss << "aOkay: " << aOkay << '\n';
-		}
-
-		if (! (gotNull == expNull))
-		{
-			oss << "Failure of Null gradel element test(0)\n";
-			oss << "exp: " << expNull << '\n';
-			oss << "got: " << gotNull << '\n';
-			oss << "aNull: " << aNull << '\n';
-		}
-
-	}
-
 	//! Examples for documentation
 	void
 	test1
@@ -86,7 +44,34 @@ namespace
 	{
 		// [DoxyExample01]
 
+		// construct a null instance
+		quadloco::pix::Spot const aNull{};
+		bool const nullIsOkay{ (false == isValid(aNull)) };
+
+		// inherits most methods from dat::Vec2D<float>
+		// with a few name convenience forwards
+		constexpr float expRow{ 2.5f };
+		constexpr float expCol{ -1.75f };
+		quadloco::pix::Spot const expSpot{ expRow, expCol };
+		float const gotRow{ expSpot.row() };
+		float const gotCol{ expSpot.col() };
+		quadloco::pix::Spot const gotSpot{ gotRow, gotCol };
+
 		// [DoxyExample01]
+
+		if (! nullIsOkay)
+		{
+			oss << "Failure of aNull test\n";
+			oss << "aNull: " << aNull << '\n';
+		}
+
+		if (! nearlyEquals(gotSpot, expSpot))
+		{
+			oss << "Failure of gotSpot test\n";
+			oss << "exp: " << expSpot << '\n';
+			oss << "got: " << gotSpot << '\n';
+		}
+
 	}
 
 }
@@ -99,7 +84,7 @@ main
 	int status{ 1 };
 	std::stringstream oss;
 
-	test0(oss);
+//	test0(oss);
 	test1(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered

@@ -24,13 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::dat::SizeHW
+\brief Unit tests (and example) code for quadloco::ang::Likely
 */
 
 
-#include "datSizeHW.hpp"
-
-#include "QuadLoco"
+#include "angLikely.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -38,67 +36,73 @@
 
 namespace
 {
-	//! Examples for documentation
+	//! Check basics
 	void
 	test0
 		( std::ostream & oss
 		)
 	{
+		// [DoxyExample00]
+
+		quadloco::ang::Likely const aNull{};
+		bool const expIsValid{ false };
+		bool const gotIsValid{ isValid(aNull) };
+
+		// [DoxyExample00]
+
+		if (! (gotIsValid == expIsValid))
+		{
+			oss << "Failure of aNull test\n";
+			oss << "aNull: " << aNull << '\n';
+		}
+	}
+
+	//! Examples for documentation
+	void
+	test1
+		( std::ostream & oss
+		)
+	{
 		// [DoxyExample01]
 
-		// value construction
-		std::size_t const expHigh{ 23u };
-		std::size_t const expWide{ 27u };
-		quadloco::dat::SizeHW const hwOrig{ expHigh, expWide };
-		std::size_t const expSize{ expHigh * expWide };
-		quadloco::dat::Spot const expCenter
-			{ .5*(double)expHigh, .5*(double)expWide };
+		// construct an accumulation buffer - here with just few bins
+		std::size_t const numBins{ 8u };
+		quadloco::ang::Likely angleProb(numBins);
 
-		// copy construction
-		quadloco::dat::SizeHW const hwCopy(hwOrig);
-		bool const copyIsSame{ hwCopy == hwOrig };
+		// add a value near start of bin (near phase wrap location)
+		double const expAngle{ .125 };
+		angleProb.add(expAngle);
 
-		// attributes
-		std::size_t const gotHigh{ hwOrig.high() };
-		std::size_t const gotWide{ hwOrig.wide() };
-		std::size_t const gotSize{ hwOrig.size() };
-		quadloco::dat::Spot const gotCenter{ hwOrig.centerSpot() };
+		// get angles 
+		std::vector<double> const gotPeakAngles{ angleProb.anglesOfPeaks() };
+		std::size_t const expNumPeaks{ 1u };
+		std::size_t const gotNumPeaks{ gotPeakAngles.size() };
 
 		// [DoxyExample01]
 
-		if (! hwOrig.isValid())
+		if (! (gotNumPeaks == expNumPeaks))
 		{
-			oss << "Failure of validity test\n";
-			oss << "hwOrig: " << hwOrig << '\n';
+			oss << "Failure of gotNumPeaks of peaks test\n";
+			oss << "exp: " << expNumPeaks << '\n';
+			oss << "got: " << gotNumPeaks << '\n';
 		}
-
-		if (! copyIsSame)
+		else
 		{
-			oss << "Failure of copy test\n";
-			oss << "hwOrig: " << hwOrig << '\n';
-			oss << "hwCopy: " << hwCopy << '\n';
-		}
-
-		bool const okaySizes
-			{  (gotHigh == expHigh)
-			&& (gotWide == expWide)
-			&& (gotSize == expSize)
-			};
-		if (! okaySizes)
-		{
-			oss << "Failure of sizes test\n";
-			oss << "expHigh: " << expHigh << '\n';
-			oss << "gotHigh: " << gotHigh << '\n';
-			oss << "expWide: " << expWide << '\n';
-			oss << "gotWide: " << gotWide << '\n';
-			oss << "expSize: " << expSize << '\n';
-			oss << "gotSize: " << gotSize << '\n';
+			double const & gotAngle = gotPeakAngles.front();
+			double const tolAngle{ angleProb.angleDelta() };
+			if (! engabra::g3::nearlyEqualsAbs(gotAngle, expAngle, tolAngle))
+			{
+				oss << "Failure of gotAngle test\n";
+				oss << "exp: " << expAngle << '\n';
+				oss << "got: " << gotAngle << '\n';
+				oss << "tol: " << tolAngle << '\n';
+			}
 		}
 	}
 
 }
 
-//! Check behavior of NS
+//! Standard test case main wrapper
 int
 main
 	()
@@ -107,6 +111,7 @@ main
 	std::stringstream oss;
 
 	test0(oss);
+	test1(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

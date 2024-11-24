@@ -32,6 +32,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 
 namespace
@@ -98,6 +99,68 @@ namespace
 		}
 	}
 
+	//! Check boundary wrap-around mapping
+	void
+	test1
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample01]
+		using namespace quadloco;
+
+		struct WrapData
+		{
+			double const theFrom;
+			double const theInto;
+
+			//! Check if gotInto is as expected
+			inline
+			void
+			check
+				( std::ostream & oss
+				, double const & gotInto
+				) const
+			{
+				double const & expInto = theInto;
+				if (! engabra::g3::nearlyEquals(gotInto, expInto))
+				{
+					using engabra::g3::io::fixed;
+					oss << "wrap:"
+						<< ' ' << fixed(theFrom)
+						<< ' ' << fixed(expInto)
+						<< ' ' << fixed(gotInto)
+						<< '\n';
+				}
+			}
+		};
+
+		//! Check principal fraction value over both negative and positive
+		std::vector<WrapData> const wraps
+				{ { -4.00,  0.00 }
+				, { -3.25,   .75 }
+				, { -1.25,   .75 }
+				, { -1.00,  0.00 }
+				, { -0.75,   .25 }
+				, { -0.25,   .75 }
+				, {  0.00,  0.00 }
+				, {  0.25,   .25 }
+				, {  0.75,   .75 }
+				, {  1.00,  0.00 }
+				, {  1.25,   .25 }
+				, {  3.75,   .75 }
+				, {  4.00,  0.00 }
+				};
+
+		// [DoxyExample01]
+
+		//! Test each modulo fraction
+		for (WrapData const & wrap : wraps)
+		{
+			double const & expInto = wrap.theInto;
+			double const gotInto{ dat::Area::principalFraction(wrap.theFrom) };
+			wrap.check(oss, gotInto);
+		}
+	}
 }
 
 //! Standard test case main wrapper
@@ -109,6 +172,7 @@ main
 	std::stringstream oss;
 
 	test0(oss);
+	test1(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

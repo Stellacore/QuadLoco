@@ -24,81 +24,74 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::dat::SizeHW
+\brief Unit tests (and example) code for quadloco::pix::Grad
 */
 
 
-#include "datSizeHW.hpp"
+#include "datGrid.hpp"
+#include "pixGrad.hpp"
+#include "pixgrid.hpp"
 
-#include "QuadLoco"
-
+#include <algorithm>
+#include <format>
 #include <iostream>
 #include <sstream>
 
 
 namespace
 {
-	//! Examples for documentation
+	//! Check null/valid instances
 	void
 	test0
 		( std::ostream & oss
 		)
 	{
+		// [DoxyExample00]
+
+		// null pixel gradient element
+		quadloco::pix::Grad const aNull{};
+		bool const expNull{ false };
+		bool const gotNull{ isValid(aNull) };
+
+		// valid pixel gradent element
+		quadloco::pix::Grad const aOkay{ 1.25, -2.15 };
+		bool const expOkay{ true };
+		bool const gotOkay{ isValid(aOkay) };
+
+		// [DoxyExample00]
+
+		if (! (gotOkay == expOkay))
+		{
+			oss << "Failure of Okay pix::Grad element test(0)\n";
+			oss << "exp: " << expOkay << '\n';
+			oss << "got: " << gotOkay << '\n';
+			oss << "aOkay: " << aOkay << '\n';
+		}
+
+		if (! (gotNull == expNull))
+		{
+			oss << "Failure of Null pix::Grad element test(0)\n";
+			oss << "exp: " << expNull << '\n';
+			oss << "got: " << gotNull << '\n';
+			oss << "aNull: " << aNull << '\n';
+		}
+
+	}
+
+	//! Examples for documentation
+	void
+	test1
+		( std::ostream & oss
+		)
+	{
 		// [DoxyExample01]
 
-		// value construction
-		std::size_t const expHigh{ 23u };
-		std::size_t const expWide{ 27u };
-		quadloco::dat::SizeHW const hwOrig{ expHigh, expWide };
-		std::size_t const expSize{ expHigh * expWide };
-		quadloco::dat::Spot const expCenter
-			{ .5*(double)expHigh, .5*(double)expWide };
-
-		// copy construction
-		quadloco::dat::SizeHW const hwCopy(hwOrig);
-		bool const copyIsSame{ hwCopy == hwOrig };
-
-		// attributes
-		std::size_t const gotHigh{ hwOrig.high() };
-		std::size_t const gotWide{ hwOrig.wide() };
-		std::size_t const gotSize{ hwOrig.size() };
-		quadloco::dat::Spot const gotCenter{ hwOrig.centerSpot() };
-
 		// [DoxyExample01]
-
-		if (! hwOrig.isValid())
-		{
-			oss << "Failure of validity test\n";
-			oss << "hwOrig: " << hwOrig << '\n';
-		}
-
-		if (! copyIsSame)
-		{
-			oss << "Failure of copy test\n";
-			oss << "hwOrig: " << hwOrig << '\n';
-			oss << "hwCopy: " << hwCopy << '\n';
-		}
-
-		bool const okaySizes
-			{  (gotHigh == expHigh)
-			&& (gotWide == expWide)
-			&& (gotSize == expSize)
-			};
-		if (! okaySizes)
-		{
-			oss << "Failure of sizes test\n";
-			oss << "expHigh: " << expHigh << '\n';
-			oss << "gotHigh: " << gotHigh << '\n';
-			oss << "expWide: " << expWide << '\n';
-			oss << "gotWide: " << gotWide << '\n';
-			oss << "expSize: " << expSize << '\n';
-			oss << "gotSize: " << gotSize << '\n';
-		}
 	}
 
 }
 
-//! Check behavior of NS
+//! Standard test case main wrapper
 int
 main
 	()
@@ -107,6 +100,7 @@ main
 	std::stringstream oss;
 
 	test0(oss);
+	test1(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

@@ -50,15 +50,6 @@ namespace sim
 	//! Functor for rendering simulated quadrant images
 	class Render
 	{
-		//! Camera with which to render image geometry and intensities
-		img::Camera const theCamera{};
-
-		//! Exterior orientation of camera w.r.t. quad target
-		rigibra::Transform const theCamWrtQuad{};
-
-		//! Quad target geometry in object space
-		obj::QuadTarget const theObjQuad{};
-
 		//! Cached data - must be set in ctor
 		Sampler const theSampler;
 
@@ -80,10 +71,7 @@ namespace sim
 				)
 				//!< XOR of quadloco::sim::Sampler::OptionFlags
 			)
-			: theCamera{ camera }
-			, theCamWrtQuad{ xCamWrtQuad }
-			, theObjQuad{ objQuad }
-			, theSampler(theCamera, theCamWrtQuad, theObjQuad, samplerOptions)
+			: theSampler(camera, xCamWrtQuad, objQuad, samplerOptions)
 		{ }
 
 		//! Construct rendering engine to simulate quad target images
@@ -106,6 +94,15 @@ namespace sim
 				)
 		{ }
 
+		//! True if this instance contains valid data
+		inline
+		bool
+		isValid
+			() const
+		{
+			return (theSampler.isValid());
+		}
+
 		//! Geometry of perspective image created by quadImage()
 		inline
 		img::QuadTarget
@@ -115,7 +112,7 @@ namespace sim
 			return theSampler.imgQuadTarget();
 		}
 
-		//! Simulate an image through camera at position xCamWrtQuad
+		//! Simulate image through ctor's camera and orientation
 		inline
 		dat::Grid<float>
 		quadImage
@@ -123,13 +120,13 @@ namespace sim
 				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
 			) const
 		{
-			dat::Grid<float> grid(theCamera.theFormat);
+			dat::Grid<float> grid(theSampler.format());
 			std::fill(grid.begin(), grid.end(), engabra::g3::null<float>());
 			injectTargetInto(&grid, numOverSamp);
 			return grid;
 		}
 
-		//! Simulate an image through camera at position xCamWrtQuad
+		//! Simulate image and set pixel values inside of provided grid
 		inline
 		void
 		injectTargetInto
@@ -140,7 +137,6 @@ namespace sim
 			) const
 		{
 			dat::Grid<float> & grid = *ptGrid;
-			constexpr double objDelta{ 1./1024. };
 
 /*
 double const & beg0 = theObjQuad.span0().theBeg;
@@ -168,9 +164,55 @@ double const & end1 = theObjQuad.span1().theEnd;
 			}
 		}
 
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "theSampler:\n" << theSampler
+				;
+
+			return oss.str();
+		}
+
 	}; // Render
 
 } // [sim]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::sim::Render const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::sim::Render const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
 

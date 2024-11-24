@@ -49,7 +49,7 @@ namespace prb
 {
 
 	//! Gaussian probability distribution in 1-dimension
-	struct Gauss1D
+	class Gauss1D
 	{
 		double const theMean{ std::numeric_limits<double>::quiet_NaN() };
 		double const theSigma{ std::numeric_limits<double>::quiet_NaN() };
@@ -69,6 +69,8 @@ namespace prb
 				{ std::sqrt(2. * std::numbers::pi_v<double>) };
 			return (1. / (sigma * rootTwoPi));
 		}
+
+	public:
 
 		// Construct invalid instance
 		inline

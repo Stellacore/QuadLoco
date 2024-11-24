@@ -141,18 +141,19 @@ namespace pix
 		{
 			PixType & min = minmax.first;
 			PixType & max = minmax.second;
-			min = std::numeric_limits<PixType>::max();
-			max = std::numeric_limits<PixType>::lowest();
 			for (FwdIter iter{beg} ; end != iter ; ++iter)
 			{
 				PixType const & pixVal = *iter;
-				if (pixVal < min)
+				if (isValid(pixVal))
 				{
-					min = pixVal;
-				}
-				if (max < pixVal)
-				{
-					max = pixVal;
+					if ((! isValid(min)) || (pixVal < min))
+					{
+						min = pixVal;
+					}
+					if ((! isValid(max)) || (max < pixVal))
+					{
+						max = pixVal;
+					}
 				}
 			}
 		}

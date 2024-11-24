@@ -49,7 +49,48 @@ namespace dat
 	//! A 2D region defined by two orthogonal 1D spans
 	struct Area
 	{
+		//! Two independent spans that define the 2D area
 		std::array<Span, 2u> theSpans;
+
+		//! For convenience to denote 2D data composed of fraction values
+		typedef std::array<double, 2u> Dyad;
+
+		//! Modulo (fractional) portion of someFrac: (0 <= principalFrac < 1)
+		inline
+		static
+		double
+		principalFraction
+			( double const & someFrac
+			)
+		{
+			double wholFrac{};
+			double const partFrac{ std::modf(someFrac, &wholFrac) };
+			// modf() rounds toward zero - need "always round downward"
+			double offset{ 0. };
+			if (someFrac < 0.)
+			{
+				if (0. != partFrac)
+				{
+					offset = 1.;
+				}
+			}
+			return partFrac + offset;
+		}
+
+		//! Fractional Dyad with components satisfy: 0 <= comp < 1.
+		inline
+		static
+		Dyad
+		principalFractionDyad
+			( Dyad const & someFracDyad
+			)
+		{
+			return Dyad
+				{ principalFraction(someFracDyad[0])
+				, principalFraction(someFracDyad[1])
+				};
+		}
+
 
 		//! True if both coordinates are not null.
 		inline
@@ -74,6 +115,30 @@ namespace dat
 				(  theSpans[0].contains(spot[0])
 				&& theSpans[1].contains(spot[1])
 				);
+		}
+
+		//! Dyad (std::array<double,2u>) of fractions in each direction at spot
+		inline
+		Dyad
+		fractionDyadAtSpot
+			( dat::Spot const & spot
+			) const
+		{
+			double const frac0{ theSpans[0].fractionAtValue(spot[0]) };
+			double const frac1{ theSpans[1].fractionAtValue(spot[1]) };
+			return std::array<double, 2u>{ frac0, frac1 };
+		}
+
+		//! Coordinate location at fractional values into the area.
+		inline
+		dat::Spot
+		spotAtFractionDyad
+			( Dyad const fracDyad
+			) const
+		{
+			double const value0{ theSpans[0].valueAtFraction(fracDyad[0]) };
+			double const value1{ theSpans[1].valueAtFraction(fracDyad[1]) };
+			return dat::Spot{ value0, value1 };
 		}
 
 		//! Descriptive information about this instance

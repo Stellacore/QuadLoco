@@ -100,15 +100,21 @@ namespace pix
 			( double const & intensityValue
 			) const
 		{
-			double const fullNumE{ theElectPerValue * intensityValue };
-			double const rootNumE{ std::sqrtf(fullNumE) };
-			std::size_t const distroMean{ static_cast<std::size_t>(rootNumE) };
+			double eShot{ 0. };
+			if (0. < intensityValue)
+			{
+				double const fullNumE{ theElectPerValue * intensityValue };
+				double const rootNumE{ std::sqrtf(fullNumE) };
+				std::size_t const distroMean
+					{ static_cast<std::size_t>(rootNumE) };
 
-			// distribution proportional to meanIntensity
-			std::poisson_distribution<std::size_t> distro(distroMean);
+				// distribution proportional to meanIntensity
+				std::poisson_distribution<std::size_t> distro(distroMean);
 
-			// noise electrons
-			return distro(prn::sGen);
+				// noise electrons
+				eShot = distro(prn::sGen);
+			}
+			return eShot;
 		}
 
 		//! Dark current noise approximation (ignoring temperature dependency)
@@ -118,7 +124,7 @@ namespace pix
 			( double const & expoSeconds = 1.
 			) const
 		{
-			double const pixVal{ valueForNumE(eNumberDark()) };
+			double const pixVal{ valueForNumE(eNumberDark(expoSeconds)) };
 			return pixVal;
 		}
 
@@ -151,6 +157,27 @@ namespace pix
 			return (pixValDark + pixValShot);
 		}
 
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "theElectPerValue: " << theElectPerValue
+				<< ' '
+				<< "theValuePerElect: " << theValuePerElect
+				;
+
+			return oss.str();
+		}
+
 
 	}; // Noise
 
@@ -158,4 +185,33 @@ namespace pix
 } // [pix]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::pix::Noise const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	/*
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::pix::Noise const & item
+		)
+	{
+		return item.isValid();
+	}
+	*/
+
+} // [anon/global]
 

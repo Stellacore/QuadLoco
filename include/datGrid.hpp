@@ -176,6 +176,9 @@ namespace dat
 			if (theData)
 			{
 				delete [] theData;
+				theHigh = 0u;
+				theWide = 0u;
+				theData = nullptr;
 			}
 		}
 
@@ -412,11 +415,11 @@ namespace dat
 		//! Row/Colum indices associated with iter value
 		inline
 		dat::RowCol
-		rowColFor
+		datRowColFor
 			( const_iterator const & iter
 			) const
 		{
-			size_t const dist(std::distance(begin(), iter));
+			size_t const dist(std::distance(cbegin(), iter));
 			return dat::RowCol
 				{ dist / hwSize().wide()
 				, dist % hwSize().wide()

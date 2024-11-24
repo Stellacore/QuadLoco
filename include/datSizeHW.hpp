@@ -32,6 +32,8 @@
  */
 
 
+#include "datSpot.hpp"
+
 #include <array>
 #include <iomanip>
 #include <iostream>
@@ -77,6 +79,16 @@ namespace dat
 			return (0u < size());
 		}
 
+		//! Index for ([0]:high, [1]:wide) !! No bounds checking!!
+		inline
+		std::size_t const &
+		operator[]
+			( std::size_t const & ndx
+			) const
+		{
+			return theHighWide[ndx];
+		}
+
 		//! Height
 		inline
 		std::size_t const &
@@ -104,14 +116,35 @@ namespace dat
 			return (theHighWide[0] * theHighWide[1]);
 		}
 
-		//! Index for ([0]:high, [1]:wide) !! No bounds checking!!
+		//! Length of perimeter in cells = 2u*(high()+wide())
 		inline
-		std::size_t const &
-		operator[]
-			( std::size_t const & ndx
-			) const
+		std::size_t
+		perimeter
+			() const
 		{
-			return theHighWide[ndx];
+			return (2u * (high() + wide()));
+		}
+
+		//! Subpixel precise length of the diagonal
+		inline
+		double
+		diagonal
+			() const
+		{
+			double const diag{ std::hypot((double)high(), (double)wide()) };
+			return diag;
+		}
+
+		//! Subpixel precise location of hwSize's center (in row,col frame)
+		inline
+		dat::Spot
+		centerSpot
+			() const
+		{
+			return dat::Spot
+				{ .5 * (double)high()
+				, .5 * (double)wide()
+				};
 		}
 
 		//! True if all dimensions are exactly equal

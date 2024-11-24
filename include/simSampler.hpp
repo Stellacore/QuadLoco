@@ -32,7 +32,9 @@
  */
 
 
+#include "cast.hpp"
 #include "datSpot.hpp"
+#include "datVec2D.hpp"
 #include "imgCamera.hpp"
 #include "imgQuadTarget.hpp"
 #include "objQuadTarget.hpp"
@@ -42,7 +44,10 @@
 #include <Rigibra>
 
 #include <functional>
+#include <iostream>
 #include <random>
+#include <sstream>
+#include <string>
 
 
 namespace quadloco
@@ -137,6 +142,28 @@ namespace sim
 			, theUseImageNoise{ isSet(optionsMask, UseImageNoise) }
 		{ }
 
+		//! True if this instance contains valid data
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  theCamera.isValid()
+				&& rigibra::isValid(theCamWrtQuad)
+				&& theObjQuad.isValid()
+				);
+		}
+
+		//! Grid (pixel) format for simulation
+		inline
+		dat::SizeHW
+		format
+			() const
+		{
+			return theCamera.theFormat;
+		}
+
 		//! Location on QuadTarget (in quad frame) associated with detSpot
 		inline
 		engabra::g3::Vector
@@ -194,7 +221,7 @@ namespace sim
 			double intenSample{ engabra::g3::null<double>() };
 
 			engabra::g3::Vector const pntInQuad{ quadLocFor(detSpot) };
-			if (isValid(pntInQuad))
+			if (engabra::g3::isValid(pntInQuad))
 			{
 				// sample intensity from quad target
 				dat::Spot const spotInQuad{ pntInQuad[0], pntInQuad[1] };
@@ -225,7 +252,7 @@ namespace sim
 			for (std::size_t nn{0u} ; nn < numSamps ; ++nn)
 			{
 				// place first spot on exact pixel location
-				constexpr dat::Spot halfSpot{ .5, .5 };
+				dat::Spot const halfSpot{ .5, .5 };
 				dat::Spot delta{ 0., 0. };
 				if (0u < nn)
 				{
@@ -233,7 +260,7 @@ namespace sim
 				}
 
 				dat::Spot const useSpot{ detSpot + halfSpot + delta };
-				if (isValid(useSpot))
+				if (::isValid(useSpot))
 				{
 					double const qSig{ quadSignalFor(useSpot) };
 					if (engabra::g3::isValid(qSig))
@@ -257,27 +284,27 @@ namespace sim
 			() const
 		{
 			using namespace engabra::g3;
-			std::function<Vector(dat::Spot)> const vecFrom
-				{ [] (dat::Spot const & spot)
-					{ return Vector{ spot[0], spot[1], 0. }; }
-				};
-			Vector const centerInExt
-				{ theCamWrtQuad(vecFrom(theObjQuad.centerSpot())) };
-			Vector const xMidInExt
-				{ theCamWrtQuad(vecFrom(theObjQuad.midSidePosX())) };
-			Vector const yMidInExt
-				{ theCamWrtQuad(vecFrom(theObjQuad.midSidePosY())) };
+			using namespace quadloco::dat;
 
-			dat::Spot const centerInDet
+			Vector const centerInExt
+				{ theCamWrtQuad(cast::vector(theObjQuad.centerSpot())) };
+			Vector const xMidInExt
+				{ theCamWrtQuad(cast::vector(theObjQuad.midSidePosX())) };
+			Vector const yMidInExt
+				{ theCamWrtQuad(cast::vector(theObjQuad.midSidePosY())) };
+
+			dat::Vec2D const centerInDet
 				{ theCamera.projectedSpotFor(centerInExt) };
-			dat::Spot const xMidInDet
+			dat::Vec2D const xMidInDet
 				{ theCamera.projectedSpotFor(xMidInExt) };
-			dat::Spot const yMidInDet
+			dat::Vec2D const yMidInDet
 				{ theCamera.projectedSpotFor(yMidInExt) };
 
-			Vector const center{ vecFrom(centerInDet) };
-			Vector const xDir{ direction(vecFrom(xMidInDet - centerInDet)) };
-			Vector const yDir{ direction(vecFrom(yMidInDet - centerInDet)) };
+			Vector const center{ cast::vector(centerInDet) };
+			Vector const xDir
+				{ direction(cast::vector(xMidInDet - centerInDet)) };
+			Vector const yDir
+				{ direction(cast::vector(yMidInDet - centerInDet)) };
 
 			img::QuadTarget const imgQuad{ center, xDir, yDir };
 			return imgQuad;
@@ -335,6 +362,31 @@ namespace sim
 			return intenSample;
 		}
 
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "    theCamera: " << theCamera
+				<< '\n'
+				<< "theCamWrtQuad: " << theCamWrtQuad
+				<< '\n'
+				<< "   theObjQuad: " << theObjQuad
+				<< '\n'
+				<< "theNoiseModel: " << theNoiseModel
+				;
+
+			return oss.str();
+		}
+
 	}; // Sampler
 
 
@@ -342,4 +394,31 @@ namespace sim
 } // [sim]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::sim::Sampler const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::sim::Sampler const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
 
