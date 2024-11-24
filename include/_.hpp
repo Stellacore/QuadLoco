@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief TODO
+ * \brief Top level file for quadloco::NM namespace
  *
  */
 
@@ -38,7 +38,7 @@
 namespace quadloco
 {
 
-/*! \brief TODO
+/*! \brief Namespaced functions and utilities for TODO
  */
 namespace NM
 {
