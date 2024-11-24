@@ -148,7 +148,7 @@ namespace img
 						img::Grad const gradSum{ gradHoodSum + gradCenter };
 
 						float const gMag{ magnitude(gradCenter) };
-						img::Grad const gDir{ (1.f/gMag) * gradCenter };
+						img::Grad const gDir{ (1./gMag) * gradCenter };
 						float const projDist{ dot(gradSum, gDir) };
 
 						constexpr float kTol{ 2.5};
@@ -433,7 +433,7 @@ namespace img
 			//
 			img::Grad const sum{ dir1 - dir2 };
 			float const mag{ magnitude(sum) };
-			img::Grad const mean{ (1.f/mag) * sum };
+			img::Grad const mean{ (1./mag) * sum };
 			return mean;
 		}
 

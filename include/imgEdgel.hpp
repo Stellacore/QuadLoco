@@ -133,7 +133,7 @@ namespace img
 					, (img::Vec2D<double>)gradient()
 					)
 				};
-			return (projection < 0.f);
+			return (projection < 0.);
 		}
 
 		//! True if location is in front of edge (relative to gradient)

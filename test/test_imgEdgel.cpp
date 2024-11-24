@@ -80,7 +80,7 @@ namespace
 		// expect hwSize(0u,0u) to be "behind" the gradient
 		// expect hwSize(high(),wide()) to be "in front of" the gradient
 		// expect location of gradient edge itself to be "in-front"
-		quadloco::img::Spot const spotBack{ 0.f, 0.f };
+		quadloco::img::Spot const spotBack{ 0., 0. };
 		quadloco::ras::RowCol const rcFront
 			{ hwSize.high()-1u, hwSize.wide()-1u };
 		bool const expBack{ false };
