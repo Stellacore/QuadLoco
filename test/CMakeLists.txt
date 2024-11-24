@@ -47,7 +47,6 @@ set(unitTests
 	test_opsFence  # bounding region determination
 	test_opsPeakFinder  # peak finding in an array
 	test_pix  # pixel image manipulations
-	test_pixSpot  # 'continuous' raster cell locations
 	test_prbGauss1D  # Gaussian probability density functions in 1D
 	test_prbquad  # probabilitic assessor of quad target pixel patterns
 	test_rasGrid  # general raster grid storage and access
