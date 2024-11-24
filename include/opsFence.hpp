@@ -42,7 +42,7 @@
 namespace quadloco
 {
 
-namespace dat
+namespace ops
 {
 
 	//! Fence object that expands to contains added values.
@@ -124,7 +124,7 @@ namespace dat
 
 	}; // Fence
 
-} // [dat]
+} // [ops]
 
 } // [quadloco]
 

@@ -38,7 +38,7 @@
 namespace quadloco
 {
 
-namespace dat
+namespace sig
 {
 
 	//! A half open interval
@@ -153,7 +153,7 @@ namespace dat
 	};
 
 
-} // [dat]
+} // [sig]
 
 } // [quadloco]
 

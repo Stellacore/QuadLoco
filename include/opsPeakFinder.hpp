@@ -45,7 +45,7 @@ namespace quadloco
 
 /*! \brief Stop level namespace for signal processing, quadloco::sig
  */
-namespace sig
+namespace ops
 {
 
 	//! Utility for finding inflection peaks in array of data
@@ -299,7 +299,7 @@ namespace sig
 	}; // PeakFinder
 
 
-} // [sig]
+} // [ops]
 
 } // [quadloco]
 

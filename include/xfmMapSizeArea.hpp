@@ -43,7 +43,7 @@
 namespace quadloco
 {
 
-namespace dat
+namespace xfm
 {
 	//!< A 2D scaling transformation between "Size" and "Area" spaces.
 	struct MapSizeArea
@@ -63,8 +63,8 @@ namespace dat
 		inline
 		explicit
 		MapSizeArea
-			( Area const & intoArea
-			, Area const & fromArea
+			( img::Area const & intoArea
+			, img::Area const & fromArea
 			, EdgeMode const & edgeMode = Clip
 			)
 			: theSize{ intoArea }
@@ -76,14 +76,14 @@ namespace dat
 		inline
 		explicit
 		MapSizeArea
-			( SizeHW const & hwGridSize
-			, Area const & fromArea
+			( ras::SizeHW const & hwGridSize
+			, img::Area const & fromArea
 			, EdgeMode const & edgeMode = Clip
 			)
 			: MapSizeArea
 				( img::Area
-					{ Span{ 0., (double)hwGridSize.high() }
-					, Span{ 0., (double)hwGridSize.wide() }
+					{ sig::Span{ 0., (double)hwGridSize.high() }
+					, sig::Span{ 0., (double)hwGridSize.wide() }
 					}
 				, fromArea
 				, edgeMode
@@ -105,15 +105,15 @@ namespace dat
 
 		//! Area spot associated with size spot location
 		inline
-		Spot
+		img::Spot
 		areaSpotForGridSpot
-			( Spot const & sizeSpot
+			( img::Spot const & sizeSpot
 			) const
 		{
 			img::Spot areaSpot{};
 			if (theSize.contains(sizeSpot))
 			{
-				Area::Dyad const fracDyad
+				img::Area::Dyad const fracDyad
 					{ theSize.fractionDyadAtSpot(sizeSpot) };
 				areaSpot = theArea.spotAtFractionDyad(fracDyad);
 			}
@@ -122,13 +122,14 @@ namespace dat
 
 		//! Grid spot location associated with area spot
 		inline
-		Spot
+		img::Spot
 		gridSpotForAreaSpot
-			( Spot const & areaSpot
+			( img::Spot const & areaSpot
 			) const
 		{
 			img::Spot sizeSpot{};
-			Area::Dyad const fracDyad{ theArea.fractionDyadAtSpot(areaSpot) };
+			img::Area::Dyad const fracDyad
+				{ theArea.fractionDyadAtSpot(areaSpot) };
 			if (Clip == theEdgeMode)
 			{
 				if (theArea.contains(areaSpot))
@@ -139,7 +140,7 @@ namespace dat
 			else
 			if (Wrap == theEdgeMode)
 			{
-				Area::Dyad const pFracDyad
+				img::Area::Dyad const pFracDyad
 					{ theArea.principalFractionDyad(fracDyad) };
 				sizeSpot = theSize.spotAtFractionDyad(pFracDyad);
 			}
@@ -169,7 +170,7 @@ namespace dat
 	}; // MapSizeArea
 
 
-} // [dat]
+} // [xfm]
 
 } // [quadloco]
 

@@ -47,7 +47,7 @@
 namespace quadloco
 {
 
-namespace dat
+namespace img
 {
 
 	//! Discrete grid location in row,colum order.
@@ -121,7 +121,7 @@ namespace dat
 	}; // Spot
 
 
-} // [dat]
+} // [img]
 
 } // [quadloco]
 

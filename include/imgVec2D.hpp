@@ -42,7 +42,7 @@
 namespace quadloco
 {
 
-namespace dat
+namespace img
 {
 	template <typename Type>
 	inline
@@ -249,7 +249,7 @@ namespace dat
 		return (vecA[0]*vecB[1] - vecA[1]*vecB[0]);
 	}
 
-} // [dat]
+} // [img]
 
 } // [quadloco]
 

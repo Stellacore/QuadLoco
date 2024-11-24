@@ -42,7 +42,7 @@
 namespace quadloco
 {
 
-namespace pix
+namespace img
 {
 
 	//! Extract derived data from grid
@@ -120,7 +120,7 @@ namespace pix
 	}; // Sampler
 
 
-} // [pix]
+} // [img]
 
 } // [quadloco]
 

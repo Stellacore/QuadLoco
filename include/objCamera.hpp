@@ -43,7 +43,7 @@ namespace quadloco
 
 /*! \brief Structs and utilities for supporting image data and processing.
  */
-namespace img
+namespace obj
 {
 	//! True if value in half open range: [minInclude <= value < maxExclude]
 	inline
@@ -199,7 +199,7 @@ namespace img
 	}; // Camera
 
 
-} // [img]
+} // [obj]
 
 } // [quadloco]
 

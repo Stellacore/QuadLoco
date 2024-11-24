@@ -141,7 +141,7 @@ namespace
 				Vec2D<double>(gotCornerLoc) - Vec2D<double>(gotCenter);
 		}
 		// Outer product structure
-		using quadloco::dat::outer;
+		using quadloco::img::outer;
 		double const & expR = expRadOuter;
 		double const expOP{ outer(expR*Spot{ 1., 0. }, expR*Spot{ 0., 1. }) };
 		double const gotOPa{ outer(gotDiffs[0], gotDiffs[1]) };

@@ -49,7 +49,7 @@
 namespace quadloco
 {
 
-namespace dat
+namespace img
 {
 
 	//! Circle containing bounding rectangle
@@ -137,7 +137,7 @@ namespace dat
 		 *       a quarter turn into line direction).
 		 */
 		inline
-		std::pair<img::Spot, dat::Spot>
+		std::pair<img::Spot, img::Spot>
 		operator()
 			( img::Vec2D<double> const & linePnt
 				//!< Any arbirary point on the line
@@ -200,7 +200,7 @@ namespace dat
 	}; // CircleIntersector
 
 
-} // [dat]
+} // [img]
 
 } // [quadloco]
 

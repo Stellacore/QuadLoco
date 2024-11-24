@@ -40,7 +40,7 @@
 namespace quadloco
 {
 
-namespace pix
+namespace img
 {
 
 	/*! \brief GRADent ELement structure representing a directed edge gradient.
@@ -121,7 +121,7 @@ namespace pix
 	}; // Grad
 
 
-} // [pix]
+} // [img]
 
 } // [quadloco]
 

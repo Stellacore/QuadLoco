@@ -70,7 +70,8 @@ namespace
 
 		// a well-defined edge for use in generating a simulated raster step
 		img::Edgel const expEdgel
-			{ pix::Spot{ (float)(hwSize.high()/2u), (float)(hwSize.wide()/2u) }
+			{ img::Spot
+				{ (double)(hwSize.high()/2u), (double)(hwSize.wide()/2u) }
 			, img::Grad{ 2., 3. }
 			};
 
@@ -80,7 +81,7 @@ namespace
 
 		// compute a full gradient grid - each cell has gradient of pixGrid
 		ras::Grid<img::Grad> const gradGrid
-			{ pix::grid::gradientGridFor(pixGrid) };
+			{ ras::grid::gradientGridFor(pixGrid) };
 
 		// expected configuration
 		img::Circle const boundingCircle
@@ -100,7 +101,7 @@ namespace
 			iter{gradGrid.cbegin()} ; gradGrid.cend() != iter ; ++iter)
 		{
 			// note original grid row/col location and gradient
-			pix::Spot const spot
+			img::Spot const spot
 				{ cast::pixSpot(gradGrid.datRowColFor(iter)) };
 			img::Grad const & grad = *iter;
 

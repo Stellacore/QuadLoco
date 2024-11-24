@@ -44,7 +44,7 @@
 namespace quadloco
 {
 
-namespace dat
+namespace ras
 {
 
 	//! Simple container for 2D raster area dimensions (high & wide)
@@ -181,7 +181,7 @@ namespace dat
 		}
 	};
 
-} // [dat]
+} // [ras]
 
 } // [quadloco]
 

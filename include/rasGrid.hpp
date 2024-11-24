@@ -46,7 +46,7 @@
 namespace quadloco
 {
 
-namespace dat
+namespace ras
 {
 	/*! \brief Holds typed data in layout with row/cols.
 
@@ -54,7 +54,7 @@ namespace dat
 	Iterations proceed as (0, 0), (0, 1), (0, 2) etc. (along rows)
 
 	\par Example
-	\snippet test/test_datGrid.cpp DoxyExample01
+	\snippet test/test_rasGrid.cpp DoxyExample01
 	*/
 	template < typename Type >
 	class Grid
@@ -501,7 +501,7 @@ namespace dat
 		 * \arg rows are separated with a newline ('\n')
 		 *
 		 * Example:
-		 * \snippet test_datGrid.cpp DoxyExample00
+		 * \snippet test_rasGrid.cpp DoxyExample00
 		 */
 		inline
 		std::string
@@ -579,7 +579,7 @@ namespace dat
 	};
 
 
-} // [dat]
+} // [ras]
 
 } // [quadloco]
 

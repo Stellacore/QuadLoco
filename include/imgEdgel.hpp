@@ -46,7 +46,7 @@
 namespace quadloco
 {
 
-namespace pix
+namespace img
 {
 
 	//! Edge element in raster space (location and gradient)
@@ -221,7 +221,7 @@ namespace pix
 
 	}; // Edgel
 
-} // [pix]
+} // [img]
 
 } // [quadloco]
 

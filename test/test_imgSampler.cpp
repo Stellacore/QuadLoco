@@ -52,7 +52,7 @@ namespace
 		// generate grid (image) with a well defined edge
 		quadloco::ras::SizeHW const hwSize{ 7u, 10u };
 		quadloco::img::Edgel const expEdgel
-			{ quadloco::pix::Spot{ 3., 4. }
+			{ quadloco::img::Spot{ 3., 4. }
 			, quadloco::img::Grad{ 2., 4. }
 			};
 
@@ -100,7 +100,7 @@ namespace
 
 		// fetch entire gradient grid
 		quadloco::ras::Grid<quadloco::img::Grad> const grads
-			{ quadloco::pix::grid::gradientGridFor(pixGrid) };
+			{ quadloco::ras::grid::gradientGridFor(pixGrid) };
 		// check if extracted samples match
 		std::size_t sameCount{ 0u };
 		for (quadloco::img::Edgel const & pixEdgel : pixEdgels)

@@ -46,7 +46,7 @@
 namespace quadloco
 {
 
-namespace hough
+namespace sig
 {
 
 	/*! \brief Hough line space "alpha,delta" parameter representation.
@@ -165,7 +165,7 @@ namespace hough
 		{
 			// compute intersection points on circle
 			img::CircleIntersector const intersector{ circle };
-			std::pair<img::Spot, dat::Spot> const solnPair
+			std::pair<img::Spot, img::Spot> const solnPair
 				{ intersector
 					( linePntFromEdgeLoc(edgel.location())
 					, lineDirFromEdgeDir(edgel.gradient())
@@ -260,7 +260,7 @@ namespace hough
 	}; // ParmAD
 
 
-} // [hough]
+} // [sig]
 
 } // [quadloco]
 

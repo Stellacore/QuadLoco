@@ -46,7 +46,7 @@
 namespace quadloco
 {
 
-namespace pix
+namespace ras
 {
 
 /*! \brief Pixel grid processing functions (e.g., for image processing)
@@ -248,7 +248,7 @@ namespace grid
 			std::size_t const colNdxEnd{ colNdxBeg + hwSize.wide() - stepFull };
 
 			// set border to null values
-			static Grad const gNull{};
+			static img::Grad const gNull{};
 			fillBorder(grads.begin(), grads.hwSize(), stepHalf, gNull);
 
 			float const scl{ 1.f / (float)stepFull };
@@ -265,7 +265,7 @@ namespace grid
 					float const colGrad
 						{ scl * (inGrid(row, colP1) - inGrid(row, colM1)) };
 
-					grads(row,col) = Grad{ rowGrad, colGrad };
+					grads(row,col) = img::Grad{ rowGrad, colGrad };
 				}
 			}
 		}
@@ -341,7 +341,7 @@ namespace grid
 
 } // [grid]
 
-} // [pix]
+} // [ras]
 
 } // [quadloco]
 

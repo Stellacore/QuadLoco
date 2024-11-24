@@ -24,7 +24,7 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::pix::grid:: functions
+\brief Unit tests (and example) code for quadloco::ras::grid:: functions
 */
 
 
@@ -33,6 +33,7 @@
 #include "imgChipSpec.hpp"
 #include "rasGrid.hpp"
 #include "imgGrad.hpp"
+#include "pix.hpp"
 #include "rasgrid.hpp"
 
 #include <algorithm>
@@ -60,17 +61,17 @@ namespace
 		// fill outer two rows and outer two columns
 		// This uses a slightly faster algorithm than the individual
 		// fill operations below
-		quadloco::pix::grid::fillBorder
+		quadloco::ras::grid::fillBorder
 			(grid.begin(), grid.hwSize(), 2u, 'x');
 
 		// fill outer one cell thick perimeter - one edge at a time
-		quadloco::pix::grid::fillInitRows
+		quadloco::ras::grid::fillInitRows
 			(grid.begin(), grid.hwSize(), 1u, 'W');
-		quadloco::pix::grid::fillInitCols
+		quadloco::ras::grid::fillInitCols
 			(grid.begin(), grid.hwSize(), 1u, 'W');
-		quadloco::pix::grid::fillLastCols
+		quadloco::ras::grid::fillLastCols
 			(grid.begin(), grid.hwSize(), 1u, 'W');
-		quadloco::pix::grid::fillLastRows
+		quadloco::ras::grid::fillLastRows
 			(grid.begin(), grid.hwSize(), 1u, 'W');
 
 		std::size_t const gotNumW // number of set 1-cell outer border
@@ -146,7 +147,7 @@ namespace
 			{ quadloco::ras::RowCol{ 0u, lrPixels.wide()/2u }
 			, quadloco::ras::SizeHW{ lrPixels.high(), lrPixels.wide()/2u }
 			};
-		quadloco::pix::grid::setSubGridValues(&lrPixels, lrFillSpec, foreVal);
+		quadloco::ras::grid::setSubGridValues(&lrPixels, lrFillSpec, foreVal);
 		quadloco::img::Grad const lrExpGrad{ 0., 10./(double)stepFull };
 
 		// Compute edge gradient across stepFull pixels
@@ -155,16 +156,16 @@ namespace
 		// [gridVal(rc + stepHalf) - gridVal(rc - stepHalf)] / (2*stepHalf)
 		// Vertical grid gradients
 		quadloco::ras::Grid<quadloco::img::Grad> const lrGrads
-			{ quadloco::pix::grid::gradientGridFor(lrPixels, stepHalf) };
+			{ quadloco::ras::grid::gradientGridFor(lrPixels, stepHalf) };
 		// Horizontal grid gradients
 		quadloco::ras::Grid<quadloco::img::Grad> const tbGrads
-			{ quadloco::pix::grid::gradientGridFor(tbPixels, stepHalf) };
+			{ quadloco::ras::grid::gradientGridFor(tbPixels, stepHalf) };
 
 		// [DoxyExample01]
 
 
-		using namespace quadloco::dat;
-		using namespace quadloco::pix;
+		using namespace quadloco::img;
+		using namespace quadloco::ras;
 
 		// Extract computed gradient values within edge regions
 		ChipSpec const tbChipSpec{ RowCol{ 3u, 1u }, SizeHW{ 2u, 6u } };
@@ -263,7 +264,7 @@ namespace
 			{ .25 + (double)rowNdx1
 			, .75 + (double)rowNdx2
 			};
-		double const gotVal{ quadloco::pix::grid::bilinValueAt(values, at) };
+		double const gotVal{ quadloco::ras::grid::bilinValueAt(values, at) };
 
 		// [DoxyExample02]
 
@@ -271,7 +272,7 @@ namespace
 			{ 2.25 + (double)rowNdx1
 			,  .75 + (double)rowNdx2
 			};
-		double const outVal{ quadloco::pix::grid::bilinValueAt(values, out) };
+		double const outVal{ quadloco::ras::grid::bilinValueAt(values, out) };
 		if (engabra::g3::isValid(outVal))
 		{
 			oss << "Failure of out of bounds not valid test(3)\n";
@@ -319,8 +320,6 @@ namespace
 
 		// check instantation with a complex type
 		using namespace quadloco;
-		using namespace quadloco::dat;
-		using namespace quadloco::pix::grid;
 		ras::Grid<std::complex<double> > cplxGrid(4u, 5u);
 		std::complex<double> const expValue{ 100., -200. };
 		std::fill	
@@ -328,7 +327,7 @@ namespace
 			, expValue
 			);
 		std::complex<double> const gotValue
-			{ pix::grid::bilinValueAt(cplxGrid, Spot{ 2., 3. }) };
+			{ ras::grid::bilinValueAt(cplxGrid, img::Spot{ 2., 3. }) };
 		// interp should be exact with the integer values used here
 		if (! (gotValue == expValue))
 		{

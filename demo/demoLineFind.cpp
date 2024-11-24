@@ -105,7 +105,7 @@ namespace sim
 
 } // [sim]
 
-namespace pix
+namespace img
 {
 	using namespace quadloco;
 
@@ -219,7 +219,7 @@ namespace pix
 	struct EdgeInfo
 	{
 		img::Edgel const theEdgel;
-		pix::Spot const theSpot;
+		img::Spot const theSpot;
 		img::Grad const theGrad;
 		double const theGradMag;
 		img::Grad const theGradDir;
@@ -303,8 +303,8 @@ namespace pix
 			// separation of the two lines
 			EdgeInfo const & ei1 = edgeInfos[ndx1];
 			EdgeInfo const & ei2 = edgeInfos[ndx2];
-			pix::Spot const & spot1 = ei1.theSpot;
-			pix::Spot const & spot2 = ei2.theSpot;
+			img::Spot const & spot1 = ei1.theSpot;
+			img::Spot const & spot2 = ei2.theSpot;
 			img::Grad const & dir1 = ei1.theGradDir;
 			img::Grad const & dir2 = ei2.theGradDir;
 			double const dist2from1{ dot((spot2 - spot1), dir1) };
@@ -449,7 +449,7 @@ namespace pix
 
 	}; // EdgePair
 
-} // [pix]
+} // [img]
 
 } // [quadloco]
 
@@ -498,7 +498,7 @@ namespace tmp
 	std::vector<GroupMembers>
 	lineIndexGroups
 		( std::vector<double> const & peakAngles
-		, std::vector<pix::EdgeInfo> const & edgeInfos
+		, std::vector<img::EdgeInfo> const & edgeInfos
 		, double const & angleSigma = 3.14*(10./180.)
 		)
 	{
@@ -517,7 +517,7 @@ namespace tmp
 			// determine closest spot for each edge direction
 			for (std::size_t ndxEdge{0u} ; ndxEdge < numEdges ; ++ndxEdge)
 			{
-				pix::EdgeInfo const & edgeInfo = edgeInfos[ndxEdge];
+				img::EdgeInfo const & edgeInfo = edgeInfos[ndxEdge];
 				img::Grad const & gradDir = edgeInfo.theGradDir;
 
 				// treat directions as spot locations (on unit circle)
@@ -570,7 +570,7 @@ main
 
 		// compute gradient at each pixel (interior to edge padding)
 		ras::Grid<img::Grad> const gradGrid
-			{ pix::grid::gradientGridFor(pixGrid) };
+			{ ras::grid::gradientGridFor(pixGrid) };
 
 		// assemble collection of edge elements from gradient grid
 	//	std::vector<img::Edgel> pixEdgels
@@ -588,23 +588,23 @@ main
 			{ pixEdgels.begin() + numToUse };
 		std::partial_sort
 			( pixEdgels.begin(), iterToUse, pixEdgels.end()
-			, [] (img::Edgel const & e1, pix::Edgel const & e2)
+			, [] (img::Edgel const & e1, img::Edgel const & e2)
 				{ return magnitude(e2.gradient()) < magnitude(e1.gradient()) ; }
 			);
 
 		// Individual edge properties
-		std::vector<pix::EdgeInfo> edgeInfos;
+		std::vector<img::EdgeInfo> edgeInfos;
 		edgeInfos.reserve(numToUse);
 
 		// compute useful properties for individual edges
 		for (std::size_t ndx{0u} ; ndx < numToUse ; ++ndx)
 		{
 			img::Edgel const & edgel = pixEdgels[ndx];
-			edgeInfos.emplace_back(pix::EdgeInfo(edgel));
+			edgeInfos.emplace_back(img::EdgeInfo(edgel));
 		}
 
 		// Candidate edgel pairs for opposite radial edges
-		std::vector<pix::EdgePair> edgePairs;
+		std::vector<img::EdgePair> edgePairs;
 		std::size_t const numWorstCase{ (numToUse * (numToUse - 1u)) / 2u };
 		edgePairs.reserve(numWorstCase);
 
@@ -614,7 +614,7 @@ main
 			for (std::size_t ndx2{ndx1+1} ; ndx2 < numToUse ; ++ndx2)
 			{
 				// remember the interesting edges
-				pix::EdgePair const edgePair(ndx1, ndx2, edgeInfos);
+				img::EdgePair const edgePair(ndx1, ndx2, edgeInfos);
 
 				// assign pseudo probability of radial edge pair
 				// which requires:
@@ -628,8 +628,8 @@ main
 					edgePairs.emplace_back(edgePair);
 
 					// update probability of individual edges
-					pix::EdgeInfo & ei1 = edgeInfos[ndx1];
-					pix::EdgeInfo & ei2 = edgeInfos[ndx2];
+					img::EdgeInfo & ei1 = edgeInfos[ndx1];
+					img::EdgeInfo & ei2 = edgeInfos[ndx2];
 					ei1.addWeight(wgtRadial);
 					ei2.addWeight(wgtRadial);
 				}
@@ -639,7 +639,7 @@ main
 		// create angle value accumulation (circular-wrapping) buffer
 		std::size_t const numAngBins{ 32u };
 		ang::Likely angleProbs(numAngBins);
-		for (pix::EdgePair const & edgePair : edgePairs)
+		for (img::EdgePair const & edgePair : edgePairs)
 		{
 			img::Grad const meanDir{ edgePair.meanDir(edgeInfos) };
 			double const angle{ edgePair.angle(meanDir) };
@@ -690,7 +690,7 @@ main
 			{
 				std::size_t const & ndxEdge = member.theNdxEdge;
 				double const & classMemberProb = member.theProb;
-				pix::EdgeInfo const & ei = edgeInfos[ndxEdge];
+				img::EdgeInfo const & ei = edgeInfos[ndxEdge];
 				ofsGroup
 					<< "edge:Spot: " << ei.theSpot
 					<< ' '
@@ -709,7 +709,7 @@ main
 		ofs << "# MeanDir[0,1] angle wgtFacing wgtLineGab wgtRadialPair\n";
 		ofs << "#\n";
 
-		for (pix::EdgePair const & edgePair : edgePairs)
+		for (img::EdgePair const & edgePair : edgePairs)
 		{
 			img::Grad const meanDir{ edgePair.meanDir(edgeInfos) };
 			using engabra::g3::io::fixed;

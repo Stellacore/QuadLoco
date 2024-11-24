@@ -33,6 +33,7 @@
 
 
 #include "ang.hpp"
+#include "angRing.hpp"
 
 #include <Engabra>
 
@@ -47,7 +48,7 @@
 namespace quadloco
 {
 
-namespace dat
+namespace ang
 {
 
 	//! \brief Circular buffer for managing angle data in binned arrays
@@ -181,7 +182,7 @@ namespace dat
 	}; // Ring
 
 
-} // [dat]
+} // [ang]
 
 } // [quadloco]
 

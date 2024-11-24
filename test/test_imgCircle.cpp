@@ -69,7 +69,7 @@ namespace
 		using namespace quadloco;
 		img::Spot const delta{ loc - linePnt };
 		img::Vec2D<double> const unitDir{ direction(lineDir) };
-		rej = dat::outer(lineDir, unitDir);
+		rej = img::outer(lineDir, unitDir);
 		return rej;
 	}
 
@@ -105,11 +105,11 @@ namespace
 
 		// circle intersection with vertical line
 		quadloco::img::CircleIntersector const intersector{ circle };
-		std::pair<quadloco::img::Spot, quadloco::dat::Spot> const gotPair
+		std::pair<quadloco::img::Spot, quadloco::img::Spot> const gotPair
 			{ intersector(spotOnLine, lineDir) };
 
 		// intersection points are symmetric above/below the test point
-		std::pair<quadloco::img::Spot, quadloco::dat::Spot> const expPair
+		std::pair<quadloco::img::Spot, quadloco::img::Spot> const expPair
 			{ quadloco::img::Spot{ 11., 20. - std::sqrt(rho*rho-dx*dx) }
 			, quadloco::img::Spot{ 11., 20. + std::sqrt(rho*rho-dx*dx) }
 			};
@@ -190,7 +190,7 @@ namespace
 		quadloco::img::CircleIntersector const intersector{ circle };
 		quadloco::img::Vec2D<double> const lineDir
 			{ quadloco::sig::ParmAD::lineDirFromEdgeDir(pixGrad) };
-		std::pair<quadloco::img::Spot, quadloco::dat::Spot> const gotPair
+		std::pair<quadloco::img::Spot, quadloco::img::Spot> const gotPair
 			{ intersector(spotOnLine, lineDir) };
 
 		// [DoxyExample00]

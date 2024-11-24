@@ -104,16 +104,17 @@ namespace
 		( std::ostream & oss
 		)
 	{
-		using namespace quadloco::dat;
-		SizeHW const fullSizeHW{  5u, 10u };
-		SizeHW const chipSizeHW{  2u,  3u };
-		RowCol const origIsIn{ 3u, 7u }; // most right/bottom that fits
-		RowCol const origOut1{ 4u, 7u }; // most right/bottom that fits
-		RowCol const origOut2{ 3u, 8u }; // most right/bottom that fits
+		using namespace quadloco;
 
-		ChipSpec const specIsIn{ origIsIn, chipSizeHW };
-		ChipSpec const specOut1{ origOut1, chipSizeHW };
-		ChipSpec const specOut2{ origOut2, chipSizeHW };
+		ras::SizeHW const fullSizeHW{  5u, 10u };
+		ras::SizeHW const chipSizeHW{  2u,  3u };
+		ras::RowCol const origIsIn{ 3u, 7u }; // most right/bottom that fits
+		ras::RowCol const origOut1{ 4u, 7u }; // most right/bottom that fits
+		ras::RowCol const origOut2{ 3u, 8u }; // most right/bottom that fits
+
+		img::ChipSpec const specIsIn{ origIsIn, chipSizeHW };
+		img::ChipSpec const specOut1{ origOut1, chipSizeHW };
+		img::ChipSpec const specOut2{ origOut2, chipSizeHW };
 
 		bool const okayIsIn{ specIsIn.fitsInto(fullSizeHW) };
 		if (! okayIsIn)

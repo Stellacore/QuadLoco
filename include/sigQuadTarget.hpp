@@ -45,7 +45,7 @@
 namespace quadloco
 {
 
-namespace img
+namespace sig
 {
 	//! Geometric description for perspective image of an obj::QuadTarget
 	struct QuadTarget
@@ -187,7 +187,7 @@ namespace img
 	}; // QuadTarget
 
 
-} // [img]
+} // [sig]
 
 } // [quadloco]
 

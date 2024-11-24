@@ -52,26 +52,25 @@ namespace
 
 		// [DoxyExample00]
 	
-		using namespace quadloco::dat;
-		Vec2D<double> const vecA{ 3., 4. };
-		Vec2D<double> const vecB{ -4., 3. };
+		img::Vec2D<double> const vecA{ 3., 4. };
+		img::Vec2D<double> const vecB{ -4., 3. };
 
-		Vec2D<double> const gotUnitA{ direction(vecA) };
+		img::Vec2D<double> const gotUnitA{ direction(vecA) };
 		double const gotMagA{ magnitude(vecA) };
 		double const gotDotAB{ dot(vecA, vecB) };
 		double const gotOuterAB{ outer(vecA, vecB) };
 
-		Vec2D<double> const gotAddAB{ vecA + vecB };
-		Vec2D<double> const gotSubAB{ vecA - vecB };
+		img::Vec2D<double> const gotAddAB{ vecA + vecB };
+		img::Vec2D<double> const gotSubAB{ vecA - vecB };
 
 		// [DoxyExample00]
 
 		double const expMagA{ std::hypot(3., 4.)  };
-		Vec2D<double> const expUnitA{ (1./expMagA)*3., (1./expMagA)*4. };
+		img::Vec2D<double> const expUnitA{ (1./expMagA)*3., (1./expMagA)*4. };
 		double const expDotAB{ 3.*(-4.) + 4.*3. };
 		double const expOuterAB{ 3.*3. - (-4.)*4. };
-		Vec2D<double> const expAddAB{ 3. + (-4.), 4.+3. };
-		Vec2D<double> const expSubAB{ 3. - (-4.), 4.-3. };
+		img::Vec2D<double> const expAddAB{ 3. + (-4.), 4.+3. };
+		img::Vec2D<double> const expSubAB{ 3. - (-4.), 4.-3. };
 
 		if (! engabra::g3::nearlyEquals(gotMagA, expMagA))
 		{

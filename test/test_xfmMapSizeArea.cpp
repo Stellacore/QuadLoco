@@ -121,13 +121,13 @@ namespace
 		//   (min,min) = { -10.,  9. }    (min,min) = {   0.,  1. }
 		//   (max,max) = {  -9., 10. }    (max,max) = {   0.,  1. }
 
-		using FromInto = std::pair<img::Spot, dat::Spot>;
+		using FromInto = std::pair<img::Spot, img::Spot>;
 		std::vector<FromInto> const pairFIs
-			{ { img::Spot{ -10.0,   9.0 }, dat::Spot{  10.0,  10.0 } }
+			{ { img::Spot{ -10.0,   9.0 }, img::Spot{  10.0,  10.0 } }
 				// (max,max) corner wraps back into (min,min)
-			, { img::Spot{  -9.0,  10.0 }, dat::Spot{  10.0,  10.0 } }
-			, { img::Spot{  -9.5,   9.5 }, dat::Spot{  10.5,  10.5 } }
-			, { img::Spot{  -8.5,   8.5 }, dat::Spot{  10.5,  10.5 } }
+			, { img::Spot{  -9.0,  10.0 }, img::Spot{  10.0,  10.0 } }
+			, { img::Spot{  -9.5,   9.5 }, img::Spot{  10.5,  10.5 } }
+			, { img::Spot{  -8.5,   8.5 }, img::Spot{  10.5,  10.5 } }
 			};
 
 		for (FromInto const & pairFI : pairFIs)

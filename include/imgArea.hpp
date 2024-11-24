@@ -43,14 +43,14 @@
 namespace quadloco
 {
 
-namespace dat
+namespace img
 {
 
 	//! A 2D region defined by two orthogonal 1D spans
 	struct Area
 	{
 		//! Two independent spans that define the 2D area
-		std::array<Span, 2u> theSpans;
+		std::array<sig::Span, 2u> theSpans;
 
 		//! For convenience to denote 2D data composed of fraction values
 		typedef std::array<double, 2u> Dyad;
@@ -164,7 +164,7 @@ namespace dat
 	}; // Area
 
 
-} // [dat]
+} // [img]
 
 } // [quadloco]
 

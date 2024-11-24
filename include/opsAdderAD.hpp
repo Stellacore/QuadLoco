@@ -49,7 +49,7 @@
 namespace quadloco
 {
 
-namespace hough
+namespace ops
 {
 
 	//! Accumulation buffer for hough alpha,delta parameters
@@ -455,7 +455,7 @@ std::cout << "weightPP: " << weightPP << '\n';
 	}; // AdderAD
 
 
-} // [hough]
+} // [ops]
 
 } // [quadloco]
 

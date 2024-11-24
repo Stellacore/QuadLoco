@@ -137,7 +137,7 @@ namespace prb
 				std::size_t numValid{ 0u };
 
 				Type const ppVal
-					{ pix::grid::bilinValueAt<Type>(pixGrid, ppSpot) };
+					{ ras::grid::bilinValueAt<Type>(pixGrid, ppSpot) };
 				if (isValid(ppVal))
 				{
 					ppVals.emplace_back(ppVal);
@@ -145,7 +145,7 @@ namespace prb
 				}
 
 				Type const npVal
-					{ pix::grid::bilinValueAt<Type>(pixGrid, npSpot) };
+					{ ras::grid::bilinValueAt<Type>(pixGrid, npSpot) };
 				if (isValid(npVal))
 				{
 					npVals.emplace_back(npVal);
@@ -153,7 +153,7 @@ namespace prb
 				}
 
 				Type const nnVal
-					{ pix::grid::bilinValueAt<Type>(pixGrid, nnSpot) };
+					{ ras::grid::bilinValueAt<Type>(pixGrid, nnSpot) };
 				if (isValid(nnVal))
 				{
 					nnVals.emplace_back(nnVal);
@@ -161,7 +161,7 @@ namespace prb
 				}
 
 				Type const pnVal
-					{ pix::grid::bilinValueAt<Type>(pixGrid, pnSpot) };
+					{ ras::grid::bilinValueAt<Type>(pixGrid, pnSpot) };
 				if (isValid(pnVal))
 				{
 					pnVals.emplace_back(pnVal);

@@ -30,36 +30,36 @@ set(unitTests
 
 	test_angLikely  # angular value likelihood estimation
 	test_cast  # data type conversion operations
-	test_datArea  # a 2D range of values
-	test_datChipSpec  # a 2D sub region of a larger area
-	test_datCircle  # geometric circle (and line intersection)
-	test_datFence  # bounding region determination
-	test_datGrid  # general raster grid storage and access
-	test_datMapSizeArea  # raster cell to continous area mapping
-	test_datRing  # wrap around data structures e.g. for angles
-	test_datRowCol  # discete raster cell locations
-	test_datSizeHW  # basic "high/wide" area boundary (half open)
-	test_datSpan  # half open interval (include start, excludes end)
-	test_datSpot  # 'continuous' raster cell locations
-	test_datVec2D  # support for 2D vector operations
-	test_houghAdderAD  # accumulatio buffer for hough alpha,delta parms
-	test_houghFindAD  # find maxima in sig::ParmAD space
-	test_houghParmAD  # Hough "alpha,delta" parameter representation
-	test_imgCamera  # simplified ideal perspective camera
-	test_imgQuadTarget  # represent perspective image of obj::QuadTarget
+	test_angRing  # wrap around data structures e.g. for angles
+##	test_sigFindAD  # find maxima in sig::ParmAD space
+	test_imgArea  # a 2D range of values
+	test_imgChipSpec  # a 2D sub region of a larger area
+	test_imgCircle  # geometric circle (and line intersection)
+	test_imgEdgel  # individual pixel edge information (Spot and Grad)
+	test_imgGrad  # pixel Gradent element type and functions
+##	test_imgSampler  # pixel grid sampling functions
+	test_imgSpot  # 'continuous' raster cell locations
+	test_imgVec2D  # support for 2D vector operations
 	test_io  # basic i/o support (e.g. pgm images)
+	test_objCamera  # simplified ideal perspective camera
 	test_objQuadTarget  # represent physical target object
-	test_pixEdgel  # individual pixel edge information (Spot and Grad)
-	test_pixGrad  # pixel Gradent element type and functions
-	test_pixgrid  # pixel/grid functions (e.g. image processing)
+	test_opsAdderAD  # accumulatio buffer for hough alpha,delta parms
+	test_opsFence  # bounding region determination
+	test_opsPeakFinder  # peak finding in an array
 	test_pix  # pixel image manipulations
-	test_pixSampler  # pixel grid sampling functions
 	test_pixSpot  # 'continuous' raster cell locations
 	test_prbGauss1D  # Gaussian probability density functions in 1D
 	test_prbquad  # probabilitic assessor of quad target pixel patterns
-	test_sigPeakFinder  # peak finding in an array
+	test_rasGrid  # general raster grid storage and access
+	test_rasgrid  # pixel/grid functions (e.g. image processing)
+	test_rasRowCol  # discete raster cell locations
+	test_rasSizeHW  # basic "high/wide" area boundary (half open)
+##	test_sigParmAD  # Hough "alpha,delta" parameter representation
+	test_sigQuadTarget  # represent perspective image of obj::QuadTarget
+	test_sigSpan  # half open interval (include start, excludes end)
 	test_simRender  # simulation of perspective images of quad target
 	test_simSampler  # simulation of image intensity sampling
+	test_xfmMapSizeArea  # raster cell to continous area mapping
 
 	)
 

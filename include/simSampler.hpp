@@ -284,7 +284,6 @@ namespace sim
 			() const
 		{
 			using namespace engabra::g3;
-			using namespace quadloco::dat;
 
 			Vector const centerInExt
 				{ theCamWrtQuad(cast::vector(theObjQuad.centerSpot())) };

@@ -40,7 +40,7 @@
 namespace quadloco
 {
 
-namespace dat
+namespace img
 {
 
 	/*! \brief Maps locations between full size raster and a working sub area.
@@ -52,8 +52,8 @@ namespace dat
 	 */
 	struct ChipSpec
 	{
-		RowCol const theOrigRC;
-		SizeHW const theSizeHW;
+		ras::RowCol const theOrigRC;
+		ras::SizeHW const theSizeHW;
 
 
 		//! True if this instance contains non trivial values
@@ -67,7 +67,7 @@ namespace dat
 
 		//! Size of this chip - convenience for theSizeHW
 		inline
-		SizeHW const &
+		ras::SizeHW const &
 		hwSize
 			() const
 		{
@@ -114,7 +114,7 @@ namespace dat
 		inline
 		bool
 		fitsInto
-			( SizeHW const & fullSizeHW
+			( ras::SizeHW const & fullSizeHW
 			) const
 		{
 			// Note that high/wide are one more than max row/col index
@@ -132,13 +132,13 @@ namespace dat
 
 		//! Chip row/col expression given full image row/col (no checking)
 		inline
-		RowCol
+		ras::RowCol
 		rcChipForFullRC
-			( RowCol const & rcInFull
+			( ras::RowCol const & rcInFull
 			) const
 		{
 			// rcInChip = (rcInFull - theOrigRC)
-			return RowCol
+			return ras::RowCol
 				{ rcInFull.row() - theOrigRC.row()
 				, rcInFull.col() - theOrigRC.col()
 				};
@@ -146,15 +146,15 @@ namespace dat
 
 		//! Full image row/col expression from chip row/col (no checking)
 		inline
-		RowCol
+		ras::RowCol
 		rcFullForChipRC
-			( RowCol const & rcInChip
+			( ras::RowCol const & rcInChip
 			) const
 		{
 			// rcInChip = (rcInFull - theOrigRC)
 			// rcInChip + theOrigRC = rcInFull
 			// rcInFull = rcInChip + theOrigRC
-			return RowCol
+			return ras::RowCol
 				{ rcInChip.row() + theOrigRC.row()
 				, rcInChip.col() + theOrigRC.col()
 				};
@@ -162,20 +162,20 @@ namespace dat
 
 		//! The row/col location into (an assumed) full size image
 		inline
-		RowCol
+		ras::RowCol
 		fullRowColFor
 			( std::size_t const & rowInChip
 			, std::size_t const & colInChip
 			) const
 		{
-			return fullRowColFor(RowCol{ rowInChip, colInChip });
+			return fullRowColFor(ras::RowCol{ rowInChip, colInChip });
 		}
 
 		//! The row/col location into (an assumed) full size image
 		inline
-		RowCol
+		ras::RowCol
 		fullRowColFor
-			( RowCol const & rcInChip
+			( ras::RowCol const & rcInChip
 			) const
 		{
 			return rcFullForChipRC(rcInChip);
@@ -199,8 +199,8 @@ namespace dat
 				{
 					for (std::size_t cChip{0u} ; cChip < wideChip ; ++cChip)
 					{
-						RowCol const rcChip{ rChip, cChip };
-						RowCol const rcFull{ rcFullForChipRC(rcChip) };
+						ras::RowCol const rcChip{ rChip, cChip };
+						ras::RowCol const rcFull{ rcFullForChipRC(rcChip) };
 						(*ptChipData)(rcChip) = fullData(rcFull);
 					}
 				}
@@ -226,8 +226,8 @@ namespace dat
 				{
 					for (std::size_t cChip{0u} ; cChip < wideChip ; ++cChip)
 					{
-						RowCol const rcChip{ rChip, cChip };
-						RowCol const rcFull{ rcFullForChipRC(rcChip) };
+						ras::RowCol const rcChip{ rChip, cChip };
+						ras::RowCol const rcFull{ rcFullForChipRC(rcChip) };
 						(*ptFullData)(rcFull) = chipData(rcChip);
 					}
 				}
@@ -258,7 +258,7 @@ namespace dat
 	}; // ChipSpec
 
 
-} // [dat]
+} // [img]
 
 } // [quadloco]
 

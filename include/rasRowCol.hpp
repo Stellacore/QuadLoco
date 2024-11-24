@@ -43,7 +43,7 @@
 namespace quadloco
 {
 
-namespace dat
+namespace ras
 {
 
 	//! Discrete grid location in row,colum order.
@@ -108,7 +108,7 @@ namespace dat
 	}; // RowCol
 
 
-} // [dat]
+} // [ras]
 
 } // [quadloco]
 
