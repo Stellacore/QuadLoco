@@ -147,11 +147,11 @@ namespace img
 					{
 						img::Grad const gradSum{ gradHoodSum + gradCenter };
 
-						float const gMag{ magnitude(gradCenter) };
+						double const gMag{ magnitude(gradCenter) };
 						img::Grad const gDir{ (1./gMag) * gradCenter };
-						float const projDist{ dot(gradSum, gDir) };
+						double const projDist{ dot(gradSum, gDir) };
 
-						constexpr float kTol{ 2.5};
+						constexpr double kTol{ 2.5};
 						if (kTol < projDist)
 						{
 							img::Edgel const edgel
@@ -233,7 +233,7 @@ namespace img
 			: theSpot{ edgel.location() }
 			, theGrad{ edgel.gradient() }
 			, theGradMag{ magnitude(theGrad) }
-			, theGradDir{ (float)(1./theGradMag) * theGrad }
+			, theGradDir{ (1./theGradMag) * theGrad }
 		{ }
 
 		//! Multiple prob into running probability
@@ -432,8 +432,7 @@ namespace img
 			// NOTE: treat dir1 as positive direction and negate dir2
 			//
 			img::Grad const sum{ dir1 - dir2 };
-			float const mag{ magnitude(sum) };
-			img::Grad const mean{ (1./mag) * sum };
+			img::Grad const mean{ direction(sum) };
 			return mean;
 		}
 
