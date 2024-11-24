@@ -28,6 +28,7 @@ set(unitTests
 	_  # test template
 	test_Version  # test project version info retrieval
 
+	test_angLikely  # angular value likelihood estimation
 	test_cast  # data type conversion operations
 	test_datArea  # a 2D range of values
 	test_datChipSpec  # a 2D sub region of a larger area
@@ -56,6 +57,7 @@ set(unitTests
 	test_pixSpot  # 'continuous' raster cell locations
 	test_prbGauss1D  # Gaussian probability density functions in 1D
 	test_prbquad  # probabilitic assessor of quad target pixel patterns
+	test_sigPeakFinder  # peak finding in an array
 	test_simRender  # simulation of perspective images of quad target
 	test_simSampler  # simulation of image intensity sampling
 
