@@ -33,7 +33,6 @@
 
 
 #include "ang.hpp"
-#include "angRing.hpp"
 
 #include <Engabra>
 
