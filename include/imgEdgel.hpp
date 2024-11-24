@@ -34,7 +34,8 @@
 
 #include "cast.hpp"
 #include "imgGrad.hpp"
-#include "pixSpot.hpp"
+#include "imgSpot.hpp"
+#include "imgVec2D.hpp"
 
 #include <Engabra>
 
@@ -53,7 +54,7 @@ namespace img
 	class Edgel
 	{
 		//! Any point on the line
-		pix::Spot theSpot{};
+		img::Spot theSpot{};
 
 		//! Direction of the (positive) gradient across the edge
 		img::Grad theGrad{};
@@ -70,7 +71,7 @@ namespace img
 		inline
 		explicit
 		Edgel
-			( pix::Spot const & spot
+			( img::Spot const & spot
 			, img::Grad const & grad
 			)
 			: theSpot{ spot }
@@ -84,13 +85,13 @@ namespace img
 			( ras::RowCol const & rowcol
 			, img::Grad const & grad
 			)
-			: theSpot{ cast::pixSpot(rowcol) }
+			: theSpot{ cast::imgSpot(rowcol) }
 			, theGrad{ grad }
 		{ }
 
 		//! Location of this edgel
 		inline
-		pix::Spot const &
+		img::Spot const &
 		location
 			() const
 		{
@@ -118,47 +119,20 @@ namespace img
 				);
 		}
 
-		//! True if location is in front of edge (relative to gradient)
-		inline
-		bool
-		rcInFront
-			( img::Spot const & rcDatSpot
-			) const
-		{
-			return (! rcInBack(rcDatSpot));
-		}
-
 		//! True if location is behind the edge (relative to gradient)
 		inline
 		bool
 		rcInBack
-			( img::Spot const & rcDatSpot
+			( img::Spot const & imgSpot
 			) const
 		{
-			return rcInBack
-				(pix::Spot{ (float)rcDatSpot.row(), (float)rcDatSpot.col() });
-		}
-
-		//! True if location is in front of edge (relative to gradient)
-		inline
-		bool
-		rcInFront
-			( pix::Spot const & rcPixSpot
-			) const
-		{
-			return rcInFront	
-				(img::Spot{ (double)rcPixSpot.row(), (double)rcPixSpot.col() });
-		}
-
-		//! True if location is behind the edge (relative to gradient)
-		inline
-		bool
-		rcInBack
-			( pix::Spot const & rcPixSpot
-			) const
-		{
-			pix::Spot const delta{ rcPixSpot - location() };
-			float const projection{ dot(delta, gradient()) };
+			img::Spot const delta{ imgSpot - location() };
+			double const projection
+				{ dot
+					( (img::Vec2D<double>)delta
+					, (img::Vec2D<double>)gradient()
+					)
+				};
 			return (projection < 0.f);
 		}
 
@@ -166,11 +140,20 @@ namespace img
 		inline
 		bool
 		rcInFront
+			( img::Spot const & imgSpot
+			) const
+		{
+			return (! rcInBack(imgSpot));
+		}
+
+		//! True if location is in front of edge (relative to gradient)
+		inline
+		bool
+		rcInFront
 			( ras::RowCol const & rowcol
 			) const
 		{
-			return rcInFront	
-				(pix::Spot{ (float)rowcol.row(), (float)rowcol.col() });
+			return rcInFront(cast::imgSpot(rowcol));
 		}
 
 		//! True if location is behind the edge (relative to gradient)
@@ -180,8 +163,7 @@ namespace img
 			( ras::RowCol const & rowcol
 			) const
 		{
-			return rcInBack
-				(pix::Spot{ (float)rowcol.row(), (float)rowcol.col() });
+			return rcInBack(cast::imgSpot(rowcol));
 		}
 
 		//! True if components are same as those of other within tol

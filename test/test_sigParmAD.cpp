@@ -88,10 +88,10 @@ namespace
 		quadloco::img::Circle const circle{ center, radius };
 
 		// raster edge element
-		using namespace quadloco::pix;
-		Spot const pixLoc{ 10.f, 21.f }; // shift in col has no effect
-		Grad const pixGrad{ 1.f, 0.f }; // grad in row dir
-		Edgel const edgel{ pixLoc, pixGrad };
+		using namespace quadloco;
+		img::Spot const pixLoc{ 10.f, 21.f }; // shift in col has no effect
+		img::Grad const pixGrad{ 1.f, 0.f }; // grad in row dir
+		img::Edgel const edgel{ pixLoc, pixGrad };
 
 		// the line segmeng of interest is perpendicular to edge gradient
 		quadloco::img::Vec2D<double> const lineDir

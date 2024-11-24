@@ -71,7 +71,7 @@ namespace
 		// Edge element (assume in middle of raster)
 		constexpr quadloco::ras::SizeHW hwSize{ 1024u, 2048u };
 		quadloco::img::Edgel const edgel
-			{ quadloco::pix::Spot{ 500.25f, 1000.75f } // edge location
+			{ quadloco::img::Spot{ 500.25f, 1000.75f } // edge location
 //			, quadloco::img::Grad{ 1.75f, 2.25f }  // gradient at that loc
 			, quadloco::img::Grad{ 1.00f, 0.00f }  // gradient at that loc
 			};
@@ -80,14 +80,14 @@ namespace
 		// expect hwSize(0u,0u) to be "behind" the gradient
 		// expect hwSize(high(),wide()) to be "in front of" the gradient
 		// expect location of gradient edge itself to be "in-front"
-		quadloco::pix::Spot const spotBack{ 0.f, 0.f };
+		quadloco::img::Spot const spotBack{ 0.f, 0.f };
 		quadloco::ras::RowCol const rcFront
 			{ hwSize.high()-1u, hwSize.wide()-1u };
 		bool const expBack{ false };
 		bool const gotBack{ edgel.rcInFront(spotBack) };
 		bool const expFront{ true };
 		bool const gotFront{ edgel.rcInFront(rcFront) };
-		quadloco::pix::Spot const spotOnEdge{ edgel.location() }; // not behind
+		quadloco::img::Spot const spotOnEdge{ edgel.location() }; // not behind
 		bool const expOnEdge{ true };
 		bool const gotOnEdge{ edgel.rcInFront(spotOnEdge) };
 

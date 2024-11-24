@@ -207,7 +207,7 @@ namespace img
 		for (std::size_t nn{0u} ; nn < numToUse ; ++nn)
 		{
 			img::Edgel const & edgel = pixEdgels[nn];
-			ras::RowCol const rc{ cast::datRowCol(edgel.location()) };
+			ras::RowCol const rc{ cast::rasRowCol(edgel.location()) };
 			magGrid(rc) = magnitude(edgel.gradient());
 		}
 

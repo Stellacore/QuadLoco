@@ -62,12 +62,12 @@ namespace sig
 		double theDelta{ engabra::g3::null<double>() };
 
 
-		//! Point that contains line segmenet (same point as pix::Spot)
+		//! Point that contains line segmenet (same point as img::Spot)
 		inline
 		static
 		img::Vec2D<double>
 		linePntFromEdgeLoc
-			( pix::Spot const & spot
+			( img::Spot const & spot
 			)
 		{
 			return img::Vec2D<double>

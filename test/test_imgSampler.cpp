@@ -106,7 +106,7 @@ namespace
 		for (quadloco::img::Edgel const & pixEdgel : pixEdgels)
 		{
 			quadloco::ras::RowCol const atRowCol
-				{ quadloco::cast::datRowCol(pixEdgel.location()) };
+				{ quadloco::cast::rasRowCol(pixEdgel.location()) };
 			quadloco::img::Grad const & expGrad = grads(atRowCol);
 			quadloco::img::Grad const & gotGrad = pixEdgel.gradient();
 			if (nearlyEquals(gotGrad, expGrad))

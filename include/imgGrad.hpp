@@ -48,31 +48,31 @@ namespace img
 	 * \note For computing gradient values over entire ras::Grid instances
 	 * refer to functions in rasgrid.hpp (e.g. gradientGridFor()).
 	 */
-	struct Grad : public img::Vec2D<float>
+	struct Grad : public img::Vec2D<double>
 	{
 
 		inline
 		explicit
 		Grad
 			()
-			: img::Vec2D<float>{}
+			: img::Vec2D<double>{}
 		{ }
 
 		inline
 		explicit
 		Grad
-			( float const val0
-			, float const val1
+			( double const val0
+			, double const val1
 			)
-			: img::Vec2D<float>{ val0, val1 }
+			: img::Vec2D<double>{ val0, val1 }
 		{ }
 
 		inline
 		explicit
 		Grad
-			( img::Vec2D<float> const vec2D
+			( img::Vec2D<double> const vec2D
 			)
-			: img::Vec2D<float>{ vec2D.theData }
+			: img::Vec2D<double>{ vec2D.theData }
 		{ }
 
 		inline
@@ -83,7 +83,7 @@ namespace img
 
 		//! Alias for (*this)[0]
 		inline
-		float const &
+		double const &
 		dx
 			() const
 		{
@@ -92,7 +92,7 @@ namespace img
 
 		//! Alias for (*this)[1]
 		inline
-		float const &
+		double const &
 		dy
 			() const
 		{
@@ -101,7 +101,7 @@ namespace img
 
 		//! Alias for (*this)[0]
 		inline
-		float const &
+		double const &
 		drow
 			() const
 		{
@@ -110,7 +110,7 @@ namespace img
 
 		//! Alias for (*this)[1]
 		inline
-		float const &
+		double const &
 		dcol
 			() const
 		{
@@ -156,7 +156,7 @@ namespace
 	nearlyEquals
 		( quadloco::img::Grad const & itemA
 		, quadloco::img::Grad const & itemB
-		, float const & tol = std::numeric_limits<float>::epsilon()
+		, double const & tol = std::numeric_limits<double>::epsilon()
 		)
 	{
 		return itemA.nearlyEquals(itemB, tol);

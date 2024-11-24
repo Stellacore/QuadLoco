@@ -68,10 +68,10 @@ namespace
 
 		// grid location spot associated with parmAD
 		quadloco::ras::RowCol const gotRowCol
-			{ adder.datRowColForAD(parmAD) };
+			{ adder.rasRowColForAD(parmAD) };
 		// parameters associated with grid location
 		quadloco::sig::ParmAD const gotParmAD
-			{ adder.houghParmADFor(quadloco::cast::datSpot(expRowCol)) };
+			{ adder.sigParmADFor(quadloco::cast::imgSpot(expRowCol)) };
 
 /*
 std::cout << '\n';

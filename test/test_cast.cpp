@@ -61,9 +61,9 @@ namespace
 		engabra::g3::Vector const vecGrad{ cast::vector(srcGrad) };
 
 		// Casting back into 2D (ignores the third component)
-		ras::RowCol const dstRowCol{ cast::datRowCol(vecRowCol) };
-		img::Spot const dstSpot{ cast::datSpot(vecSpot) };
-		img::Grad const dstGrad{ cast::pixGrad(vecSpot) };
+		ras::RowCol const dstRowCol{ cast::rasRowCol(vecRowCol) };
+		img::Spot const dstSpot{ cast::imgSpot(vecSpot) };
+		img::Grad const dstGrad{ cast::imgGrad(vecSpot) };
 
 		// [DoxyExample01]
 

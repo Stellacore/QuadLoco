@@ -166,7 +166,7 @@ namespace ops
 		//! Row/column in accumulation grid associated with ParmAD values
 		inline
 		img::Spot
-		datSpotForAD
+		imgSpotForAD
 			( sig::ParmAD const & parmAD
 			) const
 		{
@@ -181,18 +181,18 @@ namespace ops
 		//! Row/column in accumulation grid associated with ParmAD values
 		inline
 		ras::RowCol
-		datRowColForAD
+		rasRowColForAD
 			( sig::ParmAD const & parmAD
 			) const
 		{
-			img::Spot const gridSpot{ datSpotForAD(parmAD) };
-			return cast::datRowCol(gridSpot);
+			img::Spot const gridSpot{ imgSpotForAD(parmAD) };
+			return cast::rasRowCol(gridSpot);
 		}
 
 		//! Hough alpha,delta parameter values at location gridSpot
 		inline
 		sig::ParmAD
-		houghParmADFor
+		sigParmADFor
 			( img::Spot const & gridSpot
 			) const
 		{
@@ -279,7 +279,7 @@ namespace ops
 		{
 			if (isValid() && pix::isValid(gradMag) && parmAD.isValid())
 			{
-				img::Spot const spot00{ datSpotForAD(parmAD) };
+				img::Spot const spot00{ imgSpotForAD(parmAD) };
 
 				static img::Spot const dSpotNN{ -1., -1. };
 				static img::Spot const dSpotZN{  0., -1. };
@@ -351,7 +351,7 @@ std::cout << "rcPP: " << rcPP << '\n';
 */
 
 
-				img::Spot const fracZZ{ spotZZ - cast::datSpot(rcZZ) };
+				img::Spot const fracZZ{ spotZZ - cast::imgSpot(rcZZ) };
 
 /*
 std::cout << '\n';

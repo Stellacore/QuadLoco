@@ -178,8 +178,8 @@ namespace img
 				Vector const xNeg{ spnt + lamNeg*ddir };
 				Vector const xPos{ spnt + lamPos*ddir };
 
-				solnPair.first  = cast::datSpot(xNeg);
-				solnPair.second = cast::datSpot(xPos);
+				solnPair.first  = cast::imgSpot(xNeg);
+				solnPair.second = cast::imgSpot(xPos);
 
 				/*
 				Vector const rPos{ xPos - cpnt };

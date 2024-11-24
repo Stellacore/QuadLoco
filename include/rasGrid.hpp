@@ -415,7 +415,7 @@ namespace ras
 		//! Row/Colum indices associated with iter value
 		inline
 		ras::RowCol
-		datRowColFor
+		rasRowColFor
 			( const_iterator const & iter
 			) const
 		{

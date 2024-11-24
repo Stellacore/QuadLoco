@@ -102,7 +102,7 @@ namespace
 		{
 			// note original grid row/col location and gradient
 			img::Spot const spot
-				{ cast::pixSpot(gradGrid.datRowColFor(iter)) };
+				{ cast::pixSpot(gradGrid.rasRowColFor(iter)) };
 			img::Grad const & grad = *iter;
 
 			// construct Edgel and use to determine ParmAD values
@@ -122,7 +122,7 @@ namespace
 		ras::RowCol gotRowColMax{};
 		if (gridAD.cend() != itMax)
 		{
-			gotRowColMax = gridAD.datRowColFor(itMax);
+			gotRowColMax = gridAD.rasRowColFor(itMax);
 		}
 
 		// Hough parameter (alpha,delta) values for accum cell w/ max value
