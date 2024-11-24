@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Top level file for quadloco::hough namespace
+ * \brief Top level file for quadloco::utl namespace
  *
  */
 
@@ -38,13 +38,13 @@
 namespace quadloco
 {
 
-/*! \brief Finder namespace
+/*! \brief Namespaced software infrastructure utilities
  */
-namespace hough
+namespace utl
 {
 
 
-} // [hough]
+} // [utl]
 
 } // [quadloco]
 

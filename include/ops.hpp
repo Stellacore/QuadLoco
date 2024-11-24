@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Top level file for quadloco::dat namespace
+ * \brief Top level file for quadloco::ops namespace
  *
  */
 
@@ -38,13 +38,13 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced structures for general use.
+/*! \brief Namespaced functions and utilities for operations and processing.
  */
-namespace dat
+namespace ops
 {
 
 
-} // [dat]
+} // [ops]
 
 } // [quadloco]
 
