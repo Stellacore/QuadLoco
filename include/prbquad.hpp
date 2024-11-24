@@ -32,11 +32,11 @@
  */
 
 
-#include "rasGrid.hpp"
 #include "imgSpot.hpp"
-#include "sigQuadTarget.hpp"
-#include "rasgrid.hpp"
 #include "prbStats.hpp"
+#include "rasgrid.hpp"
+#include "rasGrid.hpp"
+#include "sigQuadTarget.hpp"
 
 #include <limits>
 #include <vector>

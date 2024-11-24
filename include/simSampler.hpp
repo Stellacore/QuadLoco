@@ -36,9 +36,9 @@
 #include "imgSpot.hpp"
 #include "imgVec2D.hpp"
 #include "objCamera.hpp"
-#include "sigQuadTarget.hpp"
 #include "objQuadTarget.hpp"
 #include "pixNoise.hpp"
+#include "sigQuadTarget.hpp"
 
 #include <Engabra>
 #include <Rigibra>

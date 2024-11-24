@@ -33,9 +33,9 @@
 
 
 #include "imgGrad.hpp"
-#include "rasRowCol.hpp"
 #include "imgSpot.hpp"
 #include "imgVec2D.hpp"
+#include "rasRowCol.hpp"
 
 #include <Engabra>
 

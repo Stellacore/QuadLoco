@@ -33,9 +33,9 @@
 
 
 #include "cast.hpp"
-#include "rasSizeHW.hpp"
 #include "imgSpot.hpp"
 #include "imgVec2D.hpp"
+#include "rasSizeHW.hpp"
 
 #include <Engabra>
 

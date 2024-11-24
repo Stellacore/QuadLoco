@@ -32,8 +32,8 @@
  */
 
 
-#include "sigSpan.hpp"
 #include "imgSpot.hpp"
+#include "sigSpan.hpp"
 
 #include <array>
 #include <sstream>

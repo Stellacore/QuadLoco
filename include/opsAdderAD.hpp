@@ -32,14 +32,14 @@
  */
 
 
+#include "imgSpot.hpp"
+#include "pix.hpp"
 #include "rasGrid.hpp"
-#include "xfmMapSizeArea.hpp"
 #include "rasRowCol.hpp"
 #include "rasSizeHW.hpp"
-#include "sigSpan.hpp"
-#include "imgSpot.hpp"
 #include "sigParmAD.hpp"
-#include "pix.hpp"
+#include "sigSpan.hpp"
+#include "xfmMapSizeArea.hpp"
 
 #include <algorithm>
 #include <cmath>

@@ -32,10 +32,10 @@
  */
 
 
-#include "opsFence.hpp"
-#include "rasSizeHW.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
+#include "opsFence.hpp"
+#include "rasSizeHW.hpp"
 
 #include <Rigibra>
 

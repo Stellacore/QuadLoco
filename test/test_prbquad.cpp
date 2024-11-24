@@ -30,10 +30,10 @@
 
 #include "prbquad.hpp"
 
-#include "rasSizeHW.hpp"
 #include "objCamera.hpp"
-#include "sigQuadTarget.hpp"
 #include "objQuadTarget.hpp"
+#include "rasSizeHW.hpp"
+#include "sigQuadTarget.hpp"
 #include "simConfig.hpp"
 #include "simRender.hpp"
 

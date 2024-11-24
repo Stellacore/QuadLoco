@@ -32,11 +32,11 @@
  */
 
 
-#include "rasGrid.hpp"
 #include "imgSpot.hpp"
-#include "sigQuadTarget.hpp"
 #include "pix.hpp"
 #include "prbGauss1D.hpp"
+#include "rasGrid.hpp"
+#include "sigQuadTarget.hpp"
 
 #include <algorithm>
 #include <cmath>

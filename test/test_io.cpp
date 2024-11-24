@@ -28,9 +28,9 @@
 */
 
 
-#include "rasGrid.hpp"
 #include "io.hpp"
 #include "pix.hpp"
+#include "rasGrid.hpp"
 
 #include <algorithm>
 #include <cstdio>

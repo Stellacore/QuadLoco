@@ -31,10 +31,10 @@
 #include "rasgrid.hpp"
 
 #include "imgChipSpec.hpp"
-#include "rasGrid.hpp"
 #include "imgGrad.hpp"
 #include "pix.hpp"
 #include "rasgrid.hpp"
+#include "rasGrid.hpp"
 
 #include <algorithm>
 #include <complex>

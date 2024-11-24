@@ -32,11 +32,11 @@
  */
 
 
+#include "imgEdgel.hpp"
+#include "imgSpot.hpp"
 #include "rasGrid.hpp"
 #include "rasRowCol.hpp"
 #include "rasSizeHW.hpp"
-#include "imgEdgel.hpp"
-#include "imgSpot.hpp"
 
 
 namespace quadloco

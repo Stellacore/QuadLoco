@@ -30,10 +30,10 @@
 
 #include "imgSampler.hpp"
 
-#include "sigParmAD.hpp"
 #include "imgEdgel.hpp"
-#include "simgrid.hpp"
 #include "rasgrid.hpp" // TODO - temp
+#include "sigParmAD.hpp"
+#include "simgrid.hpp"
 
 #include <algorithm>
 #include <iostream>

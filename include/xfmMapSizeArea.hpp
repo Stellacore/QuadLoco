@@ -33,9 +33,9 @@
 
 
 #include "imgArea.hpp"
+#include "imgSpot.hpp"
 #include "rasSizeHW.hpp"
 #include "sigSpan.hpp"
-#include "imgSpot.hpp"
 
 #include <array>
 

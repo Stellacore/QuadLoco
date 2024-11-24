@@ -33,10 +33,10 @@
 
 
 #include "imgChipSpec.hpp"
-#include "rasGrid.hpp"
-#include "imgSpot.hpp"
 #include "imgGrad.hpp"
+#include "imgSpot.hpp"
 #include "pix.hpp"
+#include "rasGrid.hpp"
 
 #include <algorithm>
 #include <cmath>

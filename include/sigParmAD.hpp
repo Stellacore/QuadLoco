@@ -33,8 +33,8 @@
 
 
 #include "imgCircle.hpp"
-#include "imgSpot.hpp"
 #include "imgEdgel.hpp"
+#include "imgSpot.hpp"
 
 #include <Engabra>
 

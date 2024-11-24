@@ -32,8 +32,8 @@
  */
 
 
-#include "rasGrid.hpp"
 #include "pix.hpp"
+#include "rasGrid.hpp"
 
 #include <cstdint>
 #include <filesystem>

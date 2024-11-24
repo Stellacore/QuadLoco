@@ -32,9 +32,9 @@
  */
 
 
+#include "imgGrad.hpp"
 #include "rasGrid.hpp"
 #include "rasRowCol.hpp"
-#include "imgGrad.hpp"
 
 #include <limits>
 

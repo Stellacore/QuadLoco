@@ -35,8 +35,8 @@
 #include "ang.hpp"
 #include "angRing.hpp"
 #include "imgSpot.hpp"
-#include "prbGauss1D.hpp"
 #include "opsPeakFinder.hpp"
+#include "prbGauss1D.hpp"
 
 #include <Engabra>
 
