@@ -1,0 +1,90 @@
+# Ideas
+
+demo/demoLineFind.cpp
+
+## Have
+
+## From "grep -w float ..."
+
+include/cast.hpp
+include/houghAdderAD.hpp
+include/io.hpp
+include/pixgrid.hpp
+include/pix.hpp
+include/pixSampler.hpp
+include/prbQuadness.hpp
+include/simgrid.hpp
+include/simRender.hpp
+x include/pixEdgel.hpp
+x include/pixGrad.hpp
+x include/pixSpot.hpp
+
+test/test_cast.cpp
+test/test_datGrid.cpp
+test/test_datVec2D.cpp
+test/test_houghAdderAD.cpp
+test/test_houghFindAD.cpp
+test/test_houghParmAD.cpp
+test/test_pixgrid.cpp
+test/test_pixSampler.cpp
+test/test_pixSpot.cpp
+test/test_prbquad.cpp
+test/test_simRender.cpp
+test/test_simSampler.cpp
+
+
+# Concepts
+
+
+# Questions
+
+Edgel vs Line vs LineSeg
+
+LineSeg - two Spots for end points
+Line - point on and direction (aka Ray)
+
+
+# namespaces
+dat: - 2D continuous
+	Vec2D<>
+	Spot
+	Area
+	Fence
+lin(ear): - 2D (scalar) angle operations
+ang(ular): - 2D (scalar) angle operations
+	Ring?
+dat: - 2D quantized
+	SizeHW
+	RowCol
+img: - perspective geometry related (camera, feature images)
+obj
+pix: - 2D quantized geometry suggest pix{Noise,Sampler}->img{Noise,Sampler}
+	Grid?
+
+prb
+sim: Simulation
+
+
+
+
+# Targets
+
+## Integral
+dat::RowCol -- makes sense for grid operations
+
+## Floating point
+dat::Vec2D<> -- 2D.vector baseclase: Container and operations
+dat::Spot -- 2D.location - a Vec2D: add named methods (row,col,xVal,yVal)
+dat::Aim -- 2D.direction - a Vec2D: add methods (angle, projection, rejection)
+
+dat::Grad -- 2D.gradient - aliasa for dat::Aim
+dat::Line
+	- dat::Spot
+	- dat::Aim
+
+
+# TODOs
+
+replace pix::Grad - with dat::Aim
+replace pix::Spot - with dat::Spot
+
