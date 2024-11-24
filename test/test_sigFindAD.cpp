@@ -38,7 +38,6 @@
 #include "imgEdgel.hpp"
 #include "imgGrad.hpp"
 #include "rasgrid.hpp"
-#include "pix.hpp"
 #include "simgrid.hpp"
 
 #include "sigSpan.hpp"
@@ -102,7 +101,7 @@ namespace
 		{
 			// note original grid row/col location and gradient
 			img::Spot const spot
-				{ cast::pixSpot(gradGrid.rasRowColFor(iter)) };
+				{ cast::imgSpot(gradGrid.rasRowColFor(iter)) };
 			img::Grad const & grad = *iter;
 
 			// construct Edgel and use to determine ParmAD values
@@ -111,7 +110,7 @@ namespace
 				{ sig::ParmAD::from(edgel, boundingCircle) };
 
 			// add edge magnitude into adGrid cell(s)
-			float const gradMag{ magnitude(edgel.gradient()) };
+			double const gradMag{ magnitude(edgel.gradient()) };
 			adder.add(parmAD, gradMag);
 		}
 
@@ -126,8 +125,8 @@ namespace
 		}
 
 		// Hough parameter (alpha,delta) values for accum cell w/ max value
-		img::Spot const gotSpotMax{ cast::datSpot(gotRowColMax) };
-		sig::ParmAD const gotParmAD{ adder.houghParmADFor(gotSpotMax) };
+		img::Spot const gotSpotMax{ cast::imgSpot(gotRowColMax) };
+		sig::ParmAD const gotParmAD{ adder.sigParmADFor(gotSpotMax) };
 
 		// Hough (alpha,delta) values expected for simulation generating edgel
 		sig::ParmAD const expParmAD

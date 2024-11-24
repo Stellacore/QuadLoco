@@ -89,8 +89,8 @@ namespace
 
 		// raster edge element
 		using namespace quadloco;
-		img::Spot const pixLoc{ 10.f, 21.f }; // shift in col has no effect
-		img::Grad const pixGrad{ 1.f, 0.f }; // grad in row dir
+		img::Spot const pixLoc{ 10., 21. }; // shift in col has no effect
+		img::Grad const pixGrad{ 1., 0. }; // grad in row dir
 		img::Edgel const edgel{ pixLoc, pixGrad };
 
 		// the line segmeng of interest is perpendicular to edge gradient
@@ -124,11 +124,11 @@ namespace
 	{
 		// useful test constants
 		constexpr std::size_t numSamps{ 32u };
-		constexpr float pi{ std::numbers::pi_v<float> };
-		constexpr float piHalf{ .5 * pi };
-		constexpr float piTwo{ 2. * pi };
-		constexpr float dtheta{ piTwo / (float)numSamps };
-		constexpr float drad{ 2.f / (float)numSamps };
+		constexpr double pi{ std::numbers::pi_v<double> };
+		constexpr double piHalf{ .5 * pi };
+		constexpr double piTwo{ 2. * pi };
+		constexpr double dtheta{ piTwo / (double)numSamps };
+		constexpr double drad{ 2. / (double)numSamps };
 
 		// [DoxyExample02]
 
@@ -138,13 +138,13 @@ namespace
 		quadloco::img::Circle const circle{ center, radius };
 
 		// raster edge element at center
-		quadloco::pix::Spot const pixLoc{ 0.f, 0.f };
+		quadloco::img::Spot const pixLoc{ 0., 0. };
 
 		// check that alpha values range [-pi <= alpha < pi)
-		std::set<float> gotAlphas;
+		std::set<double> gotAlphas;
 		// check that delta values range [0 <= alpha < 2.*pi)
-		std::set<float> gotDeltas;
-		for (float theta{0.f} ; theta < piTwo ; theta += dtheta)
+		std::set<double> gotDeltas;
+		for (double theta{0.} ; theta < piTwo ; theta += dtheta)
 		{
 			using namespace quadloco;
 
@@ -165,11 +165,11 @@ namespace
 			}
 
 			// adjust position in order to cover range of delta values
-			for (float rad{-1.f} ; rad < 1.f ; rad += drad)
+			for (double rad{-1.} ; rad < 1. ; rad += drad)
 			{
-				constexpr float rootHalf{ 1.f/std::numbers::sqrt2_v<float> };
-				quadloco::pix::Spot const dSpot{ rad, rad };
-				quadloco::pix::Spot const deltaLoc{ pixLoc + rootHalf*dSpot };
+				constexpr double rootHalf{ 1./std::numbers::sqrt2_v<double> };
+				quadloco::img::Spot const dSpot{ rad, rad };
+				quadloco::img::Spot const deltaLoc{ pixLoc + rootHalf*dSpot };
 				img::Edgel const deltaEdgel{ deltaLoc, pixGrad };
 				sig::ParmAD const deltaParmAD
 					{ sig::ParmAD::from(deltaEdgel, circle) };
@@ -201,7 +201,7 @@ namespace
 		}
 		if (! gotAlphas.empty())
 		{
-			float const maxAlpha{ *(gotAlphas.crbegin()) };
+			double const maxAlpha{ *(gotAlphas.crbegin()) };
 			if (! (maxAlpha < pi))
 			{
 				oss << "Failure of maxAlpha test(2)\n";
@@ -215,18 +215,18 @@ namespace
 		}
 
 		// check delta values (should all be very near pi)
-		float const minDelta{ *(gotDeltas.cbegin()) };
-		float const maxDelta{ *(gotDeltas.crbegin()) };
-		if ( (minDelta < 0.f))
+		double const minDelta{ *(gotDeltas.cbegin()) };
+		double const maxDelta{ *(gotDeltas.crbegin()) };
+		if ( (minDelta < 0.))
 		{
 			oss << "Failure of minDelta test\n";
-			oss << "exp: " << 0.f << '\n';
+			oss << "exp: " << 0. << '\n';
 			oss << "got: " << minDelta << '\n';
 		}
-		if (! (maxDelta < 2.f*pi))
+		if (! (maxDelta < 2.*pi))
 		{
 			oss << "Failure of maxDelta test\n";
-			oss << "exp: " << (2.f*pi) << '\n';
+			oss << "exp: " << (2.*pi) << '\n';
 			oss << "got: " << maxDelta << '\n';
 		}
 
