@@ -116,7 +116,6 @@ namespace
 
 			// note test case result
 			testcase.theQuadProb = quadProb;
-std::cout << "quadProb: " << engabra::g3::io::fixed(quadProb) << '\n';
 
 		}
 
