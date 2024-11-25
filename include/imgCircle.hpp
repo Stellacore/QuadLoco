@@ -32,7 +32,6 @@
  */
 
 
-#include "cast.hpp"
 #include "imgSpot.hpp"
 #include "imgVec2D.hpp"
 #include "rasSizeHW.hpp"
@@ -152,19 +151,17 @@ namespace img
 			using namespace engabra::g3;
 
 			// be sure direction is unitary (supresses quadratic coefficient)
-			Vector const spnt{ cast::vector(linePnt) };
+			img::Vec2D<double> const ddir{ direction(lineDir) };
+			img::Vec2D<double> const & spnt = linePnt;
 
-			// ROTATE the gradient direction into line direction
-			Vector const ddir
-				{ direction(Vector{ lineDir[0], lineDir[1], 0. }) };
-
-			Vector const cpnt{ cast::vector(theCircle.theCenter) };
+			img::Vec2D<double> const cpnt{ theCircle.theCenter };
 			double const & rho = theCircle.theRadius;
 
 			// quadratic equation components
-			Vector const wvec{ spnt - cpnt };
-			double const beta{ (wvec * ddir).theSca[0] };
-			double const gamma{ magSq(wvec) - rho*rho };
+			img::Vec2D<double> const wvec{ spnt - cpnt };
+			double const beta{ dot(wvec, ddir) };
+			double const wMagSq{ dot(wvec, wvec) };
+			double const gamma{ wMagSq - rho*rho };
 			double const lamMid{ -beta };
 			double const radicand{ beta*beta - gamma };
 
@@ -175,11 +172,11 @@ namespace img
 				double const lamNeg{ lamMid - delta };
 				double const lamPos{ lamMid + delta };
 
-				Vector const xNeg{ spnt + lamNeg*ddir };
-				Vector const xPos{ spnt + lamPos*ddir };
+				img::Vec2D<double> const xNeg{ spnt + lamNeg*ddir };
+				img::Vec2D<double> const xPos{ spnt + lamPos*ddir };
 
-				solnPair.first  = cast::imgSpot(xNeg);
-				solnPair.second = cast::imgSpot(xPos);
+				solnPair.first  = img::Spot(xNeg);
+				solnPair.second = img::Spot(xPos);
 
 				/*
 				Vector const rPos{ xPos - cpnt };

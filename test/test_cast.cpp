@@ -56,9 +56,9 @@ namespace
 
 		// Casting into 3D vectors (add a 3rd component identically zero)
 		using namespace quadloco;
-		engabra::g3::Vector const vecRowCol{ cast::vector(srcRowCol) };
-		engabra::g3::Vector const vecSpot{ cast::vector(srcSpot) };
-		engabra::g3::Vector const vecGrad{ cast::vector(srcGrad) };
+		engabra::g3::Vector const vecRowCol{ cast::engVector(srcRowCol) };
+		engabra::g3::Vector const vecSpot{ cast::engVector(srcSpot) };
+		engabra::g3::Vector const vecGrad{ cast::engVector(srcGrad) };
 
 		// Casting back into 2D (ignores the third component)
 		ras::RowCol const dstRowCol{ cast::rasRowCol(vecRowCol) };

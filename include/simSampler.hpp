@@ -285,12 +285,12 @@ namespace sim
 		{
 			using namespace engabra::g3;
 
-			Vector const centerInExt
-				{ theCamWrtQuad(cast::vector(theObjQuad.centerSpot())) };
-			Vector const xMidInExt
-				{ theCamWrtQuad(cast::vector(theObjQuad.midSidePosX())) };
-			Vector const yMidInExt
-				{ theCamWrtQuad(cast::vector(theObjQuad.midSidePosY())) };
+			engabra::g3::Vector const centerInExt
+				{ theCamWrtQuad(cast::engVector(theObjQuad.centerSpot())) };
+			engabra::g3::Vector const xMidInExt
+				{ theCamWrtQuad(cast::engVector(theObjQuad.midSidePosX())) };
+			engabra::g3::Vector const yMidInExt
+				{ theCamWrtQuad(cast::engVector(theObjQuad.midSidePosY())) };
 
 			img::Vec2D const centerInDet
 				{ theCamera.projectedSpotFor(centerInExt) };
@@ -299,11 +299,12 @@ namespace sim
 			img::Vec2D const yMidInDet
 				{ theCamera.projectedSpotFor(yMidInExt) };
 
-			Vector const center{ cast::vector(centerInDet) };
-			Vector const xDir
-				{ direction(cast::vector(xMidInDet - centerInDet)) };
-			Vector const yDir
-				{ direction(cast::vector(yMidInDet - centerInDet)) };
+			engabra::g3::Vector const center
+				{ cast::engVector(centerInDet) };
+			engabra::g3::Vector const xDir
+				{ direction(cast::engVector(xMidInDet - centerInDet)) };
+			engabra::g3::Vector const yDir
+				{ direction(cast::engVector(yMidInDet - centerInDet)) };
 
 			sig::QuadTarget const imgQuad{ center, xDir, yDir };
 			return imgQuad;

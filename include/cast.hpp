@@ -56,7 +56,7 @@ namespace cast
 	//! Engabra Vector: [0,1] from (row(),col()) , [2] set to zero.
 	inline
 	engabra::g3::Vector
-	vector
+	engVector
 		( ras::RowCol const & rowcol
 		)
 	{
@@ -67,7 +67,7 @@ namespace cast
 	//! Engabra Vector: [0,1] from spot[0,1], [2] set to zero.
 	inline
 	engabra::g3::Vector
-	vector
+	engVector
 		( img::Spot const & spot
 		)
 	{
@@ -77,7 +77,7 @@ namespace cast
 	//! Engabra Vector: [0,1] from vec[0,1], with output [2] set to zero.
 	inline
 	engabra::g3::Vector
-	vector
+	engVector
 		( img::Vec2D<double> const & vec
 		)
 	{
@@ -87,7 +87,7 @@ namespace cast
 	//! Engabra Vector: [0,1] from gradient element, [2] set to zero.
 	inline
 	engabra::g3::Vector
-	vector
+	engVector
 		( img::Grad const & grad
 		)
 	{
