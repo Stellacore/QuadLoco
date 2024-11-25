@@ -123,7 +123,7 @@ namespace io
 		)
 	{
 		// compute spanning range of radiometry values
-		sig::Span const fSpan{ pix::fullSpanFor(fGrid) };
+		img::Span const fSpan{ pix::fullSpanFor(fGrid) };
 
 		// stretch/compress fGrid values to fit into uGrid
 		ras::Grid<uint8_t> const uGrid{ pix::uGrid8(fGrid, fSpan) };

@@ -29,15 +29,15 @@ set(unitTests
 	test_Version  # test project version info retrieval
 
 	test_angLikely  # angular value likelihood estimation
-	test_cast  # data type conversion operations
 	test_angRing  # wrap around data structures e.g. for angles
-	test_sigFindAD  # find maxima in sig::ParmAD space
+	test_cast  # data type conversion operations
 	test_imgArea  # a 2D range of values
 	test_imgChipSpec  # a 2D sub region of a larger area
 	test_imgCircle  # geometric circle (and line intersection)
 	test_imgEdgel  # individual pixel edge information (Spot and Grad)
 	test_imgGrad  # pixel Gradent element type and functions
 	test_imgSampler  # pixel grid sampling functions
+	test_imgSpan  # half open interval (include start, excludes end)
 	test_imgSpot  # 'continuous' raster cell locations
 	test_imgVector  # support for 2D vector operations
 	test_io  # basic i/o support (e.g. pgm images)
@@ -53,9 +53,9 @@ set(unitTests
 	test_rasgrid  # pixel/grid functions (e.g. image processing)
 	test_rasRowCol  # discete raster cell locations
 	test_rasSizeHW  # basic "high/wide" area boundary (half open)
+	test_sigFindAD  # find maxima in sig::ParmAD space
 	test_sigParmAD  # Hough "alpha,delta" parameter representation
 	test_sigQuadTarget  # represent perspective image of obj::QuadTarget
-	test_sigSpan  # half open interval (include start, excludes end)
 	test_simRender  # simulation of perspective images of quad target
 	test_simSampler  # simulation of image intensity sampling
 	test_xfmMapSizeArea  # raster cell to continous area mapping

@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for sig::Span
+ * \brief Declarations for img::Span
  *
  */
 
@@ -38,7 +38,7 @@
 namespace quadloco
 {
 
-namespace sig
+namespace img
 {
 
 	//! A half open interval
@@ -153,7 +153,7 @@ namespace sig
 	};
 
 
-} // [sig]
+} // [img]
 
 } // [quadloco]
 
@@ -165,7 +165,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::sig::Span const & item
+		, quadloco::img::Span const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -176,7 +176,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::sig::Span const & item
+		( quadloco::img::Span const & item
 		)
 	{
 		return item.isValid();

@@ -79,8 +79,8 @@ namespace obj
 		{
 			double const halfEdgeMag{ .5 * fullEdgeMag };
 			return img::Area
-				{ sig::Span{ -halfEdgeMag,  halfEdgeMag }
-				, sig::Span{ -halfEdgeMag,  halfEdgeMag }
+				{ img::Span{ -halfEdgeMag,  halfEdgeMag }
+				, img::Span{ -halfEdgeMag,  halfEdgeMag }
 				};
 		}
 
@@ -146,7 +146,7 @@ namespace obj
 
 		//! Span of coordinates in first dimension (e.g. left to right)
 		inline
-		sig::Span const &
+		img::Span const &
 		span0
 			() const
 		{
@@ -155,7 +155,7 @@ namespace obj
 
 		//! Span of coordinates in second dimension (e.g. bottom to top)
 		inline
-		sig::Span const &
+		img::Span const &
 		span1
 			() const
 		{

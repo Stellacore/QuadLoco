@@ -40,8 +40,6 @@
 #include "sigParmAD.hpp"
 #include "simgrid.hpp"
 
-#include "sigSpan.hpp"
-
 #include <Engabra>
 
 #include <algorithm>

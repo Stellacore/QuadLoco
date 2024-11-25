@@ -32,8 +32,8 @@
  */
 
 
+#include "imgSpan.hpp"
 #include "rasGrid.hpp"
-#include "sigSpan.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -163,7 +163,7 @@ namespace pix
 	//! Span with begin/end at smallest/largest (valid) values in fGrid
 	template <typename PixType>
 	inline
-	sig::Span
+	img::Span
 	fullSpanFor
 		( ras::Grid<PixType> const & fGrid
 		)
@@ -176,7 +176,7 @@ namespace pix
 		PixType const delta{ fMax - fMin };
 		constexpr PixType eps{ std::numeric_limits<PixType>::epsilon() };
 		PixType const useMax{ fMax * (1.f + delta * eps) };
-		return quadloco::sig::Span{ (double)fMin, (double)useMax };
+		return quadloco::img::Span{ (double)fMin, (double)useMax };
 	}
 
 	//! uint8_t value corresponding to fpix value within fSpan range
@@ -184,8 +184,8 @@ namespace pix
 	uint8_t
 	uPix8
 		( fpix_t const & fpix
-		, sig::Span const & fSpan
-		, sig::Span const & uSpan
+		, img::Span const & fSpan
+		, img::Span const & uSpan
 		)
 	{
 		uint8_t upix{ u8Null };
@@ -213,12 +213,12 @@ namespace pix
 	ras::Grid<uint8_t>
 	uGrid8
 		( ras::Grid<fpix_t> const & fgrid
-		, sig::Span const & fSpan
+		, img::Span const & fSpan
 		)
 	{
 		ras::Grid<uint8_t> ugrid{ fgrid.hwSize() };
 
-		constexpr sig::Span uSpan{ (double)u8Dark, (double)u8Over };
+		constexpr img::Span uSpan{ (double)u8Dark, (double)u8Over };
 		ras::Grid<fpix_t>::const_iterator itIn{ fgrid.cbegin() };
 		ras::Grid<uint8_t>::iterator itOut{ ugrid.begin() };
 		while (ugrid.end() != itOut)

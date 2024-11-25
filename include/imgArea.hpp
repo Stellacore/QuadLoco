@@ -32,8 +32,8 @@
  */
 
 
+#include "imgSpan.hpp"
 #include "imgSpot.hpp"
-#include "sigSpan.hpp"
 
 #include <array>
 #include <sstream>
@@ -50,7 +50,7 @@ namespace img
 	struct Area
 	{
 		//! Two independent spans that define the 2D area
-		std::array<sig::Span, 2u> theSpans;
+		std::array<img::Span, 2u> theSpans;
 
 		//! For convenience to denote 2D data composed of fraction values
 		typedef std::array<double, 2u> Dyad;

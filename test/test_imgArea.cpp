@@ -50,15 +50,15 @@ namespace
 		bool const nullIsOkay{ (false == nullArea.isValid()) };
 
 		//! construct from two Spans
-		quadloco::sig::Span const span0{ 17., 19. };
-		quadloco::sig::Span const span1{ 23., 29. };
+		quadloco::img::Span const span0{ 17., 19. };
+		quadloco::img::Span const span1{ 23., 29. };
 		quadloco::img::Area const anArea{ span0, span1 };
 
 		// stream output
 		std::ostringstream msg;
 		msg << anArea << '\n';
 
-		// the 'containing rules' are those of sig::Span independently
+		// the 'containing rules' are those of img::Span independently
 		quadloco::img::Spot const spotIn{ 18., 24. };
 		quadloco::img::Spot const spotOut0{ 16., 24. };
 		quadloco::img::Spot const spotOut1{ 18., 30. };

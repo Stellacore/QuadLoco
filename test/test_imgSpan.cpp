@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::sig::Span
+\brief Unit tests (and example) code for quadloco::img::Span
 */
 
 
-#include "sigSpan.hpp"
+#include "imgSpan.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -74,7 +74,7 @@ namespace
 	{
 		// [DoxyExample01]
 
-		quadloco::sig::Span const nullSpan{};
+		quadloco::img::Span const nullSpan{};
 		bool const nullIsOkay{ (false == isValid(nullSpan)) };
 
 		// construct with subpixel row,col order
@@ -84,18 +84,18 @@ namespace
 
 		// eps needs to be big enough for meaningful add/sub with end/beg 
 		double const eps{ expEnd * std::numeric_limits<double>::epsilon() };
-		quadloco::sig::Span const origSpan{ expBeg, expEnd };
+		quadloco::img::Span const origSpan{ expBeg, expEnd };
 
 		// properties
 		double const gotMag{ origSpan.magnitude() };
 
 		// copy construction
-		std::vector<quadloco::sig::Span> const copySpans
+		std::vector<quadloco::img::Span> const copySpans
 			{ origSpan, origSpan, origSpan };
 
 		// output operations
 		std::ostringstream msg;
-		quadloco::sig::Span const copySpan{ copySpans.back() };
+		quadloco::img::Span const copySpan{ copySpans.back() };
 		msg << copySpan << '\n';
 
 		// test values in relationship to being contained in span
@@ -178,7 +178,7 @@ namespace
 		// [DoxyExample02]
 
 		// spans can be created as constexpr
-		constexpr quadloco::sig::Span aSpan{ 100., 200. };
+		constexpr quadloco::img::Span aSpan{ 100., 200. };
 
 		// evaluate a point inside span (Interpolation)
 		double const expInterpValue{ 125. };

@@ -32,13 +32,13 @@
  */
 
 
+#include "imgSpan.hpp"
 #include "imgSpot.hpp"
 #include "pix.hpp"
 #include "rasGrid.hpp"
 #include "rasRowCol.hpp"
 #include "rasSizeHW.hpp"
 #include "sigParmAD.hpp"
-#include "sigSpan.hpp"
 #include "xfmMapSizeArea.hpp"
 
 #include <algorithm>
@@ -134,8 +134,8 @@ namespace ops
 			, theMapSizeArea
 				( theGridAD.hwSize() 
 				, img::Area
-					{ sig::Span{ -pi, pi }
-					, sig::Span{ 0., piTwo }
+					{ img::Span{ -pi, pi }
+					, img::Span{ 0., piTwo }
 					}
 				)
 		{

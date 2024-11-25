@@ -55,10 +55,10 @@ namespace
 		fGrid(4, 0) = 500.;
 
 		// expected working span of input imagery (for test case)
-		quadloco::sig::Span const testSpan{ 101., 500. };
+		quadloco::img::Span const testSpan{ 101., 500. };
 
 		// full span (that ensures all pixels are valid)
-		quadloco::sig::Span const fullSpan
+		quadloco::img::Span const fullSpan
 			{ quadloco::pix::fullSpanFor(fGrid) };
 
 		// convert to classic uint8_t image
