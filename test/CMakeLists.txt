@@ -36,6 +36,7 @@ set(unitTests
 	test_imgCircle  # geometric circle (and line intersection)
 	test_imgEdgel  # individual pixel edge information (Spot and Grad)
 	test_imgGrad  # pixel Gradent element type and functions
+	test_imgRay  # a 2D geometric ray (start Spot and unit direction)
 	test_imgSpan  # half open interval (include start, excludes end)
 	test_imgSpot  # 'continuous' raster cell locations
 	test_imgVector  # support for 2D vector operations
