@@ -70,7 +70,7 @@ namespace img
 			, img::Grad const & grad
 			)
 			: Ray{ spot, grad }
-			, theMag{ magnitude(grad) }
+			, theMag{ img::magnitude(grad) }
 		{ }
 
 		//! Conversion from RowCol
@@ -81,7 +81,7 @@ namespace img
 			, img::Grad const & grad
 			)
 			: Ray{ cast::imgSpot(rowcol), grad }
-			, theMag{ magnitude(grad) }
+			, theMag{ img::magnitude(grad) }
 		{ }
 
 		//! True if both the point location and gradent direction are valid
@@ -114,10 +114,18 @@ namespace img
 			return img::Grad(theMag * direction());
 		}
 
+		//! Magnitude of this edge
+		inline
+		double const &
+		magnitude
+			() const
+		{
+			return theMag;
+		}
+
 		//! True if location is in front of edge (relative to gradient)
 		inline
 		bool
-// TODO rename to rcAhead()
 		rcInFront
 			( ras::RowCol const & rowcol
 			) const
@@ -128,7 +136,6 @@ namespace img
 		//! True if location is behind the edge (relative to gradient)
 		inline
 		bool
-// TODO rename to rcBehind()
 		rcInBack
 			( ras::RowCol const & rowcol
 			) const
