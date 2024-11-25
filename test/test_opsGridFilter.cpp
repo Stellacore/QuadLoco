@@ -63,62 +63,88 @@ namespace
 			{ quadloco::sim::gridWithEdge(hwSize, expEdgel) };
 
 		// collect gradient samples from image (one by one in this test)
-		std::vector<quadloco::img::Edgel> pixEdgels;
+		std::vector<quadloco::img::Edgel> gotPixEdgels;
 
 		// sample gradient at various locations
 		// NOTE: be sure pixGrid persists for scope of sampler
 		quadloco::ops::GridFilter const sampler(& pixGrid);
+		std::size_t gotEdgeCount{ 0u }; // valid and significant gradients
+		std::size_t gotZeroCount{ 0u }; // valid but zero gradients
+		std::size_t gotNullCount{ 0u }; // inValid data (e.g. at edges)
 		for (std::size_t row{0u} ; row < pixGrid.high() ; ++row)
 		{
 			for (std::size_t col{0u} ; col < pixGrid.wide() ; ++col)
 			{
 				quadloco::ras::RowCol const rc{ row, col };
 				quadloco::img::Grad const pixGrad{ sampler.pixGradAt(rc) };
+
 				if (isValid(pixGrad)) // e.g. not too near image edge
 				{
-					quadloco::img::Edgel const edgel{ rc, pixGrad };
-					pixEdgels.emplace_back(edgel);
+					double const gradMag{ magnitude(pixGrad) };
+					if (0. < gradMag)
+					{
+						quadloco::img::Edgel const edgel(rc, pixGrad);
+						gotPixEdgels.emplace_back(edgel);
+						++gotEdgeCount;
+					}
+					else
+					{
+						++gotZeroCount;
+					}
+				}
+				else
+				{
+					++gotNullCount;
 				}
 			}
 		}
 
 		// [DoxyExample01]
 
-		std::size_t const gotSize{ pixEdgels.size() };
-		std::size_t const expSize	
+		std::size_t const gotValidSize{ gotEdgeCount + gotZeroCount };
+		std::size_t const expValidSize	
 			{ pixGrid.size()
 			- 2u * pixGrid.high()
 			- 2u * pixGrid.wide()
 			+ 4u
 			};
-		if (! (gotSize == expSize))
+		if (! (gotValidSize == expValidSize))
 		{
-			oss << "Failure of pixEdgels size test\n";
-			oss << "exp: " << gotSize << '\n';
-			oss << "got: " << expSize << '\n';
+			oss << "Failure of gotPixEdgels gotValidSize test\n";
+			oss << "exp: " << gotValidSize << '\n';
+			oss << "got: " << expValidSize << '\n';
 		}
 
+		if (! (gotPixEdgels.size() == gotEdgeCount))
+		{
+			oss << "Failure of gotPixEdgels gotEdgeCount test\n";
+			oss << "exp: " << gotPixEdgels.size() << '\n';
+			oss << "got: " << gotEdgeCount << '\n';
+		}
+
+		// check if edgel data agree with grid gradients
 		// fetch entire gradient grid
 		quadloco::ras::Grid<quadloco::img::Grad> const grads
 			{ quadloco::ras::grid::gradientGridFor(pixGrid) };
-		// check if extracted samples match
 		std::size_t sameCount{ 0u };
-		for (quadloco::img::Edgel const & pixEdgel : pixEdgels)
+		for (quadloco::img::Edgel const & gotPixEdgel : gotPixEdgels)
 		{
 			quadloco::ras::RowCol const atRowCol
-				{ quadloco::cast::rasRowCol(pixEdgel.location()) };
+				{ quadloco::cast::rasRowCol(gotPixEdgel.location()) };
 			quadloco::img::Grad const & expGrad = grads(atRowCol);
-			quadloco::img::Grad const & gotGrad = pixEdgel.gradient();
-			if (nearlyEquals(gotGrad, expGrad))
+			quadloco::img::Grad const & gotGrad = gotPixEdgel.gradient();
+			constexpr double tol
+				{ 4. * std::numeric_limits<double>::epsilon() };
+			if (nearlyEquals(gotGrad, expGrad, tol))
 			{
 				++sameCount;
 			}
 		}
 
-		if (! (pixEdgels.size() == sameCount))
+		if (! (gotPixEdgels.size() == sameCount))
 		{
-			oss << "Failure of pixEdgels sameCount test\n";
-			oss << "exp: " << pixEdgels.size() << '\n';
+			oss << "Failure of gotPixEdgels sameCount test\n";
+			oss << "exp: " << gotPixEdgels.size() << '\n';
 			oss << "got: " << sameCount << '\n';
 		}
 

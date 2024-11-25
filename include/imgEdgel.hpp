@@ -33,9 +33,7 @@
 
 
 #include "cast.hpp"
-#include "imgGrad.hpp"
-#include "imgSpot.hpp"
-#include "imgVector.hpp"
+#include "imgRay.hpp"
 
 #include <Engabra>
 
@@ -51,13 +49,10 @@ namespace img
 {
 
 	//! Edge element in raster space (location and gradient)
-	class Edgel
+	class Edgel : public img::Ray
 	{
-		//! Any point on the line
-		img::Spot theSpot{};
-
-		//! Direction of the (positive) gradient across the edge
-		img::Grad theGrad{};
+		//! Magnitude of the gradient
+		double theMag{ std::numeric_limits<double>::quiet_NaN() };
 
 	public:
 
@@ -74,8 +69,8 @@ namespace img
 			( img::Spot const & spot
 			, img::Grad const & grad
 			)
-			: theSpot{ spot }
-			, theGrad{ grad }
+			: Ray{ spot, grad }
+			, theMag{ magnitude(grad) }
 		{ }
 
 		//! Conversion from RowCol
@@ -85,27 +80,9 @@ namespace img
 			( ras::RowCol const & rowcol
 			, img::Grad const & grad
 			)
-			: theSpot{ cast::imgSpot(rowcol) }
-			, theGrad{ grad }
+			: Ray{ cast::imgSpot(rowcol), grad }
+			, theMag{ magnitude(grad) }
 		{ }
-
-		//! Location of this edgel
-		inline
-		img::Spot const &
-		location
-			() const
-		{
-			return theSpot;
-		}
-
-		//! Gradient at this edgel location
-		inline
-		img::Grad const &
-		gradient
-			() const
-		{
-			return theGrad;
-		}
 
 		//! True if both the point location and gradent direction are valid
 		inline
@@ -114,56 +91,49 @@ namespace img
 			() const
 		{
 			return
-				(  location().isValid()
-				&& gradient().isValid()
+				(  img::Ray::isValid()
+				&& engabra::g3::isValid(theMag)
 				);
 		}
 
-		//! True if location is behind the edge (relative to gradient)
+		//! Location of this edgel
 		inline
-		bool
-		rcInBack
-			( img::Spot const & imgSpot
-			) const
+		img::Spot
+		location
+			() const
 		{
-			img::Spot const delta{ imgSpot - location() };
-			double const projection
-				{ dot
-					( (img::Vector<double>)delta
-					, (img::Vector<double>)gradient()
-					)
-				};
-			return (projection < 0.);
+			return img::Spot(start());
+		}
+
+		//! Gradient at this edgel location
+		inline
+		img::Grad
+		gradient
+			() const
+		{
+			return img::Grad(theMag * direction());
 		}
 
 		//! True if location is in front of edge (relative to gradient)
 		inline
 		bool
-		rcInFront
-			( img::Spot const & imgSpot
-			) const
-		{
-			return (! rcInBack(imgSpot));
-		}
-
-		//! True if location is in front of edge (relative to gradient)
-		inline
-		bool
+// TODO rename to rcAhead()
 		rcInFront
 			( ras::RowCol const & rowcol
 			) const
 		{
-			return rcInFront(cast::imgSpot(rowcol));
+			return isAhead(cast::imgSpot(rowcol));
 		}
 
 		//! True if location is behind the edge (relative to gradient)
 		inline
 		bool
+// TODO rename to rcBehind()
 		rcInBack
 			( ras::RowCol const & rowcol
 			) const
 		{
-			return rcInBack(cast::imgSpot(rowcol));
+			return isBehind(cast::imgSpot(rowcol));
 		}
 
 		//! True if components are same as those of other within tol
@@ -175,8 +145,8 @@ namespace img
 			) const
 		{
 			return
-				(  location().nearlyEquals(other.location(), tol)
-				&& gradient().nearlyEquals(other.gradient(), tol)
+				(  img::Ray::nearlyEquals(other, tol)
+				&& engabra::g3::nearlyEquals(theMag, other.theMag, tol)
 				);
 		}
 

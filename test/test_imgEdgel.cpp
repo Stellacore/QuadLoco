@@ -84,12 +84,12 @@ namespace
 		quadloco::ras::RowCol const rcFront
 			{ hwSize.high()-1u, hwSize.wide()-1u };
 		bool const expBack{ false };
-		bool const gotBack{ edgel.rcInFront(spotBack) };
+		bool const gotBack{ edgel.isAhead(spotBack) };
 		bool const expFront{ true };
 		bool const gotFront{ edgel.rcInFront(rcFront) };
 		quadloco::img::Spot const spotOnEdge{ edgel.location() }; // not behind
 		bool const expOnEdge{ true };
-		bool const gotOnEdge{ edgel.rcInFront(spotOnEdge) };
+		bool const gotOnEdge{ edgel.isAhead(spotOnEdge) };
 
 		// [DoxyExample01]
 
