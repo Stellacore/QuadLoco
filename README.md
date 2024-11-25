@@ -245,7 +245,7 @@ components of that namespace. The header files are:
 
 * img.hpp - Image space - 2D - data types
 
-	img.hpp
+	img.hpp --
 
 	-- Discrete
 
@@ -260,7 +260,6 @@ components of that namespace. The header files are:
 
 	-- Composite
 
-TODO - add
 	imgRay.hpp -- General 2D ray reprentation (start point and unit direction)
 	imgEdgel.hpp -- An img::Ray with edge gradient related methods
 
@@ -282,17 +281,15 @@ TODO - add
 
 * ops.hpp - Operations and processing capabilities
 
-	ops.hpp
+	ops.hpp --
 	opsAdderAD.hpp -- Accumulator for Hough (Alpha,Delta) parameters
-TODO - add img::Span return
-	opsFence.hpp -- Tracker for determining Span of range values
+	opsFence.hpp -- Tracker for determining (min,max) of value samples
 	opsPeakFinder.hpp -- Location of multiple peaks within 1D buffer
-TODO - rename
-	imgSampler.hpp -- Sampler of raster gradient values
+	opsGridFilter.hpp -- Digital filter computations on raster grid data
 
 * pix.hpp - Picture element (radiometry) related capabilities
 
-	pix.hpp -- 
+	pix.hpp -- Type definitions and validity testing for floating point pixels
 	pixNoise.hpp -- Digital imaging noise models
 
 * prb.hpp - Probability theory functions and utilities
@@ -315,12 +312,10 @@ TODO - rename
 	sig.hpp --
 	sigParmAD.hpp -- Parameters "Alpha,Delta" representing Hough line segment
 	sigQuadTarget.hpp -- Description of (perspective) image of obj::QuadTarget
-TODO - move to imgSpan
-	sigSpan.hpp
 
 * sim.hpp - Simulation capabilities
 
-	sim.hpp --
+	sim.hpp -- General functions useful for simulation
 	simConfig.hpp -- Description of geometry for img::QuadTarget simulation
 	simgrid.hpp -- Simulate ras::Grid data with various edge properties
 	simRender.hpp -- Produce a ras::Grid containing simulated img::QuadTarget
