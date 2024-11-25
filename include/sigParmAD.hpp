@@ -65,12 +65,12 @@ namespace sig
 		//! Point that contains line segmenet (same point as img::Spot)
 		inline
 		static
-		img::Vec2D<double>
+		img::Vector<double>
 		linePntFromEdgeLoc
 			( img::Spot const & spot
 			)
 		{
-			return img::Vec2D<double>
+			return img::Vector<double>
 				{ (double)spot[0]
 				, (double)spot[1]
 				};
@@ -79,12 +79,12 @@ namespace sig
 		//! Direction perpendicular to gradient direction in right hand sense
 		inline
 		static
-		img::Vec2D<double>
+		img::Vector<double>
 		lineDirFromEdgeDir
 			( img::Grad const & grad
 			)
 		{
-			return img::Vec2D<double>
+			return img::Vector<double>
 				{ -(double)grad[1]
 				,  (double)grad[0]
 				};

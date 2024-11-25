@@ -34,7 +34,7 @@
 
 #include "cast.hpp"
 #include "imgSpot.hpp"
-#include "imgVec2D.hpp"
+#include "imgVector.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "pixNoise.hpp"
@@ -292,11 +292,11 @@ namespace sim
 			engabra::g3::Vector const yMidInExt
 				{ theCamWrtQuad(cast::engVector(theObjQuad.midSidePosY())) };
 
-			img::Vec2D const centerInDet
+			img::Vector const centerInDet
 				{ theCamera.projectedSpotFor(centerInExt) };
-			img::Vec2D const xMidInDet
+			img::Vector const xMidInDet
 				{ theCamera.projectedSpotFor(xMidInExt) };
-			img::Vec2D const yMidInDet
+			img::Vector const yMidInDet
 				{ theCamera.projectedSpotFor(yMidInExt) };
 
 			engabra::g3::Vector const center

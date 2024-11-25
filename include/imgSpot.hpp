@@ -32,7 +32,7 @@
  */
 
 
-#include "imgVec2D.hpp"
+#include "imgVector.hpp"
 
 // #include <Engabra>
 
@@ -51,13 +51,13 @@ namespace img
 {
 
 	//! Discrete grid location in row,colum order.
-	struct Spot : public img::Vec2D<double>
+	struct Spot : public img::Vector<double>
 	{
 		inline
 		explicit
 		Spot
 			()
-			: img::Vec2D<double>{}
+			: img::Vector<double>{}
 		{ }
 
 		inline
@@ -66,15 +66,15 @@ namespace img
 			( double const val0
 			, double const val1
 			)
-			: img::Vec2D<double>{ val0, val1 }
+			: img::Vector<double>{ val0, val1 }
 		{ }
 
 		inline
 		explicit
 		Spot
-			( img::Vec2D<double> const vec2D
+			( img::Vector<double> const vec2D
 			)
-			: img::Vec2D<double>{ vec2D.theData }
+			: img::Vector<double>{ vec2D.theData }
 		{ }
 
 		inline

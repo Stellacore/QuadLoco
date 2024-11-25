@@ -249,11 +249,11 @@ components of that namespace. The header files are:
 
 	-- Discrete
 
-	imgChipSpec.hpp
+	imgChipSpec.hpp -- sub area within a raster grid
 
 	-- Continuous
 
-	imgVec2D.hpp
+	imgVector.hpp
 	imgSpot.hpp
 	imgEdgel.hpp
 	imgGrad.hpp

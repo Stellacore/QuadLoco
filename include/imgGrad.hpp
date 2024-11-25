@@ -32,7 +32,7 @@
  */
 
 
-#include "imgVec2D.hpp"
+#include "imgVector.hpp"
 
 #include <iostream>
 
@@ -48,14 +48,14 @@ namespace img
 	 * \note For computing gradient values over entire ras::Grid instances
 	 * refer to functions in rasgrid.hpp (e.g. gradientGridFor()).
 	 */
-	struct Grad : public img::Vec2D<double>
+	struct Grad : public img::Vector<double>
 	{
 
 		inline
 		explicit
 		Grad
 			()
-			: img::Vec2D<double>{}
+			: img::Vector<double>{}
 		{ }
 
 		inline
@@ -64,15 +64,15 @@ namespace img
 			( double const val0
 			, double const val1
 			)
-			: img::Vec2D<double>{ val0, val1 }
+			: img::Vector<double>{ val0, val1 }
 		{ }
 
 		inline
 		explicit
 		Grad
-			( img::Vec2D<double> const vec2D
+			( img::Vector<double> const vec2D
 			)
-			: img::Vec2D<double>{ vec2D.theData }
+			: img::Vector<double>{ vec2D.theData }
 		{ }
 
 		inline

@@ -185,7 +185,7 @@ namespace
 
 		// Check if extracted edge values match expected ones
 
-		Vec2D<double>::Formatter const fmtFunc{ "{:4.1}" };
+		Vector<double>::Formatter const fmtFunc{ "{:4.1}" };
 
 		std::function<bool(Grad const & gdelA, Grad const & gdelB)>
 			const nearlyEqualGrads

@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::img::Vec2D class template
+ * \brief Declarations for quadloco::img::Vector class template
  *
  */
 
@@ -57,7 +57,7 @@ namespace img
 
 	//! Generic 2D vector structure
 	template <typename Type>
-	struct Vec2D
+	struct Vector
 	{
 		//! Component data values
 		std::array<Type, 2u> theData
@@ -75,7 +75,7 @@ namespace img
 			inline
 			std::string
 			operator()
-				( Vec2D<Type> const & elem
+				( Vector<Type> const & elem
 				) const
 			{
 				std::ostringstream fmt;
@@ -90,7 +90,7 @@ namespace img
 
 
 		inline
-		~Vec2D
+		~Vector
 			() = default;
 
 		//! True if this instance contain valid data (is not null)
@@ -119,7 +119,7 @@ namespace img
 		inline
 		bool
 		nearlyEquals
-			( Vec2D const & other
+			( Vector const & other
 			, Type const tol = std::numeric_limits<Type>::epsilon()
 			) const
 		{
@@ -150,15 +150,15 @@ namespace img
 			return oss.str();
 		}
 
-	}; // Vec2D
+	}; // Vector
 
 	//! Scaling operations
 	template <typename Type>
 	inline
-	Vec2D<Type>
+	Vector<Type>
 	operator*
 		( Type const & scl
-		, Vec2D<Type> const & vec
+		, Vector<Type> const & vec
 		)
 	{
 		return { scl*vec[0], scl*vec[1] };
@@ -173,7 +173,7 @@ namespace img
 	inline
 	Type
 	magnitude
-		( Vec2D<Type> const & vec
+		( Vector<Type> const & vec
 		)
 	{
 		return std::hypot(vec[0], vec[1]);
@@ -182,12 +182,12 @@ namespace img
 	//! Unitary (1.==magnitude) direction for vec
 	template <typename Type>
 	inline
-	Vec2D<Type>
+	Vector<Type>
 	direction
-		( Vec2D<Type> const & vec
+		( Vector<Type> const & vec
 		)
 	{
-		Vec2D<Type> unit{};
+		Vector<Type> unit{};
 		Type const mag{ magnitude(vec) };
 		if (engabra::g3::isValid(mag))
 		{
@@ -203,25 +203,25 @@ namespace img
 	//! Sum (vecA + vecB)
 	template <typename Type>
 	inline
-	Vec2D<Type>
+	Vector<Type>
 	operator+
-		( Vec2D<Type> const & vecA
-		, Vec2D<Type> const & vecB
+		( Vector<Type> const & vecA
+		, Vector<Type> const & vecB
 		)
 	{
-		return Vec2D<Type>{ vecA[0] + vecB[0], vecA[1] + vecB[1] };
+		return Vector<Type>{ vecA[0] + vecB[0], vecA[1] + vecB[1] };
 	}
 
 	//! Difference (vecA - vecB)
 	template <typename Type>
 	inline
-	Vec2D<Type>
+	Vector<Type>
 	operator-
-		( Vec2D<Type> const & vecA
-		, Vec2D<Type> const & vecB
+		( Vector<Type> const & vecA
+		, Vector<Type> const & vecB
 		)
 	{
-		return Vec2D<Type>{ vecA[0] - vecB[0], vecA[1] - vecB[1] };
+		return Vector<Type>{ vecA[0] - vecB[0], vecA[1] - vecB[1] };
 	}
 
 
@@ -230,8 +230,8 @@ namespace img
 	inline
 	Type
 	dot
-		( Vec2D<Type> const & vecA
-		, Vec2D<Type> const & vecB
+		( Vector<Type> const & vecA
+		, Vector<Type> const & vecB
 		)
 	{
 		return (vecA[0]*vecB[0] + vecA[1]*vecB[1]);
@@ -242,8 +242,8 @@ namespace img
 	inline
 	Type
 	outer
-		( Vec2D<Type> const & vecA
-		, Vec2D<Type> const & vecB
+		( Vector<Type> const & vecA
+		, Vector<Type> const & vecB
 		)
 	{
 		return (vecA[0]*vecB[1] - vecA[1]*vecB[0]);
@@ -262,7 +262,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::img::Vec2D<Type> const & item
+		, quadloco::img::Vector<Type> const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -274,7 +274,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::img::Vec2D<Type> const & item
+		( quadloco::img::Vector<Type> const & item
 		)
 	{
 		return item.isValid();
@@ -285,8 +285,8 @@ namespace
 	inline
 	bool
 	nearlyEquals
-		( quadloco::img::Vec2D<Type> const & itemA
-		, quadloco::img::Vec2D<Type> const & itemB
+		( quadloco::img::Vector<Type> const & itemA
+		, quadloco::img::Vector<Type> const & itemB
 		, Type const tol = std::numeric_limits<Type>::epsilon()
 		)
 	{

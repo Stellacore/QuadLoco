@@ -34,7 +34,7 @@
 
 #include "imgGrad.hpp"
 #include "imgSpot.hpp"
-#include "imgVec2D.hpp"
+#include "imgVector.hpp"
 #include "rasRowCol.hpp"
 
 #include <Engabra>
@@ -78,7 +78,7 @@ namespace cast
 	inline
 	engabra::g3::Vector
 	engVector
-		( img::Vec2D<double> const & vec
+		( img::Vector<double> const & vec
 		)
 	{
 		return engabra::g3::Vector{ vec[0], vec[1], 0. };
@@ -117,7 +117,7 @@ namespace cast
 	inline
 	ras::RowCol
 	rasRowCol
-		( img::Vec2D<Type> const & vec2D
+		( img::Vector<Type> const & vec2D
 		)
 	{
 		return ras::RowCol
@@ -140,18 +140,18 @@ namespace cast
 	}
 
 	//
-	// To img::Vec2D<Type>
+	// To img::Vector<Type>
 	//
 
 	//! The first two components, vec[0,1]
 	template <typename Type>
 	inline
-	img::Vec2D<Type>
-	imgVec2D
+	img::Vector<Type>
+	imgVector
 		( engabra::g3::Vector const & imgVec
 		)
 	{
-		return img::Vec2D<Type>
+		return img::Vector<Type>
 			{ imgVec[0]
 			, imgVec[1]
 			};

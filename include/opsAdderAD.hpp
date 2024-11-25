@@ -213,7 +213,7 @@ namespace ops
 		inline
 		double
 		weightAt
-			( img::Vec2D<double> const & fracSpot
+			( img::Vector<double> const & fracSpot
 			, double const & sigma = 1.
 			)
 		{

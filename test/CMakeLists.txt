@@ -39,7 +39,7 @@ set(unitTests
 	test_imgGrad  # pixel Gradent element type and functions
 	test_imgSampler  # pixel grid sampling functions
 	test_imgSpot  # 'continuous' raster cell locations
-	test_imgVec2D  # support for 2D vector operations
+	test_imgVector  # support for 2D vector operations
 	test_io  # basic i/o support (e.g. pgm images)
 	test_objCamera  # simplified ideal perspective camera
 	test_objQuadTarget  # represent physical target object

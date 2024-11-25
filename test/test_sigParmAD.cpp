@@ -52,8 +52,8 @@ namespace
 
 		// orthogonal line direction (e.g. lineDir is 1/4 RH turn from gradDir)
 		quadloco::img::Grad const gradDir{ 1., 0. };
-		quadloco::img::Vec2D<double> const expLineDir{ 0., 1. }; // RH 1/4 turn
-		quadloco::img::Vec2D<double> const gotLineDir
+		quadloco::img::Vector<double> const expLineDir{ 0., 1. }; // RH 1/4 turn
+		quadloco::img::Vector<double> const gotLineDir
 			{ quadloco::sig::ParmAD::lineDirFromEdgeDir(gradDir) };
 
 		// [DoxyExample00]
@@ -94,7 +94,7 @@ namespace
 		img::Edgel const edgel{ pixLoc, pixGrad };
 
 		// the line segmeng of interest is perpendicular to edge gradient
-		quadloco::img::Vec2D<double> const lineDir
+		quadloco::img::Vector<double> const lineDir
 			{ quadloco::sig::ParmAD::lineDirFromEdgeDir(edgel.gradient()) };
 
 		// the Alpha,Delta parameters associate with the line segment

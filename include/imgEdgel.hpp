@@ -35,7 +35,7 @@
 #include "cast.hpp"
 #include "imgGrad.hpp"
 #include "imgSpot.hpp"
-#include "imgVec2D.hpp"
+#include "imgVector.hpp"
 
 #include <Engabra>
 
@@ -129,8 +129,8 @@ namespace img
 			img::Spot const delta{ imgSpot - location() };
 			double const projection
 				{ dot
-					( (img::Vec2D<double>)delta
-					, (img::Vec2D<double>)gradient()
+					( (img::Vector<double>)delta
+					, (img::Vector<double>)gradient()
 					)
 				};
 			return (projection < 0.);

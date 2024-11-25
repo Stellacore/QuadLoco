@@ -33,7 +33,7 @@
 
 
 #include "imgSpot.hpp"
-#include "imgVec2D.hpp"
+#include "imgVector.hpp"
 #include "rasSizeHW.hpp"
 
 #include <Engabra>
@@ -138,9 +138,9 @@ namespace img
 		inline
 		std::pair<img::Spot, img::Spot>
 		operator()
-			( img::Vec2D<double> const & linePnt
+			( img::Vector<double> const & linePnt
 				//!< Any arbirary point on the line
-			, img::Vec2D<double> const & lineDir
+			, img::Vector<double> const & lineDir
 				//!< Positive direction along line
 			) const
 		{
@@ -151,14 +151,14 @@ namespace img
 			using namespace engabra::g3;
 
 			// be sure direction is unitary (supresses quadratic coefficient)
-			img::Vec2D<double> const ddir{ direction(lineDir) };
-			img::Vec2D<double> const & spnt = linePnt;
+			img::Vector<double> const ddir{ direction(lineDir) };
+			img::Vector<double> const & spnt = linePnt;
 
-			img::Vec2D<double> const cpnt{ theCircle.theCenter };
+			img::Vector<double> const cpnt{ theCircle.theCenter };
 			double const & rho = theCircle.theRadius;
 
 			// quadratic equation components
-			img::Vec2D<double> const wvec{ spnt - cpnt };
+			img::Vector<double> const wvec{ spnt - cpnt };
 			double const beta{ dot(wvec, ddir) };
 			double const wMagSq{ dot(wvec, wvec) };
 			double const gamma{ wMagSq - rho*rho };
@@ -172,8 +172,8 @@ namespace img
 				double const lamNeg{ lamMid - delta };
 				double const lamPos{ lamMid + delta };
 
-				img::Vec2D<double> const xNeg{ spnt + lamNeg*ddir };
-				img::Vec2D<double> const xPos{ spnt + lamPos*ddir };
+				img::Vector<double> const xNeg{ spnt + lamNeg*ddir };
+				img::Vector<double> const xPos{ spnt + lamPos*ddir };
 
 				solnPair.first  = img::Spot(xNeg);
 				solnPair.second = img::Spot(xPos);
