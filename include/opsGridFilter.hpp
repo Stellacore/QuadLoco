@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::img::Sampler
+ * \brief Declarations for quadloco::ops::GridFilter
  *
  */
 
@@ -42,11 +42,11 @@
 namespace quadloco
 {
 
-namespace img
+namespace ops
 {
 
 	//! Extract derived data from grid
-	class Sampler
+	class GridFilter
 	{
 		ras::Grid<float> const * const thePtGrid{ nullptr };
 		std::size_t const theStepHalf{ 1u };
@@ -58,7 +58,7 @@ namespace img
 		//! Attach to *EXTERNALLY MANAGED* grid
 		inline
 		explicit
-		Sampler
+		GridFilter
 			( ras::Grid<float> const * const ptGrid = nullptr
 			, std::size_t const stepHalf = 1u
 			)
@@ -111,16 +111,16 @@ namespace img
 					float const colGrad
 						{ scl * (inGrid(row, colP1) - inGrid(row, colM1)) };
 
-					grad = Grad{ rowGrad, colGrad };
+					grad = img::Grad{ rowGrad, colGrad };
 				}
 			}
 			return grad;
 		}
 
-	}; // Sampler
+	}; // GridFilter
 
 
-} // [img]
+} // [ops]
 
 } // [quadloco]
 

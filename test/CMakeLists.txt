@@ -36,7 +36,6 @@ set(unitTests
 	test_imgCircle  # geometric circle (and line intersection)
 	test_imgEdgel  # individual pixel edge information (Spot and Grad)
 	test_imgGrad  # pixel Gradent element type and functions
-	test_imgSampler  # pixel grid sampling functions
 	test_imgSpan  # half open interval (include start, excludes end)
 	test_imgSpot  # 'continuous' raster cell locations
 	test_imgVector  # support for 2D vector operations
@@ -45,6 +44,7 @@ set(unitTests
 	test_objQuadTarget  # represent physical target object
 	test_opsAdderAD  # accumulatio buffer for hough alpha,delta parms
 	test_opsFence  # bounding region determination
+	test_opsGridFilter  # pixel grid sampling functions
 	test_opsPeakFinder  # peak finding in an array
 	test_pix  # pixel image manipulations
 	test_prbGauss1D  # Gaussian probability density functions in 1D

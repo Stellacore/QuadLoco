@@ -24,14 +24,14 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::img::Sampler
+\brief Unit tests (and example) code for quadloco::ops::GridFilter
 */
 
 
-#include "imgSampler.hpp"
+#include "opsGridFilter.hpp"
 
 #include "imgEdgel.hpp"
-#include "rasgrid.hpp" // TODO - temp
+#include "rasgrid.hpp"
 #include "sigParmAD.hpp"
 #include "simgrid.hpp"
 
@@ -67,7 +67,7 @@ namespace
 
 		// sample gradient at various locations
 		// NOTE: be sure pixGrid persists for scope of sampler
-		quadloco::img::Sampler const sampler(& pixGrid);
+		quadloco::ops::GridFilter const sampler(& pixGrid);
 		for (std::size_t row{0u} ; row < pixGrid.high() ; ++row)
 		{
 			for (std::size_t col{0u} ; col < pixGrid.wide() ; ++col)
