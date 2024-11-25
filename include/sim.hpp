@@ -48,7 +48,7 @@ namespace sim
 	inline
 	double
 	approxPixPerObj
-		( img::Camera const & camera
+		( obj::Camera const & camera
 		, rigibra::Transform const & xCamWrtQuad
 		)
 	{
@@ -63,8 +63,8 @@ namespace sim
 		Vector const objPoInExt{ xCamWrtQuad(objPoInQuad) };
 		Vector const objPxInExt{ xCamWrtQuad(objPxInQuad) };
 		// corresponding image space displacement
-		dat::Spot const imgPo{ camera.detectorSpotFor(objPoInExt) };
-		dat::Spot const imgPx{ camera.detectorSpotFor(objPxInExt) };
+		img::Spot const imgPo{ camera.detectorSpotFor(objPoInExt) };
+		img::Spot const imgPx{ camera.detectorSpotFor(objPxInExt) };
 		if (imgPo.isValid() && imgPx.isValid())
 		{
 			double const imgMag{ magnitude(imgPx - imgPo) };

@@ -33,10 +33,10 @@
 
 
 #include "ang.hpp"
-#include "datRing.hpp"
-#include "datSpot.hpp"
+#include "angRing.hpp"
+#include "imgSpot.hpp"
+#include "opsPeakFinder.hpp"
 #include "prbGauss1D.hpp"
-#include "sigPeakFinder.hpp"
 
 #include <Engabra>
 
@@ -54,7 +54,7 @@ namespace ang
 	//! \brief Angle likelihood estimation
 	struct Likely
 	{
-		dat::Ring const theRing{};
+		ang::Ring const theRing{};
 		std::vector<double> theBinSums{};
 
 		//! Construct a default (null) instance
@@ -146,7 +146,7 @@ namespace ang
 		indicesOfPeaks
 			() const
 		{
-			sig::PeakFinder const peakFinder
+			ops::PeakFinder const peakFinder
 				(theBinSums.cbegin(), theBinSums.cend());
 			return peakFinder.peakIndices();
 		}
@@ -170,11 +170,11 @@ namespace ang
 			double const angleNext{ theRing.angleAt(ndxNext) };
 
 			// do math with vectors to avoid phase wrap problems
-			dat::Spot const spotPrev
+			img::Spot const spotPrev
 				{ std::cos(anglePrev), std::sin(anglePrev) };
-			dat::Spot const spotCurr
+			img::Spot const spotCurr
 				{ std::cos(angleCurr), std::sin(angleCurr) };
-			dat::Spot const spotNext
+			img::Spot const spotNext
 				{ std::cos(angleNext), std::sin(angleNext) };
 
 			// use accumulation buffer as weights
@@ -183,7 +183,7 @@ namespace ang
 			double const wgtNext{ theBinSums[ndxNext] };
 
 			// compute weighted average location
-			dat::Spot const wSpotSum
+			img::Spot const wSpotSum
 				{ wgtPrev * spotPrev
 				+ wgtCurr * spotCurr
 				+ wgtNext * spotNext
@@ -195,7 +195,7 @@ namespace ang
 				};
 			// if there's a peak here, at least one of the weights
 			// must be greater than zero - so okay to divide
-			dat::Spot const wSpot{ (1./wSum) * wSpotSum };
+			img::Spot const wSpot{ (1./wSum) * wSpotSum };
 
 			// convert weighted spot location to angle
 			double const wgtAngle{ ang::atan2(wSpot[1], wSpot[0]) };

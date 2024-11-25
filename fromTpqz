@@ -1,0 +1,25 @@
+From TPQZ
+
+libdat/
+Area.h -- real rectangle bounds
+
+libimg/
+io.h -- load and save various rgb8 (and float) formats
+
+libmath/
+angle.h - angle evaluation/interpolation functions
+CircleTab.h - rotating lookup table
+MapSizeArea.h - grid to area lookup
+smooth.h - triangle window smoothing with wrap around
+
+libprob/
+CDF function evaluation and operations
+Histogram.h - data structure
+histo.h - histrogram operations functions
+
+libsig/
+Peak.h - peak extraction from Grid (primary, secondary, prominence)
+
+libtri/
+IsoTille.h - (regular) triangle mesh interpolation infrastructure
+

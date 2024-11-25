@@ -32,10 +32,11 @@
  */
 
 
-#include "datGrid.hpp"
-#include "datRowCol.hpp"
-#include "datSizeHW.hpp"
-#include "pixEdgel.hpp"
+#include "imgEdgel.hpp"
+#include "imgSpot.hpp"
+#include "rasGrid.hpp"
+#include "rasRowCol.hpp"
+#include "rasSizeHW.hpp"
 
 
 namespace quadloco
@@ -46,19 +47,19 @@ namespace sim
 
 	//! Grid with a strong edge defined by provided edgel
 	inline
-	dat::Grid<float>
+	ras::Grid<float>
 	gridWithEdge
-		( dat::SizeHW const & hwSize
+		( ras::SizeHW const & hwSize
 			//!< Size of grid to create
-		, pix::Edgel const & edgel
+		, img::Edgel const & edgel
 			//!< Location and direction of edge to create
-		, float const & valueBackground = 0.f
+		, float const & valueBackground = 0.
 			//!< Value to assign behind the edge
-		, float const & valueForeground = 1.f
+		, float const & valueForeground = 1.
 			//!< Value to assign in front of the edge
 		)
 	{
-		dat::Grid<float> pixGrid(hwSize);
+		ras::Grid<float> pixGrid(hwSize);
 		for (std::size_t row{0u} ; row < hwSize.high() ; ++row)
 		{
 			for (std::size_t col{0u} ; col < hwSize.wide() ; ++col)
@@ -66,18 +67,18 @@ namespace sim
 				constexpr bool smoothEdge{ true };
 				if (smoothEdge)
 				{
-					float const mag{ magnitude(edgel.gradient()) };
-					constexpr float eps
-						{ std::numeric_limits<float>::epsilon() };
-					if ((256.f * eps) < mag)
+					double const mag{ magnitude(edgel.gradient()) };
+					constexpr double eps
+						{ std::numeric_limits<double>::epsilon() };
+					if ((256. * eps) < mag)
 					{
-						pix::Spot const pixSpot{ (float)row, (float)col };
-						pix::Spot const relSpot{ pixSpot - edgel.location() };
-						float const delta{ dot(edgel.gradient(), relSpot) };
-						float const dist{ (1.f/mag) * delta };
-						float const mean
+						img::Spot const imgSpot{ (float)row, (float)col };
+						img::Spot const relSpot{ imgSpot - edgel.location() };
+						double const delta{ dot(edgel.gradient(), relSpot) };
+						double const dist{ (1./mag) * delta };
+						double const mean
 							{ .5f * (valueBackground + valueForeground) };
-						float pixValue { mean + .5f*dist };
+						double pixValue { mean + .5f*dist };
 						if (pixValue < valueBackground)
 						{
 							pixValue = valueBackground;
@@ -91,7 +92,7 @@ namespace sim
 				}
 				else // sharp edge
 				{
-					dat::RowCol const rcLoc{ row, col };
+					ras::RowCol const rcLoc{ row, col };
 					float pixValue{ valueBackground };
 					if (edgel.rcInFront(rcLoc))
 					{

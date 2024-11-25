@@ -30,10 +30,10 @@
 
 #include "prbquad.hpp"
 
-#include "datSizeHW.hpp"
-#include "imgCamera.hpp"
-#include "imgQuadTarget.hpp"
+#include "objCamera.hpp"
 #include "objQuadTarget.hpp"
+#include "rasSizeHW.hpp"
+#include "sigQuadTarget.hpp"
 #include "simConfig.hpp"
 #include "simRender.hpp"
 
@@ -68,7 +68,7 @@ namespace
 		// simulate face-on 1:1 image of a quad target
 		quadloco::sim::Config const config
 			{ quadloco::sim::Config::faceOn(objQuad, numPix) };
-		quadloco::img::Camera const & camera = config.camera();
+		quadloco::obj::Camera const & camera = config.camera();
 		rigibra::Transform const & xCamWrtQua = config.xformStaWrtQuad();
 
 		// render simulated image
@@ -78,12 +78,12 @@ namespace
 		//	( camera, xCamWrtQua, objQuad
 			, opt::None // no SceneBias nor ImageNoise
 			);
-		quadloco::dat::Grid<float> const pixGrid{ render.quadImage(numOver) };
+		quadloco::ras::Grid<float> const pixGrid{ render.quadImage(numOver) };
 		// retrieve geometry of the simulated image
-		quadloco::img::QuadTarget const expImgQuad{ render.imgQuadTarget() };
+		quadloco::sig::QuadTarget const expImgQuad{ render.imgQuadTarget() };
 
 		// for this test, assume the found geometry is perfect
-		quadloco::img::QuadTarget const & gotImgQuad = expImgQuad;
+		quadloco::sig::QuadTarget const & gotImgQuad = expImgQuad;
 
 		// assess the quadness of pixels w.r.t. the estimated "found" geometry
 		std::ostringstream msg; // diagnostic info

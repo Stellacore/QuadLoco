@@ -224,4 +224,106 @@ for lens distortion.
 		-- represent first intersection point as angle position on the circle
 		-- represent the second point as signed angular difference from first
 
+## Software Components
+
+### Project namespace headers
+
+Each project namespace has its own namespace header file that includes all
+components of that namespace. The header files are:
+
+* QuadLoco (or QuadLoco.hpp) - Project top level header - includes all others
+
+* ang.hpp - Angle data structures and manipulations
+
+	ang.hpp -- basic angle values and functions
+	angRing.hpp -- Wrap-around buffer
+	angLikely.hpp -- Pseudo-probability interpretation of ang::Ring buffer
+
+* cast.hpp - Casting functions for converting between data types
+
+	cast.hpp -- Basic cast functions
+
+* img.hpp - Image space - 2D - data types
+
+	img.hpp --
+
+	-- Discrete
+
+	imgChipSpec.hpp -- Sub area within a raster grid
+
+	-- Continuous
+
+	imgSpan.hpp -- A half open interval of values [min,max)
+	imgVector.hpp -- General 2D vector representation and operations
+	imgSpot.hpp -- An img::Vector with location specific methods
+	imgGrad.hpp -- An img::Vector with gradient specific methods
+
+	-- Composite
+
+	imgRay.hpp -- General 2D ray reprentation (start point and unit direction)
+	imgEdgel.hpp -- An img::Ray with edge gradient related methods
+
+	-- geometry
+
+	imgArea.hpp -- Rectangular region with half open high,wide spans
+	imgCircle.hpp -- Circle data (center spot and radius)
+
+
+* io.hpp - Input/Output basic capabilities
+
+	io.hpp -- Simple save and load functions (e.g. *.pgm files)
+
+* obj.hpp - Object space - 3D - data type
+
+	obj.hpp -- 
+	objCamera.hpp -- Perspective image projection model
+	objQuadTarget.hpp -- Description of quad target geometry and radiometry
+
+* ops.hpp - Operations and processing capabilities
+
+	ops.hpp --
+	opsAdderAD.hpp -- Accumulator for Hough (Alpha,Delta) parameters
+	opsFence.hpp -- Tracker for determining (min,max) of value samples
+	opsPeakFinder.hpp -- Location of multiple peaks within 1D buffer
+	opsGridFilter.hpp -- Digital filter computations on raster grid data
+
+* pix.hpp - Picture element (radiometry) related capabilities
+
+	pix.hpp -- Type definitions and validity testing for floating point pixels
+	pixNoise.hpp -- Digital imaging noise models
+
+* prb.hpp - Probability theory functions and utilities
+
+	prb.hpp -- 
+	prbGauss1D.hpp -- Gaussian probability PDF value computation
+	prbquad.hpp -- Assess "quad target-ness" of raster data signal
+	prbStats.hpp -- Statistics accumulation over scalar samples
+
+* ras.hpp - Raster data types
+
+	ras.hpp -- 
+	rasGrid.hpp -- Data structure of cells in a high,wide grid configuration
+	rasgrid.hpp -- Functions that operate on ras::Grid data
+	rasRowCol.hpp -- Indices pair specifying location within ras::Grid
+	rasSizeHW.hpp -- Value pair specifying height,width of ras::Grid like data
+
+* sig.hpp - Signal processing types and functions
+
+	sig.hpp --
+	sigParmAD.hpp -- Parameters "Alpha,Delta" representing Hough line segment
+	sigQuadTarget.hpp -- Description of (perspective) image of obj::QuadTarget
+
+* sim.hpp - Simulation capabilities
+
+	sim.hpp -- General functions useful for simulation
+	simConfig.hpp -- Description of geometry for img::QuadTarget simulation
+	simgrid.hpp -- Simulate ras::Grid data with various edge properties
+	simRender.hpp -- Produce a ras::Grid containing simulated img::QuadTarget
+	simSampler.hpp -- Ray-trace style radiometric sampling of obj::QuadTarget
+
+* xfm.hpp - Transformation functions and capabilities
+
+	xfm.hpp --
+	xfmMapSizeArea.hpp -- Transform data between ras::SizeHW and img::Area
+
 

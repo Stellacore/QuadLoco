@@ -32,8 +32,8 @@
  */
 
 
-#include "datArea.hpp"
-#include "datSpot.hpp"
+#include "imgArea.hpp"
+#include "imgSpot.hpp"
 
 #include <Engabra>
 
@@ -61,7 +61,7 @@ namespace obj
 		double const theEdgeMag{ engabra::g3::null<double>() };
 
 		//! Bounding (half open) area - distinguish target from surround
-		dat::Area const theArea{};
+		img::Area const theArea{};
 
 		//! If true clip the background patches into triangles
 		bool const theDoubleTriangle{ false };
@@ -72,15 +72,15 @@ namespace obj
 		//! Area symmetric about origin with theEdgeMag size on each side
 		inline
 		static
-		dat::Area
+		img::Area
 		areaFor
 			( double const & fullEdgeMag
 			)
 		{
 			double const halfEdgeMag{ .5 * fullEdgeMag };
-			return dat::Area
-				{ dat::Span{ -halfEdgeMag,  halfEdgeMag }
-				, dat::Span{ -halfEdgeMag,  halfEdgeMag }
+			return img::Area
+				{ img::Span{ -halfEdgeMag,  halfEdgeMag }
+				, img::Span{ -halfEdgeMag,  halfEdgeMag }
 				};
 		}
 
@@ -146,7 +146,7 @@ namespace obj
 
 		//! Span of coordinates in first dimension (e.g. left to right)
 		inline
-		dat::Span const &
+		img::Span const &
 		span0
 			() const
 		{
@@ -155,7 +155,7 @@ namespace obj
 
 		//! Span of coordinates in second dimension (e.g. bottom to top)
 		inline
-		dat::Span const &
+		img::Span const &
 		span1
 			() const
 		{
@@ -201,52 +201,52 @@ namespace obj
 
 		//! Center location in target frame (origin == zero)
 		inline
-		dat::Spot
+		img::Spot
 		centerSpot
 			() const
 		{
-			return dat::Spot{ 0., 0. };
+			return img::Spot{ 0., 0. };
 		}
 
 		//! Point on outer edge along 'x' axis
 		inline
-		dat::Spot
+		img::Spot
 		midSidePosX
 			() const
 		{
-			return dat::Spot{ halfEdgeMag(), 0. };
+			return img::Spot{ halfEdgeMag(), 0. };
 		}
 
 		//! Point on outer edge along 'x' axis
 		inline
-		dat::Spot
+		img::Spot
 		midSideNegX
 			() const
 		{
-			return dat::Spot{ -halfEdgeMag(), 0. };
+			return img::Spot{ -halfEdgeMag(), 0. };
 		}
 
 		//! Point on outer edge along 'x' axis
 		inline
-		dat::Spot
+		img::Spot
 		midSidePosY
 			() const
 		{
-			return dat::Spot{ 0., halfEdgeMag() };
+			return img::Spot{ 0., halfEdgeMag() };
 		}
 
 		//! Point on outer edge along 'x' axis
 		inline
-		dat::Spot
+		img::Spot
 		midSideNegY
 			() const
 		{
-			return dat::Spot{ 0., -halfEdgeMag() };
+			return img::Spot{ 0., -halfEdgeMag() };
 		}
 
 		//! The four outer corners in order: RT, LT, LB, RB
 		inline
-		std::array<dat::Spot, 4u>
+		std::array<img::Spot, 4u>
 		cornerLocs
 			() const
 		{
@@ -254,11 +254,11 @@ namespace obj
 			double const rgt{ span0().theEnd };
 			double const bot{ span1().theBeg };
 			double const top{ span1().theEnd };
-			return std::array<dat::Spot, 4u>
-				{ dat::Spot{ rgt, top }
-				, dat::Spot{ lft, top }
-				, dat::Spot{ lft, bot }
-				, dat::Spot{ rgt, bot }
+			return std::array<img::Spot, 4u>
+				{ img::Spot{ rgt, top }
+				, img::Spot{ lft, top }
+				, img::Spot{ lft, bot }
+				, img::Spot{ rgt, bot }
 				};
 		}
 
@@ -266,7 +266,7 @@ namespace obj
 		inline
 		double
 		surroundSignalAt
-			( dat::Spot const & spotOnQuad
+			( img::Spot const & spotOnQuad
 			) const
 		{
 			double const val0{ theMeanValue };
@@ -301,7 +301,7 @@ namespace obj
 		inline
 		double
 		quadSignalAt
-			( dat::Spot const & spotOnQuad
+			( img::Spot const & spotOnQuad
 			) const
 		{
 			// default to nan for outside of target area

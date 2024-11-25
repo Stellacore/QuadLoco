@@ -32,11 +32,11 @@
  */
 
 
-#include "datGrid.hpp"
-#include "datSpot.hpp"
-#include "imgQuadTarget.hpp"
-#include "pixgrid.hpp"
+#include "imgSpot.hpp"
 #include "prbStats.hpp"
+#include "rasgrid.hpp"
+#include "rasGrid.hpp"
+#include "sigQuadTarget.hpp"
 
 #include <limits>
 #include <vector>
@@ -79,8 +79,8 @@ namespace prb
 		static
 		SquareRadiiSamples
 		from
-			( dat::Grid<Type> const & pixGrid
-			, img::QuadTarget const & imgQuad
+			( ras::Grid<Type> const & pixGrid
+			, sig::QuadTarget const & imgQuad
 			)
 		{
 			std::vector<Type> ppVals{};
@@ -128,16 +128,16 @@ namespace prb
 				Vector const pnLoc{ .5 * (xpLoc + ynLoc) };
 
 				// radial flat sample spots (cast from Vector)
-				dat::Spot const ppSpot{ ppLoc[0], ppLoc[1] };
-				dat::Spot const npSpot{ npLoc[0], npLoc[1] };
-				dat::Spot const nnSpot{ nnLoc[0], nnLoc[1] };
-				dat::Spot const pnSpot{ pnLoc[0], pnLoc[1] };
+				img::Spot const ppSpot{ ppLoc[0], ppLoc[1] };
+				img::Spot const npSpot{ npLoc[0], npLoc[1] };
+				img::Spot const nnSpot{ nnLoc[0], nnLoc[1] };
+				img::Spot const pnSpot{ pnLoc[0], pnLoc[1] };
 
 
 				std::size_t numValid{ 0u };
 
 				Type const ppVal
-					{ pix::grid::bilinValueAt<Type>(pixGrid, ppSpot) };
+					{ ras::grid::bilinValueAt<Type>(pixGrid, ppSpot) };
 				if (isValid(ppVal))
 				{
 					ppVals.emplace_back(ppVal);
@@ -145,7 +145,7 @@ namespace prb
 				}
 
 				Type const npVal
-					{ pix::grid::bilinValueAt<Type>(pixGrid, npSpot) };
+					{ ras::grid::bilinValueAt<Type>(pixGrid, npSpot) };
 				if (isValid(npVal))
 				{
 					npVals.emplace_back(npVal);
@@ -153,7 +153,7 @@ namespace prb
 				}
 
 				Type const nnVal
-					{ pix::grid::bilinValueAt<Type>(pixGrid, nnSpot) };
+					{ ras::grid::bilinValueAt<Type>(pixGrid, nnSpot) };
 				if (isValid(nnVal))
 				{
 					nnVals.emplace_back(nnVal);
@@ -161,7 +161,7 @@ namespace prb
 				}
 
 				Type const pnVal
-					{ pix::grid::bilinValueAt<Type>(pixGrid, pnSpot) };
+					{ ras::grid::bilinValueAt<Type>(pixGrid, pnSpot) };
 				if (isValid(pnVal))
 				{
 					pnVals.emplace_back(pnVal);
@@ -265,8 +265,8 @@ namespace prb
 	inline
 	double
 	isQuadlike
-		( dat::Grid<Type> const & pixGrid
-		, img::QuadTarget const & imgQuad
+		( ras::Grid<Type> const & pixGrid
+		, sig::QuadTarget const & imgQuad
 		, std::ostream * const & ptMessages = nullptr
 		)
 	{

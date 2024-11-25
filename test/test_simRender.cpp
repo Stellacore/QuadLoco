@@ -28,10 +28,10 @@
 */
 
 
-#include "datGrid.hpp"
 #include "io.hpp"
 #include "objQuadTarget.hpp"
 #include "pix.hpp"
+#include "rasGrid.hpp"
 #include "simConfig.hpp"
 #include "simRender.hpp"
 
@@ -80,7 +80,7 @@ namespace
 			( config
 			, opt::None // no SceneBias nor ImageNoise
 			);
-		quadloco::dat::Grid<float> const gotPixGrid
+		quadloco::ras::Grid<float> const gotPixGrid
 			{ render.quadImage(numOverSample) };
 
 		// For this test case, quad should exactly fill the 2x2 grid
@@ -96,7 +96,7 @@ namespace
 		  && (2u == gotPixGrid.wide())
 		   )
 		{
-			quadloco::dat::Grid<float> expPixGrid{ gotPixGrid.hwSize() };
+			quadloco::ras::Grid<float> expPixGrid{ gotPixGrid.hwSize() };
 			expPixGrid(0u, 0u) = 1.f;  expPixGrid(0u, 1u) = 0.f;  
 			expPixGrid(1u, 0u) = 0.f;  expPixGrid(1u, 1u) = 1.f;  
 
@@ -154,12 +154,12 @@ namespace
 			, opt::None // no SceneBias nor ImageNoise
 			);
 
-		quadloco::dat::Grid<float> const fGrid{ render.quadImage() };
+		quadloco::ras::Grid<float> const fGrid{ render.quadImage() };
 		// ... retrieve geometry of the simulated image
-		quadloco::img::QuadTarget const imgQuad{ render.imgQuadTarget() };
+		quadloco::sig::QuadTarget const imgQuad{ render.imgQuadTarget() };
 
 		// note min/max pixel values (e.g. useful for normalizing radiometry)
-		quadloco::dat::Span const fSpan{ quadloco::pix::fullSpanFor(fGrid) };
+		quadloco::img::Span const fSpan{ quadloco::pix::fullSpanFor(fGrid) };
 
 		// [DoxyExample01]
 

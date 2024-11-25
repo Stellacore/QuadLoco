@@ -32,8 +32,8 @@
  */
 
 
-#include "datGrid.hpp"
 #include "pix.hpp"
+#include "rasGrid.hpp"
 
 #include <cstdint>
 #include <filesystem>
@@ -53,7 +53,7 @@ namespace io
 	bool
 	writePGM
 		( std::filesystem::path const & pgmPath
-		, dat::Grid<uint8_t> const & ugrid
+		, ras::Grid<uint8_t> const & ugrid
 		)
 	{
 		std::ofstream ofs
@@ -77,12 +77,12 @@ namespace io
 
 	//! Grid of image pixels retrieved from pgmPath
 	inline
-	dat::Grid<uint8_t>
+	ras::Grid<uint8_t>
 	readPGM
 		( std::filesystem::path const & pgmPath
 		)
 	{
-		dat::Grid<uint8_t> ugrid{};
+		ras::Grid<uint8_t> ugrid{};
 		std::ifstream ifs
 			( pgmPath
 			, std::ios_base::in
@@ -98,10 +98,10 @@ namespace io
 		ifs >> maxPix;
 
 		// if valid header info, then read pixel values
-		dat::SizeHW const hwSize{ high, wide };
+		ras::SizeHW const hwSize{ high, wide };
 		if (hwSize.isValid() && (255u == maxPix))
 		{
-			ugrid = dat::Grid<uint8_t>(hwSize);
+			ugrid = ras::Grid<uint8_t>(hwSize);
 			for (std::size_t row{0u} ; row < ugrid.high() ; ++row)
 			{
 				for (std::size_t col{0u} ; col < ugrid.wide() ; ++col)
@@ -119,14 +119,14 @@ namespace io
 	bool
 	writeStretchPGM
 		( std::filesystem::path const & pgmPath
-		, dat::Grid<float> const & fGrid
+		, ras::Grid<float> const & fGrid
 		)
 	{
 		// compute spanning range of radiometry values
-		dat::Span const fSpan{ pix::fullSpanFor(fGrid) };
+		img::Span const fSpan{ pix::fullSpanFor(fGrid) };
 
 		// stretch/compress fGrid values to fit into uGrid
-		dat::Grid<uint8_t> const uGrid{ pix::uGrid8(fGrid, fSpan) };
+		ras::Grid<uint8_t> const uGrid{ pix::uGrid8(fGrid, fSpan) };
 
 		// write resulting uGrid
 		return io::writePGM(pgmPath, uGrid);
