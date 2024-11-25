@@ -236,12 +236,12 @@ components of that namespace. The header files are:
 * ang.hpp - Angle data structures and manipulations
 
 	ang.hpp -- basic angle values and functions
-	angRing.hpp -- wrap-around buffer
-	angLikely.hpp -- pseudo-probability interpretation of ang::Ring buffer
+	angRing.hpp -- Wrap-around buffer
+	angLikely.hpp -- Pseudo-probability interpretation of ang::Ring buffer
 
 * cast.hpp - Casting functions for converting between data types
 
-	cast.hpp
+	cast.hpp -- Basic cast functions
 
 * img.hpp - Image space - 2D - data types
 
@@ -249,75 +249,86 @@ components of that namespace. The header files are:
 
 	-- Discrete
 
-	imgChipSpec.hpp -- sub area within a raster grid
+	imgChipSpec.hpp -- Sub area within a raster grid
 
 	-- Continuous
 
-	imgVector.hpp
-	imgSpot.hpp
-	imgEdgel.hpp
-	imgGrad.hpp
+	imgSpan.hpp -- A half open interval of values [min,max)
+	imgVector.hpp -- General 2D vector representation and operations
+	imgSpot.hpp -- An img::Vector with location specific methods
+	imgGrad.hpp -- An img::Vector with gradient specific methods
 
-	imgArea.hpp
-	imgCircle.hpp
-	imgSampler.hpp -- ?? TODO move to sig? or ops?
+	-- Composite
+
+TODO - add
+	imgRay.hpp -- General 2D ray reprentation (start point and unit direction)
+	imgEdgel.hpp -- An img::Ray with edge gradient related methods
+
+	-- geometry
+
+	imgArea.hpp -- Rectangular region with half open high,wide spans
+	imgCircle.hpp -- Circle data (center spot and radius)
+
 
 * io.hpp - Input/Output basic capabilities
 
-	io.hpp
+	io.hpp -- Simple save and load functions (e.g. *.pgm files)
 
 * obj.hpp - Object space - 3D - data type
 
-	objCamera.hpp
-	obj.hpp
-	objQuadTarget.hpp
+	obj.hpp -- 
+	objCamera.hpp -- Perspective image projection model
+	objQuadTarget.hpp -- Description of quad target geometry and radiometry
 
 * ops.hpp - Operations and processing capabilities
 
-	opsAdderAD.hpp
-	opsFence.hpp
 	ops.hpp
-	opsPeakFinder.hpp
+	opsAdderAD.hpp -- Accumulator for Hough (Alpha,Delta) parameters
+TODO - add img::Span return
+	opsFence.hpp -- Tracker for determining Span of range values
+	opsPeakFinder.hpp -- Location of multiple peaks within 1D buffer
+TODO - rename
+	imgSampler.hpp -- Sampler of raster gradient values
 
 * pix.hpp - Picture element (radiometry) related capabilities
 
-	pix.hpp
-	pixNoise.hpp
+	pix.hpp -- 
+	pixNoise.hpp -- Digital imaging noise models
 
 * prb.hpp - Probability theory functions and utilities
 
-	prbGauss1D.hpp
-	prb.hpp
-	prbquad.hpp
-	prbQuadness.hpp
-	prbStats.hpp
+	prb.hpp -- 
+	prbGauss1D.hpp -- Gaussian probability PDF value computation
+	prbquad.hpp -- Assess "quad target-ness" of raster data signal
+	prbStats.hpp -- Statistics accumulation over scalar samples
 
 * ras.hpp - Raster data types
 
-	rasgrid.hpp
-	rasGrid.hpp
-	ras.hpp
-	rasRowCol.hpp
-	rasSizeHW.hpp
+	ras.hpp -- 
+	rasGrid.hpp -- Data structure of cells in a high,wide grid configuration
+	rasgrid.hpp -- Functions that operate on ras::Grid data
+	rasRowCol.hpp -- Indices pair specifying location within ras::Grid
+	rasSizeHW.hpp -- Value pair specifying height,width of ras::Grid like data
 
 * sig.hpp - Signal processing types and functions
 
-	sig.hpp
-	sigParmAD.hpp
-	sigQuadTarget.hpp
+	sig.hpp --
+	sigParmAD.hpp -- Parameters "Alpha,Delta" representing Hough line segment
+	sigQuadTarget.hpp -- Description of (perspective) image of obj::QuadTarget
+TODO - move to imgSpan
 	sigSpan.hpp
 
 * sim.hpp - Simulation capabilities
 
-	simConfig.hpp
-	simgrid.hpp
-	sim.hpp
-	simRender.hpp
-	simSampler.hpp
+	sim.hpp --
+	simConfig.hpp -- Description of geometry for img::QuadTarget simulation
+	simgrid.hpp -- Simulate ras::Grid data with various edge properties
+	simRender.hpp -- Produce a ras::Grid containing simulated img::QuadTarget
+	simSampler.hpp -- Ray-trace style radiometric sampling of obj::QuadTarget
 
 * xfm.hpp - Transformation functions and capabilities
 
-	xfm.hpp
-	xfmMapSizeArea.hpp
+	xfm.hpp --
+	xfmMapSizeArea.hpp -- Transform data between ras::SizeHW and img::Area
 
 
