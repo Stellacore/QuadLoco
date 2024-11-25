@@ -10,6 +10,8 @@ b: both namespace and classname change
 o   ang:  angLikely.hpp
 n   ang:  datRing.hpp
 
+o  cast:  cast.hpp
+
 n   img:  datArea.hpp
 b   img:  datChipSpec.hpp -> dat::Chip
 n   img:  datCircle.hpp
@@ -19,6 +21,8 @@ n   img:  pixEdgel.hpp
 n   img:  pixGrad.hpp
 n   img:  pixSampler.hpp
 n   img:  pixSpot.hpp
+
+o    io:  io.hpp
 
 n   obj:  imgCamera.hpp
 o   obj:  objQuadTarget.hpp
@@ -50,15 +54,12 @@ o   sim:  simgrid.hpp
 
 b   xfm:  datMapSizeArea.hpp -> xfm::MapChipArea
 
-n   utl:: cast.hpp -> utlcast.hpp
-n   utl:: io.hpp -> utlio.hpp
-
-xx dat.hpp
-xx hough.hpp 
 
 # namespace headers
 ok   ang.hpp
+ok  cast.hpp
 ok   img.hpp
+ok    io.hpp
 ok   obj.hpp
 new: ops.hpp
 ok   pix.hpp
@@ -66,7 +67,6 @@ ok   prb.hpp
 new: ras.hpp
 new: sig.hpp
 ok   sim.hpp
-new: utl.hpp
 new: xfm.hpp
 
 # Development

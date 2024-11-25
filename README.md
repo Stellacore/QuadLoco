@@ -224,4 +224,100 @@ for lens distortion.
 		-- represent first intersection point as angle position on the circle
 		-- represent the second point as signed angular difference from first
 
+## Software Components
+
+### Project namespace headers
+
+Each project namespace has its own namespace header file that includes all
+components of that namespace. The header files are:
+
+* QuadLoco (or QuadLoco.hpp) - Project top level header - includes all others
+
+* ang.hpp - Angle data structures and manipulations
+
+	ang.hpp -- basic angle values and functions
+	angRing.hpp -- wrap-around buffer
+	angLikely.hpp -- pseudo-probability interpretation of ang::Ring buffer
+
+* cast.hpp - Casting functions for converting between data types
+
+	cast.hpp
+
+* img.hpp - Image space - 2D - data types
+
+	img.hpp
+
+	-- Discrete
+
+	imgChipSpec.hpp
+
+	-- Continuous
+
+	imgVec2D.hpp
+	imgSpot.hpp
+	imgEdgel.hpp
+	imgGrad.hpp
+
+	imgArea.hpp
+	imgCircle.hpp
+	imgSampler.hpp -- ?? TODO move to sig? or ops?
+
+* io.hpp - Input/Output basic capabilities
+
+	io.hpp
+
+* obj.hpp - Object space - 3D - data type
+
+	objCamera.hpp
+	obj.hpp
+	objQuadTarget.hpp
+
+* ops.hpp - Operations and processing capabilities
+
+	opsAdderAD.hpp
+	opsFence.hpp
+	ops.hpp
+	opsPeakFinder.hpp
+
+* pix.hpp - Picture element (radiometry) related capabilities
+
+	pix.hpp
+	pixNoise.hpp
+
+* prb.hpp - Probability theory functions and utilities
+
+	prbGauss1D.hpp
+	prb.hpp
+	prbquad.hpp
+	prbQuadness.hpp
+	prbStats.hpp
+
+* ras.hpp - Raster data types
+
+	rasgrid.hpp
+	rasGrid.hpp
+	ras.hpp
+	rasRowCol.hpp
+	rasSizeHW.hpp
+
+* sig.hpp - Signal processing types and functions
+
+	sig.hpp
+	sigParmAD.hpp
+	sigQuadTarget.hpp
+	sigSpan.hpp
+
+* sim.hpp - Simulation capabilities
+
+	simConfig.hpp
+	simgrid.hpp
+	sim.hpp
+	simRender.hpp
+	simSampler.hpp
+
+* xfm.hpp - Transformation functions and capabilities
+
+	xfm.hpp
+	xfmMapSizeArea.hpp
+
 
