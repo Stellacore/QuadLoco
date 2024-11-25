@@ -51,7 +51,7 @@ namespace
 		}
 
 		// [DoxyExample00]
-	
+
 		img::Vector<double> const vecA{ 3., 4. };
 		img::Vector<double> const vecB{ -4., 3. };
 
@@ -110,6 +110,24 @@ namespace
 
 		// [DoxyExample01]
 
+		// dot/outer product conventions
+		using Vec = quadloco::img::Vector<double>;
+		double const gotDot{ dot(Vec{1., 0.}, Vec{0., 1. }) };
+		double const gotOut{ outer(Vec{1., 0.}, Vec{0., 1. }) };
+		double const expDot{ 0. };
+		double const expOut{ 1. }; // +1 for righthand convention on outer
+		if (! engabra::g3::nearlyEquals(gotDot, expDot))
+		{
+			oss << "Failure of gotDot test\n";
+			oss << "exp: " << expDot << '\n';
+			oss << "got: " << gotDot << '\n';
+		}
+		if (! engabra::g3::nearlyEquals(gotOut, expOut))
+		{
+			oss << "Failure of gotOut test\n";
+			oss << "exp: " << expOut << '\n';
+			oss << "got: " << gotOut << '\n';
+		}
 
 		// [DoxyExample01]
 	}
