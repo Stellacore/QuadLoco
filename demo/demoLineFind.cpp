@@ -265,27 +265,50 @@ namespace img
 
 
 	//! Attributes of single Edgel
-	struct EdgeInfo
+	class EdgeInfo
 	{
 		img::Edgel const theEdgel;
-		img::Spot const theSpot;
-		img::Grad const theGrad;
-		double const theGradMag;
-		img::Grad const theGradDir;
 		double theWeightSum{ 0. };
+
+	public:
 
 		inline
 		explicit
 		EdgeInfo
 			( img::Edgel const & edgel
 			)
-			: theSpot{ edgel.location() }
-			, theGrad{ edgel.gradient() }
-			, theGradMag{ magnitude(theGrad) }
-			, theGradDir{ (1./theGradMag) * theGrad }
+			: theEdgel{ edgel }
+			, theWeightSum{ 0. }
 		{ }
 
-		//! Multiple prob into running probability
+		//! Edge element
+		inline
+		img::Edgel const &
+		edgel
+			() const
+		{
+			return theEdgel;
+		}
+
+		//! Direction from Edgel
+		inline
+		img::Vector<double>
+		edgeDirection
+			() const
+		{
+			return edgel().direction();
+		}
+
+		// Location of Edgel
+		inline
+		img::Vector<double>
+		edgeLocation
+			() const
+		{
+			return edgel().location();
+		}
+
+		//! Running probability of significance
 		inline
 		void
 		addWeight
@@ -309,7 +332,7 @@ namespace img
 		angleOfGrad
 			() const
 		{
-			return quadloco::ang::atan2(theGrad[1], theGrad[0]);
+			return edgel().angle();
 		}
 
 	}; // EdgeInfo
@@ -336,7 +359,7 @@ namespace img
 		{
 			EdgeInfo const & ei1 = edgeInfos[ndx1];
 			EdgeInfo const & ei2 = edgeInfos[ndx2];
-			return dot(ei1.theGradDir, ei2.theGradDir);
+			return dot(ei1.edgeDirection(), ei2.edgeDirection());
 		}
 
 		//! Average distance of other edge location from own edge line.
@@ -352,10 +375,10 @@ namespace img
 			// separation of the two lines
 			EdgeInfo const & ei1 = edgeInfos[ndx1];
 			EdgeInfo const & ei2 = edgeInfos[ndx2];
-			img::Spot const & spot1 = ei1.theSpot;
-			img::Spot const & spot2 = ei2.theSpot;
-			img::Grad const & dir1 = ei1.theGradDir;
-			img::Grad const & dir2 = ei2.theGradDir;
+			img::Spot const spot1{ ei1.edgeLocation() };
+			img::Spot const spot2{ ei2.edgeLocation() };
+			img::Grad const dir1{ ei1.edgeDirection() };
+			img::Grad const dir2{ ei2.edgeDirection() };
 			double const dist2from1{ dot((spot2 - spot1), dir1) };
 			double const dist1from2{ dot((spot1 - spot2), dir2) };
 			double const distBetween{ .5 * (dist2from1 + dist1from2) };
@@ -475,8 +498,8 @@ namespace img
 		{
 			EdgeInfo const & ei1 = edgeInfos[theNdx1];
 			EdgeInfo const & ei2 = edgeInfos[theNdx2];
-			img::Grad const & dir1 = ei1.theGradDir;
-			img::Grad const & dir2 = ei2.theGradDir;
+			img::Grad const dir1{ ei1.edgeDirection() };
+			img::Grad const dir2{ ei2.edgeDirection() };
 			//
 			// NOTE: treat dir1 as positive direction and negate dir2
 			//
@@ -571,7 +594,7 @@ namespace tmp
 constexpr double minWeight{ 1./1024./1024. };
 				if (minWeight < edgeInfo.weight())
 				{
-					img::Grad const & gradDir = edgeInfo.theGradDir;
+					img::Grad const gradDir{ edgeInfo.edgeDirection() };
 
 					// treat directions as spot locations (on unit circle)
 					img::Spot const gradSpot{ gradDir[0], gradDir[1] };
@@ -745,7 +768,7 @@ main
 				double const & classMemberProb = member.theProb;
 				img::EdgeInfo const & ei = edgeInfos[ndxEdge];
 				ofsGroup
-					<< "edge:Spot: " << ei.theSpot
+					<< "edge:Spot: " << ei.edgeLocation()
 					<< ' '
 					<< "classProb: " << engabra::g3::io::fixed(classMemberProb)
 					<< ' '
