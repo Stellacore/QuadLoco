@@ -31,7 +31,7 @@
 #include "opsGridFilter.hpp"
 
 #include "imgEdgel.hpp"
-#include "rasgrid.hpp"
+#include "opsgrid.hpp"
 #include "sigParmAD.hpp"
 #include "simgrid.hpp"
 
@@ -125,7 +125,7 @@ namespace
 		// check if edgel data agree with grid gradients
 		// fetch entire gradient grid
 		quadloco::ras::Grid<quadloco::img::Grad> const grads
-			{ quadloco::ras::grid::gradientGridFor(pixGrid) };
+			{ quadloco::ops::grid::gradientGridFor(pixGrid) };
 		std::size_t sameCount{ 0u };
 		for (quadloco::img::Edgel const & gotPixEdgel : gotPixEdgels)
 		{

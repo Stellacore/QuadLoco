@@ -37,9 +37,9 @@
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "opsAdderAD.hpp"
+#include "opsgrid.hpp"
 #include "opsPeakFinder.hpp"
 #include "prbGauss1D.hpp"
-#include "rasgrid.hpp"
 #include "sigQuadTarget.hpp"
 #include "simRender.hpp"
 
@@ -68,8 +68,8 @@ namespace sim
 		grids.reserve(10u);
 
 		// configure camera (including image size)
-		static ras::SizeHW const hwGrid{ 128u, 128u };
-		static double const pd{ 200. };
+		constexpr ras::SizeHW hwGrid{ 128u, 128u };
+		constexpr double pd{ 200. };
 		static obj::Camera const camera{ hwGrid, pd };
 
 		// quad target size
@@ -105,7 +105,7 @@ namespace sim
 
 } // [sim]
 
-namespace img
+namespace ops
 {
 	using namespace quadloco;
 
@@ -174,40 +174,6 @@ namespace img
 		return pixEdgels;
 	}
 
-
-	//! Compute edge elements from gradient grid
-	inline
-	std::vector<img::Edgel>
-	edgelsFromGradGrid
-		( ras::Grid<img::Grad> const & gradGrid
-		)
-	{
-		std::vector<img::Edgel> pixEdgels{};
-		pixEdgels.reserve(gradGrid.size());
-
-		// could skip unset edge rows
-		for (std::size_t row{0u} ; row < gradGrid.high() ; ++row)
-		{
-			for (std::size_t col{0u} ; col < gradGrid.wide() ; ++col)
-			{
-				img::Grad const & grad = gradGrid(row, col);
-				if (grad.isValid())
-				{
-					constexpr double tol
-						{ std::numeric_limits<double>::epsilon() };
-					if (tol < magnitude(grad))
-					{
-						// should be valid since grad is significant
-						img::Edgel const edgel(ras::RowCol{ row, col }, grad);
-						pixEdgels.push_back(edgel);
-					}
-				}
-			}
-		}
-
-		return pixEdgels;
-	}
-
 	//! Populate a grid with pixEdgel magnitude data (only at edgel locations)
 	inline
 	ras::Grid<float>
@@ -217,8 +183,8 @@ namespace img
 		, std::size_t const & numToUse
 		)
 	{
-		ras::Grid<float> magGrid(hwSize);
-		std::fill(magGrid.begin(), magGrid.end(), 0.f);
+		ras::Grid<float> grid(hwSize);
+		std::fill(grid.begin(), grid.end(), 0.f);
 		for (std::size_t nn{0u} ; nn < numToUse ; ++nn)
 		{
 			img::Edgel const & edgel = pixEdgels[nn];
@@ -228,10 +194,10 @@ namespace img
 				exit(9);
 			}
 			ras::RowCol const rc{ cast::rasRowCol(edgel.location()) };
-			magGrid(rc) = magnitude(edgel.gradient());
+			grid(rc) = edgel.magnitude();
 		}
 
-		return magGrid;
+		return grid;
 	}
 
 	//! Populate a grid with pixEdgel angles data (only at edgel locations)
@@ -243,8 +209,8 @@ namespace img
 		, std::size_t const & numToUse
 		)
 	{
-		ras::Grid<float> magGrid(hwSize);
-		std::fill(magGrid.begin(), magGrid.end(), 0.f);
+		ras::Grid<float> grid(hwSize);
+		std::fill(grid.begin(), grid.end(), 0.f);
 		for (std::size_t nn{0u} ; nn < numToUse ; ++nn)
 		{
 			img::Edgel const & edgel = pixEdgels[nn];
@@ -257,13 +223,18 @@ namespace img
 			double const angle{ edgel.angle() };
 			// angle values range from [-pi, pi), so add a
 			// bias to distinguish from background
-			magGrid(rc) = 5.f + (float)angle;
+			grid(rc) = 5.f + (float)angle;
 		}
 
-		return magGrid;
+		return grid;
 	}
 
 
+} // [ops]
+
+
+namespace img
+{
 	//! Attributes of single Edgel
 	class EdgeInfo
 	{
@@ -342,7 +313,7 @@ namespace img
 	{
 		std::size_t theNdx1;
 		std::size_t theNdx2;
-		double theDotAlign; // negative dot product of edge gradients
+		double theDotFacing; // negative dot product of edge gradients
 		double theWgtFacing; // pseudo prop of oppositely directed edges
 		double theLineGapDist; // distance between edge line segments
 		double theWgtLineGap; // pseudo prop of edgels being collinear
@@ -412,13 +383,13 @@ namespace img
 				//!< Separation of lines between two edgels
 			, double const & lineGapSigma
 				//!< Uncertainty in collinearity (tolerance is 3x this)
-			, double const & theDotAlign
+			, double const & theDotFacing
 				//!< Relative (anti)alignment used to qualify computation
-			, double const & theDotAlignMin = .75
+			, double const & theDotFacingMin = .75
 			)
 		{
 			double wgt{ 0. };
-			if (theDotAlignMin < theDotAlign)
+			if (theDotFacingMin < theDotFacing)
 			{
 				double const lineGapMax{ 4. * lineGapSigma };
 				if (lineGapDist < lineGapMax)
@@ -444,12 +415,12 @@ namespace img
 			)
 			: theNdx1{ ndx1 }
 			, theNdx2{ ndx2 }
-			, theDotAlign{ -dotGradDirs(theNdx1, theNdx2, edgeInfos) }
-			, theWgtFacing{ weightFacing(theDotAlign) }
+			, theDotFacing{ -dotGradDirs(theNdx1, theNdx2, edgeInfos) }
+			, theWgtFacing{ weightFacing(theDotFacing) }
 				// Average distance of other pixel to own edge line seg
 			, theLineGapDist{ lineGapDist(theNdx1, theNdx2, edgeInfos) }
 			, theWgtLineGap
-				{ weightLineGap(theLineGapDist, lineGapSigma, theDotAlign) }
+				{ weightLineGap(theLineGapDist, lineGapSigma, theDotFacing) }
 		{ }
 
 		//! Pseudo-probability of edges facing each other
@@ -459,7 +430,7 @@ namespace img
 			() const
 		{
 			double wgt{ 0. };
-			if (0. < theDotAlign)
+			if (0. < theDotFacing)
 			{
 				wgt = theWgtFacing;
 			}
@@ -647,11 +618,11 @@ main
 
 		// compute gradient at each pixel (interior to edge padding)
 		ras::Grid<img::Grad> const gradGrid
-			{ ras::grid::gradientGridFor(pixGrid) };
+			{ ops::grid::gradientGridFor(pixGrid) };
 
 		// assemble collection of edge elements from gradient grid
 		std::vector<img::Edgel> pixEdgels
-			{ connectedEdgelsFromGradGrid(gradGrid) };
+			{ ops::connectedEdgelsFromGradGrid(gradGrid) };
 
 		// estimate a reasonable number of edge pixels to expect
 		// (assume target nearly filling diagaonals and with 2 pix edges)
@@ -801,11 +772,11 @@ main
 
 		// draw strongest edgel magnitudes into grid (for development feedback)
 		ras::Grid<float> const magGrid
-			(edgeMagGridFor(pixGrid.hwSize(), pixEdgels, numToUse));
+			(ops::edgeMagGridFor(pixGrid.hwSize(), pixEdgels, numToUse));
 
 		// draw strongest edgel angles into grid (for dev)
 		ras::Grid<float> const angGrid
-			(edgeAngleGridFor(pixGrid.hwSize(), pixEdgels, numToUse));
+			(ops::edgeAngleGridFor(pixGrid.hwSize(), pixEdgels, numToUse));
 
 		io::writeStretchPGM(pixName, pixGrid);
 		io::writeStretchPGM(magName, magGrid);

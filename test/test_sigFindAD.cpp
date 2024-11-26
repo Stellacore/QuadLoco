@@ -34,7 +34,7 @@
 #include "imgGrad.hpp"
 #include "imgSpot.hpp"
 #include "opsAdderAD.hpp"
-#include "rasgrid.hpp"
+#include "opsgrid.hpp"
 #include "rasGrid.hpp"
 #include "rasRowCol.hpp"
 #include "sigParmAD.hpp"
@@ -78,7 +78,7 @@ namespace
 
 		// compute a full gradient grid - each cell has gradient of pixGrid
 		ras::Grid<img::Grad> const gradGrid
-			{ ras::grid::gradientGridFor(pixGrid) };
+			{ ops::grid::gradientGridFor(pixGrid) };
 
 		// expected configuration
 		img::Circle const boundingCircle
