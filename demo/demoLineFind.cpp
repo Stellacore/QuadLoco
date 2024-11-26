@@ -132,31 +132,39 @@ namespace img
 				img::Grad const & gradCenter = gradGrid(row, col);
 				if (gradCenter.isValid())
 				{
-					// sum gradients for neighbor hood
-					img::Grad const gradHoodSum
-						{ gradGrid(row - 1u, col - 1u)
-						+ gradGrid(row - 1u, col     )
-						+ gradGrid(row - 1u, col + 1u)
-						+ gradGrid(row     , col - 1u)
-						+ gradGrid(row     , col + 1u)
-						+ gradGrid(row + 1u, col - 1u)
-						+ gradGrid(row + 1u, col     )
-						+ gradGrid(row + 1u, col + 1u)
-						};
-					if (gradHoodSum.isValid())
+					double const gMag{ magnitude(gradCenter) };
+					constexpr double tol
+						{ std::numeric_limits<double>::epsilon() };
+					if (tol < gMag)
 					{
-						img::Grad const gradSum{ gradHoodSum + gradCenter };
-
-						double const gMag{ magnitude(gradCenter) };
-						img::Grad const gDir{ (1./gMag) * gradCenter };
-						double const projDist{ dot(gradSum, gDir) };
-
-						constexpr double kTol{ 2.5};
-						if (kTol < projDist)
+						// sum gradients for neighbor hood
+						img::Grad const gradHoodSum
+							{ gradGrid(row - 1u, col - 1u)
+							+ gradGrid(row - 1u, col     )
+							+ gradGrid(row - 1u, col + 1u)
+							+ gradGrid(row     , col - 1u)
+							+ gradGrid(row     , col + 1u)
+							+ gradGrid(row + 1u, col - 1u)
+							+ gradGrid(row + 1u, col     )
+							+ gradGrid(row + 1u, col + 1u)
+							};
+						if (gradHoodSum.isValid())
 						{
-							img::Edgel const edgel
-								(ras::RowCol{ row, col }, gradCenter);
-							pixEdgels.push_back(edgel);
+							img::Grad const gradSum{ gradHoodSum + gradCenter };
+							img::Grad const gDir{ gradCenter };
+							double const projDist
+								{ (1./gMag) * dot(gradSum, gDir) };
+
+							constexpr double kTol{ 2.5};
+							if (kTol < projDist)
+							{
+								// assured to be valid at this point since
+								// only processing non-trivial gradients
+								// i.e., tol < magnitude(gradCenter) above
+								img::Edgel const edgel
+									(ras::RowCol{ row, col }, gradCenter);
+								pixEdgels.push_back(edgel);
+							}
 						}
 					}
 				}
@@ -185,8 +193,14 @@ namespace img
 				img::Grad const & grad = gradGrid(row, col);
 				if (grad.isValid())
 				{
-					img::Edgel const edgel(ras::RowCol{ row, col }, grad);
-					pixEdgels.push_back(edgel);
+					constexpr double tol
+						{ std::numeric_limits<double>::epsilon() };
+					if (tol < magnitude(grad))
+					{
+						// should be valid since grad is significant
+						img::Edgel const edgel(ras::RowCol{ row, col }, grad);
+						pixEdgels.push_back(edgel);
+					}
 				}
 			}
 		}
@@ -194,6 +208,7 @@ namespace img
 		return pixEdgels;
 	}
 
+	//! Populate a grid with pixEdgel magnitude data (only at edgel locations)
 	inline
 	ras::Grid<float>
 	edgeMagGridFor
@@ -207,8 +222,42 @@ namespace img
 		for (std::size_t nn{0u} ; nn < numToUse ; ++nn)
 		{
 			img::Edgel const & edgel = pixEdgels[nn];
+			if (! isValid(edgel))
+			{
+				std::cerr << "ERROR got invalid edgel were not expecting it\n";
+				exit(9);
+			}
 			ras::RowCol const rc{ cast::rasRowCol(edgel.location()) };
 			magGrid(rc) = magnitude(edgel.gradient());
+		}
+
+		return magGrid;
+	}
+
+	//! Populate a grid with pixEdgel angles data (only at edgel locations)
+	inline
+	ras::Grid<float>
+	edgeAngleGridFor
+		( ras::SizeHW const & hwSize
+		, std::vector<img::Edgel> const & pixEdgels
+		, std::size_t const & numToUse
+		)
+	{
+		ras::Grid<float> magGrid(hwSize);
+		std::fill(magGrid.begin(), magGrid.end(), 0.f);
+		for (std::size_t nn{0u} ; nn < numToUse ; ++nn)
+		{
+			img::Edgel const & edgel = pixEdgels[nn];
+			if (! isValid(edgel))
+			{
+				std::cerr << "ERROR got invalid edgel were not expecting it\n";
+				exit(9);
+			}
+			ras::RowCol const rc{ cast::rasRowCol(edgel.location()) };
+			double const angle{ edgel.angle() };
+			// angle values range from [-pi, pi), so add a
+			// bias to distinguish from background
+			magGrid(rc) = 5.f + (float)angle;
 		}
 
 		return magGrid;
@@ -452,6 +501,7 @@ namespace img
 
 } // [quadloco]
 
+
 namespace tmp
 {
 	using namespace quadloco;
@@ -471,7 +521,7 @@ namespace tmp
 	//! Spot locations for each angle
 	inline
 	std::vector<img::Spot>
-	spotLocsFor
+	unitCircleSpotsFor
 		( std::vector<double> const & angles
 		)
 	{
@@ -510,37 +560,42 @@ namespace tmp
 		{
 			groups = std::vector<GroupMembers>(numGroups, GroupMembers{});
 
-			// spot locations for each angle
-			std::vector<img::Spot> const spotLocs{ spotLocsFor(peakAngles) };
+			// unit circle spot locations for each angle
+			std::vector<img::Spot> const spotLocs
+				{ unitCircleSpotsFor(peakAngles) };
 
 			// determine closest spot for each edge direction
 			for (std::size_t ndxEdge{0u} ; ndxEdge < numEdges ; ++ndxEdge)
 			{
 				img::EdgeInfo const & edgeInfo = edgeInfos[ndxEdge];
-				img::Grad const & gradDir = edgeInfo.theGradDir;
-
-				// treat directions as spot locations (on unit circle)
-				img::Spot const gradSpot{ gradDir[0], gradDir[1] };
-
-				// determine group closest to this edge direction
-				double distMin{ 8. }; // much larger than unit circle diameter
-				std::size_t ndxMin{ 0u };
-				for (std::size_t
-					ndxGroup{0u} ; ndxGroup < numGroups ; ++ndxGroup)
+constexpr double minWeight{ 1./1024./1024. };
+				if (minWeight < edgeInfo.weight())
 				{
-					img::Spot const & spotLoc = spotLocs[ndxGroup];
-					double const dist{ magnitude(gradSpot - spotLoc) };
-					if (dist < distMin)
-					{
-						distMin = dist;
-						ndxMin = ndxGroup;
-					}
-				}
+					img::Grad const & gradDir = edgeInfo.theGradDir;
 
-				// add edge index to closest group
-				double const arg{ distMin / angleSigma };
-				double const prob{ std::exp(-arg*arg) };
-				groups[ndxMin].emplace_back(tmp::Member{ndxEdge, prob});
+					// treat directions as spot locations (on unit circle)
+					img::Spot const gradSpot{ gradDir[0], gradDir[1] };
+
+					// determine group closest to current edge direction
+					double distMin{ 8. }; // much larger than unit circle
+					std::size_t ndxMin{ 0u };
+					for (std::size_t
+						ndxGroup{0u} ; ndxGroup < numGroups ; ++ndxGroup)
+					{
+						img::Spot const & spotLoc = spotLocs[ndxGroup];
+						double const dist{ magnitude(gradSpot - spotLoc) };
+						if (dist < distMin)
+						{
+							distMin = dist;
+							ndxMin = ndxGroup;
+						}
+					}
+
+					// add edge index to closest group
+					double const arg{ distMin / angleSigma };
+					double const prob{ std::exp(-arg*arg) };
+					groups[ndxMin].emplace_back(tmp::Member{ndxEdge, prob});
+				}
 			}
 		}
 
@@ -572,8 +627,6 @@ main
 			{ ras::grid::gradientGridFor(pixGrid) };
 
 		// assemble collection of edge elements from gradient grid
-	//	std::vector<img::Edgel> pixEdgels
-	//		{ edgelsFromGradGrid(gradGrid) };
 		std::vector<img::Edgel> pixEdgels
 			{ connectedEdgelsFromGradGrid(gradGrid) };
 
@@ -588,7 +641,7 @@ main
 		std::partial_sort
 			( pixEdgels.begin(), iterToUse, pixEdgels.end()
 			, [] (img::Edgel const & e1, img::Edgel const & e2)
-				{ return magnitude(e2.gradient()) < magnitude(e1.gradient()) ; }
+				{ return e2.magnitude() < e1.magnitude() ; }
 			);
 
 		// Individual edge properties
@@ -678,6 +731,7 @@ main
 		std::string const datName{ std::format("./sample{:02d}dat.txt", nn) };
 		std::string const pixName{ std::format("./sample{:02d}pix.pgm", nn) };
 		std::string const magName{ std::format("./sample{:02d}mag.pgm", nn) };
+		std::string const angName{ std::format("./sample{:02d}ang.pgm", nn) };
 
 		std::ofstream ofsGroup(grpName);
 		for (std::size_t
@@ -722,20 +776,26 @@ main
 		}
 
 
-		// draw strongest pixels into grid (for development feedback)
+		// draw strongest edgel magnitudes into grid (for development feedback)
 		ras::Grid<float> const magGrid
 			(edgeMagGridFor(pixGrid.hwSize(), pixEdgels, numToUse));
 
+		// draw strongest edgel angles into grid (for dev)
+		ras::Grid<float> const angGrid
+			(edgeAngleGridFor(pixGrid.hwSize(), pixEdgels, numToUse));
+
 		io::writeStretchPGM(pixName, pixGrid);
 		io::writeStretchPGM(magName, magGrid);
+		io::writeStretchPGM(angName, angGrid);
 
 		std::cout << '\n';
 		std::cout << "pixEdgels.size: " << pixEdgels.size() << '\n';
 		std::cout << "Linedata written to '" << datName << "'\n";
 		std::cout << "Pix data written to '" << pixName << "'\n";
 		std::cout << "Mag data written to '" << magName << "'\n";
+		std::cout << "Ang data written to '" << angName << "'\n";
 
-break;
+//break;
 
 	}
 	std::cout << '\n';
