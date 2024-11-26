@@ -312,6 +312,7 @@ components of that namespace. The header files are:
 	ops.hpp --
 	opsAdderAD.hpp -- Accumulator for Hough (Alpha,Delta) parameters
 	opsFence.hpp -- Tracker for determining (min,max) of value samples
+	opsgrid.hpp -- Functions that operate on ras::Grid data
 	opsPeakFinder.hpp -- Location of multiple peaks within 1D buffer
 	opsGridFilter.hpp -- Digital filter computations on raster grid data
 
