@@ -32,6 +32,7 @@
  */
 
 
+#include "ang.hpp"
 #include "cast.hpp"
 #include "imgRay.hpp"
 
@@ -121,6 +122,16 @@ namespace img
 			() const
 		{
 			return theMag;
+		}
+
+		//! Angle of gradient vector
+		inline
+		double
+		angle
+			() const
+		{
+			img::Grad const grad{ gradient() };
+			return ang::atan2(grad[1], grad[0]);
 		}
 
 		//! True if location is in front of edge (relative to gradient)
