@@ -109,71 +109,6 @@ namespace ops
 {
 	using namespace quadloco;
 
-	//! Compute edge elements from gradient grid
-	inline
-	std::vector<img::Edgel>
-	connectedEdgelsFromGradGrid
-		( ras::Grid<img::Grad> const & gradGrid
-		)
-	{
-		std::vector<img::Edgel> pixEdgels{};
-		pixEdgels.reserve(gradGrid.size());
-
-		std::size_t const rowLast{ gradGrid.high() - 1u };
-		std::size_t const colLast{ gradGrid.wide() - 1u };
-
-		// leave room to compute with neighbors
-		// could skip unset edge rows
-		for (std::size_t row{1u} ; row < rowLast ; ++row)
-		{
-			for (std::size_t col{1u} ; col < colLast ; ++col)
-			{
-				// gradient at center
-				img::Grad const & gradCenter = gradGrid(row, col);
-				if (gradCenter.isValid())
-				{
-					double const gMag{ magnitude(gradCenter) };
-					constexpr double tol
-						{ std::numeric_limits<double>::epsilon() };
-					if (tol < gMag)
-					{
-						// sum gradients for neighbor hood
-						img::Grad const gradHoodSum
-							{ gradGrid(row - 1u, col - 1u)
-							+ gradGrid(row - 1u, col     )
-							+ gradGrid(row - 1u, col + 1u)
-							+ gradGrid(row     , col - 1u)
-							+ gradGrid(row     , col + 1u)
-							+ gradGrid(row + 1u, col - 1u)
-							+ gradGrid(row + 1u, col     )
-							+ gradGrid(row + 1u, col + 1u)
-							};
-						if (gradHoodSum.isValid())
-						{
-							img::Grad const gradSum{ gradHoodSum + gradCenter };
-							img::Grad const gDir{ gradCenter };
-							double const projDist
-								{ (1./gMag) * dot(gradSum, gDir) };
-
-							constexpr double kTol{ 2.5};
-							if (kTol < projDist)
-							{
-								// assured to be valid at this point since
-								// only processing non-trivial gradients
-								// i.e., tol < magnitude(gradCenter) above
-								img::Edgel const edgel
-									(ras::RowCol{ row, col }, gradCenter);
-								pixEdgels.push_back(edgel);
-							}
-						}
-					}
-				}
-			}
-		}
-
-		return pixEdgels;
-	}
-
 	//! Populate a grid with pixEdgel magnitude data (only at edgel locations)
 	inline
 	ras::Grid<float>
@@ -622,7 +557,7 @@ main
 
 		// assemble collection of edge elements from gradient grid
 		std::vector<img::Edgel> pixEdgels
-			{ ops::connectedEdgelsFromGradGrid(gradGrid) };
+			{ ops::grid::linkedEdgelsFrom(gradGrid) };
 
 		// estimate a reasonable number of edge pixels to expect
 		// (assume target nearly filling diagaonals and with 2 pix edges)
