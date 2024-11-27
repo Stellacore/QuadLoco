@@ -105,68 +105,6 @@ namespace sim
 
 } // [sim]
 
-namespace ops
-{
-	using namespace quadloco;
-
-	//! Populate a grid with pixEdgel magnitude data (only at edgel locations)
-	inline
-	ras::Grid<float>
-	edgeMagGridFor
-		( ras::SizeHW const & hwSize
-		, std::vector<img::Edgel> const & pixEdgels
-		, std::size_t const & numToUse
-		)
-	{
-		ras::Grid<float> grid(hwSize);
-		std::fill(grid.begin(), grid.end(), 0.f);
-		for (std::size_t nn{0u} ; nn < numToUse ; ++nn)
-		{
-			img::Edgel const & edgel = pixEdgels[nn];
-			if (! isValid(edgel))
-			{
-				std::cerr << "ERROR got invalid edgel were not expecting it\n";
-				exit(9);
-			}
-			ras::RowCol const rc{ cast::rasRowCol(edgel.location()) };
-			grid(rc) = edgel.magnitude();
-		}
-
-		return grid;
-	}
-
-	//! Populate a grid with pixEdgel angles data (only at edgel locations)
-	inline
-	ras::Grid<float>
-	edgeAngleGridFor
-		( ras::SizeHW const & hwSize
-		, std::vector<img::Edgel> const & pixEdgels
-		, std::size_t const & numToUse
-		)
-	{
-		ras::Grid<float> grid(hwSize);
-		std::fill(grid.begin(), grid.end(), 0.f);
-		for (std::size_t nn{0u} ; nn < numToUse ; ++nn)
-		{
-			img::Edgel const & edgel = pixEdgels[nn];
-			if (! isValid(edgel))
-			{
-				std::cerr << "ERROR got invalid edgel were not expecting it\n";
-				exit(9);
-			}
-			ras::RowCol const rc{ cast::rasRowCol(edgel.location()) };
-			double const angle{ edgel.angle() };
-			// angle values range from [-pi, pi), so add a
-			// bias to distinguish from background
-			grid(rc) = 5.f + (float)angle;
-		}
-
-		return grid;
-	}
-
-
-} // [ops]
-
 
 namespace img
 {
@@ -707,11 +645,15 @@ main
 
 		// draw strongest edgel magnitudes into grid (for development feedback)
 		ras::Grid<float> const magGrid
-			(ops::edgeMagGridFor(pixGrid.hwSize(), pixEdgels, numToUse));
+			{ ops::grid::edgeMagGridFor
+				(pixGrid.hwSize(), pixEdgels, numToUse)
+			};
 
 		// draw strongest edgel angles into grid (for dev)
 		ras::Grid<float> const angGrid
-			(ops::edgeAngleGridFor(pixGrid.hwSize(), pixEdgels, numToUse));
+			{ ops::grid::edgeAngleGridFor
+				(pixGrid.hwSize(), pixEdgels, numToUse)
+			};
 
 		io::writeStretchPGM(pixName, pixGrid);
 		io::writeStretchPGM(magName, magGrid);

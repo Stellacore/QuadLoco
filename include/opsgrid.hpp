@@ -36,7 +36,10 @@
 #include "imgGrad.hpp"
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
+#include "rasRowCol.hpp"
+#include "rasSizeHW.hpp"
 
+#include <algorithm>
 #include <limits>
 #include <vector>
 
@@ -223,6 +226,63 @@ namespace grid
 
 		return pixEdgels;
 	}
+
+	//! Populate a grid with edgels magnitude data (only at edgel locations)
+	inline
+	ras::Grid<float>
+	edgeMagGridFor
+		( ras::SizeHW const & hwSize
+		, std::vector<img::Edgel> const & edgels
+		, std::size_t const & numToUse
+		)
+	{
+		ras::Grid<float> grid(hwSize);
+		std::fill(grid.begin(), grid.end(), 0.f);
+		for (std::size_t nn{0u} ; nn < numToUse ; ++nn)
+		{
+			img::Edgel const & edgel = edgels[nn];
+			if (! isValid(edgel))
+			{
+				std::cerr << "ERROR got invalid edgel were not expecting it\n";
+				exit(9);
+			}
+			ras::RowCol const rc{ cast::rasRowCol(edgel.location()) };
+			grid(rc) = edgel.magnitude();
+		}
+
+		return grid;
+	}
+
+	//! Populate a grid with edgels angles data (only at edgel locations)
+	inline
+	ras::Grid<float>
+	edgeAngleGridFor
+		( ras::SizeHW const & hwSize
+		, std::vector<img::Edgel> const & edgels
+		, std::size_t const & numToUse
+		, float const & backgroundBias = -5.f
+		)
+	{
+		ras::Grid<float> grid(hwSize);
+		// angle values range from [-pi, pi), so start with a background
+		// bias so that angle values are better distinguished.
+		std::fill(grid.begin(), grid.end(), backgroundBias);
+		for (std::size_t nn{0u} ; nn < numToUse ; ++nn)
+		{
+			img::Edgel const & edgel = edgels[nn];
+			if (! isValid(edgel))
+			{
+				std::cerr << "ERROR got invalid edgel were not expecting it\n";
+				exit(9);
+			}
+			ras::RowCol const rc{ cast::rasRowCol(edgel.location()) };
+			double const angle{ edgel.angle() };
+			grid(rc) = (float)angle;
+		}
+
+		return grid;
+	}
+
 
 } // grid
 

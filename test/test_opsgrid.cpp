@@ -139,7 +139,7 @@ namespace
 			if (showData)
 			{
 				std::cout << pixGrid.infoStringContents
-					("pixGrid", "%5.2f") << '\n';
+					("pixGrid", "{:5.2f}") << '\n';
 				img::Vector<double>::Formatter fmtFunc{};
 				std::cout << gradGrid.infoStringContents
 					("gradGrid", fmtFunc) << '\n';
@@ -218,6 +218,91 @@ namespace
 		// [DoxyExample02]
 	}
 
+	//! Check magnitude and angle grid extraction
+	void
+	test3
+		( std::ostream & oss
+		)
+	{
+
+		// [DoxyExample03]
+
+		using namespace quadloco;
+
+		// create grid with "raised" square in middle
+		ras::Grid<float> fullGrid{ ras::SizeHW{ 16u, 16u } };
+		std::fill(fullGrid.begin(), fullGrid.end(), 0.f);
+		img::ChipSpec const chip
+			{ ras::RowCol{ 4u, 4u }
+			, ras::SizeHW{ 8u, 8u }
+			};
+		ras::grid::setSubGridValues(&fullGrid, chip, 2.f);
+
+		// compute gradient grid
+		ras::Grid<img::Grad> const gradGrid
+// TODO - name? For? From?
+			{ ops::grid::gradientGridFor(fullGrid) };
+
+		// extract edgels from this grid
+		std::vector<img::Edgel> const edgels
+			{ ops::grid::allEdgelsFrom(gradGrid) };
+
+		// generate grid with (all) edgel magnitudes
+		ras::Grid<float> const magGrid
+			{ ops::grid::edgeMagGridFor
+				(gradGrid.hwSize(), edgels, edgels.size())
+			};
+
+		// generate grid with (all) edgel angles
+		float const expBias{ -8.f }; // so angle values [-pi,pi) stand out
+		ras::Grid<float> const angGrid
+			{ ops::grid::edgeAngleGridFor
+				(gradGrid.hwSize(), edgels, edgels.size(), expBias)
+			};
+
+		// [DoxyExample03]
+
+		// expect number of non-zero gradients
+		std::size_t const expNumGrad
+			{ 4u * (chip.hwSize().high() - 2u) // gradients span two cells
+			+ 4u * (chip.hwSize().wide() - 2u)
+			+ 4u * 3u  // each corner has 3 non zero gradients
+			};
+
+		std::size_t const gotNumMag
+			{ (std::size_t)std::count_if
+				( magGrid.cbegin(), magGrid.cend()
+				, [] (float const & val) { return (0.f < val); }
+				)
+			};
+		std::size_t const gotNumAng
+			{ (std::size_t)std::count_if
+				( angGrid.cbegin(), angGrid.cend()
+				, [& expBias] (float const & val) { return (expBias < val); }
+				)
+			};
+		if ( (! (edgels.size() == expNumGrad))
+		  || (! (gotNumMag == expNumGrad))
+		  || (! (gotNumAng == expNumGrad))
+		   )
+		{
+			oss << "Failure of (non-zero) gradient size test\n";
+			oss << "exp: " << expNumGrad << '\n';
+			oss << "   edgels: " << edgels.size() << '\n';
+			oss << "gotNumMag: " << gotNumMag << '\n';
+			oss << "gotNumAng: " << gotNumAng << '\n';
+		}
+
+		/*
+		std::cout << fullGrid.infoStringContents("fullGrid", "%5.2f") << '\n';
+		img::Vector<double>::Formatter const gradFmt{ "{:4.1f}" };
+		std::cout << gradGrid.infoStringContents("gradGrid", gradFmt) << '\n';
+		std::cout << magGrid.infoStringContents("magGrid", "%5.2f") << '\n';
+		std::cout << angGrid.infoStringContents("angGrid", "%5.2f") << '\n';
+		*/
+
+	}
+
 
 }
 
@@ -232,6 +317,7 @@ main
 //	test0(oss);
 	test1(oss);
 	test2(oss);
+	test3(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{
