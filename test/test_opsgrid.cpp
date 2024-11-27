@@ -46,42 +46,128 @@ namespace
 		( std::ostream & oss
 		)
 	{
-		// [DoxyExample01]
-
 		using namespace quadloco;
 
+		// simulate grid with an sharp edge in it
+
 		// simulate grid with strong edge constistent with expEdgel
-		ras::SizeHW const hwSize{ 1024u, 2048u };
-		img::Edgel const expEdgel
-			{ img::Spot{ 500u, 1000u }  // edge through this location
-			, img::Grad{ -1., 3. } // direction of gradient the location
+		ras::SizeHW const hwSize{ 7u, 8u };
+		std::vector<img::Edgel> const expEdgels
+			{ img::Edgel
+				{ img::Spot{ hwSize.centerSpot() }
+				, img::Grad{  1., 0. }
+				}
+			, img::Edgel
+				{ img::Spot{ hwSize.centerSpot() }
+				, img::Grad{  0., 1. }
+				}
 			};
-		ras::Grid<float> const pixGrid
-			{ sim::gridWithEdge(hwSize, expEdgel) };
-		ras::Grid<img::Grad> const gradGrid
-			{ ops::grid::gradientGridFor(pixGrid) };
+		// span hwSize *except* for *TWO* border pixels on each end of edge.
+		// (one border cell is lost to gradient edge, second lost to
+		// neighbor support computations (which then hit the null border))
+		// and edge gradients are equal across two rows(cols) of the grid
+		std::vector<std::size_t> const expLinkSizes
+			{ 2u * (hwSize.wide() - 4u) // for horizontal edge (spanning cols)
+			, 2u * (hwSize.high() - 4u) // for vertical edge (spanning rows)
+			};
 
-		// extract edgels from grid data
-
-		// get edgel instances for all nonzero gradients
-		std::vector<img::Edgel> const allEdgels
-			{ ops::grid::allEdgelsFrom(gradGrid) };
-		// get only edgel instances that are strongly linked to adjacent ones
-		std::vector<img::Edgel> const linkEdgels
-			{ ops::grid::linkedEdgelsFrom(gradGrid) };
-
-		// [DoxyExample01]
-
-		// TODO replace this with real test code
-		std::string const fname(__FILE__);
-		bool const isTemplate{ (std::string::npos != fname.find("/_.cpp")) };
-		if (! isTemplate)
+		for (std::size_t ntest{0u} ; ntest < expEdgels.size() ; ++ntest)
 		{
-			oss << "Failure to implement real test\n";
+
+			// [DoxyExample01]
+
+			// simulate grid with a (straight) step consisten with expEdgel.
+			img::Edgel const expEdgel = expEdgels[ntest];
+			ras::Grid<float> const pixGrid
+				{ sim::gridWithEdge(hwSize, expEdgel, sim::Step) };
+			ras::Grid<img::Grad> const gradGrid
+				{ ops::grid::gradientGridFor(pixGrid) };
+
+			// extract edgels from grid data
+
+			// get edgel instances for all nonzero gradients
+			std::vector<img::Edgel> const allEdgels
+				{ ops::grid::allEdgelsFrom(gradGrid) };
+
+			// get only the edgel instances strongly linked to adjacent ones
+			std::vector<img::Edgel> const linkedEdgels
+				{ ops::grid::linkedEdgelsFrom(gradGrid) };
+
+			// [DoxyExample01]
+
+			// for a step edge...
+			// *ALL* of the detected gradient *magnitudes* should
+			// be 1/2 of the expEdgel gradient magnitude.
+			// (Since gradient is computed with grid stride of 2 cells)
+			double const expGradMag{ .5 * expEdgel.magnitude() };
+			using Iter = std::vector<img::Edgel>::const_iterator;
+			std::pair<Iter, Iter> const iterMinMax
+				{ std::minmax_element
+					( allEdgels.cbegin(), allEdgels.cend()
+					, [] (img::Edgel const & e1, img::Edgel const & e2)
+						{ return (e1.magnitude() < e2.magnitude()); }
+					)
+				};
+			double const gotGradMagMin{ iterMinMax.first->magnitude() };
+			double const gotGradMagMax{ iterMinMax.second->magnitude() };
+
+			if (! engabra::g3::nearlyEquals(gotGradMagMin, expGradMag))
+			{
+				oss << "Failure of (step) gradient gotGradMagMin test\n";
+				oss << "exp: " << expGradMag << '\n';
+				oss << "got: " << gotGradMagMin << '\n';
+			}
+			if (! engabra::g3::nearlyEquals(gotGradMagMax, expGradMag))
+			{
+				oss << "Failure of (step) gradient gotGradMagMax test\n";
+				oss << "exp: " << expGradMag << '\n';
+				oss << "got: " << gotGradMagMax << '\n';
+			}
+
+			// the strongly linked edges should span the grid format
+			// *EXCEPT* for one border pixel on each end of the edge.
+			if (! (linkedEdgels.size() == expLinkSizes[ntest]))
+			{
+				oss << "Failure of linkedEdgels.size() test\n";
+				oss << "     ntest: " << ntest << '\n';
+				oss << "  expEdgel: " << expEdgel << '\n';
+				oss << "exp.size(): " << expLinkSizes[ntest] << '\n';
+				oss << "got.size(): " << linkedEdgels.size() << '\n';
+			}
+
+			constexpr bool showData{ false };
+			if (showData)
+			{
+				std::cout << pixGrid.infoStringContents
+					("pixGrid", "%5.2f") << '\n';
+				img::Vector<double>::Formatter fmtFunc{};
+				std::cout << gradGrid.infoStringContents
+					("gradGrid", fmtFunc) << '\n';
+				std::cout << "\nallEdgel\n";
+				for (img::Edgel const & edgel : allEdgels)
+				{
+					std::cout << "edgel: " << edgel
+						<< ' ' << edgel.magnitude() << '\n';
+				}
+				std::cout << "\nlinkedEdgel\n";
+				for (img::Edgel const & edgel : linkedEdgels)
+				{
+					std::cout << "edgel: " << edgel
+						<< ' ' << edgel.magnitude() << '\n';
+				}
+				std::cout << "\nexpEdgel\n";
+				std::cout << "edgel: " << expEdgel << '\n';
+				std::cout << " eDir: " << expEdgel.direction() << '\n';
+				std::cout << " eMag: " << expEdgel.magnitude() << '\n';
+				std::cout << '\n';
+			}
+
 		}
+
+		// check if linkEdgels is a subset of allEdgels
 	}
 
-	//! cehck computation of radient grids
+	//! check computation of radient grids
 	void
 	test2
 		( std::ostream & oss
