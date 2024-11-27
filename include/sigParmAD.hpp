@@ -32,6 +32,7 @@
  */
 
 
+#include "ang.hpp"
 #include "imgCircle.hpp"
 #include "imgEdgel.hpp"
 #include "imgSpot.hpp"
@@ -90,30 +91,6 @@ namespace sig
 				};
 		}
 
-		/*! \brief Half-open interval enforcement around std::atan2().
-		 *
-		 * Ensure that return values is in the strict half open interval
-		 * \arg -pi <= result < pi
-		 */
-		/*
-		inline
-		static
-		double
-		arcTan2
-			( double const & dy
-			, double const & dx
-			)
-		{
-			double result{ std::atan2(dy, dx) };
-			constexpr double pi{ std::numbers::pi_v<double> };
-			if (pi == result)
-			{
-				result = -pi;
-			}
-			return result;
-		}
-		*/
-
 		//! Angle (from circle center) to line seg start on cicle
 		inline
 		static
@@ -125,7 +102,7 @@ namespace sig
 		{
 			double const dx{ spotOnCircle[0] - circle.theCenter[0] };
 			double const dy{ spotOnCircle[1] - circle.theCenter[1] };
-			double const alpha{ std::atan2(dy, dx) };
+			double const alpha{ ang::atan2(dy, dx) };
 			return alpha;
 		}
 
@@ -141,7 +118,7 @@ namespace sig
 		{
 			double const dx{ spotOnCircle[0] - circle.theCenter[0] };
 			double const dy{ spotOnCircle[1] - circle.theCenter[1] };
-			double delta{ (std::atan2(dy, dx) - alpha) };
+			double delta{ (ang::atan2(dy, dx) - alpha) };
 			constexpr double piTwo{ 2.*std::numbers::pi_v<double> };
 			if (delta < 0.)
 			{

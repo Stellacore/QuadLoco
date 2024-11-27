@@ -29,6 +29,8 @@
 
 
 #include "angRing.hpp"
+
+#include "ang.hpp"
 #include "imgSpot.hpp"
 #include "prbGauss1D.hpp"
 
@@ -321,7 +323,7 @@ namespace
 		angles.reserve(spots.size());
 		for (quadloco::img::Spot const & spot : spots)
 		{
-			angles.emplace_back(std::atan2(spot[1], spot[0]));
+			angles.emplace_back(quadloco::ang::atan2(spot[1], spot[0]));
 		}
 		return angles;
 	}
@@ -344,7 +346,7 @@ namespace
 		std::vector<img::Spot> const spots
 			{ spotsAbout(expSpot, sigma, numSpots) };
 		std::vector<double> const angles{ anglesFromSpots(spots) };
-		double const expAngle{ std::atan2(expSpot[1], expSpot[0]) };
+		double const expAngle{ ang::atan2(expSpot[1], expSpot[0]) };
 
 		// accumulate angles into ring buffer
 		std::size_t const numBins{ 32u };
