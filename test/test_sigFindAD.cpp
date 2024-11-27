@@ -63,110 +63,126 @@ namespace
 		using namespace quadloco;
 
 		// (simulated) image size
-		ras::SizeHW const hwSize{ 17u, 19u };
+		constexpr ras::SizeHW hwSize{  4u,  4u };
+		constexpr bool showData{ false };
 
-		// a well-defined edge for use in generating a simulated raster step
-		img::Edgel const expEdgel
-			{ img::Spot
-				{ (double)(hwSize.high()/2u), (double)(hwSize.wide()/2u) }
-			, img::Grad{ 2., 3. }
+		// a well-defined edges for use in generating a simulated raster step
+		img::Grad const gradCol{ 0., 1. };
+		img::Grad const gradRow{ 1., 0. };
+		std::vector<img::Edgel> const expEdgels
+			{ img::Edgel{ hwSize.centerSpot(), gradRow }
+			, img::Edgel{ hwSize.centerSpot(), gradCol }
 			};
 
-		// simulate image with a very strong edge (constistent with expEdgel)
-		ras::Grid<float> const pixGrid
-			{ sim::gridWithEdge(hwSize, expEdgel) };
-
-		// compute a full gradient grid - each cell has gradient of pixGrid
-		ras::Grid<img::Grad> const gradGrid
-			{ ops::grid::gradientGridFor(pixGrid) };
-
-		// expected configuration
-		img::Circle const boundingCircle
-			{ img::Circle::circumScribing(gradGrid.hwSize()) };
-		sig::ParmAD const expMaxAD
-			{ sig::ParmAD::from(expEdgel, boundingCircle) };
-
-		// Determine accumulation buffer size (crudely)
-		std::size_t const sizeAD{ hwSize.perimeter() / 4u };
-		ras::SizeHW const adSize{ sizeAD, sizeAD };
-
-		// Setup accumulator
-		ops::AdderAD adder(adSize);
-
-		// accumulate Grad values into Hough A(lpha)-D(elta) buffer
-		for (ras::Grid<img::Grad>::const_iterator
-			iter{gradGrid.cbegin()} ; gradGrid.cend() != iter ; ++iter)
+		for (img::Edgel const & expEdgel : expEdgels)
 		{
-			// note original grid row/col location and gradient
-			img::Spot const spot
-				{ cast::imgSpot(gradGrid.rasRowColFor(iter)) };
-			img::Grad const & grad = *iter;
+			// simulate image with a strong edge (constistent with expEdgel)
+			ras::Grid<float> const pixGrid
+				{ sim::gridWithEdge(hwSize, expEdgel, sim::Step) };
 
-			// construct Edgel and use to determine ParmAD values
-			img::Edgel const edgel{ spot, grad };
-			sig::ParmAD const parmAD
-				{ sig::ParmAD::from(edgel, boundingCircle) };
+			// compute a full gradient grid - each cell has gradient of pixGrid
+			ras::Grid<img::Grad> const gradGrid
+				{ ops::grid::gradientGridFor(pixGrid) };
 
-			// add edge magnitude into adGrid cell(s)
-			double const gradMag{ magnitude(edgel.gradient()) };
-			adder.add(parmAD, gradMag);
-		}
+			// expected configuration
+			img::Circle const boundingCircle
+				{ img::Circle::circumScribing(gradGrid.hwSize()) };
+			sig::ParmAD const expMaxAD
+				{ sig::ParmAD::from(expEdgel, boundingCircle) };
 
-		// find max value (for this test data, there's only one max
-		ras::Grid<float> const & gridAD = adder.grid();
-		ras::Grid<float>::const_iterator const itMax
-			{ std::max_element(gridAD.cbegin(), gridAD.cend()) };
-		ras::RowCol gotRowColMax{};
-		if (gridAD.cend() != itMax)
-		{
-			gotRowColMax = gridAD.rasRowColFor(itMax);
-		}
+			// Determine accumulation buffer size (crudely)
+			std::size_t const sizeAD{ hwSize.perimeter() / 4u };
+			ras::SizeHW const adSize{ sizeAD, sizeAD };
 
-		// Hough parameter (alpha,delta) values for accum cell w/ max value
-		img::Spot const gotSpotMax{ cast::imgSpot(gotRowColMax) };
-		sig::ParmAD const gotParmAD{ adder.sigParmADFor(gotSpotMax) };
+			// Setup accumulator
+			ops::AdderAD adder(adSize);
 
-		// Hough (alpha,delta) values expected for simulation generating edgel
-		sig::ParmAD const expParmAD
-			{ sig::ParmAD::from(expEdgel, boundingCircle) };
+			// accumulate Grad values into Hough A(lpha)-D(elta) buffer
+			for (ras::Grid<img::Grad>::const_iterator
+				iter{gradGrid.cbegin()} ; gradGrid.cend() != iter ; ++iter)
+			{
+				// note original grid row/col location and gradient
+				img::Spot const spot
+					{ cast::imgSpot(gradGrid.rasRowColFor(iter)) };
+				img::Grad const & grad = *iter;
 
-		// [DoxyExample01]
+				// construct Edgel and use to determine ParmAD values
+				img::Edgel const edgel{ spot, grad };
+				sig::ParmAD const parmAD
+					{ sig::ParmAD::from(edgel, boundingCircle) };
 
-		/*
-		std::cout << pixGrid.infoStringContents("pixGrid", "%2.1f") << '\n';
-		std::cout << "gotRowColMax: " << gotRowColMax << '\n';
-		std::cout << "gotSpotMax: " << gotSpotMax << '\n';
-		std::cout << "expParmAD: " << expParmAD << '\n';
-		std::cout << "gotParmAD: " << gotParmAD << '\n';
-		std::cout << adder.grid().infoStringContents("adder", "%2.1f") << '\n';
-		*/
+				// add edge magnitude into adGrid cell(s)
+				double const gradMag{ magnitude(edgel.gradient()) };
+				adder.add(parmAD, gradMag);
+			}
 
-		if (! isValid(boundingCircle))
-		{
-			oss << "Failure of valid boundingCircle test\n";
-			oss << "boundingCircle: " << boundingCircle << '\n';
-		}
+			// find max value (for this test data, there's only one max
+			ras::Grid<float> const & gridAD = adder.grid();
+			ras::Grid<float>::const_iterator const itMax
+				{ std::max_element(gridAD.cbegin(), gridAD.cend()) };
+			ras::RowCol gotRowColMax{};
+			if (gridAD.cend() != itMax)
+			{
+				gotRowColMax = gridAD.rasRowColFor(itMax);
+			}
 
-		double const tolAD{ 2. / (.5 * hwSize.diagonal()) };
-		if (! nearlyEquals(gotParmAD, expParmAD, tolAD))
-		{
-			double const gotAlpha{ gotParmAD.alpha() };
-			double const expAlpha{ expParmAD.alpha() };
-			double const difAlpha{ gotAlpha - expAlpha };
+			// Hough parameter (alpha,delta) values for accum cell w/ max value
+			img::Spot const gotSpotMax{ cast::imgSpot(gotRowColMax) };
+			sig::ParmAD const gotParmAD{ adder.sigParmADFor(gotSpotMax) };
 
-			double const gotDelta{ gotParmAD.delta() };
-			double const expDelta{ expParmAD.delta() };
-			double const difDelta{ gotDelta - expDelta };
+			// Hough (alpha,delta) values expected for simulation expEdgel
+			sig::ParmAD const expParmAD
+				{ sig::ParmAD::from(expEdgel, boundingCircle) };
 
-			using engabra::g3::io::fixed;
-			oss << "Failure of gotParmAD test\n";
-			oss << "expAlpha: " << fixed(expAlpha) << '\n';
-			oss << "gotAlpha: " << fixed(gotAlpha) << '\n';
-			oss << "expDelta: " << fixed(expDelta) << '\n';
-			oss << "gotDelta: " << fixed(gotDelta) << '\n';
-			oss << "difAlpha: " << fixed(difAlpha) << '\n';
-			oss << "difDelta: " << fixed(difDelta) << '\n';
-			oss << "   tolAD: " << fixed(tolAD) << '\n';
+			// [DoxyExample01]
+
+			if (showData)
+			{
+				std::cout << "\n\n";
+				std::cout << pixGrid.infoStringContents
+					("pixGrid", "%5.2f") << '\n';
+
+				img::Vector<double>::Formatter fmtFunc{};
+				std::cout << gradGrid.infoStringContents
+					("gradGrid", fmtFunc) << '\n';
+
+				std::cout << "expEdgel: " << expEdgel << '\n';
+				std::cout << "gotRowColMax: " << gotRowColMax << '\n';
+				std::cout << "gotSpotMax: " << gotSpotMax << '\n';
+				std::cout << "expParmAD: " << expParmAD << '\n';
+				std::cout << "gotParmAD: " << gotParmAD << '\n';
+				std::cout << adder.grid().infoStringContents
+					("adder", "%4.1f") << '\n';
+				std::cout << "\n";
+			}
+
+			if (! isValid(boundingCircle))
+			{
+				oss << "Failure of valid boundingCircle test\n";
+				oss << "boundingCircle: " << boundingCircle << '\n';
+			}
+
+			double const tolAD{ 2. / (.5 * hwSize.diagonal()) };
+			if (! nearlyEquals(gotParmAD, expParmAD, tolAD))
+			{
+				double const gotAlpha{ gotParmAD.alpha() };
+				double const expAlpha{ expParmAD.alpha() };
+				double const difAlpha{ gotAlpha - expAlpha };
+
+				double const gotDelta{ gotParmAD.delta() };
+				double const expDelta{ expParmAD.delta() };
+				double const difDelta{ gotDelta - expDelta };
+
+				using engabra::g3::io::fixed;
+				oss << "Failure of gotParmAD test\n";
+				oss << "expAlpha: " << fixed(expAlpha) << '\n';
+				oss << "gotAlpha: " << fixed(gotAlpha) << '\n';
+				oss << "expDelta: " << fixed(expDelta) << '\n';
+				oss << "gotDelta: " << fixed(gotDelta) << '\n';
+				oss << "difAlpha: " << fixed(difAlpha) << '\n';
+				oss << "difDelta: " << fixed(difDelta) << '\n';
+				oss << "   tolAD: " << fixed(tolAD) << '\n';
+			}
 		}
 
 	}
