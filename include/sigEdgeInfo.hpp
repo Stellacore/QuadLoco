@@ -54,72 +54,10 @@ namespace sig
 		//! Sum of weights suggesting part of a radial edge
 		double theWgtRadialSum;
 
-// TODO - handled by collinearity assessment?
-//		//! Sum of location differences to (qualified) other edgels
-//		img::Vector<double> theDiffDirSum;
-
 		//! Sum of mean alignment directions with other (qualified) edgels
 		img::Vector<double> theEdgeDirSum;
 
-	public:
-
-		//! \brief Begin gathering information related to this edge element
-		inline
-		explicit
-		EdgeInfo
-			( img::Edgel const & edgel
-			)
-			: theEdgel{ edgel }
-			, theWgtRadialSum{ 0. }
-//			, theDiffDirSum{ 0., 0. }
-			, theEdgeDirSum{ 0., 0. }
-		{ }
-
-		//! \brief Edge element
-		inline
-		img::Edgel const &
-		edgel
-			() const
-		{
-			return theEdgel;
-		}
-
-		//! \brief Forward direction from Edgel
-		inline
-		img::Vector<double>
-		edgeDirection
-			() const
-		{
-			return edgel().direction();
-		}
-
-		//! \brief Forward location of Edgel
-		inline
-		img::Vector<double>
-		edgeLocation
-			() const
-		{
-			return edgel().location();
-		}
-
-		//! Composite gradient associated edgel pair (positive with ndx1)
-		inline
-		static
-		img::Vector<double>
-		alignDirBetween
-			( img::Edgel const & edgel1
-			, img::Edgel const & edgel2
-			)
-		{
-			img::Vector<double> const & dir1 = edgel1.direction();
-			img::Vector<double> const & dir2 = edgel2.direction();
-			//
-			// NOTE: treat dir1 as positive direction and negate dir2
-			//
-			img::Vector<double> const sumPosNeg{ dir1 - dir2 };
-			img::Vector<double> const meanDir{ direction(sumPosNeg) };
-			return meanDir;
-		}
+	// static methods
 
 		//! \brief Average distance of other edge location from own edge line.
 		inline
@@ -166,6 +104,76 @@ namespace sig
 			}
 			return wgt;
 		}
+
+	// private
+
+		//! Composite gradient associated edgel pair (positive with ndx1)
+		inline
+		img::Vector<double>
+		directionAdjustedTo
+			( img::Edgel const & other
+			) const
+		{
+			img::Vector<double> const & dirSelf = theEdgel.direction();
+			img::Vector<double> const & dirOther = other.direction();
+			//
+			// NOTE: treat dirFrom as positive direction and negate dirInto
+			//
+			img::Vector<double> const negOther{ -dirOther };
+			img::Vector<double> const sumDirs{ dirSelf + negOther };
+			img::Vector<double> const meanDir{ direction(sumDirs) };
+			return meanDir;
+		}
+
+	public:
+
+		//! \brief Begin gathering information related to this edge element
+		inline
+		explicit
+		EdgeInfo
+			( img::Edgel const & edgel
+			)
+			: theEdgel{ edgel }
+			, theWgtRadialSum{ 0. }
+			, theEdgeDirSum{ 0., 0. }
+		{ }
+
+		//
+		// Direct access to edgel components
+		//
+
+		//! \brief Edge element
+		inline
+		img::Edgel const &
+		edgel
+			() const
+		{
+			return theEdgel;
+		}
+
+		//! \brief Forward direction from Edgel
+		inline
+		img::Vector<double> const &
+		edgeDirection
+			() const
+		{
+			// img::Edgel inherits from img::Ray with (const &) direction()
+			return theEdgel.direction();
+		}
+
+		//! \brief Forward location of Edgel
+		inline
+		img::Vector<double> const &
+		edgeLocation
+			() const
+		{
+			// img::Edgel inherits from img::Ray with (const &) start()
+			return theEdgel.start();
+		}
+
+		//
+		// Accumulation/tracking functions
+		//
 
 		/*! \brief Use someEdgel to update tracking information
 		 *
@@ -224,32 +232,18 @@ namespace sig
 					double const wgtRadial
 						{ wgtFacing * wgtLineGap };
 
-//					// (unitary) direction from this toward other location
-//					img::Vector<double> const dirToOther
-//						{ direction(someEdgel.start() - theEdgel.start()) };
-
 					// (unitary) "average" direction of this edgel and other
 					img::Vector<double> const pairDir
-						{ alignDirBetween(theEdgel, someEdgel) };
+						{ directionAdjustedTo(someEdgel) };
 
 					// update tracking information
 					theWgtRadialSum += wgtRadial;
-//					theDiffDirSum = theDiffDirSum + wgtRadial * dirToOther;
 					theEdgeDirSum = theEdgeDirSum + wgtRadial * pairDir;
 				}
 			}
 		}
 
-//		//! \brief Angle of gradient direction
-//		inline
-//		double
-//		angleOfDeltaDirSum
-//			() const
-//		{
-//			return ang::atan2(theDiffDirSum[1], theDiffDirSum[0]);
-//		}
-
-		//! \brief Angle of gradient direction
+		//! \brief Angle associated with accumulted (pairwise) edge directions
 		inline
 		double
 		consideredAngle
@@ -267,7 +261,10 @@ namespace sig
 			return direction(theEdgeDirSum);
 		}
 
-		//! \brief Current cummulative weight for this edgel
+		/*! \brief Current cummulative significance weight for this edgel
+		 *
+		 * As candidate for belonging to a (quad target) radial edge.
+		 */
 		inline
 		double const &
 		consideredWeight

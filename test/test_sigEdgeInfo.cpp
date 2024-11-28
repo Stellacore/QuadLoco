@@ -53,27 +53,66 @@ namespace
 		img::Spot const currSpot{  1.,  2. };
 		img::Grad const currGrad{  .75, .25 };
 		// other spot (for this test) having oppositely directed gradient
-		img::Spot const pairSpot{  currSpot + deltaSpot };
-		img::Grad const pairGrad{ -currGrad };
+		img::Spot const otherSpot{  currSpot + deltaSpot };
+		img::Grad const otherGrad{ -currGrad };
+
+		// Tracking direction aligned with self, anti-aligned with other
+		img::Vector<double> const expDir{ direction(currGrad - otherGrad) };
 
 		// Track information in relation to this edgel
 		img::Edgel const currEdgel{ currSpot, currGrad };
 		sig::EdgeInfo currEdgeInfo{ currEdgel };
 
 		// Update currEdgel tracking with other edgels
-		img::Edgel const pairEdgel{ pairSpot, pairGrad };
+		img::Edgel const otherEdgel{ otherSpot, otherGrad };
 
-		currEdgeInfo.consider(pairEdgel);
+		// update currEdgeInfo with other edgel candidates (here only 1 other)
+		currEdgeInfo.consider(otherEdgel);
+		double const gotWgt1{ currEdgeInfo.consideredWeight() };
+		currEdgeInfo.consider(otherEdgel); // typically many *different* others
+		double const gotWgt2{ currEdgeInfo.consideredWeight() };
+		// gotWgt[12] reflect running weight updated after each consider() call
+
+		// Pseudo-probability of belonging to a (quad target) radial edge
+		double const gotWgt{ currEdgeInfo.consideredWeight() };
+		// Estimated most likely gradient direction of this edge)
+		img::Vector<double> const gotDir{ currEdgeInfo.consideredDirection() };
+		// Estimated most-likely angle (aligned with gradient) for this edge
+		// (convenience for ang::atan2(gotDir[1], gotDir[0]))
+		double const gotAng{ currEdgeInfo.consideredAngle() };
 
 		// [DoxyExample01]
 
-		// TODO replace this with real test code
-		std::string const fname(__FILE__);
-		bool const isTemplate{ (std::string::npos != fname.find("/_.cpp")) };
-		if (! isTemplate)
+		double const expAng{ ang::atan2(gotDir[1], gotDir[0]) };
+
+		if (! (0. < gotWgt))
 		{
-			oss << "Failure to implement real test\n";
+			oss << "Failure of gotWgt test\n";
+			oss << "exp: (0 < got) " << '\n';
+			oss << "got: " << gotWgt << '\n';
 		}
+		if (! engabra::g3::nearlyEquals(gotWgt2, (2.*gotWgt1)))
+		{
+			oss << "Failure of gotWgt[1,2] test\n";
+			oss << "got1: " << gotWgt1 << '\n';
+			oss << "got2: " << gotWgt2 << '\n';
+		}
+
+		double const tol{ 4. * std::numeric_limits<double>::epsilon() };
+		if (! nearlyEquals(gotDir, expDir, tol))
+		{
+			oss << "Failure of gotDir test\n";
+			oss << "exp: " << expDir << '\n';
+			oss << "got: " << gotDir << '\n';
+		}
+
+		if (! ang::nearlySameAngle(gotAng, expAng))
+		{
+			oss << "Failure of gotAng test\n";
+			oss << "exp: " << expAng << '\n';
+			oss << "got: " << gotAng << '\n';
+		}
+
 	}
 
 }
