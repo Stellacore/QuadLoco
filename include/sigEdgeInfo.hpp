@@ -54,11 +54,12 @@ namespace sig
 		//! Sum of weights suggesting part of a radial edge
 		double theWgtRadialSum;
 
-		//! Sum of location differences to (qualified) other edgels
-		img::Vector<double> theDeltaSum;
+// TODO - handled by collinearity assessment?
+//		//! Sum of location differences to (qualified) other edgels
+//		img::Vector<double> theDiffDirSum;
 
 		//! Sum of mean alignment directions with other (qualified) edgels
-		img::Vector<double> theMeanDirSum;
+		img::Vector<double> theEdgeDirSum;
 
 	public:
 
@@ -70,8 +71,8 @@ namespace sig
 			)
 			: theEdgel{ edgel }
 			, theWgtRadialSum{ 0. }
-			, theDeltaSum{ 0., 0. }
-			, theMeanDirSum{ 0., 0. }
+//			, theDiffDirSum{ 0., 0. }
+			, theEdgeDirSum{ 0., 0. }
 		{ }
 
 		//! \brief Edge element
@@ -223,9 +224,9 @@ namespace sig
 					double const wgtRadial
 						{ wgtFacing * wgtLineGap };
 
-					// (unitary) direction from this toward other location
-					img::Vector<double> const dirToOther
-						{ direction(someEdgel.start() - theEdgel.start()) };
+//					// (unitary) direction from this toward other location
+//					img::Vector<double> const dirToOther
+//						{ direction(someEdgel.start() - theEdgel.start()) };
 
 					// (unitary) "average" direction of this edgel and other
 					img::Vector<double> const pairDir
@@ -233,11 +234,30 @@ namespace sig
 
 					// update tracking information
 					theWgtRadialSum += wgtRadial;
-					theDeltaSum = theDeltaSum + wgtRadial * dirToOther;
-					theMeanDirSum = theMeanDirSum + wgtRadial * pairDir;
+//					theDiffDirSum = theDiffDirSum + wgtRadial * dirToOther;
+					theEdgeDirSum = theEdgeDirSum + wgtRadial * pairDir;
 				}
 			}
 		}
+
+//		//! \brief Angle of gradient direction
+//		inline
+//		double
+//		angleOfDeltaDirSum
+//			() const
+//		{
+//			return ang::atan2(theDiffDirSum[1], theDiffDirSum[0]);
+//		}
+
+		//! \brief Angle of gradient direction
+		inline
+		double
+		angleOfEdgeDirSum
+			() const
+		{
+			return ang::atan2(theEdgeDirSum[1], theEdgeDirSum[0]);
+		}
+
 
 		//! \brief Update cummulative edge weight by adding weight
 		inline
