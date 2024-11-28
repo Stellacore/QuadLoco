@@ -55,6 +55,9 @@ set(unitTests
 	test_rasgrid  # pixel/grid functions (e.g. image processing)
 	test_rasRowCol  # discete raster cell locations
 	test_rasSizeHW  # basic "high/wide" area boundary (half open)
+	test_sigEdgeEval  # Edgel evaluator checking likelihood on quad radii
+	test_sigEdgeInfo  # Edgel characteristics tracking 
+	test_sigEdgePair  # Edgel characteristics tracking 
 	test_sigFindAD  # find maxima in sig::ParmAD space
 	test_sigParmAD  # Hough "alpha,delta" parameter representation
 	test_sigQuadTarget  # represent perspective image of obj::QuadTarget

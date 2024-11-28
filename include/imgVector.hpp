@@ -196,6 +196,23 @@ namespace img
 		return unit;
 	}
 
+
+	//
+	// Uniary
+	//
+
+	//! Difference (vecA - vecB)
+	template <typename Type>
+	inline
+	Vector<Type>
+	operator-
+		( Vector<Type> const & vec
+		)
+	{
+		return Vector<Type>{ -vec[0], -vec[1] };
+	}
+
+
 	//
 	// Binary
 	//
@@ -223,7 +240,6 @@ namespace img
 	{
 		return Vector<Type>{ vecA[0] - vecB[0], vecA[1] - vecB[1] };
 	}
-
 
 	//! Scalar dot product
 	template <typename Type>
