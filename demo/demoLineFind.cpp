@@ -41,7 +41,6 @@
 #include "opsPeakFinder.hpp"
 #include "prbGauss1D.hpp"
 #include "sigEdgeInfo.hpp"
-#include "sigEdgePair.hpp"
 #include "sigQuadTarget.hpp"
 #include "simRender.hpp"
 
@@ -177,7 +176,7 @@ namespace tmp
 			{
 				sig::EdgeInfo const & edgeInfo = edgeInfos[ndxEdge];
 constexpr double minWeight{ 1./1024./1024. };
-				if (minWeight < edgeInfo.weight())
+				if (minWeight < edgeInfo.consideredWeight())
 				{
 					img::Grad const gradDir{ edgeInfo.edgeDirection() };
 
@@ -263,47 +262,29 @@ main
 			edgeInfos.emplace_back(sig::EdgeInfo(edgel));
 		}
 
-		// Candidate edgel pairs for opposite radial edges
-		std::vector<sig::EdgePair> edgePairs;
 		std::size_t const numWorstCase{ (numToUse * (numToUse - 1u)) / 2u };
-		edgePairs.reserve(numWorstCase);
 
 		// find pairs of edgels likely on opposite radial edges
 		for (std::size_t ndx1{0u} ; ndx1 < numToUse ; ++ndx1)
 		{
+			sig::EdgeInfo & edgeInfo1 = edgeInfos[ndx1];
+
 			for (std::size_t ndx2{ndx1+1} ; ndx2 < numToUse ; ++ndx2)
 			{
-				// remember the interesting edges
-				sig::EdgePair const edgePair(ndx1, ndx2, edgeInfos);
+				sig::EdgeInfo & edgeInfo2 = edgeInfos[ndx2];
 
-				// assign pseudo probability of radial edge pair
-				// which requires:
-				// - oppositing gradient directions (for +/- radius)
-				// - approx collinearity of spots perp to edge grads
-				double const wgtRadial{ edgePair.weightRadialPair() };
-
-				// remember pairs which are likely to be on opposite edges
-				if (.75 < wgtRadial)
-				{
-					edgePairs.emplace_back(edgePair);
-
-					// update probability of individual edges
-					sig::EdgeInfo & ei1 = edgeInfos[ndx1];
-					sig::EdgeInfo & ei2 = edgeInfos[ndx2];
-					ei1.addWeight(wgtRadial);
-					ei2.addWeight(wgtRadial);
-				}
+				edgeInfo1.consider(edgeInfo2.edgel());
+				edgeInfo2.consider(edgeInfo1.edgel());
 			}
 		}
 
 		// create angle value accumulation (circular-wrapping) buffer
 		std::size_t const numAngBins{ 32u };
 		ang::Likely angleProbs(numAngBins);
-		for (sig::EdgePair const & edgePair : edgePairs)
+		for (sig::EdgeInfo const & edgeInfo : edgeInfos)
 		{
-			img::Grad const pairDir{ edgePair.pairDir(edgeInfos) };
-			double const angle{ edgePair.angle(pairDir) };
-			double const weight{ edgePair.weightRadialPair() };
+			double const angle{ edgeInfo.consideredAngle() };
+			double const weight{ edgeInfo.consideredWeight() };
 			angleProbs.add(angle, weight, 2);
 		}
 
@@ -324,7 +305,7 @@ main
 		std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
 		std::cout << angleProbs.infoString("angleProbs") << '\n';
 		std::cout << "numWorstCase: " << numWorstCase << '\n';
-		std::cout << "     numUsed: " << edgePairs.size() << '\n';
+		std::cout << "    numToUse: " << numToUse << '\n';
 		for (double const & peakAngle : peakAngles)
 		{
 			std::cout << "peakAngle: "
@@ -352,12 +333,13 @@ main
 				std::size_t const & ndxEdge = member.theNdxEdge;
 				double const & classMemberProb = member.theProb;
 				sig::EdgeInfo const & ei = edgeInfos[ndxEdge];
+				using engabra::g3::io::fixed;
 				ofsGroup
 					<< "edge:Spot: " << ei.edgeLocation()
 					<< ' '
-					<< "classProb: " << engabra::g3::io::fixed(classMemberProb)
+					<< "classProb: " << fixed(classMemberProb)
 					<< ' '
-					<< "radialWeight: " << engabra::g3::io::fixed(ei.weight())
+					<< "radialWeight: " << fixed(ei.consideredWeight())
 					<< ' '
 					<< "groupId: " << ndxGroup
 					<< '\n';
@@ -370,19 +352,15 @@ main
 		ofs << "# MeanDir[0,1] angle wgtFacing wgtLineGab wgtRadialPair\n";
 		ofs << "#\n";
 
-		for (sig::EdgePair const & edgePair : edgePairs)
+		for (sig::EdgeInfo const & edgeInfo : edgeInfos)
 		{
-			img::Grad const pairDir{ edgePair.pairDir(edgeInfos) };
 			using engabra::g3::io::fixed;
 			ofs
-				<< ' ' << pairDir                            // 1,2
-				<< ' ' << fixed(edgePair.angle(pairDir))     // 3
-				<< ' ' << fixed(edgePair.weightFacing())     // 4
-				<< ' ' << fixed(edgePair.weightCollinear())    // 5
-				<< ' ' << fixed(edgePair.weightRadialPair()) // 6
+				<< ' ' << edgeInfo.consideredDirection()     // 1,2
+				<< ' ' << fixed(edgeInfo.consideredAngle())  // 3
+				<< ' ' << fixed(edgeInfo.consideredWeight())           // 4
 				<< '\n';
 		}
-
 
 		// draw strongest edgel magnitudes into grid (for development feedback)
 		ras::Grid<float> const magGrid

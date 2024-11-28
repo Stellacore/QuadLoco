@@ -252,39 +252,28 @@ namespace sig
 		//! \brief Angle of gradient direction
 		inline
 		double
-		angleOfEdgeDirSum
+		consideredAngle
 			() const
 		{
 			return ang::atan2(theEdgeDirSum[1], theEdgeDirSum[0]);
 		}
 
-
-		//! \brief Update cummulative edge weight by adding weight
+		//! \brief Direction (unitary) of pairwise mean edge directions
 		inline
-		void
-		addWeight
-			( double const & weight
-			)
+		img::Vector<double>
+		consideredDirection
+			() const
 		{
-			theWgtRadialSum += weight;
+			return direction(theEdgeDirSum);
 		}
 
 		//! \brief Current cummulative weight for this edgel
 		inline
 		double const &
-		weight
+		consideredWeight
 			() const
 		{
 			return theWgtRadialSum;
-		}
-
-		//! \brief Angle of gradient direction
-		inline
-		double
-		angleOfGrad
-			() const
-		{
-			return edgel().angle();
 		}
 
 	}; // EdgeInfo
