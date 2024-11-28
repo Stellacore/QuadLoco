@@ -54,7 +54,7 @@ namespace sig
 		// (e.g. all outer edges could be cropped from image sample)
 
 		//! \brief Center is required
-		engabra::g3::Vector const theCenter
+		engabra::g3::Vector theCenter
 			{engabra::g3::null<engabra::g3::Vector>()};
 
 		/*! \brief One of two *UNITARY* directions - target "x-axis".
@@ -63,12 +63,12 @@ namespace sig
 		 * edges that has foreground (white) to the right side of
 		 * the edge, and background (dark) to the left of the edge.
 		 */
-		engabra::g3::Vector const theDirX
+		engabra::g3::Vector theDirX
 			{engabra::g3::null<engabra::g3::Vector>()};
 
 
 		//! \brief Second of two *UNITARY* directions - target "y-axis".
-		engabra::g3::Vector const theDirY
+		engabra::g3::Vector theDirY
 			{engabra::g3::null<engabra::g3::Vector>()};
 
 
