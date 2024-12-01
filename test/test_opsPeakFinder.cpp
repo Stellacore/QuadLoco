@@ -143,48 +143,20 @@ namespace
 
 	}
 
-	//! Check class operations
+	//! Test if {got,exp}PeakLocs are the same
+	inline
 	void
-	test2
+	checkPeaks
 		( std::ostream & oss
+		, std::vector<std::size_t> const & gotPeakLocs
+		, std::vector<std::size_t> const & expPeakLocs
+		, std::string const & tname
 		)
 	{
-		// [DoxyExample02]
-
-		// An arbitrary sequence of data with many local peaks
-		std::vector<int> const values
-			{ 8, 5, 5, 5, 6, 5, 7, 8, 8, 9, 9, 5, 5, 4, 6, 3, 4, 6, 7, 7
-			, 7, 5, 6, 7, 8, 8, 6, 5, 7, 4, 3, 5, 4, 3, 3, 2, 1, 3, 2, 4
-			};
-		// Peaks are any location for which before/after are both NOT larger.
-		// Grouping on lines below corresponds with content of sets to be
-		// returned by PeakFinder::peakIndexGrps() function.
-		// for flat-top peaks, expect the middle of the peak indices
-		std::vector<std::size_t> const expPeakLocs
-			{  0u // 0u  // single peak at start of (wrapped) data stream
-			,  4u // 4u
-			,  9u // 9u, 10u  // peak with two same values
-			, 14u // 14u
-			, 19u // 18u, 19u, 20u // peak with three same values
-			, 24u // 24u, 25u  // two-wide peak
-			, 28u // 28u
-			, 31u // 31u
-			, 37u // 37u
-			};
-
-		// Construct peak finder (assuming data wrap around)
-		// (For peak w/o wrap, ignore ndx==0, ndx==size()-1u results)
-		quadloco::ops::PeakFinder const peakFinder
-				(values.cbegin(), values.cend());
-
-		// Retrieve index at middle of each peak group
-		std::vector<std::size_t> const gotPeakLocs{ peakFinder.peakIndices() };
-
-		// [DoxyExample02]
-
 		if (! (gotPeakLocs.size() == expPeakLocs.size()))
 		{
-			oss << "Failure of peak (middle) finding size test\n";
+			oss << "Failure of peak finding size test: "
+				<< tname << '\n';
 			oss << "expSize: " << expPeakLocs.size() << '\n';
 			oss << "gotSize: " << gotPeakLocs.size() << '\n';
 		}
@@ -198,7 +170,8 @@ namespace
 				};
 			if (! same)
 			{
-				oss << "Failure of peak (middle) content test\n";
+				oss << "Failure of peak finding content test: "
+					<< tname << '\n';
 				for (std::size_t nn{0u} ; nn < expPeakLocs.size() ; ++nn)
 				{
 					oss << "nn: " << nn << '\n';
@@ -207,6 +180,52 @@ namespace
 				}
 			}
 		}
+	}
+
+
+	//! Check class operations
+	void
+	test2
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample02]
+
+		// An arbitrary sequence of data with many local peaks
+		// (Same data as test1() but rotated one index to put peak at end)
+		std::vector<int> const values
+			{ 5, 5, 5, 6, 5, 7, 8, 8, 9, 9, 5, 5, 4, 6, 3, 4, 6, 7, 7, 7
+			, 5, 6, 7, 8, 8, 6, 5, 7, 4, 3, 5, 4, 3, 3, 2, 1, 3, 2, 4, 8
+			};
+		// Peaks are any location for which before/after are both NOT larger.
+		// Grouping on lines below corresponds with content of sets to be
+		// returned by PeakFinder::peakIndexGrps() function.
+		// for flat-top peaks, expect the middle of the peak indices
+		std::vector<std::size_t> const expPeakLocs
+			{  3u
+			,  8u
+			, 13u
+			, 18u
+			, 23u
+			, 27u
+			, 30u
+			, 36u
+			, 39u
+			};
+
+		// Construct peak finder (assuming data wrap around)
+		// (For peak w/o wrap, ignore ndx==0, ndx==size()-1u results)
+		quadloco::ops::PeakFinder const peakFinder
+				(values.cbegin(), values.cend());
+
+		// Retrieve index at middle of each peak group
+		std::vector<std::size_t> const gotPeakLocs{ peakFinder.peakIndices() };
+
+		// [DoxyExample02]
+
+		// test detection of peaks in order coded above
+		checkPeaks(oss, gotPeakLocs, expPeakLocs, "test2-asCoded");
+
 
 	}
 
