@@ -226,6 +226,27 @@ namespace
 		// test detection of peaks in order coded above
 		checkPeaks(oss, gotPeakLocs, expPeakLocs, "test2-asCoded");
 
+		// check (all) cyclic permutations of the data
+		std::size_t const numVals{ values.size() };
+		std::vector<int> rotValues{ values };
+		std::vector<std::size_t> rotPeakLocs{ expPeakLocs };
+		for (std::size_t nn{0u} ; nn < numVals ; ++nn)
+		{
+			std::rotate
+				( rotValues.begin(), rotValues.begin() + 1u
+				, rotValues.end()
+				);
+			std::rotate
+				( rotPeakLocs.begin(), rotPeakLocs.begin() + 1u
+				, rotPeakLocs.end()
+				);
+
+			std::ostringstream tmsg;
+			tmsg << "test2-rotate-nn=" << nn;
+
+			checkPeaks(oss, gotPeakLocs, expPeakLocs, tmsg.str());
+		}
+
 
 	}
 
