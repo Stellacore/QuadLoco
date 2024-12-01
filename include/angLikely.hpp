@@ -218,6 +218,17 @@ namespace ang
 			return peakAngles;
 		}
 
+		//! Ring buffer weight at angle
+		inline
+		double
+		binSumAtAngle
+			( double const & angle
+			) const
+		{
+			std::size_t const ndx{ theRing.indexFor(angle) };
+			return theBinSums[ndx];
+		}
+
 		//! Descriptive information about this instance.
 		inline
 		std::string
