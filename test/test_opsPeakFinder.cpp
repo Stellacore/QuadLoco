@@ -250,6 +250,62 @@ namespace
 
 	}
 
+	//! check example case (broken at commit 46f3052de
+	void
+	test3
+		( std::ostream & oss
+		)
+	{
+		std::vector<double> const values
+			{ 1.959706  // 0: Peak (end is lower)
+			, 0.147268
+			, 0.020545
+			, 0.037892  // 3: Peak
+			, 0.003328
+			, 0.001077
+			, 0.000112
+			, 0.000002
+			, 0.000000
+			, 0.000000
+			, 0.000000
+			, 0.000000
+			, 0.029304
+			, 0.083700
+			, 1.667888
+			, 4.393755  // 15: Peak
+			, 1.624745
+			, 0.235455
+			, 0.000000
+			, 0.000000
+			, 0.000000
+			, 0.000000
+			, 1.913586
+			, 6.749526  // 23: Peak
+			, 4.190713
+			, 0.392528
+			, 0.000000
+			, 0.000000
+			, 0.000000
+			, 0.032921
+			, 0.120138
+			, 1.083869
+			};
+		std::vector<std::size_t> const expPeakLocs
+			{ 0u, 3u, 15u, 23u };
+
+		// Construct peak finder (assuming data wrap around)
+		// (For peak w/o wrap, ignore ndx==0, ndx==size()-1u results)
+		quadloco::ops::PeakFinder const peakFinder
+				(values.cbegin(), values.cend());
+
+		// Retrieve index at middle of each peak group
+		std::vector<std::size_t> const gotPeakLocs{ peakFinder.peakIndices() };
+
+		// test detection of peaks in order coded above
+		checkPeaks(oss, gotPeakLocs, expPeakLocs, "test3-realCase");
+
+	}
+
 }
 
 //! Standard test case main wrapper
@@ -263,6 +319,7 @@ main
 //	test0(oss);
 	test1(oss);
 	test2(oss);
+	test3(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{
