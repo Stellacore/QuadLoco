@@ -29,8 +29,15 @@
 
 
 #include "imgEdgel.hpp"
+#include "objCamera.hpp"
+#include "objQuadTarget.hpp"
 #include "opsgrid.hpp"
 #include "sigEdgeEval.hpp"
+#include "simConfig.hpp"
+#include "simRender.hpp"
+
+#include <Engabra>
+#include <Rigibra>
 
 #include <iostream>
 #include <sstream>
@@ -38,6 +45,46 @@
 
 namespace
 {
+	//! Simulate a strong signal quad image
+	inline
+	quadloco::ras::Grid<float>
+	simulatedQuadGrid
+		( quadloco::sig::QuadTarget * const & ptSigQuad = nullptr
+		)
+	{
+		using namespace quadloco;
+		sim::Config const config
+			{ obj::QuadTarget
+				( .25
+				, obj::QuadTarget::AddSurround
+				)
+			, obj::Camera
+//				{ ras::SizeHW{ 128u, 128u }
+{ ras::SizeHW{ 8u, 8u }
+				, 100. // pd
+				}
+			, rigibra::Transform
+				{ engabra::g3::Vector{ 0., 0., 1. }
+				, rigibra::Attitude
+					{ rigibra::PhysAngle
+						{ engabra::g3::BiVector{ 0., 0., 0. } }
+					}
+				}
+			};
+		sim::Render const render
+			( config
+		//	, sim::Sampler::None
+			, sim::Sampler::UseSceneBias
+			| sim::Sampler::UseImageNoise
+			);
+		std::size_t const numOverSample{ 128u };
+		if (ptSigQuad)
+		{
+			*ptSigQuad = render.imgQuadTarget();
+		}
+		return render.quadImage(numOverSample);
+	}
+
 	//! Examples for documentation
 	void
 	test1
@@ -49,16 +96,21 @@ namespace
 		using namespace quadloco;
 
 		// simulate quad target image and extract edgels
-		ras::Grid<float> const pixGrid{ /*TODO*/ };
+		ras::Grid<float> const pixGrid{ simulatedQuadGrid() };
+std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
+
+		// compute gradient elements
 		ras::Grid<img::Grad> const gradGrid
 			{ ops::grid::gradientGridFor(pixGrid) };
-
-
-		std::vector<img::Edgel> const edgels{ /*TODO*/ };
+		// assess significant gradients in context with other
+		std::vector<img::Edgel> const edgels
+			{ ops::grid::linkedEdgelsFrom(gradGrid) };
 
 		// categorize edgels into counter directed groups
-		sig::EdgeEval const edgeRank(gradGrid);
+		sig::EdgeEval const edgeEval(gradGrid);
 
+		std::vector<double> const peakAngles
+			{ edgeEval.peakAngles() };
 
 
 /*
@@ -68,6 +120,14 @@ namespace
 */
 
 		// [DoxyExample01]
+
+		// should be four or more radial directions for simulated quad image
+		if (! (3u < peakAngles.size()))
+		{
+			oss << "Failure of sufficient angle peak detection test\n";
+			oss << "exp: (3u < peakAngles.size())\n";
+			oss << "got: " << peakAngles.size() << '\n';
+		}
 
 		// TODO replace this with real test code
 		std::string const fname(__FILE__);
