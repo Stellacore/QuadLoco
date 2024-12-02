@@ -34,6 +34,8 @@
 
 #include "imgEdgel.hpp"
 
+#include <Engabra>
+
 #include <cmath>
 
 
@@ -47,15 +49,15 @@ namespace sig
 	class EdgeInfo
 	{
 		//! The edgel for which realtionships are being tracked
-		img::Edgel const theEdgel;
+		img::Edgel const theEdgel{};
 
 		// Tracking information (from consider() function)
 
 		//! Sum of weights suggesting part of a radial edge
-		double theWgtRadialSum;
+		double theWgtRadialSum{ engabra::g3::null<double>() };
 
 		//! Sum of mean alignment directions with other (qualified) edgels
-		img::Vector<double> theEdgeDirSum;
+		img::Vector<double> theEdgeDirSum{};
 
 	// static methods
 
@@ -127,6 +129,12 @@ namespace sig
 
 	public:
 
+		//! Contruct a null (! isValid()) instance
+		inline
+		explicit
+		EdgeInfo
+			() = default;
+
 		//! \brief Begin gathering information related to this edge element
 		inline
 		explicit
@@ -137,6 +145,19 @@ namespace sig
 			, theWgtRadialSum{ 0. }
 			, theEdgeDirSum{ 0., 0. }
 		{ }
+
+		//! True if this instance contains valid (not null) data
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  theEdgel.isValid()
+				&& engabra::g3::isValid(theWgtRadialSum)
+				&& theEdgeDirSum.isValid()
+				);
+		}
 
 		//
 		// Direct access to edgel components
@@ -239,6 +260,18 @@ namespace sig
 					// update tracking information
 					theWgtRadialSum += wgtRadial;
 					theEdgeDirSum = theEdgeDirSum + wgtRadial * pairDir;
+
+/*
+using engabra::g3::io::fixed;
+std::cout
+	<< "wgtFacing: " << fixed(wgtFacing)
+	<< ' '
+	<< "wgtLineGap: " << fixed(wgtLineGap)
+	<< ' '
+	<< "wgtRadial: " << fixed(wgtRadial)
+	<< '\n';
+*/
+
 				}
 			}
 		}
@@ -273,6 +306,29 @@ namespace sig
 			return theWgtRadialSum;
 		}
 
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "edgel: " << theEdgel
+				<< ' '
+				<< "wgtRad: " << theWgtRadialSum
+				<< ' '
+				<< "dirSum: " << theEdgeDirSum
+				;
+			return oss.str();
+		}
+
+
 	}; // EdgeInfo
 
 
@@ -280,4 +336,31 @@ namespace sig
 } // [sig]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::sig::EdgeInfo const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::sig::EdgeInfo const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
 
