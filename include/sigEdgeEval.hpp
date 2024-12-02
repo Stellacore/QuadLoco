@@ -160,20 +160,30 @@ std::cout << "theEdgeInfos.size: " << theEdgeInfos.size() << '\n';
 				double const fwdAngle{ edgeInfo.consideredAngle() };
 				double const weight{ edgeInfo.consideredWeight() };
 				angleProbs.add(fwdAngle, weight, 2u);
+
 				// TODO - is this necessary?
 				// also add opposite angle to ensure angle prob buffer
 				// peaks are symmetrically balanced (to faciliate 
 				// edge group duo extraction below
-//				double const revAngle
-//					{ ang::principalAngle(fwdAngle + ang::piOne()) };
-//				angleProbs.add(revAngle, weight, 2u);
+				double const revAngle
+					{ ang::principalAngle(fwdAngle + ang::piOne()) };
+				angleProbs.add(revAngle, weight, 2u);
 			}
 
 std::cout << angleProbs.infoString("angleProbs") << '\n';
 std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
 
+std::vector<std::size_t> const peakMaxNdxs{ angleProbs.indicesOfPeaks() };
+for (std::size_t const & peakMaxNdx : peakMaxNdxs)
+{
+	std::cout << "  peakMaxNdx: " << std::setw(4u) << peakMaxNdx << '\n';
+}
+std::cout << "--\n";
+
 			// get peaks from angular accumulation buffer
 			peaks = angleProbs.anglesOfPeaks();
+
+std::cout << "--\n";
 
 for (double const & peakAngle : peaks)
 {
