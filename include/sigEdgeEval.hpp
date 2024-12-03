@@ -47,10 +47,100 @@ namespace quadloco
 
 namespace sig
 {
+	//! Candidate radial edge ray (aligned with radiometric gradients)
+	struct RayWgt
+	{
+		img::Ray const theRay{};
+		double const theWeight{};
+
+		//! True if this instance contains valid data
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  theRay.isValid()
+				&& engabra::g3::isValid(theWeight)
+				);
+		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "ray: " << theRay
+				<< ' '
+				<< "wgt: " << engabra::g3::io::fixed(theWeight);
+				;
+			return oss.str();
+		}
+
+
+	}; // RayWgt
+
+	//! Indices and weights for grouping EdgeInfo in association with an angle.
+	struct EdgeGroup
+	{
+		//! Collection index and entry weight pair
+		struct NdxWgt
+		{
+			std::size_t const theNdx;
+			double const theWeight;
+
+		}; // NdxWgt
+
+		//! Index/Weights for assumed (external) EdgeInfo collection
+		std::vector<NdxWgt> theNdxWgts;
+
+		//! Ray best fitting (gradient-weighted average) edge direction
+		inline
+		img::Ray
+		rayFit
+			( std::vector<sig::EdgeInfo> const & edgeInfos
+			, double * const ptWgt = nullptr
+			) const
+		{
+			img::Ray ray{}; // null instance
+			img::Vector<double> sumLoc{ 0., 0. };
+			img::Vector<double> sumDir{ 0., 0. };
+			double sumWgt{ 0. };
+			for (NdxWgt const & ndxWgt : theNdxWgts)
+			{
+				std::size_t const & ndx = ndxWgt.theNdx;
+				img::Edgel const & edgel = edgeInfos[ndx].edgel();
+				double const & wgt = edgel.magnitude(); // gradient mag
+				sumLoc = sumLoc + wgt * edgel.location();
+				sumDir = sumDir + edgel.gradient();
+				sumWgt += wgt;
+			}
+			if (0. < sumWgt)
+			{
+				img::Vector<double> const rayLoc{ (1./sumWgt) * sumLoc };
+				img::Vector<double> const rayDir{ direction(sumDir) };
+				ray = img::Ray{ rayLoc, rayDir };
+				if (ptWgt)
+				{
+					*ptWgt = sumWgt;
+				}
+			}
+			return ray;
+		}
+
+	}; // EdgeGroup
 
 
 	//! \brief Estimate the association between EdgeInfo items and angle values.
-	struct GroupTable
+	class GroupTable
 	{
 		std::vector<double> const theAngles;
 		ras::Grid<double> const theNdxAngWeights;
@@ -128,6 +218,8 @@ namespace sig
 			return tab;
 		}
 
+	public:
+
 		//! Populate edge/angle weight table - ref: fillTable().
 		inline
 		GroupTable
@@ -137,6 +229,33 @@ namespace sig
 			: theAngles{ peakAngles }
 			, theNdxAngWeights{ fillTable(edgeInfos, theAngles) }
 		{ }
+
+		//! Index/Weights from table classified by peakAngle (from ctor info)
+		inline
+		std::vector<EdgeGroup>
+		edgeGroups
+			() const
+		{
+			std::vector<EdgeGroup> edgeGroups;
+			std::size_t const numGroups{ theNdxAngWeights.wide() };
+			std::size_t const numElem{ theNdxAngWeights.high() };
+			for (std::size_t col{0u} ; col < numGroups ; ++col)
+			{
+				std::vector<EdgeGroup::NdxWgt> ndxWgts;
+				for (std::size_t row{0u} ; row < numElem ; ++row)
+				{
+					std::size_t const & ndx = row;
+					double const & wgt = theNdxAngWeights(row, col);
+					if (0. < wgt)
+					{
+						EdgeGroup::NdxWgt const ndxWgt{ ndx, wgt };
+						ndxWgts.emplace_back(ndxWgt);
+					}
+				}
+				edgeGroups.emplace_back(EdgeGroup{ ndxWgts });
+			}
+			return edgeGroups;
+		}
 
 		//! Description including contents of theNdxAngWeight table
 		inline
@@ -298,8 +417,7 @@ namespace sig
 			// get peaks from angular accumulation buffer
 			peaks = angleProbs.anglesOfPeaks();
 
-
-
+/*
 std::cout << angleProbs.infoString("angleProbs") << '\n';
 std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
 
@@ -320,6 +438,7 @@ for (double const & peakAngle : peaks)
 		<< "  peakValue: " << engabra::g3::io::fixed(peakValue)
 		<< '\n';
 }
+*/
 
 			return peaks;
 		}
@@ -334,6 +453,25 @@ for (double const & peakAngle : peaks)
 			return GroupTable(theEdgeInfos, angles);
 		}
 
+		//! Edge ray (aligned with gradients) candidates for radial edges
+		inline
+		std::vector<RayWgt>
+		groupRayWeights
+			() const
+		{
+			std::vector<RayWgt> rayWgts;
+			GroupTable const groupTab{ groupTable() };
+			std::vector<EdgeGroup> const groups{ groupTab.edgeGroups() };
+			rayWgts.reserve(groups.size());
+			for (EdgeGroup const & group : groups)
+			{
+				double wgt{ 0. };
+				img::Ray const ray{ group.rayFit(theEdgeInfos, &wgt) };
+				RayWgt const rayWgt{ ray, wgt };
+				rayWgts.emplace_back(rayWgt);
+			}
+			return rayWgts;
+		}
 
 	}; // EdgeEval
 
@@ -341,4 +479,31 @@ for (double const & peakAngle : peaks)
 } // [sig]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::sig::RayWgt const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::sig::RayWgt const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
 

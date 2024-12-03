@@ -98,7 +98,6 @@ namespace
 
 		// simulate quad target image and extract edgels
 		ras::Grid<float> const pixGrid{ simulatedQuadGrid() };
-std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
 
 		// compute gradient elements
 		ras::Grid<img::Grad> const gradGrid
@@ -107,13 +106,12 @@ std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
 		std::vector<img::Edgel> const edgels
 			{ ops::grid::linkedEdgelsFrom(gradGrid) };
 
-		// categorize edgels into counter directed groups
+		// categorize edgels as candidates for (radial) quad target edge groups
 		sig::EdgeEval const edgeEval(gradGrid);
+		std::vector<sig::RayWgt> const rayWgts
+			{ edgeEval.groupRayWeights() };
 
-		std::vector<double> const peakAngles{ edgeEval.peakAngles() };
-		sig::GroupTable const groupTab{ edgeEval.groupTable() };
 
-std::cout << groupTab.infoStringContents("groupTab", "%5.3f") << '\n';
 
 
 /*
@@ -123,6 +121,18 @@ std::cout << groupTab.infoStringContents("groupTab", "%5.3f") << '\n';
 */
 
 		// [DoxyExample01]
+
+std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
+sig::GroupTable const groupTab{ edgeEval.groupTable() };
+std::cout << groupTab.infoStringContents("groupTab", "%5.3f") << '\n';
+std::cout << "rayWgts.size: " << rayWgts.size() << '\n';
+		for (sig::RayWgt const & rayWgt : rayWgts)
+		{
+			std::cout << "rayWgt: " << rayWgt << '\n';
+		}
+
+
+		std::vector<double> const peakAngles{ edgeEval.peakAngles() };
 
 		// should be four or more radial directions for simulated quad image
 		if (! (3u < peakAngles.size()))
