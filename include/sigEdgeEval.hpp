@@ -48,10 +48,124 @@ namespace quadloco
 namespace sig
 {
 
+
+	//! \brief Estimate the association between EdgeInfo items and angle values.
+	struct GroupTable
+	{
+		std::vector<double> const theAngles;
+		ras::Grid<double> const theNdxAngWeights;
+
+		//! Collection of unitary directions corresponding with angle values.
+		inline
+		static
+		std::vector<img::Vector<double> >
+		directionsFor
+			( std::vector<double> const & angles
+			)
+		{
+			std::vector<img::Vector<double> > dirs;
+			dirs.reserve(angles.size());
+			for (double const & angle : angles)
+			{
+				dirs.emplace_back
+					(img::Vector<double>{ std::cos(angle), std::sin(angle)} );
+			}
+			return dirs;
+		}
+
+		/*! \brief Create pseudo-probabilities of edges belonging to angles
+		 *
+		 * The table rows correspond to indices in the edge info struture
+		 * and the table columns correspond with elements from the angles
+		 * collection.
+		 *
+		 * Table values are an accumulation of weighted gradients, where
+		 * the weight factor is computed based on proximity to angle
+		 * directions.
+		 *
+		 * The maximum weight in a row - suggests the angle to which the
+		 * row edgel is most closely algined (e.g. classification of
+		 * edgels into angle categories).
+		 *
+		 * The larger weights down a column suggest which edgels are likely
+		 * to associated with that particular angle (e.g. be on an edge
+		 * with that direction).
+		 */
+		inline
+		static
+		ras::Grid<double>
+		fillTable
+			( std::vector<sig::EdgeInfo> const & edgeInfos
+			, std::vector<double> const & angles
+			, double const & cosPower = 10. // attenuation of dot product
+			)
+		{
+			ras::Grid<double> tab(edgeInfos.size(), angles.size());
+			std::fill(tab.begin(), tab.end(), 0.);
+
+			std::vector<img::Vector<double> > const aDirs
+				{ directionsFor(angles) };
+			std::size_t const numEdges{ edgeInfos.size() };
+			std::size_t const numAngles{ angles.size() };
+			for (std::size_t eNdx{0u} ; eNdx < numEdges ; ++eNdx)
+			{
+				std::size_t const & row = eNdx;
+				img::Edgel const & edgel = edgeInfos[eNdx].edgel();
+				img::Vector<double> const eDir{ edgel.direction() };
+				for (std::size_t aNdx{0u} ; aNdx < numAngles ; ++aNdx)
+				{
+					std::size_t const & col = aNdx;
+					img::Vector<double> const & aDir = aDirs[aNdx];
+
+					double const align{ dot(eDir, aDir) };
+					if (.75 < align)
+					{
+						double const dirWgt{ std::powf(align, cosPower) };
+						tab(row,col) += dirWgt * edgel.magnitude();
+					}
+				}
+			}
+			return tab;
+		}
+
+		//! Populate edge/angle weight table - ref: fillTable().
+		inline
+		GroupTable
+			( std::vector<sig::EdgeInfo> const & edgeInfos
+			, std::vector<double> const & peakAngles
+			)
+			: theAngles{ peakAngles }
+			, theNdxAngWeights{ fillTable(edgeInfos, theAngles) }
+		{ }
+
+		//! Description including contents of theNdxAngWeight table
+		inline
+		std::string
+		infoStringContents
+			( std::string const & title
+				//!< Heading to print (along with size info)
+			, std::string const & cfmt
+				//!< A 'printf' style string to format each cell value
+			) const
+		{
+			std::ostringstream oss;
+			oss << theNdxAngWeights.infoStringContents(title, cfmt);
+			oss << '\n';
+			oss << "# angles: ";
+			for (double const & angle : theAngles)
+			{
+				using engabra::g3::io::fixed;
+				oss << ' ' << fixed(angle, 2u, 3u);
+			}
+			return oss.str();
+		}
+
+	}; // GroupTable
+
+
 	//! \brief Evaluator of edgels that are likely part of quad target image
 	class EdgeEval
 	{
-		std::vector<img::Edgel> const theEdgels;
 		std::vector<sig::EdgeInfo> const theEdgeInfos;
 
 	// static functions
@@ -62,12 +176,13 @@ namespace sig
 		std::vector<img::Edgel>
 		dominantEdgelsFrom
 			( ras::Grid<img::Grad> const & gradGrid
+			, double const & linkEdgeDist = 1.5
 			, std::size_t const & numTimesDiagonal = 6u
 			)
 		{
 			// get all strongly linked edgels
 			std::vector<img::Edgel> edgels
-				{ ops::grid::linkedEdgelsFrom(gradGrid, 1.5) };
+				{ ops::grid::linkedEdgelsFrom(gradGrid, linkEdgeDist) };
 
 			// conservative estimate of how many to search knowing that
 			// a quad target should be consuming large part of grid
@@ -137,10 +252,23 @@ namespace sig
 		EdgeEval
 			( ras::Grid<img::Grad> const & gradGrid
 			)
-// TODO - really don't need to save edgels, since in they are in EdgeInfos
-			: theEdgels{ dominantEdgelsFrom(gradGrid) }
-			, theEdgeInfos{ edgeInfosFor(theEdgels) }
+			: theEdgeInfos{ edgeInfosFor(dominantEdgelsFrom(gradGrid)) }
 		{ }
+
+
+		//! Collection of edge elements being used for evaluation
+		inline
+		std::vector<img::Edgel>
+		edgelsInUse
+			() const
+		{
+			std::vector<img::Edgel> edgels;
+			for (sig::EdgeInfo const & edgeInfo : theEdgeInfos)
+			{
+				edgels.emplace_back(edgeInfo.edgel());
+			}
+			return edgels;
+		}
 
 		//! Determine most likely edgel angle directions (perp to radial edges)
 		inline
@@ -151,8 +279,6 @@ namespace sig
 		{
 			std::vector<double> peaks;
 
-std::cout << "\npeakAngles():\n";
-std::cout << "theEdgeInfos.size: " << theEdgeInfos.size() << '\n';
 			// create angle value accumulation (circular-wrapping) buffer
 			ang::Likely angleProbs(numAngBins);
 			for (sig::EdgeInfo const & edgeInfo : theEdgeInfos)
@@ -161,14 +287,18 @@ std::cout << "theEdgeInfos.size: " << theEdgeInfos.size() << '\n';
 				double const weight{ edgeInfo.consideredWeight() };
 				angleProbs.add(fwdAngle, weight, 2u);
 
-				// TODO - is this necessary?
-				// also add opposite angle to ensure angle prob buffer
-				// peaks are symmetrically balanced (to faciliate 
-				// edge group duo extraction below
+				// also add opposite angle to create angle prob buffer
+				// peaks that are symmetrically balanced (to faciliate 
+				// edge group duo extraction below)
 				double const revAngle
 					{ ang::principalAngle(fwdAngle + ang::piOne()) };
 				angleProbs.add(revAngle, weight, 2u);
 			}
+
+			// get peaks from angular accumulation buffer
+			peaks = angleProbs.anglesOfPeaks();
+
+
 
 std::cout << angleProbs.infoString("angleProbs") << '\n';
 std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
@@ -179,9 +309,6 @@ for (std::size_t const & peakMaxNdx : peakMaxNdxs)
 	std::cout << "  peakMaxNdx: " << std::setw(4u) << peakMaxNdx << '\n';
 }
 std::cout << "--\n";
-
-			// get peaks from angular accumulation buffer
-			peaks = angleProbs.anglesOfPeaks();
 
 std::cout << "--\n";
 
@@ -197,27 +324,15 @@ for (double const & peakAngle : peaks)
 			return peaks;
 		}
 
-		/*
-		//! Collection of EdgeInfo likely belonging to same radial edge
-		using EdgeGroup = std::vector<sig::EdgeInfo>;
-
-		//! (Radial) edge groups on opposite side of target center
-		struct EdgeGroupDuo
-		{
-			EdgeGroup const theEdgeInfos1{};
-			EdgeGroup const theEdgeInfos2{};
-
-		}; // EdgeGroupDuo
-
-		//! Pairs of EdgeInfo groups
+		//! \brief Weight table reflecting edgeInfo membership to angle group
 		inline
-		std::vector<EdgeGroupDuo>
-		foo
+		GroupTable
+		groupTable
 			() const
 		{
-			return {};//TODO
+			std::vector<double> const angles{ peakAngles() };
+			return GroupTable(theEdgeInfos, angles);
 		}
-		*/
 
 
 	}; // EdgeEval

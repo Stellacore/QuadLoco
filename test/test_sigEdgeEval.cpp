@@ -76,6 +76,7 @@ namespace
 		//	, sim::Sampler::None
 			, sim::Sampler::UseSceneBias
 			| sim::Sampler::UseImageNoise
+		//	, sim::Sampler::UseImageNoise
 			);
 		std::size_t const numOverSample{ 128u };
 		if (ptSigQuad)
@@ -109,8 +110,10 @@ std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
 		// categorize edgels into counter directed groups
 		sig::EdgeEval const edgeEval(gradGrid);
 
-		std::vector<double> const peakAngles
-			{ edgeEval.peakAngles() };
+		std::vector<double> const peakAngles{ edgeEval.peakAngles() };
+		sig::GroupTable const groupTab{ edgeEval.groupTable() };
+
+std::cout << groupTab.infoStringContents("groupTab", "%5.3f") << '\n';
 
 
 /*
