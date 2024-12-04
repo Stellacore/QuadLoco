@@ -114,8 +114,11 @@ namespace
 
 		// categorize edgels as candidates for (radial) quad target edge groups
 		sig::EdgeEval const edgeEval(gradGrid);
+
+		std::vector<sig::EdgeGroup> const edgeGroups{ edgeEval.edgeGroups() };
 		std::vector<sig::RayWgt> const rayWgts
-			{ edgeEval.groupRayWeights() };
+			{ edgeEval.groupRayWeights(edgeGroups) };
+
 		std::vector<sig::SpotWgt> const spotWgts
 			{ edgeEval.centerSpotWeights(gradGrid.hwSize()) };
 
@@ -149,14 +152,15 @@ ras::Grid<float> const eiGrid
 (void)io::writeStretchPGM("edgeInfoMag.pgm", eiGrid);
 
 
-		std::vector<double> const peakAngles{ edgeEval.peakAngles() };
+		std::vector<sig::AngleWgt> const peakAWs
+			{ edgeEval.peakAngleWeights() };
 
 		// should be four or more radial directions for simulated quad image
-		if (! (3u < peakAngles.size()))
+		if (! (3u < peakAWs.size()))
 		{
 			oss << "Failure of sufficient angle peak detection test\n";
-			oss << "exp: (3u < peakAngles.size())\n";
-			oss << "got: " << peakAngles.size() << '\n';
+			oss << "exp: (3u < peakAWs.size())\n";
+			oss << "got: " << peakAWs.size() << '\n';
 		}
 
 		// TODO replace this with real test code

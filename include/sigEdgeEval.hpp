@@ -60,10 +60,12 @@ namespace sig
 	constexpr double sRaySeparation{ 2.5 };
 
 
-	//! Candidate radial edge ray (aligned with radiometric gradients)
-	struct RayWgt
+
+	//! Candidate item and associated weight
+	template <typename ItemType>
+	struct ItemWgt
 	{
-		img::Ray theRay{};
+		ItemType theItem{};
 		double theWeight{};
 
 		//! True if this instance contains valid data
@@ -73,9 +75,27 @@ namespace sig
 			() const
 		{
 			return
-				(  theRay.isValid()
+				(  theItem.isValid()
 				&& engabra::g3::isValid(theWeight)
 				);
+		}
+
+		//! Item instance
+		inline
+		ItemType const &
+		item
+			() const
+		{
+			return theItem;
+		}
+
+		//! Weight value
+		inline
+		double const &
+		weight
+			() const
+		{
+			return theWeight;
 		}
 
 		//! Descriptive information about this instance.
@@ -91,7 +111,7 @@ namespace sig
 				oss << title << ' ';
 			}
 			oss
-				<< "ray: " << theRay
+				<< "item: " << theItem
 				<< ' '
 				<< "wgt: " << engabra::g3::io::fixed(theWeight);
 				;
@@ -99,98 +119,105 @@ namespace sig
 		}
 
 
-	}; // RayWgt
+	}; // ItemWgt
+
+	//! An img::Ray item and associated weight
+	using RayWgt = ItemWgt<img::Ray>;
+
+	//! An img::Spot item and associated weight
+	using SpotWgt = ItemWgt<img::Spot>;
+
+	//! An angle item and associated weight
+	using AngleWgt = ItemWgt<double>;
 
 
-	//! Weighted spot location
-	struct SpotWgt
+	//! Candidate center point
+	inline
+	static
+	SpotWgt
+	intersectionOf
+		( RayWgt const & rw1
+		, RayWgt const & rw2
+		)
 	{
-		img::Spot theSpot{};
-		double theWeight{};
+		img::Spot meetSpot{}; // null
+		double meetWgt{ 0. };
+		// access data: points on edge, edge dirs, and edge weights
+		img::Vector<double> const & s1 = rw1.item().start();
+		img::Vector<double> const & s2 = rw2.item().start();
+		img::Vector<double> const & d1 = rw1.item().direction();
+		img::Vector<double> const & d2 = rw2.item().direction();
+		double const & wgtRay1 = rw1.theWeight;
+		double const & wgtRay2 = rw2.theWeight;
+		// coefficient matrix
+		double const & fwd00 = d1[0];
+		double const & fwd01 = d1[1];
+		double const & fwd10 = d2[0];
+		double const & fwd11 = d2[1];
+		// determinant
+		double const det{ fwd00*fwd11 - fwd01*fwd10 };
+		if (std::numeric_limits<double>::epsilon() < std::abs(det))
+		{
+			// right hand side vector
+			double const rhs0{ dot(d1, s1) };
+			double const rhs1{ dot(d2, s2) };
+			// inverse coefficient matrix
+			double const & inv00 = fwd11;
+			double const inv01{ -fwd01 };
+			double const inv10{ -fwd10 };
+			double const & inv11 = fwd00;
+			// solve for intersection location
+			double const scl{ 1. / det };
+			meetSpot = img::Spot
+				{ scl * (inv00*rhs0 + inv01*rhs1)
+				, scl * (inv10*rhs0 + inv11*rhs1)
+				};
+			// use coefficient matrix determinant as intersection weight
+			// combined with input data weights.
+			double const wgtMeet{ std::abs(det) };
+			meetWgt = wgtMeet * wgtRay1 * wgtRay2;
+		}
+		return SpotWgt{ meetSpot, meetWgt };
+	}
 
-		//! Candidate center point
+	//! Utility filter to determine if spots should be used.
+	struct SpotFilter
+	{
+		bool theUseArea{ false };
+		img::Area theArea{};
+
+		/*! Determine when to use spots
+		 *
+		 * Use always if hwSize is not valid
+		 * Otherwise, if hwSize is valid, only use spots inside the area.
+		 */
 		inline
-		static
-		SpotWgt
-		fromIntersectionOf
-			( RayWgt const & rw1
-			, RayWgt const & rw2
+		explicit
+		SpotFilter
+			( ras::SizeHW const & hwSize
 			)
-		{
-			img::Spot meetSpot{}; // null
-			double meetWgt{ 0. };
-			// access data: points on edge, edge dirs, and edge weights
-			img::Vector<double> const & s1 = rw1.theRay.start();
-			img::Vector<double> const & s2 = rw2.theRay.start();
-			img::Vector<double> const & d1 = rw1.theRay.direction();
-			img::Vector<double> const & d2 = rw2.theRay.direction();
-			double const & wgtRay1 = rw1.theWeight;
-			double const & wgtRay2 = rw2.theWeight;
-			// coefficient matrix
-			double const & fwd00 = d1[0];
-			double const & fwd01 = d1[1];
-			double const & fwd10 = d2[0];
-			double const & fwd11 = d2[1];
-			// determinant
-			double const det{ fwd00*fwd11 - fwd01*fwd10 };
-			if (std::numeric_limits<double>::epsilon() < std::abs(det))
-			{
-				// right hand side vector
-				double const rhs0{ dot(d1, s1) };
-				double const rhs1{ dot(d2, s2) };
-				// inverse coefficient matrix
-				double const & inv00 = fwd11;
-				double const inv01{ -fwd01 };
-				double const inv10{ -fwd10 };
-				double const & inv11 = fwd00;
-				// solve for intersection location
-				double const scl{ 1. / det };
-				meetSpot = img::Spot
-					{ scl * (inv00*rhs0 + inv01*rhs1)
-					, scl * (inv10*rhs0 + inv11*rhs1)
-					};
-				// use coefficient matrix determinant as intersection weight
-				// combined with input data weights.
-				double const wgtMeet{ std::abs(det) };
-				meetWgt = wgtMeet * wgtRay1 * wgtRay2;
-			}
-			return SpotWgt{ meetSpot, meetWgt };
-		}
+			: theUseArea{ hwSize.isValid() }
+			, theArea
+				{ img::Span{ 0., static_cast<double>(hwSize.high())}
+				, img::Span{ 0., static_cast<double>(hwSize.wide())}
+				}
+		{ }
 
-		//! True if this instance contains valid data
+		//! True if spot should be utilized
 		inline
 		bool
-		isValid
-			() const
+		useSpot
+			( img::Spot const & spot
+			) const
 		{
 			return
-				(  theSpot.isValid()
-				&& engabra::g3::isValid(theWeight)
+				(  theUseArea
+				&& theArea.contains(spot)
 				);
 		}
 
-		//! Descriptive information about this instance.
-		inline
-		std::string
-		infoString
-			( std::string const & title = {}
-			) const
-		{
-			std::ostringstream oss;
-			if (! title.empty())
-			{
-				oss << title << ' ';
-			}
-			oss
-				<< "spot: " << theSpot
-				<< ' '
-				<< "wgt: " << engabra::g3::io::fixed(theWeight);
-				;
-			return oss.str();
-		}
+	};
 
-
-	}; // SpotWgt
 
 	//! Indices and weights for grouping EdgeInfo in association with an angle.
 	struct EdgeGroup
@@ -268,10 +295,15 @@ namespace sig
 	}; // EdgeGroup
 
 
+// TODO
+//	//! An sig::EdgeGroup item and associated weight
+//	using GroupWgt = ItemWgt<sig::EdgeGroup>;
+
+
 	//! \brief Estimate the association between EdgeInfo items and angle values.
 	class GroupTable
 	{
-		std::vector<double> const theAngles;
+		std::vector<AngleWgt> const theAngWgts;
 		ras::Grid<double> const theNdxAngWeights;
 
 		//! Collection of unitary directions corresponding with angle values.
@@ -279,13 +311,14 @@ namespace sig
 		static
 		std::vector<img::Vector<double> >
 		directionsFor
-			( std::vector<double> const & angles
+			( std::vector<AngleWgt> const & peakAWs
 			)
 		{
 			std::vector<img::Vector<double> > dirs;
-			dirs.reserve(angles.size());
-			for (double const & angle : angles)
+			dirs.reserve(peakAWs.size());
+			for (AngleWgt const & peakAW : peakAWs)
 			{
+				double const & angle = peakAW.item();
 				dirs.emplace_back
 					(img::Vector<double>{ std::cos(angle), std::sin(angle)} );
 			}
@@ -315,17 +348,17 @@ namespace sig
 		ras::Grid<double>
 		fillTable
 			( std::vector<sig::EdgeInfo> const & edgeInfos
-			, std::vector<double> const & angles
+			, std::vector<AngleWgt> const & peakAWs
 			, double const & cosPower = sCosPower // attenuation of dot product
 			)
 		{
-			ras::Grid<double> tab(edgeInfos.size(), angles.size());
+			ras::Grid<double> tab(edgeInfos.size(), peakAWs.size());
 			std::fill(tab.begin(), tab.end(), 0.);
 
 			std::vector<img::Vector<double> > const aDirs
-				{ directionsFor(angles) };
+				{ directionsFor(peakAWs) };
 			std::size_t const numEdges{ edgeInfos.size() };
-			std::size_t const numAngles{ angles.size() };
+			std::size_t const numAngles{ peakAWs.size() };
 			for (std::size_t eNdx{0u} ; eNdx < numEdges ; ++eNdx)
 			{
 				std::size_t const & row = eNdx;
@@ -353,10 +386,10 @@ namespace sig
 		inline
 		GroupTable
 			( std::vector<sig::EdgeInfo> const & edgeInfos
-			, std::vector<double> const & peakAngles
+			, std::vector<AngleWgt> const & peakAWs
 			)
-			: theAngles{ peakAngles }
-			, theNdxAngWeights{ fillTable(edgeInfos, theAngles) }
+			: theAngWgts{ peakAWs }
+			, theNdxAngWeights{ fillTable(edgeInfos, theAngWgts) }
 		{ }
 
 		//! Index/Weights from table classified by peakAngle (from ctor info)
@@ -400,10 +433,10 @@ namespace sig
 			oss << theNdxAngWeights.infoStringContents(title, cfmt);
 			oss << '\n';
 			oss << "# angles: ";
-			for (double const & angle : theAngles)
+			for (AngleWgt const & angWgt : theAngWgts)
 			{
 				using engabra::g3::io::fixed;
-				oss << ' ' << fixed(angle, 2u, 3u);
+				oss << ' ' << angWgt.infoString() << '\n';
 			}
 			return oss.str();
 		}
@@ -539,12 +572,12 @@ namespace sig
 
 		//! Determine most likely edgel angle directions (perp to radial edges)
 		inline
-		std::vector<double>
-		peakAngles
+		std::vector<AngleWgt>
+		peakAngleWeights
 			( std::size_t const & numAngBins = sNumAngleBins
 			) const
 		{
-			std::vector<double> peaks;
+			std::vector<AngleWgt> peakAWs;
 
 			// create angle value accumulation (circular-wrapping) buffer
 			ang::Likely angleProbs(numAngBins);
@@ -563,9 +596,18 @@ namespace sig
 			}
 
 			// get peaks from angular accumulation buffer
-			peaks = angleProbs.anglesOfPeaks();
+			std::vector<double> const peakAngles{ angleProbs.anglesOfPeaks() };
+			for (double const & peakAngle : peakAngles)
+			{
+				double const peakValue
+					{ angleProbs.binSumAtAngle(peakAngle) };
+				AngleWgt const angleWgt
+					{ peakAngle
+					, peakValue
+					};
+				peakAWs.emplace_back(angleWgt);
+			}
 
-/*
 std::cout << angleProbs.infoString("angleProbs") << '\n';
 std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
 
@@ -578,17 +620,17 @@ std::cout << "--\n";
 
 std::cout << "--\n";
 
-for (double const & peakAngle : peaks)
+for (AngleWgt const & peakAW : peakAWs)
 {
-	double const peakValue{ angleProbs.binSumAtAngle(peakAngle) };
 	std::cout
-		<< "  peakAngle: " << engabra::g3::io::fixed(peakAngle)
-		<< "  peakValue: " << engabra::g3::io::fixed(peakValue)
+		<< "  peakAngle: " << engabra::g3::io::fixed(peakAW.item())
+		<< "  peakValue: " << engabra::g3::io::fixed(peakAW.weight())
 		<< '\n';
 }
+/*
 */
 
-			return peaks;
+			return peakAWs;
 		}
 
 		//! \brief Weight table reflecting edgeInfo membership to angle group
@@ -597,19 +639,29 @@ for (double const & peakAngle : peaks)
 		groupTable
 			() const
 		{
-			std::vector<double> const angles{ peakAngles() };
-			return GroupTable(theEdgeInfos, angles);
+			std::vector<AngleWgt> const peakAWs{ peakAngleWeights() };
+			return GroupTable(theEdgeInfos, peakAWs);
+		}
+
+		//! Index/Weights from table classified by peakAngle (from ctor info)
+		inline
+		std::vector<EdgeGroup>
+		edgeGroups
+			() const
+		{
+			GroupTable const groupTab{ groupTable() };
+			std::vector<EdgeGroup> const groups{ groupTab.edgeGroups() };
+			return groups;
 		}
 
 		//! Edge ray (aligned with gradients) candidates for radial edges
 		inline
 		std::vector<RayWgt>
 		groupRayWeights
-			() const
+			( std::vector<EdgeGroup> const & groups
+			) const
 		{
 			std::vector<RayWgt> rayWgts;
-			GroupTable const groupTab{ groupTable() };
-			std::vector<EdgeGroup> const groups{ groupTab.edgeGroups() };
 			rayWgts.reserve(groups.size());
 			for (EdgeGroup const & group : groups)
 			{
@@ -627,44 +679,6 @@ for (double const & peakAngle : peaks)
 				);
 			return rayWgts;
 		}
-
-		//! Utility filter to determine if spots should be used.
-		struct SpotFilter
-		{
-			bool theUseArea{ false };
-			img::Area theArea{};
-
-			/*! Determine when to use spots
-			 *
-			 * Use always if hwSize is not valid
-			 * Otherwise, if hwSize is valid, only use spots inside the area.
-			 */
-			inline
-			explicit
-			SpotFilter
-				( ras::SizeHW const & hwSize
-				)
-				: theUseArea{ hwSize.isValid() }
-				, theArea
-					{ img::Span{ 0., static_cast<double>(hwSize.high())}
-					, img::Span{ 0., static_cast<double>(hwSize.wide())}
-					}
-			{ }
-
-			//! True if spot should be utilized
-			inline
-			bool
-			useSpot
-				( img::Spot const & spot
-				) const
-			{
-				return
-					(  theUseArea
-					&& theArea.contains(spot)
-					);
-			}
-
-		};
 
 		/*! \brief Pseudo-probability that edge ray spots are NOT coincident.
 		 *
@@ -719,7 +733,7 @@ for (double const & peakAngle : peaks)
 			SpotFilter const spotFilter(hwSize);
 
 			// get edge rays likely associated with radial quad edges
-			std::vector<RayWgt> const rayWgts{ groupRayWeights() };
+			std::vector<RayWgt> const rayWgts{ groupRayWeights(edgeGroups()) };
 			std::size_t const numEdges{ rayWgts.size() };
 			std::size_t const & numUseRW = numEdges;
 			// pair-wise intersection of all rays
@@ -730,16 +744,15 @@ for (double const & peakAngle : peaks)
 				for (std::size_t ndx2{ndx1+1u} ; ndx2 < numUseRW ; ++ndx2)
 				{
 					RayWgt const & rw2 = rayWgts[ndx2];
-					SpotWgt const tmpSpotWgt
-						{ SpotWgt::fromIntersectionOf(rw1, rw2) };
+					SpotWgt const tmpSpotWgt{ intersectionOf(rw1, rw2) };
 					if (tmpSpotWgt.isValid())
 					{
-						if (spotFilter.useSpot(tmpSpotWgt.theSpot))
+						if (spotFilter.useSpot(tmpSpotWgt.item()))
 						{
 							double const wgtSeparate
-								{ separationWeight(rw1.theRay, rw2.theRay) };
+								{ separationWeight(rw1.item(), rw2.item()) };
 							SpotWgt const useSpotWgt
-								{ tmpSpotWgt.theSpot
+								{ tmpSpotWgt.item()
 								, wgtSeparate * tmpSpotWgt.theWeight
 								};
 							spotWgts.emplace_back(useSpotWgt);
@@ -753,7 +766,7 @@ for (double const & peakAngle : peaks)
 			for (std::size_t ndxSW{0u} ; ndxSW < numSW ; ++ndxSW)
 			{
 				SpotWgt & spotWgt = spotWgts[ndxSW];
-				img::Spot const & spot = spotWgt.theSpot;
+				img::Spot const & spot = spotWgt.item();
 				double const & wgtSpot = spotWgt.theWeight;
 
 				// use all edge rays to "vote" on quality of the
@@ -762,7 +775,7 @@ for (double const & peakAngle : peaks)
 				for (std::size_t ndxRW{0u} ; ndxRW < numUseRW ; ++ndxRW)
 				{
 					RayWgt const & rayWgt = rayWgts[ndxRW];
-					img::Ray const & ray = rayWgt.theRay;
+					img::Ray const & ray = rayWgt.item();
 					double const & wgtRay = rayWgt.theWeight;
 
 					double const edgeGap{ ray.distanceAlong(spot) };
