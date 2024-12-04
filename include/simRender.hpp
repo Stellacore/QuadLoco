@@ -66,8 +66,8 @@ namespace sim
 			, obj::QuadTarget const & objQuad
 				//!< Quad target (defines the quad reference frame) 
 			, unsigned const & samplerOptions =
-				( Sampler::UseSceneBias
-				| Sampler::UseImageNoise
+				( Sampler::AddSceneBias
+				| Sampler::AddImageNoise
 				)
 				//!< XOR of quadloco::sim::Sampler::OptionFlags
 			)
@@ -81,8 +81,8 @@ namespace sim
 			( sim::Config const & simConfig
 				//!< Simulation configuration
 			, unsigned const & samplerOptions =
-				( Sampler::UseSceneBias
-				| Sampler::UseImageNoise
+				( Sampler::AddSceneBias
+				| Sampler::AddImageNoise
 				)
 				//!< XOR of quadloco::sim::Sampler::OptionFlags
 			)

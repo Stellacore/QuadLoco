@@ -64,10 +64,10 @@ namespace obj
 		img::Area const theArea{};
 
 		//! If true clip the background patches into triangles
-		bool const theDoubleTriangle{ false };
+		bool const theWithTriangle{ false };
 
 		//! If true, quadSignalAt() returns dithered background values
-		bool const theAddSurround{ true };
+		bool const theWithSurround{ true };
 
 		//! Area symmetric about origin with theEdgeMag size on each side
 		inline
@@ -90,8 +90,8 @@ namespace obj
 		enum OptionFlags
 		{
 			  None            = 0x0000
-			, AddSurround     = 0x0001
-			, DoubleTriangle  = 0x0002
+			, WithSurround    = 0x0001
+			, WithTriangle    = 0x0002
 		};
 
 	private:
@@ -124,15 +124,15 @@ namespace obj
 			( double const & fullEdgeLength
 				//!< Length of center lines (twice a radial edge length)
 			, unsigned const & options =
-				( AddSurround
-			//	| DoubleTriangle
+				( WithSurround
+			//	| WithTriangle
 				)
 				//!< Or'd combo of quadloco::obj::QuadTarget::OptionFlags
 			)
 			: theEdgeMag{ fullEdgeLength }
 			, theArea{ areaFor(theEdgeMag) }
-			, theDoubleTriangle{ isSet(options, DoubleTriangle) }
-			, theAddSurround{ isSet(options, AddSurround) }
+			, theWithTriangle{ isSet(options, WithTriangle) }
+			, theWithSurround{ isSet(options, WithSurround) }
 		{ }
 
 		//! True if this instance contains valid data (is not null)
@@ -321,7 +321,7 @@ namespace obj
 				value = (signEval < 0.) ? theWhite : theBlack;
 
 				// introduce triangle clipping
-				if (theDoubleTriangle && (theBlack == value))
+				if (theWithTriangle && (theBlack == value))
 				{
 					// apply foreground color to outer triangle areas
 					// of background signal to produce a double-triangle
@@ -335,7 +335,7 @@ namespace obj
 				}
 			}
 			else
-			if (theAddSurround)
+			if (theWithSurround)
 			{
 				// requested to filling surrounding area
 				value = surroundSignalAt(spotOnQuad);

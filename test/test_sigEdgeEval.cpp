@@ -53,12 +53,13 @@ namespace
 		)
 	{
 		using namespace quadloco;
+		using namespace quadloco::obj;
 		sim::Config const config
 			{ obj::QuadTarget
 				( .25
-			//	, obj::QuadTarget::AddSurround
-			//	| obj::QuadTarget::DoubleTriangle
-				, obj::QuadTarget::DoubleTriangle
+			//	, QuadTarget::None
+			//	, QuadTarget::WithSurround | QuadTarget::WithTriangle
+				, QuadTarget::WithTriangle
 				)
 			, obj::Camera
 //				{ ras::SizeHW{ 128u, 128u }
@@ -74,12 +75,12 @@ namespace
 					}
 				}
 			};
+		using namespace quadloco::sim;
 		sim::Render const render
 			( config
-		//	, sim::Sampler::None
-			, sim::Sampler::UseSceneBias
-			| sim::Sampler::UseImageNoise
-		//	, sim::Sampler::UseImageNoise
+		//	, Sampler::None
+			, Sampler::AddSceneBias | Sampler::AddImageNoise
+		//	, Sampler::AddImageNoise
 			);
 		std::size_t const numOverSample{ 128u };
 		if (ptSigQuad)
