@@ -29,6 +29,7 @@
 
 
 #include "imgEdgel.hpp"
+#include "io.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "opsgrid.hpp"
@@ -39,6 +40,7 @@
 #include <Engabra>
 #include <Rigibra>
 
+#include <fstream>
 #include <iostream>
 #include <sstream>
 
@@ -53,15 +55,19 @@ namespace
 		)
 	{
 		using namespace quadloco;
+		using namespace quadloco::obj;
 		sim::Config const config
 			{ obj::QuadTarget
 				( .25
-				, obj::QuadTarget::AddSurround
+			//	, QuadTarget::None
+			//	, QuadTarget::WithSurround | QuadTarget::WithTriangle
+				, QuadTarget::WithTriangle
 				)
 			, obj::Camera
 //				{ ras::SizeHW{ 128u, 128u }
-{ ras::SizeHW{ 8u, 8u }
-				, 100. // pd
+//				, 100. // pd
+{ ras::SizeHW{ 16u, 16u }
+				,  55. // pd
 				}
 			, rigibra::Transform
 				{ engabra::g3::Vector{ 0., 0., 1. }
@@ -71,11 +77,12 @@ namespace
 					}
 				}
 			};
+		using namespace quadloco::sim;
 		sim::Render const render
 			( config
-		//	, sim::Sampler::None
-			, sim::Sampler::UseSceneBias
-			| sim::Sampler::UseImageNoise
+		//	, Sampler::None
+			, Sampler::AddSceneBias | Sampler::AddImageNoise
+		//	, Sampler::AddImageNoise
 			);
 		std::size_t const numOverSample{ 128u };
 		if (ptSigQuad)
@@ -97,7 +104,6 @@ namespace
 
 		// simulate quad target image and extract edgels
 		ras::Grid<float> const pixGrid{ simulatedQuadGrid() };
-std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
 
 		// compute gradient elements
 		ras::Grid<img::Grad> const gradGrid
@@ -106,11 +112,12 @@ std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
 		std::vector<img::Edgel> const edgels
 			{ ops::grid::linkedEdgelsFrom(gradGrid) };
 
-		// categorize edgels into counter directed groups
+		// categorize edgels as candidates for (radial) quad target edge groups
 		sig::EdgeEval const edgeEval(gradGrid);
-
-		std::vector<double> const peakAngles
-			{ edgeEval.peakAngles() };
+		std::vector<sig::RayWgt> const rayWgts
+			{ edgeEval.groupRayWeights() };
+		std::vector<sig::SpotWgt> const spotWgts
+			{ edgeEval.centerSpotWeights(gradGrid.hwSize()) };
 
 
 /*
@@ -120,6 +127,29 @@ std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
 */
 
 		// [DoxyExample01]
+
+std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
+sig::GroupTable const groupTab{ edgeEval.groupTable() };
+std::cout << groupTab.infoStringContents("groupTab", "%5.3f") << '\n';
+std::cout << "rayWgts.size: " << rayWgts.size() << '\n';
+
+std::ofstream ofsRay("ray.dat");
+		for (sig::RayWgt const & rayWgt : rayWgts)
+		{
+			ofsRay << "rayWgt: " << rayWgt << '\n';
+		}
+std::ofstream ofsSpot("spot.dat");
+		for (sig::SpotWgt const & spotWgt : spotWgts)
+		{
+			ofsSpot << "spotWgt: " << spotWgt << '\n';
+		}
+
+ras::Grid<float> const eiGrid
+	{ edgeEval.edgeInfoGrid(gradGrid.hwSize()) };
+(void)io::writeStretchPGM("edgeInfoMag.pgm", eiGrid);
+
+
+		std::vector<double> const peakAngles{ edgeEval.peakAngles() };
 
 		// should be four or more radial directions for simulated quad image
 		if (! (3u < peakAngles.size()))

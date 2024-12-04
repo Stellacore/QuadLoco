@@ -34,6 +34,7 @@
 
 
 #include "angLikely.hpp"
+#include "imgArea.hpp"
 #include "opsgrid.hpp"
 #include "rasGrid.hpp"
 #include "sigEdgeInfo.hpp"
@@ -47,11 +48,372 @@ namespace quadloco
 
 namespace sig
 {
+	//! Attenuation power on dot product
+	constexpr double sCosPower{ 10. };
+	//! Multiply threshold for neighborhood gradient agreement
+	constexpr double sLinkEdgeDist{ 2.50 };
+	//! Use to estimate expected maximum number of strong edgels
+	constexpr std::size_t sDiagMultiple{ 6u };
+	//! Number of bins to use in angle direction peak detection
+	constexpr std::size_t sNumAngleBins{ 32u };
+	//! Expected minimum proximity of two adjacent radial edge rays
+	constexpr double sRaySeparation{ 2.5 };
+
+
+	//! Candidate radial edge ray (aligned with radiometric gradients)
+	struct RayWgt
+	{
+		img::Ray theRay{};
+		double theWeight{};
+
+		//! True if this instance contains valid data
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  theRay.isValid()
+				&& engabra::g3::isValid(theWeight)
+				);
+		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "ray: " << theRay
+				<< ' '
+				<< "wgt: " << engabra::g3::io::fixed(theWeight);
+				;
+			return oss.str();
+		}
+
+
+	}; // RayWgt
+
+
+	//! Weighted spot location
+	struct SpotWgt
+	{
+		img::Spot theSpot{};
+		double theWeight{};
+
+		//! Candidate center point
+		inline
+		static
+		SpotWgt
+		fromIntersectionOf
+			( RayWgt const & rw1
+			, RayWgt const & rw2
+			)
+		{
+			img::Spot meetSpot{}; // null
+			double meetWgt{ 0. };
+			// access data: points on edge, edge dirs, and edge weights
+			img::Vector<double> const & s1 = rw1.theRay.start();
+			img::Vector<double> const & s2 = rw2.theRay.start();
+			img::Vector<double> const & d1 = rw1.theRay.direction();
+			img::Vector<double> const & d2 = rw2.theRay.direction();
+			double const & wgtRay1 = rw1.theWeight;
+			double const & wgtRay2 = rw2.theWeight;
+			// coefficient matrix
+			double const & fwd00 = d1[0];
+			double const & fwd01 = d1[1];
+			double const & fwd10 = d2[0];
+			double const & fwd11 = d2[1];
+			// determinant
+			double const det{ fwd00*fwd11 - fwd01*fwd10 };
+			if (std::numeric_limits<double>::epsilon() < std::abs(det))
+			{
+				// right hand side vector
+				double const rhs0{ dot(d1, s1) };
+				double const rhs1{ dot(d2, s2) };
+				// inverse coefficient matrix
+				double const & inv00 = fwd11;
+				double const inv01{ -fwd01 };
+				double const inv10{ -fwd10 };
+				double const & inv11 = fwd00;
+				// solve for intersection location
+				double const scl{ 1. / det };
+				meetSpot = img::Spot
+					{ scl * (inv00*rhs0 + inv01*rhs1)
+					, scl * (inv10*rhs0 + inv11*rhs1)
+					};
+				// use coefficient matrix determinant as intersection weight
+				// combined with input data weights.
+				double const wgtMeet{ std::abs(det) };
+				meetWgt = wgtMeet * wgtRay1 * wgtRay2;
+			}
+			return SpotWgt{ meetSpot, meetWgt };
+		}
+
+		//! True if this instance contains valid data
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  theSpot.isValid()
+				&& engabra::g3::isValid(theWeight)
+				);
+		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "spot: " << theSpot
+				<< ' '
+				<< "wgt: " << engabra::g3::io::fixed(theWeight);
+				;
+			return oss.str();
+		}
+
+
+	}; // SpotWgt
+
+	//! Indices and weights for grouping EdgeInfo in association with an angle.
+	struct EdgeGroup
+	{
+		//! Collection index and entry weight pair
+		struct NdxWgt
+		{
+			std::size_t const theNdx;
+			double const theWeight;
+
+		}; // NdxWgt
+
+		//! Index/Weights for assumed (external) EdgeInfo collection
+		std::vector<NdxWgt> theNdxWgts;
+
+		//! Average EdgeInfo.consideredWeight() for all edgels in this group.
+		inline
+		double
+		consideredWeight
+			( std::vector<sig::EdgeInfo> const & edgeInfos
+			) const
+		{
+			double aveWgt{ 0. };
+			double sumWgt{ 0. };
+			double count{ 0. };
+			for (NdxWgt const & ndxWgt : theNdxWgts)
+			{
+				std::size_t const & ndx = ndxWgt.theNdx;
+				EdgeInfo const & edgeInfo = edgeInfos[ndx];
+				double const wgtRadial{ edgeInfo.consideredWeight() };
+				sumWgt += wgtRadial;
+				count += 1.;
+			}
+			if (0. < count)
+			{
+				aveWgt = (1./count) * sumWgt;
+			}
+			return aveWgt;
+		}
+
+		//! Ray best fitting (gradient-weighted average) edge direction
+		inline
+		RayWgt
+		fitRayWeight
+			( std::vector<sig::EdgeInfo> const & edgeInfos
+			) const
+		{
+			img::Ray ray{}; // null instance
+			img::Vector<double> sumLoc{ 0., 0. };
+			img::Vector<double> sumDir{ 0., 0. };
+			double sumWgt{ 0. };
+			for (NdxWgt const & ndxWgt : theNdxWgts)
+			{
+				std::size_t const & ndx = ndxWgt.theNdx;
+				EdgeInfo const & edgeInfo = edgeInfos[ndx];
+				img::Edgel const & edgel = edgeInfos[ndx].edgel();
+				double const wgtRadial{ edgeInfo.consideredWeight() };
+				double const & wgtGradMag = edgel.magnitude(); // gradient mag
+				double const wgtTotal{ wgtRadial * wgtGradMag };
+				// NOTE: wgt on gradient is (wgtGradMag*direction==gradient()
+				sumDir = sumDir + wgtRadial *              edgel.gradient();
+				sumLoc = sumLoc + wgtRadial * wgtGradMag * edgel.location();
+				sumWgt += wgtRadial * wgtGradMag;
+			}
+			if (0. < sumWgt)
+			{
+				img::Vector<double> const rayLoc{ (1./sumWgt) * sumLoc };
+				img::Vector<double> const rayDir{ direction(sumDir) };
+				ray = img::Ray{ rayLoc, rayDir };
+			}
+			RayWgt const rayWgt{ ray, sumWgt };
+			return rayWgt;
+		}
+
+	}; // EdgeGroup
+
+
+	//! \brief Estimate the association between EdgeInfo items and angle values.
+	class GroupTable
+	{
+		std::vector<double> const theAngles;
+		ras::Grid<double> const theNdxAngWeights;
+
+		//! Collection of unitary directions corresponding with angle values.
+		inline
+		static
+		std::vector<img::Vector<double> >
+		directionsFor
+			( std::vector<double> const & angles
+			)
+		{
+			std::vector<img::Vector<double> > dirs;
+			dirs.reserve(angles.size());
+			for (double const & angle : angles)
+			{
+				dirs.emplace_back
+					(img::Vector<double>{ std::cos(angle), std::sin(angle)} );
+			}
+			return dirs;
+		}
+
+		/*! \brief Create pseudo-probabilities of edges belonging to angles
+		 *
+		 * The table rows correspond to indices in the edge info struture
+		 * and the table columns correspond with elements from the angles
+		 * collection.
+		 *
+		 * Table values are an accumulation of weighted gradients, where
+		 * the weight factor is computed based on proximity to angle
+		 * directions.
+		 *
+		 * The maximum weight in a row - suggests the angle to which the
+		 * row edgel is most closely algined (e.g. classification of
+		 * edgels into angle categories).
+		 *
+		 * The larger weights down a column suggest which edgels are likely
+		 * to associated with that particular angle (e.g. be on an edge
+		 * with that direction).
+		 */
+		inline
+		static
+		ras::Grid<double>
+		fillTable
+			( std::vector<sig::EdgeInfo> const & edgeInfos
+			, std::vector<double> const & angles
+			, double const & cosPower = sCosPower // attenuation of dot product
+			)
+		{
+			ras::Grid<double> tab(edgeInfos.size(), angles.size());
+			std::fill(tab.begin(), tab.end(), 0.);
+
+			std::vector<img::Vector<double> > const aDirs
+				{ directionsFor(angles) };
+			std::size_t const numEdges{ edgeInfos.size() };
+			std::size_t const numAngles{ angles.size() };
+			for (std::size_t eNdx{0u} ; eNdx < numEdges ; ++eNdx)
+			{
+				std::size_t const & row = eNdx;
+				img::Edgel const & edgel = edgeInfos[eNdx].edgel();
+				img::Vector<double> const eDir{ edgel.direction() };
+				for (std::size_t aNdx{0u} ; aNdx < numAngles ; ++aNdx)
+				{
+					std::size_t const & col = aNdx;
+					img::Vector<double> const & aDir = aDirs[aNdx];
+
+					double const align{ dot(eDir, aDir) };
+					if (.75 < align)
+					{
+						double const dirWgt{ std::powf(align, cosPower) };
+						tab(row,col) += dirWgt * edgel.magnitude();
+					}
+				}
+			}
+			return tab;
+		}
+
+	public:
+
+		//! Populate edge/angle weight table - ref: fillTable().
+		inline
+		GroupTable
+			( std::vector<sig::EdgeInfo> const & edgeInfos
+			, std::vector<double> const & peakAngles
+			)
+			: theAngles{ peakAngles }
+			, theNdxAngWeights{ fillTable(edgeInfos, theAngles) }
+		{ }
+
+		//! Index/Weights from table classified by peakAngle (from ctor info)
+		inline
+		std::vector<EdgeGroup>
+		edgeGroups
+			() const
+		{
+			std::vector<EdgeGroup> edgeGroups;
+			std::size_t const numGroups{ theNdxAngWeights.wide() };
+			std::size_t const numElem{ theNdxAngWeights.high() };
+			for (std::size_t col{0u} ; col < numGroups ; ++col)
+			{
+				std::vector<EdgeGroup::NdxWgt> ndxWgts;
+				for (std::size_t row{0u} ; row < numElem ; ++row)
+				{
+					std::size_t const & ndx = row;
+					double const & wgt = theNdxAngWeights(row, col);
+					if (0. < wgt)
+					{
+						EdgeGroup::NdxWgt const ndxWgt{ ndx, wgt };
+						ndxWgts.emplace_back(ndxWgt);
+					}
+				}
+				edgeGroups.emplace_back(EdgeGroup{ ndxWgts });
+			}
+			return edgeGroups;
+		}
+
+		//! Description including contents of theNdxAngWeight table
+		inline
+		std::string
+		infoStringContents
+			( std::string const & title
+				//!< Heading to print (along with size info)
+			, std::string const & cfmt
+				//!< A 'printf' style string to format each cell value
+			) const
+		{
+			std::ostringstream oss;
+			oss << theNdxAngWeights.infoStringContents(title, cfmt);
+			oss << '\n';
+			oss << "# angles: ";
+			for (double const & angle : theAngles)
+			{
+				using engabra::g3::io::fixed;
+				oss << ' ' << fixed(angle, 2u, 3u);
+			}
+			return oss.str();
+		}
+
+	}; // GroupTable
+
 
 	//! \brief Evaluator of edgels that are likely part of quad target image
 	class EdgeEval
 	{
-		std::vector<img::Edgel> const theEdgels;
 		std::vector<sig::EdgeInfo> const theEdgeInfos;
 
 	// static functions
@@ -62,18 +424,19 @@ namespace sig
 		std::vector<img::Edgel>
 		dominantEdgelsFrom
 			( ras::Grid<img::Grad> const & gradGrid
-			, std::size_t const & numTimesDiagonal = 6u
+			, double const & linkEdgeDist = sLinkEdgeDist
+			, std::size_t const & diagMultiple = sDiagMultiple
 			)
 		{
 			// get all strongly linked edgels
 			std::vector<img::Edgel> edgels
-				{ ops::grid::linkedEdgelsFrom(gradGrid, 1.5) };
+				{ ops::grid::linkedEdgelsFrom(gradGrid, linkEdgeDist) };
 
 			// conservative estimate of how many to search knowing that
 			// a quad target should be consuming large part of grid
 			double const diag{ gradGrid.hwSize().diagonal() };
 			std::size_t const estNumToUse
-				{ static_cast<std::size_t>((double)numTimesDiagonal * diag) };
+				{ static_cast<std::size_t>((double)diagMultiple * diag) };
 			std::size_t const numToUse{ std::min(estNumToUse, edgels.size()) };
 
 			// move strongest edges near front
@@ -137,22 +500,52 @@ namespace sig
 		EdgeEval
 			( ras::Grid<img::Grad> const & gradGrid
 			)
-// TODO - really don't need to save edgels, since in they are in EdgeInfos
-			: theEdgels{ dominantEdgelsFrom(gradGrid) }
-			, theEdgeInfos{ edgeInfosFor(theEdgels) }
+			: theEdgeInfos{ edgeInfosFor(dominantEdgelsFrom(gradGrid)) }
 		{ }
+
+		// TODO - should go someplace else - EdgeInfo functions maybe?
+		//! Significant edgeInfo organized into a grid
+		inline
+		ras::Grid<float>
+		edgeInfoGrid
+			( ras::SizeHW const & hwSize
+			) const
+		{
+			ras::Grid<float> eiGrid(hwSize);
+			std::fill(eiGrid.begin(), eiGrid.end(), 0.f);
+			for (sig::EdgeInfo const & edgeInfo : theEdgeInfos)
+			{
+				ras::RowCol const rc
+					{ cast::rasRowCol(edgeInfo.edgel().start()) };
+	//			eiGrid(rc) = edgeInfo.edgel().magnitude();
+				eiGrid(rc) = (float)edgeInfo.consideredWeight();
+			}
+			return eiGrid;
+		}
+
+		//! Collection of edge elements being used for evaluation
+		inline
+		std::vector<img::Edgel>
+		edgelsInUse
+			() const
+		{
+			std::vector<img::Edgel> edgels;
+			for (sig::EdgeInfo const & edgeInfo : theEdgeInfos)
+			{
+				edgels.emplace_back(edgeInfo.edgel());
+			}
+			return edgels;
+		}
 
 		//! Determine most likely edgel angle directions (perp to radial edges)
 		inline
 		std::vector<double>
 		peakAngles
-			( std::size_t const & numAngBins = 32u
+			( std::size_t const & numAngBins = sNumAngleBins
 			) const
 		{
 			std::vector<double> peaks;
 
-std::cout << "\npeakAngles():\n";
-std::cout << "theEdgeInfos.size: " << theEdgeInfos.size() << '\n';
 			// create angle value accumulation (circular-wrapping) buffer
 			ang::Likely angleProbs(numAngBins);
 			for (sig::EdgeInfo const & edgeInfo : theEdgeInfos)
@@ -161,15 +554,18 @@ std::cout << "theEdgeInfos.size: " << theEdgeInfos.size() << '\n';
 				double const weight{ edgeInfo.consideredWeight() };
 				angleProbs.add(fwdAngle, weight, 2u);
 
-				// TODO - is this necessary?
-				// also add opposite angle to ensure angle prob buffer
-				// peaks are symmetrically balanced (to faciliate 
-				// edge group duo extraction below
+				// also add opposite angle to create angle prob buffer
+				// peaks that are symmetrically balanced (to faciliate 
+				// edge group duo extraction below)
 				double const revAngle
 					{ ang::principalAngle(fwdAngle + ang::piOne()) };
 				angleProbs.add(revAngle, weight, 2u);
 			}
 
+			// get peaks from angular accumulation buffer
+			peaks = angleProbs.anglesOfPeaks();
+
+/*
 std::cout << angleProbs.infoString("angleProbs") << '\n';
 std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
 
@@ -179,9 +575,6 @@ for (std::size_t const & peakMaxNdx : peakMaxNdxs)
 	std::cout << "  peakMaxNdx: " << std::setw(4u) << peakMaxNdx << '\n';
 }
 std::cout << "--\n";
-
-			// get peaks from angular accumulation buffer
-			peaks = angleProbs.anglesOfPeaks();
 
 std::cout << "--\n";
 
@@ -193,31 +586,207 @@ for (double const & peakAngle : peaks)
 		<< "  peakValue: " << engabra::g3::io::fixed(peakValue)
 		<< '\n';
 }
+*/
 
 			return peaks;
 		}
 
-		/*
-		//! Collection of EdgeInfo likely belonging to same radial edge
-		using EdgeGroup = std::vector<sig::EdgeInfo>;
-
-		//! (Radial) edge groups on opposite side of target center
-		struct EdgeGroupDuo
-		{
-			EdgeGroup const theEdgeInfos1{};
-			EdgeGroup const theEdgeInfos2{};
-
-		}; // EdgeGroupDuo
-
-		//! Pairs of EdgeInfo groups
+		//! \brief Weight table reflecting edgeInfo membership to angle group
 		inline
-		std::vector<EdgeGroupDuo>
-		foo
+		GroupTable
+		groupTable
 			() const
 		{
-			return {};//TODO
+			std::vector<double> const angles{ peakAngles() };
+			return GroupTable(theEdgeInfos, angles);
 		}
-		*/
+
+		//! Edge ray (aligned with gradients) candidates for radial edges
+		inline
+		std::vector<RayWgt>
+		groupRayWeights
+			() const
+		{
+			std::vector<RayWgt> rayWgts;
+			GroupTable const groupTab{ groupTable() };
+			std::vector<EdgeGroup> const groups{ groupTab.edgeGroups() };
+			rayWgts.reserve(groups.size());
+			for (EdgeGroup const & group : groups)
+			{
+				RayWgt const rayWgt{ group.fitRayWeight(theEdgeInfos) };
+				if (rayWgt.isValid())
+				{
+					rayWgts.emplace_back(rayWgt);
+				}
+			}
+			std::sort
+				( rayWgts.begin(), rayWgts.end()
+				, [] (RayWgt const & rw1, RayWgt const & rw2)
+					// reverse directions to sort largest weight first
+					{ return rw2.theWeight < rw1.theWeight; }
+				);
+			return rayWgts;
+		}
+
+		//! Utility filter to determine if spots should be used.
+		struct SpotFilter
+		{
+			bool theUseArea{ false };
+			img::Area theArea{};
+
+			/*! Determine when to use spots
+			 *
+			 * Use always if hwSize is not valid
+			 * Otherwise, if hwSize is valid, only use spots inside the area.
+			 */
+			inline
+			explicit
+			SpotFilter
+				( ras::SizeHW const & hwSize
+				)
+				: theUseArea{ hwSize.isValid() }
+				, theArea
+					{ img::Span{ 0., static_cast<double>(hwSize.high())}
+					, img::Span{ 0., static_cast<double>(hwSize.wide())}
+					}
+			{ }
+
+			//! True if spot should be utilized
+			inline
+			bool
+			useSpot
+				( img::Spot const & spot
+				) const
+			{
+				return
+					(  theUseArea
+					&& theArea.contains(spot)
+					);
+			}
+
+		};
+
+		/*! \brief Pseudo-probability that edge ray spots are NOT coincident.
+		 *
+		 * Spot locations should be seprated by a couple pixels
+		 * due to the multi-pixel span of gradient computation. (In practice
+		 * resolution of the image will be a factor, but that's likely
+		 * less than or comparable to gradient computation span).
+		 *
+		 * Consider two grid cells seprated by one empty cell, the
+		 * distance between them is 2 in a cardinal direction and 2.8
+		 * in diagonal one. Therefore, one might expect a separation
+		 * of less than this to be an artifact. E.g. less than 2-2.8
+		 * is probably insignificant.
+		 *
+		 * Approaching another way, for a highly oblique target, two
+		 * (oppositely directed) adjacent edge rays, could be separated
+		 * by order of 2 or 2.8 pixels which should be considered
+		 * significant. E.g. more than 2-2.8 is probably significant.
+		 *
+		 * Therefore, it's probably reasonable to associate a value of
+		 * maybe 2.5 as a 50/50 proposition.  E.g. .50=exp(-arg^2)=P(arg)
+		 * suggesting arg on the order of .83 or so.  For arg=delta/sigma
+		 * this suggests sigma on the order of delta/.83. So e.g. for
+		 * delta = 2-2.8, this suggests sigma value near 2.4 to 3.3
+		 * (for using non-normalized pseudo-probability function, 'P(arg)').
+		 */
+		inline
+		static
+		double
+		separationWeight
+			( img::Ray const & ray1
+			, img::Ray const & ray2
+			, double const & sigma = sRaySeparation
+			)
+		{
+			double const delta{ magnitude(ray2.start() - ray1.start()) };
+			double const arg{ delta / sigma };
+			double const wgtNear{ std::exp(-arg*arg) };
+			double const wgtSeparate{ 1. - wgtNear };
+			return wgtSeparate;
+		}
+
+		//! Collection of center point candidates
+		inline
+		std::vector<SpotWgt>
+		centerSpotWeights
+			( ras::SizeHW const & hwSize = ras::SizeHW{}
+				//!< If size isValid(), use it to filter candidate spots
+			) const
+		{
+			std::vector<SpotWgt> spotWgts;
+			SpotFilter const spotFilter(hwSize);
+
+			// get edge rays likely associated with radial quad edges
+			std::vector<RayWgt> const rayWgts{ groupRayWeights() };
+			std::size_t const numEdges{ rayWgts.size() };
+			std::size_t const & numUseRW = numEdges;
+			// pair-wise intersection of all rays
+			spotWgts.reserve((numUseRW * (numUseRW - 1u)) / 2u);
+			for (std::size_t ndx1{0u} ; ndx1 < numUseRW ; ++ndx1)
+			{
+				RayWgt const & rw1 = rayWgts[ndx1];
+				for (std::size_t ndx2{ndx1+1u} ; ndx2 < numUseRW ; ++ndx2)
+				{
+					RayWgt const & rw2 = rayWgts[ndx2];
+					SpotWgt const tmpSpotWgt
+						{ SpotWgt::fromIntersectionOf(rw1, rw2) };
+					if (tmpSpotWgt.isValid())
+					{
+						if (spotFilter.useSpot(tmpSpotWgt.theSpot))
+						{
+							double const wgtSeparate
+								{ separationWeight(rw1.theRay, rw2.theRay) };
+							SpotWgt const useSpotWgt
+								{ tmpSpotWgt.theSpot
+								, wgtSeparate * tmpSpotWgt.theWeight
+								};
+							spotWgts.emplace_back(useSpotWgt);
+						}
+					}
+				}
+			}
+
+			// assess how well each spot agrees with all edge rays
+			std::size_t const numSW{ spotWgts.size() };
+			for (std::size_t ndxSW{0u} ; ndxSW < numSW ; ++ndxSW)
+			{
+				SpotWgt & spotWgt = spotWgts[ndxSW];
+				img::Spot const & spot = spotWgt.theSpot;
+				double const & wgtSpot = spotWgt.theWeight;
+
+				// use all edge rays to "vote" on quality of the
+				// candidate spot location.
+				double voteTotal{ 0. };
+				for (std::size_t ndxRW{0u} ; ndxRW < numUseRW ; ++ndxRW)
+				{
+					RayWgt const & rayWgt = rayWgts[ndxRW];
+					img::Ray const & ray = rayWgt.theRay;
+					double const & wgtRay = rayWgt.theWeight;
+
+					double const edgeGap{ ray.distanceAlong(spot) };
+					double const arg{ (edgeGap / 1.) };
+					double const prob{ std::exp(-arg*arg) };
+					// accumulate this pseudo probability into spot weight
+					double const wgtVote{ wgtRay * prob };
+					voteTotal += wgtVote;
+				}
+
+				// update weight for this spot
+				spotWgt.theWeight *= voteTotal;
+			}
+
+			// sort highest weight (most likely) spot first
+			std::sort
+				( spotWgts.begin(), spotWgts.end()
+				, [] (SpotWgt const & sw1, SpotWgt const & sw2)
+					// reverse directions to sort largest weight first
+					{ return sw2.theWeight < sw1.theWeight; }
+				);
+
+			return spotWgts;
+		}
 
 
 	}; // EdgeEval
@@ -226,4 +795,57 @@ for (double const & peakAngle : peaks)
 } // [sig]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::sig::RayWgt const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::sig::RayWgt const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::sig::SpotWgt const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::sig::SpotWgt const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
 

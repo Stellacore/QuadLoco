@@ -61,8 +61,8 @@ namespace
 		quadloco::obj::QuadTarget const objQuad
 			( edgeMag
 			, quadloco::obj::QuadTarget::None
-		//	| quadloco::obj::QuadTarget::DoubleTriangle
-		//	| quadloco::obj::QuadTarget::AddSurround
+		//	| quadloco::obj::QuadTarget::WithTriangle
+		//	| quadloco::obj::QuadTarget::WithSurround
 			);
 
 		// simulate face-on 1:1 image of a quad target
