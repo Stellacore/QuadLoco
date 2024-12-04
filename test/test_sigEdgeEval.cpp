@@ -56,12 +56,15 @@ namespace
 		sim::Config const config
 			{ obj::QuadTarget
 				( .25
-				, obj::QuadTarget::AddSurround
+			//	, obj::QuadTarget::AddSurround
+			//	| obj::QuadTarget::DoubleTriangle
+				, obj::QuadTarget::DoubleTriangle
 				)
 			, obj::Camera
 //				{ ras::SizeHW{ 128u, 128u }
-{ ras::SizeHW{ 8u, 8u }
-				, 100. // pd
+//				, 100. // pd
+{ ras::SizeHW{ 16u, 16u }
+				,  55. // pd
 				}
 			, rigibra::Transform
 				{ engabra::g3::Vector{ 0., 0., 1. }
@@ -110,8 +113,8 @@ namespace
 		sig::EdgeEval const edgeEval(gradGrid);
 		std::vector<sig::RayWgt> const rayWgts
 			{ edgeEval.groupRayWeights() };
-
-
+		std::vector<sig::SpotWgt> const spotWgts
+			{ edgeEval.centerSpotWeights(gradGrid.hwSize()) };
 
 
 /*
@@ -130,6 +133,11 @@ std::cout << "rayWgts.size: " << rayWgts.size() << '\n';
 		{
 			std::cout << "rayWgt: " << rayWgt << '\n';
 		}
+		for (sig::SpotWgt const & spotWgt : spotWgts)
+		{
+			std::cout << "spotWgt: " << spotWgt << '\n';
+		}
+
 
 
 		std::vector<double> const peakAngles{ edgeEval.peakAngles() };

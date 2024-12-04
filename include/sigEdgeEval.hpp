@@ -34,6 +34,7 @@
 
 
 #include "angLikely.hpp"
+#include "imgArea.hpp"
 #include "opsgrid.hpp"
 #include "rasGrid.hpp"
 #include "sigEdgeInfo.hpp"
@@ -47,11 +48,17 @@ namespace quadloco
 
 namespace sig
 {
+	constexpr double sCosPower = 10.; // attenuation power on dot product
+	constexpr double sLinkEdgeDist = 2.50;
+	constexpr std::size_t sDiagMultiple = 6u;
+	constexpr std::size_t sNumAngleBins = 32u;
+
+
 	//! Candidate radial edge ray (aligned with radiometric gradients)
 	struct RayWgt
 	{
-		img::Ray const theRay{};
-		double const theWeight{};
+		img::Ray theRay{};
+		double theWeight{};
 
 		//! True if this instance contains valid data
 		inline
@@ -87,6 +94,97 @@ namespace sig
 
 
 	}; // RayWgt
+
+
+	//! Weighted spot location
+	struct SpotWgt
+	{
+		img::Spot theSpot{};
+		double theWeight{};
+
+		//! Candidate center point
+		inline
+		static
+		SpotWgt
+		fromIntersectionOf
+			( RayWgt const & rw1
+			, RayWgt const & rw2
+			)
+		{
+			img::Spot meetSpot{}; // null
+			double meetWgt{ 0. };
+			// access data: points on edge, edge dirs, and edge weights
+			img::Vector<double> const & s1 = rw1.theRay.start();
+			img::Vector<double> const & s2 = rw2.theRay.start();
+			img::Vector<double> const & d1 = rw1.theRay.direction();
+			img::Vector<double> const & d2 = rw2.theRay.direction();
+			double const & wgtRay1 = rw1.theWeight;
+			double const & wgtRay2 = rw2.theWeight;
+			// coefficient matrix
+			double const & fwd00 = d1[0];
+			double const & fwd01 = d1[1];
+			double const & fwd10 = d2[0];
+			double const & fwd11 = d2[1];
+			// determinant
+			double const det{ fwd00*fwd11 - fwd01*fwd10 };
+			if (std::numeric_limits<double>::epsilon() < std::abs(det))
+			{
+				// right hand side vector
+				double const rhs0{ dot(d1, s1) };
+				double const rhs1{ dot(d2, s2) };
+				// inverse coefficient matrix
+				double const & inv00 = fwd11;
+				double const inv01{ -fwd01 };
+				double const inv10{ -fwd10 };
+				double const & inv11 = fwd00;
+				// solve for intersection location
+				double const scl{ 1. / det };
+				meetSpot = img::Spot
+					{ scl * (inv00*rhs0 + inv01*rhs1)
+					, scl * (inv10*rhs0 + inv11*rhs1)
+					};
+				// use coefficient matrix determinant as intersection weight
+				// combined with input data weights.
+				double const wgtMeet{ std::abs(det) };
+				meetWgt = wgtMeet * wgtRay1 * wgtRay2;
+			}
+			return SpotWgt{ meetSpot, meetWgt };
+		}
+
+		//! True if this instance contains valid data
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  theSpot.isValid()
+				&& engabra::g3::isValid(theWeight)
+				);
+		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "spot: " << theSpot
+				<< ' '
+				<< "wgt: " << engabra::g3::io::fixed(theWeight);
+				;
+			return oss.str();
+		}
+
+
+	}; // SpotWgt
 
 	//! Indices and weights for grouping EdgeInfo in association with an angle.
 	struct EdgeGroup
@@ -187,7 +285,7 @@ namespace sig
 		fillTable
 			( std::vector<sig::EdgeInfo> const & edgeInfos
 			, std::vector<double> const & angles
-			, double const & cosPower = 10. // attenuation of dot product
+			, double const & cosPower = sCosPower // attenuation of dot product
 			)
 		{
 			ras::Grid<double> tab(edgeInfos.size(), angles.size());
@@ -295,8 +393,8 @@ namespace sig
 		std::vector<img::Edgel>
 		dominantEdgelsFrom
 			( ras::Grid<img::Grad> const & gradGrid
-			, double const & linkEdgeDist = 1.5
-			, std::size_t const & numTimesDiagonal = 6u
+			, double const & linkEdgeDist = sLinkEdgeDist
+			, std::size_t const & diagMultiple = sDiagMultiple
 			)
 		{
 			// get all strongly linked edgels
@@ -307,7 +405,7 @@ namespace sig
 			// a quad target should be consuming large part of grid
 			double const diag{ gradGrid.hwSize().diagonal() };
 			std::size_t const estNumToUse
-				{ static_cast<std::size_t>((double)numTimesDiagonal * diag) };
+				{ static_cast<std::size_t>((double)diagMultiple * diag) };
 			std::size_t const numToUse{ std::min(estNumToUse, edgels.size()) };
 
 			// move strongest edges near front
@@ -393,7 +491,7 @@ namespace sig
 		inline
 		std::vector<double>
 		peakAngles
-			( std::size_t const & numAngBins = 32u
+			( std::size_t const & numAngBins = sNumAngleBins
 			) const
 		{
 			std::vector<double> peaks;
@@ -468,10 +566,172 @@ for (double const & peakAngle : peaks)
 				double wgt{ 0. };
 				img::Ray const ray{ group.rayFit(theEdgeInfos, &wgt) };
 				RayWgt const rayWgt{ ray, wgt };
-				rayWgts.emplace_back(rayWgt);
+				if (rayWgt.isValid())
+				{
+					rayWgts.emplace_back(rayWgt);
+				}
 			}
+			std::sort
+				( rayWgts.begin(), rayWgts.end()
+				, [] (RayWgt const & rw1, RayWgt const & rw2)
+					// reverse directions to sort largest weight first
+					{ return rw2.theWeight < rw1.theWeight; }
+				);
 			return rayWgts;
 		}
+
+		//! Utility filter to determine if spots should be used.
+		struct SpotFilter
+		{
+			bool theUseArea{ false };
+			img::Area theArea{};
+
+			/*! Determine when to use spots
+			 *
+			 * Use always if hwSize is not valid
+			 * Otherwise, if hwSize is valid, only use spots inside the area.
+			 */
+			inline
+			explicit
+			SpotFilter
+				( ras::SizeHW const & hwSize
+				)
+				: theUseArea{ hwSize.isValid() }
+				, theArea
+					{ img::Span{ 0., static_cast<double>(hwSize.high())}
+					, img::Span{ 0., static_cast<double>(hwSize.wide())}
+					}
+			{ }
+
+			//! True if spot should be utilized
+			inline
+			bool
+			useSpot
+				( img::Spot const & spot
+				) const
+			{
+				return
+					(  theUseArea
+					&& theArea.contains(spot)
+					);
+			}
+
+		};
+
+
+		//! Collection of center point candidates
+		inline
+		std::vector<SpotWgt>
+		centerSpotWeightsPairwiseA
+			( ras::SizeHW const & hwSize = ras::SizeHW{}
+				//!< If size isValid(), use it to filter candidate spots
+			) const
+		{
+			std::vector<SpotWgt> spotWgts;
+			std::vector<RayWgt> const rayWgts{ groupRayWeights() };
+			std::size_t const numEdges{ rayWgts.size() };
+			std::size_t const & numToUse = numEdges;
+			spotWgts.reserve((numToUse * (numToUse - 1u)) / 2u);
+			SpotFilter const spotFilter(hwSize);
+			for (std::size_t ndx1{0u} ; ndx1 < numToUse ; ++ndx1)
+			{
+				RayWgt const & rw1 = rayWgts[ndx1];
+				for (std::size_t ndx2{ndx1+1u} ; ndx2 < numToUse ; ++ndx2)
+				{
+					RayWgt const & rw2 = rayWgts[ndx2];
+					SpotWgt const spotWgt
+						{ SpotWgt::fromIntersectionOf(rw1, rw2) };
+					if (spotWgt.isValid())
+					{
+						if (spotFilter.useSpot(spotWgt.theSpot))
+						{
+							spotWgts.emplace_back(spotWgt);
+						}
+					}
+				}
+			}
+			std::sort
+				( spotWgts.begin(), spotWgts.end()
+				, [] (SpotWgt const & sw1, SpotWgt const & sw2)
+					// reverse directions to sort largest weight first
+					{ return sw2.theWeight < sw1.theWeight; }
+				);
+			return spotWgts;
+		}
+
+		//! Collection of center point candidates
+		inline
+		std::vector<SpotWgt>
+		centerSpotWeights
+			( ras::SizeHW const & hwSize = ras::SizeHW{}
+				//!< If size isValid(), use it to filter candidate spots
+			) const
+		{
+			std::vector<SpotWgt> spotWgts;
+			SpotFilter const spotFilter(hwSize);
+
+			// get edge rays likely associated with radial quad edges
+			std::vector<RayWgt> const rayWgts{ groupRayWeights() };
+			std::size_t const numEdges{ rayWgts.size() };
+			std::size_t const & numUseRW = numEdges;
+			// pair-wise intersection of all rays
+			spotWgts.reserve((numUseRW * (numUseRW - 1u)) / 2u);
+			for (std::size_t ndx1{0u} ; ndx1 < numUseRW ; ++ndx1)
+			{
+				RayWgt const & rw1 = rayWgts[ndx1];
+				for (std::size_t ndx2{ndx1+1u} ; ndx2 < numUseRW ; ++ndx2)
+				{
+					RayWgt const & rw2 = rayWgts[ndx2];
+					SpotWgt const spotWgt
+						{ SpotWgt::fromIntersectionOf(rw1, rw2) };
+					if (spotWgt.isValid())
+					{
+						if (spotFilter.useSpot(spotWgt.theSpot))
+						{
+							spotWgts.emplace_back(spotWgt);
+						}
+					}
+				}
+			}
+
+			// assess how well each spot agrees with all edge rays
+			std::size_t const numSW{ spotWgts.size() };
+			for (std::size_t ndxSW{0u} ; ndxSW < numSW ; ++ndxSW)
+			{
+				SpotWgt & spotWgt = spotWgts[ndxSW];
+				img::Spot const & spot = spotWgt.theSpot;
+				double & wgtSpot = spotWgt.theWeight; // REPLACE this value
+
+				// Replace pairwise (spotWgt.theWeight) from above
+				// with a new spot weight computed with all edge rays
+				wgtSpot = 0.;
+				for (std::size_t ndxRW{0u} ; ndxRW < numUseRW ; ++ndxRW)
+				{
+					RayWgt const & rayWgt = rayWgts[ndxRW];
+					img::Ray const & ray = rayWgt.theRay;
+					double const & wgtRay = rayWgt.theWeight;
+
+					double const edgeGap{ ray.distanceAlong(spot) };
+					double const arg{ (edgeGap / 1.) };
+					double const prob{ std::exp(-arg*arg) };
+					// accumulate this pseudo probability into spot weight
+					double const wgtVote{ wgtRay * prob };
+					wgtSpot += wgtVote;
+				}
+			}
+
+			// sort highest weight (most likely) spot first
+			std::sort
+				( spotWgts.begin(), spotWgts.end()
+				, [] (SpotWgt const & sw1, SpotWgt const & sw2)
+					// reverse directions to sort largest weight first
+					{ return sw2.theWeight < sw1.theWeight; }
+				);
+
+
+			return spotWgts;
+		}
+
 
 	}; // EdgeEval
 
@@ -500,6 +760,32 @@ namespace
 	bool
 	isValid
 		( quadloco::sig::RayWgt const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::sig::SpotWgt const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::sig::SpotWgt const & item
 		)
 	{
 		return item.isValid();
