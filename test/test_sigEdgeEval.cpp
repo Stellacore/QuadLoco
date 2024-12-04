@@ -29,6 +29,7 @@
 
 
 #include "imgEdgel.hpp"
+#include "io.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "opsgrid.hpp"
@@ -39,6 +40,7 @@
 #include <Engabra>
 #include <Rigibra>
 
+#include <fstream>
 #include <iostream>
 #include <sstream>
 
@@ -130,15 +132,21 @@ std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
 sig::GroupTable const groupTab{ edgeEval.groupTable() };
 std::cout << groupTab.infoStringContents("groupTab", "%5.3f") << '\n';
 std::cout << "rayWgts.size: " << rayWgts.size() << '\n';
+
+std::ofstream ofsRay("ray.dat");
 		for (sig::RayWgt const & rayWgt : rayWgts)
 		{
-			std::cout << "rayWgt: " << rayWgt << '\n';
+			ofsRay << "rayWgt: " << rayWgt << '\n';
 		}
+std::ofstream ofsSpot("spot.dat");
 		for (sig::SpotWgt const & spotWgt : spotWgts)
 		{
-			std::cout << "spotWgt: " << spotWgt << '\n';
+			ofsSpot << "spotWgt: " << spotWgt << '\n';
 		}
 
+ras::Grid<float> const eiGrid
+	{ edgeEval.edgeInfoGrid(gradGrid.hwSize()) };
+(void)io::writeStretchPGM("edgeInfoMag.pgm", eiGrid);
 
 
 		std::vector<double> const peakAngles{ edgeEval.peakAngles() };

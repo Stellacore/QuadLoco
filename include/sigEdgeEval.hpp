@@ -200,12 +200,36 @@ namespace sig
 		//! Index/Weights for assumed (external) EdgeInfo collection
 		std::vector<NdxWgt> theNdxWgts;
 
+		//! Average EdgeInfo.consideredWeight() for all edgels in this group.
+		inline
+		double
+		consideredWeight
+			( std::vector<sig::EdgeInfo> const & edgeInfos
+			) const
+		{
+			double aveWgt{ 0. };
+			double sumWgt{ 0. };
+			double count{ 0. };
+			for (NdxWgt const & ndxWgt : theNdxWgts)
+			{
+				std::size_t const & ndx = ndxWgt.theNdx;
+				EdgeInfo const & edgeInfo = edgeInfos[ndx];
+				double const wgtRadial{ edgeInfo.consideredWeight() };
+				sumWgt += wgtRadial;
+				count += 1.;
+			}
+			if (0. < count)
+			{
+				aveWgt = (1./count) * sumWgt;
+			}
+			return aveWgt;
+		}
+
 		//! Ray best fitting (gradient-weighted average) edge direction
 		inline
-		img::Ray
-		rayFit
+		RayWgt
+		fitRayWeight
 			( std::vector<sig::EdgeInfo> const & edgeInfos
-			, double * const ptWgt = nullptr
 			) const
 		{
 			img::Ray ray{}; // null instance
@@ -215,23 +239,24 @@ namespace sig
 			for (NdxWgt const & ndxWgt : theNdxWgts)
 			{
 				std::size_t const & ndx = ndxWgt.theNdx;
+				EdgeInfo const & edgeInfo = edgeInfos[ndx];
 				img::Edgel const & edgel = edgeInfos[ndx].edgel();
-				double const & wgt = edgel.magnitude(); // gradient mag
-				sumLoc = sumLoc + wgt * edgel.location();
-				sumDir = sumDir + edgel.gradient();
-				sumWgt += wgt;
+				double const wgtRadial{ edgeInfo.consideredWeight() };
+				double const & wgtGradMag = edgel.magnitude(); // gradient mag
+				double const wgtTotal{ wgtRadial * wgtGradMag };
+				// NOTE: wgt on gradient is (wgtGradMag*direction==gradient()
+				sumDir = sumDir + wgtRadial *              edgel.gradient();
+				sumLoc = sumLoc + wgtRadial * wgtGradMag * edgel.location();
+				sumWgt += wgtRadial * wgtGradMag;
 			}
 			if (0. < sumWgt)
 			{
 				img::Vector<double> const rayLoc{ (1./sumWgt) * sumLoc };
 				img::Vector<double> const rayDir{ direction(sumDir) };
 				ray = img::Ray{ rayLoc, rayDir };
-				if (ptWgt)
-				{
-					*ptWgt = sumWgt;
-				}
 			}
-			return ray;
+			RayWgt const rayWgt{ ray, sumWgt };
+			return rayWgt;
 		}
 
 	}; // EdgeGroup
@@ -472,6 +497,25 @@ namespace sig
 			: theEdgeInfos{ edgeInfosFor(dominantEdgelsFrom(gradGrid)) }
 		{ }
 
+		// TODO - should go someplace else - EdgeInfo functions maybe?
+		//! Significant edgeInfo organized into a grid
+		inline
+		ras::Grid<float>
+		edgeInfoGrid
+			( ras::SizeHW const & hwSize
+			) const
+		{
+			ras::Grid<float> eiGrid(hwSize);
+			std::fill(eiGrid.begin(), eiGrid.end(), 0.f);
+			for (sig::EdgeInfo const & edgeInfo : theEdgeInfos)
+			{
+				ras::RowCol const rc
+					{ cast::rasRowCol(edgeInfo.edgel().start()) };
+	//			eiGrid(rc) = edgeInfo.edgel().magnitude();
+				eiGrid(rc) = (float)edgeInfo.consideredWeight();
+			}
+			return eiGrid;
+		}
 
 		//! Collection of edge elements being used for evaluation
 		inline
@@ -563,9 +607,7 @@ for (double const & peakAngle : peaks)
 			rayWgts.reserve(groups.size());
 			for (EdgeGroup const & group : groups)
 			{
-				double wgt{ 0. };
-				img::Ray const ray{ group.rayFit(theEdgeInfos, &wgt) };
-				RayWgt const rayWgt{ ray, wgt };
+				RayWgt const rayWgt{ group.fitRayWeight(theEdgeInfos) };
 				if (rayWgt.isValid())
 				{
 					rayWgts.emplace_back(rayWgt);
