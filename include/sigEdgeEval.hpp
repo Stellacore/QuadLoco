@@ -48,10 +48,16 @@ namespace quadloco
 
 namespace sig
 {
-	constexpr double sCosPower = 10.; // attenuation power on dot product
-	constexpr double sLinkEdgeDist = 2.50;
-	constexpr std::size_t sDiagMultiple = 6u;
-	constexpr std::size_t sNumAngleBins = 32u;
+	//! Attenuation power on dot product
+	constexpr double sCosPower{ 10. };
+	//! Multiply threshold for neighborhood gradient agreement
+	constexpr double sLinkEdgeDist{ 2.50 };
+	//! Use to estimate expected maximum number of strong edgels
+	constexpr std::size_t sDiagMultiple{ 6u };
+	//! Number of bins to use in angle direction peak detection
+	constexpr std::size_t sNumAngleBins{ 32u };
+	//! Expected minimum proximity of two adjacent radial edge rays
+	constexpr double sRaySeparation{ 2.5 };
 
 
 	//! Candidate radial edge ray (aligned with radiometric gradients)
@@ -660,45 +666,45 @@ for (double const & peakAngle : peaks)
 
 		};
 
-
-		//! Collection of center point candidates
+		/*! \brief Pseudo-probability that edge ray spots are NOT coincident.
+		 *
+		 * Spot locations should be seprated by a couple pixels
+		 * due to the multi-pixel span of gradient computation. (In practice
+		 * resolution of the image will be a factor, but that's likely
+		 * less than or comparable to gradient computation span).
+		 *
+		 * Consider two grid cells seprated by one empty cell, the
+		 * distance between them is 2 in a cardinal direction and 2.8
+		 * in diagonal one. Therefore, one might expect a separation
+		 * of less than this to be an artifact. E.g. less than 2-2.8
+		 * is probably insignificant.
+		 *
+		 * Approaching another way, for a highly oblique target, two
+		 * (oppositely directed) adjacent edge rays, could be separated
+		 * by order of 2 or 2.8 pixels which should be considered
+		 * significant. E.g. more than 2-2.8 is probably significant.
+		 *
+		 * Therefore, it's probably reasonable to associate a value of
+		 * maybe 2.5 as a 50/50 proposition.  E.g. .50=exp(-arg^2)=P(arg)
+		 * suggesting arg on the order of .83 or so.  For arg=delta/sigma
+		 * this suggests sigma on the order of delta/.83. So e.g. for
+		 * delta = 2-2.8, this suggests sigma value near 2.4 to 3.3
+		 * (for using non-normalized pseudo-probability function, 'P(arg)').
+		 */
 		inline
-		std::vector<SpotWgt>
-		centerSpotWeightsPairwiseA
-			( ras::SizeHW const & hwSize = ras::SizeHW{}
-				//!< If size isValid(), use it to filter candidate spots
-			) const
+		static
+		double
+		separationWeight
+			( img::Ray const & ray1
+			, img::Ray const & ray2
+			, double const & sigma = sRaySeparation
+			)
 		{
-			std::vector<SpotWgt> spotWgts;
-			std::vector<RayWgt> const rayWgts{ groupRayWeights() };
-			std::size_t const numEdges{ rayWgts.size() };
-			std::size_t const & numToUse = numEdges;
-			spotWgts.reserve((numToUse * (numToUse - 1u)) / 2u);
-			SpotFilter const spotFilter(hwSize);
-			for (std::size_t ndx1{0u} ; ndx1 < numToUse ; ++ndx1)
-			{
-				RayWgt const & rw1 = rayWgts[ndx1];
-				for (std::size_t ndx2{ndx1+1u} ; ndx2 < numToUse ; ++ndx2)
-				{
-					RayWgt const & rw2 = rayWgts[ndx2];
-					SpotWgt const spotWgt
-						{ SpotWgt::fromIntersectionOf(rw1, rw2) };
-					if (spotWgt.isValid())
-					{
-						if (spotFilter.useSpot(spotWgt.theSpot))
-						{
-							spotWgts.emplace_back(spotWgt);
-						}
-					}
-				}
-			}
-			std::sort
-				( spotWgts.begin(), spotWgts.end()
-				, [] (SpotWgt const & sw1, SpotWgt const & sw2)
-					// reverse directions to sort largest weight first
-					{ return sw2.theWeight < sw1.theWeight; }
-				);
-			return spotWgts;
+			double const delta{ magnitude(ray2.start() - ray1.start()) };
+			double const arg{ delta / sigma };
+			double const wgtNear{ std::exp(-arg*arg) };
+			double const wgtSeparate{ 1. - wgtNear };
+			return wgtSeparate;
 		}
 
 		//! Collection of center point candidates
@@ -724,13 +730,19 @@ for (double const & peakAngle : peaks)
 				for (std::size_t ndx2{ndx1+1u} ; ndx2 < numUseRW ; ++ndx2)
 				{
 					RayWgt const & rw2 = rayWgts[ndx2];
-					SpotWgt const spotWgt
+					SpotWgt const tmpSpotWgt
 						{ SpotWgt::fromIntersectionOf(rw1, rw2) };
-					if (spotWgt.isValid())
+					if (tmpSpotWgt.isValid())
 					{
-						if (spotFilter.useSpot(spotWgt.theSpot))
+						if (spotFilter.useSpot(tmpSpotWgt.theSpot))
 						{
-							spotWgts.emplace_back(spotWgt);
+							double const wgtSeparate
+								{ separationWeight(rw1.theRay, rw2.theRay) };
+							SpotWgt const useSpotWgt
+								{ tmpSpotWgt.theSpot
+								, wgtSeparate * tmpSpotWgt.theWeight
+								};
+							spotWgts.emplace_back(useSpotWgt);
 						}
 					}
 				}
@@ -742,11 +754,11 @@ for (double const & peakAngle : peaks)
 			{
 				SpotWgt & spotWgt = spotWgts[ndxSW];
 				img::Spot const & spot = spotWgt.theSpot;
-				double & wgtSpot = spotWgt.theWeight; // REPLACE this value
+				double const & wgtSpot = spotWgt.theWeight;
 
-				// Replace pairwise (spotWgt.theWeight) from above
-				// with a new spot weight computed with all edge rays
-				wgtSpot = 0.;
+				// use all edge rays to "vote" on quality of the
+				// candidate spot location.
+				double voteTotal{ 0. };
 				for (std::size_t ndxRW{0u} ; ndxRW < numUseRW ; ++ndxRW)
 				{
 					RayWgt const & rayWgt = rayWgts[ndxRW];
@@ -758,8 +770,11 @@ for (double const & peakAngle : peaks)
 					double const prob{ std::exp(-arg*arg) };
 					// accumulate this pseudo probability into spot weight
 					double const wgtVote{ wgtRay * prob };
-					wgtSpot += wgtVote;
+					voteTotal += wgtVote;
 				}
+
+				// update weight for this spot
+				spotWgt.theWeight *= voteTotal;
 			}
 
 			// sort highest weight (most likely) spot first
@@ -769,7 +784,6 @@ for (double const & peakAngle : peaks)
 					// reverse directions to sort largest weight first
 					{ return sw2.theWeight < sw1.theWeight; }
 				);
-
 
 			return spotWgts;
 		}
