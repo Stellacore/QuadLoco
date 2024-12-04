@@ -115,12 +115,8 @@ namespace
 		// categorize edgels as candidates for (radial) quad target edge groups
 		sig::EdgeEval const edgeEval(gradGrid);
 
-		std::vector<sig::EdgeGroup> const edgeGroups{ edgeEval.edgeGroups() };
-		std::vector<sig::RayWgt> const rayWgts
-			{ edgeEval.groupRayWeights(edgeGroups) };
-
 		std::vector<sig::SpotWgt> const spotWgts
-			{ edgeEval.centerSpotWeights(gradGrid.hwSize()) };
+			{ edgeEval.spotWeightsOverall(gradGrid.hwSize()) };
 
 
 /*
@@ -130,6 +126,10 @@ namespace
 */
 
 		// [DoxyExample01]
+
+std::vector<sig::EdgeGroup> const edgeGroups{ edgeEval.edgeGroups() };
+std::vector<sig::RayWgt> const rayWgts
+	{ edgeEval.groupRayWeights(edgeGroups) };
 
 std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
 sig::GroupTable const groupTab{ edgeEval.groupTable() };

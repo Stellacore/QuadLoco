@@ -1,4 +1,3 @@
-
 //
 // MIT License
 //
@@ -717,43 +716,48 @@ for (AngleWgt const & peakAW : peakAWs)
 			double const delta{ magnitude(ray2.start() - ray1.start()) };
 			double const arg{ delta / sigma };
 			double const wgtNear{ std::exp(-arg*arg) };
-			double const wgtSeparate{ 1. - wgtNear };
-			return wgtSeparate;
+			double const wgtDistinct{ 1. - wgtNear };
+			return wgtDistinct;
 		}
 
-		//! Collection of center point candidates
+		//! Spots (and weights) associated with pairwise edgeray intersections
 		inline
 		std::vector<SpotWgt>
-		centerSpotWeights
-			( ras::SizeHW const & hwSize = ras::SizeHW{}
-				//!< If size isValid(), use it to filter candidate spots
+		spotWeightsPairwise
+			( std::vector<RayWgt> const & rayWgts
+			, ras::SizeHW const & hwSize
 			) const
 		{
 			std::vector<SpotWgt> spotWgts;
 			SpotFilter const spotFilter(hwSize);
 
 			// get edge rays likely associated with radial quad edges
-			std::vector<RayWgt> const rayWgts{ groupRayWeights(edgeGroups()) };
 			std::size_t const numEdges{ rayWgts.size() };
 			std::size_t const & numUseRW = numEdges;
+
 			// pair-wise intersection of all rays
 			spotWgts.reserve((numUseRW * (numUseRW - 1u)) / 2u);
 			for (std::size_t ndx1{0u} ; ndx1 < numUseRW ; ++ndx1)
 			{
-				RayWgt const & rw1 = rayWgts[ndx1];
+				RayWgt const & rw1 = rayWgts[ndx1]; // first ray
 				for (std::size_t ndx2{ndx1+1u} ; ndx2 < numUseRW ; ++ndx2)
 				{
-					RayWgt const & rw2 = rayWgts[ndx2];
+					RayWgt const & rw2 = rayWgts[ndx2]; // second ray
+
+					// intersect the two rays and check if intersection is...
 					SpotWgt const tmpSpotWgt{ intersectionOf(rw1, rw2) };
+					// ... defined
 					if (tmpSpotWgt.isValid())
 					{
+						// ... within the hwSize shape (if one provided)
 						if (spotFilter.useSpot(tmpSpotWgt.item()))
 						{
-							double const wgtSeparate
+							// weight by geometric distinctiveness
+							double const wgtDistinct
 								{ separationWeight(rw1.item(), rw2.item()) };
 							SpotWgt const useSpotWgt
 								{ tmpSpotWgt.item()
-								, wgtSeparate * tmpSpotWgt.theWeight
+								, wgtDistinct * tmpSpotWgt.theWeight
 								};
 							spotWgts.emplace_back(useSpotWgt);
 						}
@@ -761,34 +765,80 @@ for (AngleWgt const & peakAW : peakAWs)
 				}
 			}
 
+			return spotWgts;
+		}
+
+		//! Update inSpotWgts weighting based on consensus of all edgerays
+		inline
+		std::vector<SpotWgt>
+		spotWeightsConsensus
+			( std::vector<SpotWgt> const & inSpotWgts
+			, std::vector<RayWgt> const & rayWgts
+			) const
+		{
+			std::vector<SpotWgt> spotWgts;
+			spotWgts.reserve(inSpotWgts.size());
+
+			std::size_t const numSW{ inSpotWgts.size() };
+			std::size_t const numRWs{ rayWgts.size() };
+
 			// assess how well each spot agrees with all edge rays
-			std::size_t const numSW{ spotWgts.size() };
 			for (std::size_t ndxSW{0u} ; ndxSW < numSW ; ++ndxSW)
 			{
-				SpotWgt & spotWgt = spotWgts[ndxSW];
-				img::Spot const & spot = spotWgt.item();
-				double const & wgtSpot = spotWgt.theWeight;
+				// access input spot data
+				SpotWgt const & inSpotWgt = inSpotWgts[ndxSW];
+				img::Spot const & inSpot = inSpotWgt.item();
+				double const & inWgt = inSpotWgt.weight();
 
-				// use all edge rays to "vote" on quality of the
-				// candidate spot location.
+				// consider all edge rays in "voting" on quality of the
+				// candidate center spot location.
 				double voteTotal{ 0. };
-				for (std::size_t ndxRW{0u} ; ndxRW < numUseRW ; ++ndxRW)
+				for (std::size_t ndxRW{0u} ; ndxRW < numRWs ; ++ndxRW)
 				{
+					// access ray data
 					RayWgt const & rayWgt = rayWgts[ndxRW];
 					img::Ray const & ray = rayWgt.item();
 					double const & wgtRay = rayWgt.theWeight;
 
-					double const edgeGap{ ray.distanceAlong(spot) };
+					// determine collinearity gap (aka 'rejection') of
+					// spot from current ray
+					double const edgeGap{ ray.distanceAlong(inSpot) };
+					// use gap to assign pseudo-probability for collinearity
 					double const arg{ (edgeGap / 1.) };
-					double const prob{ std::exp(-arg*arg) };
+					double const probCollin{ std::exp(-arg*arg) };
+
 					// accumulate this pseudo probability into spot weight
-					double const wgtVote{ wgtRay * prob };
+					double const wgtVote{ wgtRay * probCollin };
 					voteTotal += wgtVote;
 				}
 
-				// update weight for this spot
-				spotWgt.theWeight *= voteTotal;
+				// Create a return spot using vote total to modify prior weight
+				double const updateWgt{ inWgt * voteTotal };
+				spotWgts.emplace_back(SpotWgt{ inSpot, updateWgt });
 			}
+			return spotWgts;
+		}
+
+		//! Collection of center point candidates
+		inline
+		std::vector<SpotWgt>
+		spotWeightsOverall
+			( ras::SizeHW const & hwSize = ras::SizeHW{}
+				//!< If size isValid(), use it to filter candidate spots
+			) const
+		{
+			// Define candidate edgerays and associated weights
+			std::vector<RayWgt> const rayWgts
+				{ groupRayWeights(edgeGroups()) };
+
+			// Compute pairwise intersection of rays
+			std::size_t const numRWs{ rayWgts.size() };
+			std::vector<SpotWgt> const tmpSpotWgts
+				{ spotWeightsPairwise(rayWgts, hwSize) };
+
+			// Spots with weighting based on consensus of all rays
+			std::vector<SpotWgt> spotWgts
+				{ spotWeightsConsensus(tmpSpotWgts, rayWgts) };
 
 			// sort highest weight (most likely) spot first
 			std::sort
@@ -810,6 +860,35 @@ for (AngleWgt const & peakAW : peakAWs)
 } // [quadloco]
 
 
+namespace
+{
+	//! Put item.infoString() to stream
+	template <typename ItemType>
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::sig::ItemWgt<ItemType> const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	template <typename ItemType>
+	inline
+	bool
+	isValid
+		( quadloco::sig::ItemWgt<ItemType> const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
+
+/*
 namespace
 {
 	//! Put item.infoString() to stream
@@ -861,4 +940,5 @@ namespace
 	}
 
 } // [anon/global]
+*/
 
