@@ -292,19 +292,18 @@ namespace sim
 			engabra::g3::Vector const yMidInExt
 				{ theCamWrtQuad(cast::engVector(theObjQuad.midSidePosY())) };
 
-			img::Vector const centerInDet
+			using namespace quadloco::img;
+
+			Vector<double> const centerInDet
 				{ theCamera.projectedSpotFor(centerInExt) };
-			img::Vector const xMidInDet
+			Vector<double> const xMidInDet
 				{ theCamera.projectedSpotFor(xMidInExt) };
-			img::Vector const yMidInDet
+			Vector<double> const yMidInDet
 				{ theCamera.projectedSpotFor(yMidInExt) };
 
-			engabra::g3::Vector const center
-				{ cast::engVector(centerInDet) };
-			engabra::g3::Vector const xDir
-				{ direction(cast::engVector(xMidInDet - centerInDet)) };
-			engabra::g3::Vector const yDir
-				{ direction(cast::engVector(yMidInDet - centerInDet)) };
+			Spot const center{ centerInDet };
+			Vector<double> const xDir{ direction(xMidInDet - centerInDet) };
+			Vector<double> const yDir{ direction(yMidInDet - centerInDet) };
 
 			sig::QuadTarget const imgQuad{ center, xDir, yDir };
 			return imgQuad;

@@ -32,9 +32,8 @@
  */
 
 
+#include "ang.hpp"
 #include "imgSpot.hpp"
-
-#include <Engabra>
 
 #include <array>
 #include <cmath>
@@ -56,8 +55,7 @@ namespace sig
 		// (e.g. all outer edges could be cropped from image sample)
 
 		//! \brief Center is required
-		engabra::g3::Vector theCenter
-			{engabra::g3::null<engabra::g3::Vector>()};
+		img::Spot theCenter{};
 
 		/*! \brief One of two *UNITARY* directions - target "x-axis".
 		 *
@@ -65,13 +63,11 @@ namespace sig
 		 * edges that has foreground (white) to the right side of
 		 * the edge, and background (dark) to the left of the edge.
 		 */
-		engabra::g3::Vector theDirX
-			{engabra::g3::null<engabra::g3::Vector>()};
+		img::Vector<double> theDirX;
 
 
 		//! \brief Second of two *UNITARY* directions - target "y-axis".
-		engabra::g3::Vector theDirY
-			{engabra::g3::null<engabra::g3::Vector>()};
+		img::Vector<double> theDirY;
 
 
 		//! True if this instance contains valid data (not null)
@@ -81,21 +77,19 @@ namespace sig
 			() const
 		{
 			return
-				(  engabra::g3::isValid(theCenter)
-				&& engabra::g3::isValid(theDirX)
-				&& engabra::g3::isValid(theDirY)
+				(  theCenter.isValid()
+				&& theDirX.isValid()
+				&& theDirY.isValid()
 				);
 		}
 
-		//! Location of intersection of 'X' and 'Y' QuadTarget axes
 		inline
 		img::Spot
 		centerSpot
 			() const
 		{
-			return img::Spot{ theCenter[0], theCenter[1] };
+			return theCenter;
 		}
-
 
 		//! True if theDirX(wedge)theDirY is aligned with e12
 		inline
@@ -103,10 +97,8 @@ namespace sig
 		isDextral
 			() const
 		{
-			using namespace engabra::g3;
-			BiVector const bivXY{ (theDirX * theDirY).theBiv };
-			double const dot{ (-bivXY * e12).theSca[0] };
-			return (0. < dot);
+			double const bivXY{ outer(theDirX, theDirY) };
+			return (0. < bivXY);
 		}
 
 		//! True if this instance isValid() with (tol<angleSizeYwX)
@@ -130,11 +122,10 @@ namespace sig
 		angleSizeYwX
 			() const
 		{
-			using namespace engabra::g3;
-			Spinor const spinYwX{ direction(theDirX) * direction(theDirY) };
-			BiVector const angle{ logG2(spinYwX).theBiv };
-			double const angSize{ -(angle * e12).theSca[0] };
-			return angSize;
+			double angSize{ 0. };
+			double const comp0{ dot(theDirX, theDirY) };
+			double const comp1{ outer(theDirX, theDirY) };
+			return ang::atan2(comp1, comp0);
 		}
 
 		//! True if this is same as other within numeric tolerance
@@ -148,19 +139,18 @@ namespace sig
 			bool same{ isValid() && other.isValid() };
 			if (same)
 			{
-				using engabra::g3::nearlyEquals;
 				// centers need to be the same
 				bool const okayCenter
-					{ nearlyEquals(theCenter, other.theCenter, tol) };
+					{ ::nearlyEquals(theCenter, other.theCenter, tol) };
 
 				// both directions need to be parallel or anti-parallel
 				bool const okayPos
-					{  nearlyEquals(theDirX,  other.theDirX, tol)
-					&& nearlyEquals(theDirY,  other.theDirY, tol)
+					{  ::nearlyEquals(theDirX,  other.theDirX, tol)
+					&& ::nearlyEquals(theDirY,  other.theDirY, tol)
 					};
 				bool const okayNeg
-					{  nearlyEquals(theDirX, -other.theDirX, tol)
-					&& nearlyEquals(theDirY, -other.theDirY, tol)
+					{  ::nearlyEquals(theDirX, -other.theDirX, tol)
+					&& ::nearlyEquals(theDirY, -other.theDirY, tol)
 					};
 				bool const okayDir{ okayPos || okayNeg };
 
