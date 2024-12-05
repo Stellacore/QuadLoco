@@ -119,19 +119,19 @@ namespace
 
 		// estimate center location - return order is
 		// most likely location at front with decreasing likelihood following)
-		std::vector<sig::SpotWgt> const spotWgts
-			{ edgeEval.spotWeightsOverall(gradGrid.hwSize()) };
+		std::vector<sig::QuadWgt> const sigQuadWgts
+			{ edgeEval.sigQuadWeights(gradGrid.hwSize()) };
 
 		img::Spot gotCenterSpot{};
-		if (! spotWgts.empty())
+		if (! sigQuadWgts.empty())
 		{
 			// use first spotWgt (one with highest weight) as 'best' estimate
-			gotCenterSpot = spotWgts.front().item();
+			gotCenterSpot = sigQuadWgts.front().item().centerSpot();
 		}
-
 
 		// [DoxyExample01]
 
+/*
 std::vector<sig::EdgeGroup> const edgeGroups{ edgeEval.edgeGroups() };
 std::vector<sig::RayWgt> const rayWgts
 	{ edgeEval.groupRayWeights(edgeGroups) };
@@ -148,17 +148,21 @@ std::ofstream ofsRay("ray.dat");
 			ofsRay << "rayWgt: " << rayWgt << '\n';
 		}
 
-std::cout << "spotWgts.size: " << spotWgts.size() << '\n';
-std::ofstream ofsSpot("spot.dat");
-		for (sig::SpotWgt const & spotWgt : spotWgts)
-		{
-			std::cout << spotWgt << '\n';
-			ofsSpot << "spotWgt: " << spotWgt << '\n';
-		}
-
 ras::Grid<float> const eiGrid
 	{ edgeEval.edgeInfoGrid(gradGrid.hwSize()) };
 (void)io::writeStretchPGM("edgeInfoMag.pgm", eiGrid);
+*/
+
+std::cout << "sigQuadWgts.size: " << sigQuadWgts.size() << '\n';
+std::ofstream ofsSpot("spot.dat");
+		for (sig::QuadWgt const & sigQuadWgt : sigQuadWgts)
+		{
+			std::cout << sigQuadWgt << '\n';
+			ofsSpot << "sigQuadWgt:"
+				<< ' ' << sigQuadWgt.item().centerSpot()
+				<< ' ' << engabra::g3::io::fixed(sigQuadWgt.weight())
+				<< '\n';
+		}
 
 
 		std::vector<sig::AngleWgt> const peakAWs
