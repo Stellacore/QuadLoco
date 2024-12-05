@@ -318,10 +318,11 @@ std::cout
 			{
 				oss << title << ' ';
 			}
+			using engabra::g3::io::fixed;
 			oss
 				<< "edgel: " << theEdgel
 				<< ' '
-				<< "wgtRad: " << theWgtRadialSum
+				<< "wgtRad: " << fixed(theWgtRadialSum)
 				<< ' '
 				<< "dirSum: " << theEdgeDirSum
 				;
