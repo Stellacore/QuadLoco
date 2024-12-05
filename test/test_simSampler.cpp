@@ -101,8 +101,8 @@ namespace
 			using opt = quadloco::sim::Sampler::OptionFlags;
 			quadloco::sim::Render const render
 				( config
-				// None, UseSceneBias, UseImageNoise
-				, opt::None | opt::UseImageNoise
+				// None, AddSceneBias, AddImageNoise
+				, opt::None | opt::AddImageNoise
 				);
 			quadloco::ras::Grid<float> const pixGrid{ render.quadImage() };
 			//quadloco::io::writeStretchPGM("sample.pgm", pixGrid);

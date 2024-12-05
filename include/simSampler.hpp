@@ -77,8 +77,8 @@ namespace sim
 		rigibra::Transform const theQuadWrtCam{};
 
 		// Sampling options
-		bool const theUseSceneBias{ true };
-		bool const theUseImageNoise{ true };
+		bool const theAddSceneBias{ true };
+		bool const theAddImageNoise{ true };
 
 
 		//! Intersection of ray with the Z=0 (e12) plane
@@ -103,8 +103,8 @@ namespace sim
 		enum OptionFlags
 		{
 			  None           = 0x0000
-			, UseSceneBias   = 0x0001
-			, UseImageNoise  = 0x0002
+			, AddSceneBias   = 0x0001
+			, AddImageNoise  = 0x0002
 		};
 
 	private:
@@ -132,14 +132,14 @@ namespace sim
 			( obj::Camera const & camera
 			, rigibra::Transform const & xCamWrtQuad
 			, obj::QuadTarget const & objQuad
-			, unsigned const & optionsMask = (UseSceneBias | UseImageNoise)
+			, unsigned const & optionsMask = (AddSceneBias | AddImageNoise)
 			)
 			: theCamera{ camera }
 			, theCamWrtQuad{ xCamWrtQuad }
 			, theObjQuad{ objQuad }
 			, theQuadWrtCam{ rigibra::inverse(theCamWrtQuad) }
-			, theUseSceneBias{ isSet(optionsMask, UseSceneBias) }
-			, theUseImageNoise{ isSet(optionsMask, UseImageNoise) }
+			, theAddSceneBias{ isSet(optionsMask, AddSceneBias) }
+			, theAddImageNoise{ isSet(optionsMask, AddImageNoise) }
 		{ }
 
 		//! True if this instance contains valid data
@@ -292,19 +292,18 @@ namespace sim
 			engabra::g3::Vector const yMidInExt
 				{ theCamWrtQuad(cast::engVector(theObjQuad.midSidePosY())) };
 
-			img::Vector const centerInDet
+			using namespace quadloco::img;
+
+			Vector<double> const centerInDet
 				{ theCamera.projectedSpotFor(centerInExt) };
-			img::Vector const xMidInDet
+			Vector<double> const xMidInDet
 				{ theCamera.projectedSpotFor(xMidInExt) };
-			img::Vector const yMidInDet
+			Vector<double> const yMidInDet
 				{ theCamera.projectedSpotFor(yMidInExt) };
 
-			engabra::g3::Vector const center
-				{ cast::engVector(centerInDet) };
-			engabra::g3::Vector const xDir
-				{ direction(cast::engVector(xMidInDet - centerInDet)) };
-			engabra::g3::Vector const yDir
-				{ direction(cast::engVector(yMidInDet - centerInDet)) };
+			Spot const center{ centerInDet };
+			Vector<double> const xDir{ direction(xMidInDet - centerInDet) };
+			Vector<double> const yDir{ direction(yMidInDet - centerInDet) };
 
 			sig::QuadTarget const imgQuad{ center, xDir, yDir };
 			return imgQuad;
@@ -340,7 +339,7 @@ namespace sim
 
 				// illumination bias across target
 				double valueBias{ 0. };
-				if (theUseSceneBias)
+				if (theAddSceneBias)
 				{
 					valueBias = noiseBias(spotInQuad);
 				}
@@ -350,7 +349,7 @@ namespace sim
 
 				// combined noise (dark and shot)
 				double valueNoise{ 0. };
-				if (theUseImageNoise)
+				if (theAddImageNoise)
 				{
 					valueNoise = theNoiseModel.valueFor(incidentValue);
 				}

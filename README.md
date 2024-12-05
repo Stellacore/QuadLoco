@@ -228,6 +228,34 @@ for lens distortion.
 
 ### Project namespace headers
 
+#### Namespace Summary
+
+The project top level namespace is "quadloco". All declarations can be
+accessed by including the top level file
+
+* QuadLoco (or QuadLoco.hpp) - Project top level header - includes all others
+e.g.
+	```
+	#include <QuadLoco>
+	```
+
+The top level "quadloco" namespace includes a number of sub-namespaces:
+
+* ang::  Angle data (e.g. Ring, ...)
+* cast::  Casting functions
+* img::  Image space - 2D data types (e.g. Spot, Grad, Area, ...
+* io::  Input/Output basic capabilities
+* obj::  Object space - 3D data type (e.g. QuadTarget, ...)
+* ops::  Operations and processing (GridFilter, PeakFinder, ...)
+* pix::  Picture element/radiometry (e.g.Noise, ...)
+* prb::  Probability theory (e.g. Gauss1D, Stats, ...)
+* ras::  Raster data (e.g. Grid, RowCol, SizeHW, ...)
+* sig::  Signal processing (e.g. QuadTarget, ParmAD, ...)
+* sim::  Simulation capabilities (e.g. Config, QuadTarget, grid, ...)
+* xfm::  Transformationx (e.g. MapSizeArea, ...)
+
+#### Namespace Detail
+
 Each project namespace has its own namespace header file that includes all
 components of that namespace. The header files are:
 
@@ -284,6 +312,7 @@ components of that namespace. The header files are:
 	ops.hpp --
 	opsAdderAD.hpp -- Accumulator for Hough (Alpha,Delta) parameters
 	opsFence.hpp -- Tracker for determining (min,max) of value samples
+	opsgrid.hpp -- Functions that operate on ras::Grid data
 	opsPeakFinder.hpp -- Location of multiple peaks within 1D buffer
 	opsGridFilter.hpp -- Digital filter computations on raster grid data
 

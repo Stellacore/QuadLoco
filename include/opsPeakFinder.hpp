@@ -191,7 +191,12 @@ namespace ops
 
 				// gather indices assocaited with peaks
 				peakNdxGrps.reserve(numElem); // impossible worst case
-				bool trackingPeak{ false };
+
+				// set initial tracking flag state based on wrap around
+				// condition from first element
+				Flag const flag0{ flagForIndex(0, numElem, itBeg) };
+				bool trackingPeak{ (Drop == flag0) };
+
 				std::vector<std::size_t> currPeakNdxs;
 			//	std::string dnote;
 			//	std::string unote;
@@ -248,8 +253,8 @@ namespace ops
 						tnote = "t-on";
 					}
 					std::cout
-						<< "ndx: " << std::setw(3u) << ndxFlag.theNdx
-						<< ' ' << "flag: " << stringFor(ndxFlag.theFlag)
+						<< "ndx: " << std::setw(3u) << ndx
+						<< ' ' << "flag: " << stringFor(flag)
 						<< ' ' << dnote
 						<< ' ' << tnote
 						<< ' ' << unote

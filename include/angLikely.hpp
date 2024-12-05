@@ -151,6 +151,7 @@ namespace ang
 			return peakFinder.peakIndices();
 		}
 
+		/*
 		//! Angle at ndxCurr adjusted to reflect theBinSum of neighbors
 		inline
 		double
@@ -201,6 +202,7 @@ namespace ang
 			double const wgtAngle{ ang::atan2(wSpot[1], wSpot[0]) };
 			return wgtAngle;
 		}
+		*/
 
 		//! Angles for local peaks (near middle for plateaus)
 		inline
@@ -213,9 +215,23 @@ namespace ang
 			peakAngles.reserve(ndxs.size());
 			for (std::size_t const & ndx : ndxs)
 			{
-				peakAngles.emplace_back(weightedAngleAt(ndx));
+				// return (start of)bin angle associated with ndx
+				peakAngles.emplace_back(theRing.angleAt(ndx));
+				// weighted average angle (based on two adjacent bin values)
+			//	peakAngles.emplace_back(weightedAngleAt(ndx));
 			}
 			return peakAngles;
+		}
+
+		//! Ring buffer weight at angle
+		inline
+		double
+		binSumAtAngle
+			( double const & angle
+			) const
+		{
+			std::size_t const ndx{ theRing.indexFor(angle) };
+			return theBinSums[ndx];
 		}
 
 		//! Descriptive information about this instance.

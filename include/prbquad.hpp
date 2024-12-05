@@ -88,7 +88,8 @@ namespace prb
 			std::vector<Type> nnVals{};
 			std::vector<Type> pnVals{};
 
-			using namespace engabra::g3;
+			using Vector = quadloco::img::Vector<double>;
+
 			Vector const & orig = imgQuad.theCenter;
 			Vector const & xpDir = imgQuad.theDirX;
 			Vector const & ypDir = imgQuad.theDirY;
@@ -138,7 +139,7 @@ namespace prb
 
 				Type const ppVal
 					{ ras::grid::bilinValueAt<Type>(pixGrid, ppSpot) };
-				if (isValid(ppVal))
+				if (img::isValidType(ppVal))
 				{
 					ppVals.emplace_back(ppVal);
 					++numValid;
@@ -146,7 +147,7 @@ namespace prb
 
 				Type const npVal
 					{ ras::grid::bilinValueAt<Type>(pixGrid, npSpot) };
-				if (isValid(npVal))
+				if (img::isValidType(npVal))
 				{
 					npVals.emplace_back(npVal);
 					++numValid;
@@ -154,7 +155,7 @@ namespace prb
 
 				Type const nnVal
 					{ ras::grid::bilinValueAt<Type>(pixGrid, nnSpot) };
-				if (isValid(nnVal))
+				if (img::isValidType(nnVal))
 				{
 					nnVals.emplace_back(nnVal);
 					++numValid;
@@ -162,7 +163,7 @@ namespace prb
 
 				Type const pnVal
 					{ ras::grid::bilinValueAt<Type>(pixGrid, pnSpot) };
-				if (isValid(pnVal))
+				if (img::isValidType(pnVal))
 				{
 					pnVals.emplace_back(pnVal);
 					++numValid;

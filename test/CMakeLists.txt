@@ -45,6 +45,7 @@ set(unitTests
 	test_objQuadTarget  # represent physical target object
 	test_opsAdderAD  # accumulatio buffer for hough alpha,delta parms
 	test_opsFence  # bounding region determination
+	test_opsgrid  # Edgel extraction
 	test_opsGridFilter  # pixel grid sampling functions
 	test_opsPeakFinder  # peak finding in an array
 	test_pix  # pixel image manipulations
@@ -54,6 +55,8 @@ set(unitTests
 	test_rasgrid  # pixel/grid functions (e.g. image processing)
 	test_rasRowCol  # discete raster cell locations
 	test_rasSizeHW  # basic "high/wide" area boundary (half open)
+	test_sigEdgeEval  # Edgel evaluator checking likelihood on quad radii
+	test_sigEdgeInfo  # Edgel characteristics tracking 
 	test_sigFindAD  # find maxima in sig::ParmAD space
 	test_sigParmAD  # Hough "alpha,delta" parameter representation
 	test_sigQuadTarget  # represent perspective image of obj::QuadTarget

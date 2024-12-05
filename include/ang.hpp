@@ -78,8 +78,7 @@ namespace ang
 	{
 		double angle(std::atan2(yy, xx));
 		// compare (using value computed with (hopefully) the same function
-		static double const wrapPoint(std::atan2( 0., -1.)); // +pi
-		///    double const wrapPoint(std::atan2(-0., -1.)); // -pi
+		constexpr double wrapPoint{ std::numbers::pi_v<double> };
 		if (wrapPoint == angle)
 		{
 			angle = -wrapPoint;
@@ -94,8 +93,7 @@ namespace ang
 		( double const & anyAngle
 		)
 	{
-		// note: std::atan2 can return either -pi or +pi !! so use above one
-		return (atan2(std::sin(anyAngle), std::cos(anyAngle)));
+		return (ang::atan2(std::sin(anyAngle), std::cos(anyAngle)));
 	}
 
 	//! Angle that is in the half open positive range [0,+2pi)

@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Top level file for quadloco::NM namespace
+ * \brief Declarations for quadloco::NM::CN namespace
  *
  */
 
@@ -42,6 +42,12 @@ namespace quadloco
  */
 namespace NM
 {
+
+	//! \brief TODO
+	struct CN
+	{
+
+	}; // CN
 
 
 } // [NM]

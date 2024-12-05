@@ -29,6 +29,7 @@
 
 
 #include "rasgrid.hpp"
+#include "opsgrid.hpp" // /TODO remove
 
 #include "imgChipSpec.hpp"
 #include "imgGrad.hpp"
@@ -156,10 +157,10 @@ namespace
 		// [gridVal(rc + stepHalf) - gridVal(rc - stepHalf)] / (2*stepHalf)
 		// Vertical grid gradients
 		quadloco::ras::Grid<quadloco::img::Grad> const lrGrads
-			{ quadloco::ras::grid::gradientGridFor(lrPixels, stepHalf) };
+			{ quadloco::ops::grid::gradientGridFor(lrPixels, stepHalf) };
 		// Horizontal grid gradients
 		quadloco::ras::Grid<quadloco::img::Grad> const tbGrads
-			{ quadloco::ras::grid::gradientGridFor(tbPixels, stepHalf) };
+			{ quadloco::ops::grid::gradientGridFor(tbPixels, stepHalf) };
 
 		// [DoxyExample01]
 
