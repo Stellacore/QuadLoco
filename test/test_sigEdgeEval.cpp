@@ -103,7 +103,9 @@ namespace
 		using namespace quadloco;
 
 		// simulate quad target image and extract edgels
-		ras::Grid<float> const pixGrid{ simulatedQuadGrid() };
+		quadloco::sig::QuadTarget sigQuad{};  // set by simulation
+		ras::Grid<float> const pixGrid{ simulatedQuadGrid(&sigQuad) };
+		img::Spot const expCenterSpot{ sigQuad.centerSpot() };
 
 		// compute gradient elements
 		ras::Grid<img::Grad> const gradGrid
@@ -115,15 +117,18 @@ namespace
 		// categorize edgels as candidates for (radial) quad target edge groups
 		sig::EdgeEval const edgeEval(gradGrid);
 
+		// estimate center location - return order is
+		// most likely location at front with decreasing likelihood following)
 		std::vector<sig::SpotWgt> const spotWgts
 			{ edgeEval.spotWeightsOverall(gradGrid.hwSize()) };
 
+		img::Spot gotCenterSpot{};
+		if (! spotWgts.empty())
+		{
+			// use first spotWgt (one with highest weight) as 'best' estimate
+			gotCenterSpot = spotWgts.front().item();
+		}
 
-/*
-		// estimate center from grouped edgels
-		std::vector<img::Spot> const gotCenters{ groups.estimatedCenter() };
-		img::Spot const gotCenter{ groups.center() };
-*/
 
 		// [DoxyExample01]
 
@@ -134,16 +139,20 @@ std::vector<sig::RayWgt> const rayWgts
 std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
 sig::GroupTable const groupTab{ edgeEval.groupTable() };
 std::cout << groupTab.infoStringContents("groupTab", "%5.3f") << '\n';
-std::cout << "rayWgts.size: " << rayWgts.size() << '\n';
 
+std::cout << "rayWgts.size: " << rayWgts.size() << '\n';
 std::ofstream ofsRay("ray.dat");
 		for (sig::RayWgt const & rayWgt : rayWgts)
 		{
+			std::cout << rayWgt << '\n';
 			ofsRay << "rayWgt: " << rayWgt << '\n';
 		}
+
+std::cout << "spotWgts.size: " << spotWgts.size() << '\n';
 std::ofstream ofsSpot("spot.dat");
 		for (sig::SpotWgt const & spotWgt : spotWgts)
 		{
+			std::cout << spotWgt << '\n';
 			ofsSpot << "spotWgt: " << spotWgt << '\n';
 		}
 
@@ -163,12 +172,12 @@ ras::Grid<float> const eiGrid
 			oss << "got: " << peakAWs.size() << '\n';
 		}
 
-		// TODO replace this with real test code
-		std::string const fname(__FILE__);
-		bool const isTemplate{ (std::string::npos != fname.find("/_.cpp")) };
-		if (! isTemplate)
+		double const tolCenter{ .5 };
+		if (! nearlyEquals(gotCenterSpot, expCenterSpot, tolCenter))
 		{
-			oss << "Failure to implement real test\n";
+			oss << "Failure of gotCenterSpot test\n";
+			oss << "exp: " << expCenterSpot << '\n';
+			oss << "got: " << gotCenterSpot << '\n';
 		}
 	}
 
