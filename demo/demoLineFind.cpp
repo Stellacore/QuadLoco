@@ -40,6 +40,7 @@
 #include "opsgrid.hpp"
 #include "opsPeakFinder.hpp"
 #include "prbGauss1D.hpp"
+#include "sigEdgeEval.hpp"
 #include "sigEdgeInfo.hpp"
 #include "sigQuadTarget.hpp"
 #include "simRender.hpp"
@@ -58,15 +59,63 @@ namespace sim
 {
 	using namespace quadloco;
 
+	//! Simulated raster data and geometric image shape
+	struct TestCase
+	{
+		ras::Grid<float> thePixGrid;
+		sig::QuadTarget theSigQuad;
+
+	}; // TestCase
+
+	//! Center point comparison
+	struct TestResult
+	{
+		std::size_t const theNdx;
+		sig::SpotWgt const theExpSW{};
+		sig::SpotWgt const theGotSW{};
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			img::Spot const & expSpot = theExpSW.item();
+			img::Spot const & gotSpot = theGotSW.item();
+			img::Spot const difSpot{ gotSpot - expSpot };
+			using engabra::g3::io::fixed;
+			oss
+				<< "ndx: " << std::setw(3u) << theNdx
+				<< "  "
+				<< "difSpot: " << difSpot
+				<< "  "
+				<< "expSpot: " << expSpot
+				<< "  "
+				<< "gotSpot: " << gotSpot
+				<< "  wgt: " << fixed(theGotSW.weight())
+				;
+
+			return oss.str();
+		}
+
+	}; // TestResult
+
+
 	//! Simulate images for demonstration
 	inline
-	std::vector<ras::Grid<float> >
-	quadImages
+	std::vector<TestCase>
+	testCases
 		( std::size_t const & numImages
 		)
 	{
-		std::vector<ras::Grid<float> > grids;
-		grids.reserve(10u);
+		std::vector<TestCase> cases;
+		cases.reserve(10u);
 
 		// configure camera (including image size)
 		constexpr ras::SizeHW hwGrid{ 128u, 128u };
@@ -98,10 +147,11 @@ namespace sim
 			std::cout << "render: " << render << '\n';
 
 			// simulate pixel image
-			grids.emplace_back(render.quadImage());
+			cases.emplace_back
+				(TestCase{ render.quadImage(), render.sigQuadTarget() });
 		}
 
-		return grids;
+		return cases;
 	}
 
 } // [sim]
@@ -219,19 +269,53 @@ main
 	()
 {
 	constexpr std::size_t numImages{ 7u };
-	std::vector<quadloco::ras::Grid<float> > const pixGrids
-		{ quadloco::sim::quadImages(numImages) };
+	std::vector<quadloco::sim::TestCase> const testCases
+		{ quadloco::sim::testCases(numImages) };
+	std::vector<quadloco::sim::TestResult> testResults{};
+	testResults.reserve(testCases.size());
 
 	// loop over sample images
-	for (std::size_t nn{0u} ; nn < pixGrids.size() ; ++nn)
+	for (std::size_t nn{0u} ; nn < testCases.size() ; ++nn)
 	{
 		using namespace quadloco;
 
-		ras::Grid<float> const & pixGrid = pixGrids[nn];
+		sim::TestCase const & testCase = testCases[nn];
+		ras::Grid<float> const & pixGrid = testCase.thePixGrid;
 
 		// compute gradient at each pixel (interior to edge padding)
 		ras::Grid<img::Grad> const gradGrid
 			{ ops::grid::gradientGridFor(pixGrid) };
+
+
+		//
+		// Extract center point and compare with test case known value
+		//
+
+		// Construct edge evaluator to work on gradient grid
+		sig::EdgeEval const edgeEval(gradGrid);
+
+		// Fetch best estimated spot locations
+		std::vector<sig::SpotWgt> const spotWgts
+			{ edgeEval.spotWeightsOverall(gradGrid.hwSize()) };
+
+		if (! spotWgts.empty())
+		{
+			img::Spot const expSpot{ testCase.theSigQuad.centerSpot() };
+			double const expSigma{ 0. }; // exact
+			sig::SpotWgt const expSW{ expSpot, expSigma };
+
+			sig::SpotWgt const & gotSW = spotWgts.front();
+			//g::Spot const & gotSpot = gotSW.item();
+			//uble const & gotSigma = gotSW.weight();
+
+			sim::TestResult const testResult{ nn, expSW, gotSW };
+			testResults.emplace_back(testResult);
+		}
+
+
+		//
+		// Generate various data for inspection
+		//
 
 		// assemble collection of edge elements from gradient grid
 		std::vector<img::Edgel> pixEdgels
@@ -389,6 +473,13 @@ main
 
 	}
 	std::cout << '\n';
+
+	// display results
+	std::cout << "\n\ntestResults: " << testResults.size() << '\n';
+	for (quadloco::sim::TestResult const & testResult : testResults)
+	{
+		std::cout << "testResult: " << testResult.infoString() << '\n';
+	}
 
 	return 0;
 }
