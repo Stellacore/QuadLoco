@@ -32,6 +32,8 @@
  */
 
 
+#include "imgSpot.hpp"
+
 #include <Engabra>
 
 #include <array>
@@ -84,6 +86,16 @@ namespace sig
 				&& engabra::g3::isValid(theDirY)
 				);
 		}
+
+		//! Location of intersection of 'X' and 'Y' QuadTarget axes
+		inline
+		img::Spot
+		centerSpot
+			() const
+		{
+			return img::Spot{ theCenter[0], theCenter[1] };
+		}
+
 
 		//! True if theDirX(wedge)theDirY is aligned with e12
 		inline

@@ -57,6 +57,8 @@ namespace sig
 	constexpr std::size_t sNumAngleBins{ 32u };
 	//! Expected minimum proximity of two adjacent radial edge rays
 	constexpr double sRaySeparation{ 2.5 };
+	//! Maximum misclosure distance between spot and associated edge line
+	constexpr double sEdgeMissMax{ 2. };
 
 
 
@@ -126,8 +128,34 @@ namespace sig
 	//! An img::Spot item and associated weight
 	using SpotWgt = ItemWgt<img::Spot>;
 
+	//! An index item and associated weight
+	using NdxWgt = ItemWgt<std::size_t>;
+
+
 	//! An angle item and associated weight
-	using AngleWgt = ItemWgt<double>;
+	struct AngleWgt : public ItemWgt<double>
+	{
+		// overload ItemWgt formatting (brute force, non-virtual)
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "item: " << engabra::g3::io::fixed(item())
+				<< ' '
+				<< "wgt: " << engabra::g3::io::fixed(weight())
+				;
+			return oss.str();
+		}
+	};
 
 
 	//! Candidate center point
@@ -179,6 +207,96 @@ namespace sig
 		return SpotWgt{ meetSpot, meetWgt };
 	}
 
+
+	//! Least square solver for point central to multiple edgerays
+	struct CenterSolver
+	{
+		double theAtA00{ 0. };
+		double theAtA01{ 0. };
+		//uble theAtA10{ 0. }; // symmetric coefficient matrix
+		double theAtA11{ 0. };
+		double theAtB0{ 0. };
+		double theAtB1{ 0. };
+
+		//! Incorporate ray into solution process
+		inline
+		void
+		addRay
+			( img::Ray const & ray
+			, double const & wgt
+			)
+		{
+			// access data: points on edge, edge dirs, and edge weights
+			img::Vector<double> const & pnt = ray.start();
+			img::Vector<double> const & dir = ray.direction();
+			double const bj{ dot(dir, pnt) };
+			// accumulate normal system
+			theAtA00 += wgt * dir[0]*dir[0];
+			theAtA01 += wgt * dir[0]*dir[1];
+			//eAtA10 += wgt * dir[1]*dir[0]; // symmetric
+			theAtA11 += wgt * dir[1]*dir[1];
+			theAtB0  += wgt * dir[0] * bj;
+			theAtB1  += wgt * dir[1] * bj;
+		}
+
+		//! Least-Square spot location with max eigenvalue weight
+		inline
+		SpotWgt
+		solutionSpotWeight
+			() const
+		{
+			SpotWgt solnSW{};
+
+			// coefficient matrix
+			double const & fwd00 = theAtA00;
+			double const & fwd01 = theAtA01;
+			double const & fwd10 = theAtA01; // theAtA10; // symmetric
+			double const & fwd11 = theAtA11;
+			// determinant
+			double const det{ fwd00*fwd11 - fwd01*fwd10 };
+			if (std::numeric_limits<double>::epsilon() < std::abs(det))
+			{
+				// inverse normal matrix
+				double const scl{ 1. / det };
+				double const inv00{  scl*fwd11 };
+				double const inv01{ -scl*fwd01 };
+				//uble const inv10{ -scl*fwd10 }; // symmetric
+				double const inv11{  scl*fwd00 };
+
+				// least square spot solution
+				double const & inv10 = inv01; // symmetric
+				img::Spot const solnSpot
+					{ inv00*theAtB0 + inv01*theAtB1
+					, inv10*theAtB0 + inv11*theAtB1
+					};
+
+				double solnWgt{ std::numeric_limits<double>::quiet_NaN() };
+
+				// characteristic polynomial (quadratic coefficient == 1)
+				double const beta{ -.5 * (fwd00 + fwd11) };
+				double const & gamma = det;
+				double const lamMid{ -beta };
+				double const radicand{ beta*beta - gamma };
+				if (! (radicand < 0.)) // theoretically true (for proper code)
+				{
+					// compute eigen values
+					double const root{ std::sqrt(radicand) };
+					double const lamNeg{ lamMid - root };
+					double const lamPos{ lamMid + root };
+					double const lamBig
+						{ std::max(std::abs(lamNeg), std::abs(lamPos)) };
+
+					// standard deviation
+					solnWgt = std::sqrt(std::abs(lamBig));
+				}
+				solnSW = SpotWgt{ solnSpot, solnWgt };
+			}
+			return solnSW;
+		}
+
+	}; // CenterSolver
+
+
 	//! Utility filter to determine if spots should be used.
 	struct SpotFilter
 	{
@@ -221,14 +339,6 @@ namespace sig
 	//! Indices and weights for grouping EdgeInfo in association with an angle.
 	struct EdgeGroup
 	{
-		//! Collection index and entry weight pair
-		struct NdxWgt
-		{
-			std::size_t const theNdx;
-			double const theWeight;
-
-		}; // NdxWgt
-
 		//! Index/Weights for assumed (external) EdgeInfo collection
 		std::vector<NdxWgt> theNdxWgts;
 
@@ -244,7 +354,7 @@ namespace sig
 			double count{ 0. };
 			for (NdxWgt const & ndxWgt : theNdxWgts)
 			{
-				std::size_t const & ndx = ndxWgt.theNdx;
+				std::size_t const & ndx = ndxWgt.item();
 				EdgeInfo const & edgeInfo = edgeInfos[ndx];
 				double const wgtRadial{ edgeInfo.consideredWeight() };
 				sumWgt += wgtRadial;
@@ -270,7 +380,7 @@ namespace sig
 			double sumWgt{ 0. };
 			for (NdxWgt const & ndxWgt : theNdxWgts)
 			{
-				std::size_t const & ndx = ndxWgt.theNdx;
+				std::size_t const & ndx = ndxWgt.item();
 				EdgeInfo const & edgeInfo = edgeInfos[ndx];
 				img::Edgel const & edgel = edgeInfos[ndx].edgel();
 				double const wgtRadial{ edgeInfo.consideredWeight() };
@@ -402,14 +512,14 @@ namespace sig
 			std::size_t const numElem{ theNdxAngWeights.high() };
 			for (std::size_t col{0u} ; col < numGroups ; ++col)
 			{
-				std::vector<EdgeGroup::NdxWgt> ndxWgts;
+				std::vector<NdxWgt> ndxWgts;
 				for (std::size_t row{0u} ; row < numElem ; ++row)
 				{
 					std::size_t const & ndx = row;
 					double const & wgt = theNdxAngWeights(row, col);
 					if (0. < wgt)
 					{
-						EdgeGroup::NdxWgt const ndxWgt{ ndx, wgt };
+						NdxWgt const ndxWgt{ ndx, wgt };
 						ndxWgts.emplace_back(ndxWgt);
 					}
 				}
@@ -431,11 +541,11 @@ namespace sig
 			std::ostringstream oss;
 			oss << theNdxAngWeights.infoStringContents(title, cfmt);
 			oss << '\n';
-			oss << "# angles: ";
+			oss << "angles:";
 			for (AngleWgt const & angWgt : theAngWgts)
 			{
 				using engabra::g3::io::fixed;
-				oss << ' ' << angWgt.infoString() << '\n';
+				oss << "\n  " << angWgt.infoString();
 			}
 			return oss.str();
 		}
@@ -547,10 +657,9 @@ namespace sig
 			std::fill(eiGrid.begin(), eiGrid.end(), 0.f);
 			for (sig::EdgeInfo const & edgeInfo : theEdgeInfos)
 			{
-				ras::RowCol const rc
+				ras::RowCol const rowcol
 					{ cast::rasRowCol(edgeInfo.edgel().start()) };
-	//			eiGrid(rc) = edgeInfo.edgel().magnitude();
-				eiGrid(rc) = (float)edgeInfo.consideredWeight();
+				eiGrid(rowcol) = (float)edgeInfo.consideredWeight();
 			}
 			return eiGrid;
 		}
@@ -607,6 +716,7 @@ namespace sig
 				peakAWs.emplace_back(angleWgt);
 			}
 
+/*
 std::cout << angleProbs.infoString("angleProbs") << '\n';
 std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
 
@@ -626,7 +736,6 @@ for (AngleWgt const & peakAW : peakAWs)
 		<< "  peakValue: " << engabra::g3::io::fixed(peakAW.weight())
 		<< '\n';
 }
-/*
 */
 
 			return peakAWs;
@@ -801,10 +910,11 @@ for (AngleWgt const & peakAW : peakAWs)
 					double const & wgtRay = rayWgt.theWeight;
 
 					// determine collinearity gap (aka 'rejection') of
-					// spot from current ray
-					double const edgeGap{ ray.distanceAlong(inSpot) };
-					// use gap to assign pseudo-probability for collinearity
-					double const arg{ (edgeGap / 1.) };
+					// spot from current ray (misclosure distance)
+					double const edgeMiss{ ray.distanceAlong(inSpot) };
+
+					// assign pseudo-probability of collinearity
+					double const arg{ (edgeMiss / 1.) };
 					double const probCollin{ std::exp(-arg*arg) };
 
 					// accumulate this pseudo probability into spot weight
@@ -816,6 +926,93 @@ for (AngleWgt const & peakAW : peakAWs)
 				double const updateWgt{ inWgt * voteTotal };
 				spotWgts.emplace_back(SpotWgt{ inSpot, updateWgt });
 			}
+			return spotWgts;
+		}
+
+		//! Indices and weights for which rayWgts are most collinear with spot
+		inline
+		std::vector<NdxWgt>
+		rayNdxWeights
+			( SpotWgt const & candidateSW
+			, std::vector<RayWgt> const & rayWgts
+			) const
+		{
+			std::vector<NdxWgt> colinRayNdxWgts;
+			std::size_t const numRWs{ rayWgts.size() };
+			colinRayNdxWgts.reserve(numRWs);
+
+			img::Spot const & spotCandidate = candidateSW.item();
+			double const & wgtCandidate = candidateSW.weight();
+
+			// consider all edge rays in "voting" on quality of the
+			// candidate center spot location.
+			for (std::size_t ndxRW{0u} ; ndxRW < numRWs ; ++ndxRW)
+			{
+				// access ray data
+				RayWgt const & rayWgt = rayWgts[ndxRW];
+				img::Ray const & ray = rayWgt.item();
+				double const & wgtRay = rayWgt.theWeight;
+
+				// determine collinearity gap (aka 'rejection') of
+				// spot from current ray (misclosure distance)
+				double const edgeMiss{ ray.distanceAlong(spotCandidate) };
+
+				if (edgeMiss < sEdgeMissMax)
+				{
+					// assign pseudo-probability of collinearity
+					double const arg{ (edgeMiss / 1.) };
+					double const probCollin{ std::exp(-arg*arg) };
+
+					// pseudo probability for this spot solution
+					double const wgt{ wgtCandidate * wgtRay * probCollin };
+
+					// remember this ray index
+					colinRayNdxWgts.emplace_back(NdxWgt{ ndxRW, wgt });
+				}
+			}
+
+			return colinRayNdxWgts;
+		}
+
+		//! Spot/weights fit onto most collinear edge rays
+		inline
+		std::vector<SpotWgt>
+		spotWeightsFit
+			( std::vector<SpotWgt> const & inSpotWgts
+			, std::vector<RayWgt> const & rayWgts
+			) const
+		{
+			std::vector<SpotWgt> spotWgts;
+			spotWgts.reserve(inSpotWgts.size());
+			for (SpotWgt const & inSpotWgt : inSpotWgts)
+			{
+				std::vector<NdxWgt> const rayNWs
+					{ rayNdxWeights(inSpotWgt, rayWgts) };
+				if (3u < rayNWs.size())
+				{
+					CenterSolver solver;
+					for (NdxWgt const & rayNW : rayNWs)
+					{
+						std::size_t const & rayNdx = rayNW.item();
+						double const & rayWgt = rayNW.weight();
+						img::Ray const & ray = rayWgts[rayNdx].item();
+						double const obsWgt{ rayWgt * inSpotWgt.weight() };
+						solver.addRay(ray, obsWgt);
+					}
+
+					SpotWgt const & spotSoln{ solver.solutionSpotWeight() };
+					spotWgts.emplace_back(spotSoln);
+				}
+			}
+
+			// sort with highest weight (most likely spot) first
+			std::sort
+				( spotWgts.begin(), spotWgts.end()
+				, [] (SpotWgt const & sw1, SpotWgt const & sw2)
+					// reverse compare order to sort largest weight first
+					{ return sw2.theWeight < sw1.theWeight; }
+				);
+
 			return spotWgts;
 		}
 
@@ -833,22 +1030,18 @@ for (AngleWgt const & peakAW : peakAWs)
 
 			// Compute pairwise intersection of rays
 			std::size_t const numRWs{ rayWgts.size() };
-			std::vector<SpotWgt> const tmpSpotWgts
+			std::vector<SpotWgt> const pairSpotWgts
 				{ spotWeightsPairwise(rayWgts, hwSize) };
 
 			// Spots with weighting based on consensus of all rays
-			std::vector<SpotWgt> spotWgts
-				{ spotWeightsConsensus(tmpSpotWgts, rayWgts) };
+			std::vector<SpotWgt> qualSpotWgts
+				{ spotWeightsConsensus(pairSpotWgts, rayWgts) };
 
-			// sort highest weight (most likely) spot first
-			std::sort
-				( spotWgts.begin(), spotWgts.end()
-				, [] (SpotWgt const & sw1, SpotWgt const & sw2)
-					// reverse directions to sort largest weight first
-					{ return sw2.theWeight < sw1.theWeight; }
-				);
+			//! Spot locations fit to most qualified rays
+			std::vector<SpotWgt> fitSpotWgts
+				{ spotWeightsFit(qualSpotWgts, rayWgts) };
 
-			return spotWgts;
+			return fitSpotWgts;
 		}
 
 
@@ -888,57 +1081,4 @@ namespace
 
 } // [anon/global]
 
-/*
-namespace
-{
-	//! Put item.infoString() to stream
-	inline
-	std::ostream &
-	operator<<
-		( std::ostream & ostrm
-		, quadloco::sig::RayWgt const & item
-		)
-	{
-		ostrm << item.infoString();
-		return ostrm;
-	}
-
-	//! True if item is not null
-	inline
-	bool
-	isValid
-		( quadloco::sig::RayWgt const & item
-		)
-	{
-		return item.isValid();
-	}
-
-} // [anon/global]
-
-namespace
-{
-	//! Put item.infoString() to stream
-	inline
-	std::ostream &
-	operator<<
-		( std::ostream & ostrm
-		, quadloco::sig::SpotWgt const & item
-		)
-	{
-		ostrm << item.infoString();
-		return ostrm;
-	}
-
-	//! True if item is not null
-	inline
-	bool
-	isValid
-		( quadloco::sig::SpotWgt const & item
-		)
-	{
-		return item.isValid();
-	}
-
-} // [anon/global]
-*/
 
