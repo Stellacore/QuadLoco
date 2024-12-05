@@ -385,7 +385,7 @@ namespace sig
 				img::Edgel const & edgel = edgeInfos[ndx].edgel();
 				double const wgtRadial{ edgeInfo.consideredWeight() };
 				double const & wgtGradMag = edgel.magnitude(); // gradient mag
-				double const wgtTotal{ wgtRadial * wgtGradMag };
+				// double const wgtTotal{ wgtRadial * wgtGradMag };
 				// NOTE: wgt on gradient is (wgtGradMag*direction==gradient()
 				sumDir = sumDir + wgtRadial *              edgel.gradient();
 				sumLoc = sumLoc + wgtRadial * wgtGradMag * edgel.location();
@@ -1029,7 +1029,6 @@ for (AngleWgt const & peakAW : peakAWs)
 				{ groupRayWeights(edgeGroups()) };
 
 			// Compute pairwise intersection of rays
-			std::size_t const numRWs{ rayWgts.size() };
 			std::vector<SpotWgt> const pairSpotWgts
 				{ spotWeightsPairwise(rayWgts, hwSize) };
 
