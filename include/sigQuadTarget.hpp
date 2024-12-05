@@ -122,7 +122,6 @@ namespace sig
 		angleSizeYwX
 			() const
 		{
-			double angSize{ 0. };
 			double const comp0{ dot(theDirX, theDirY) };
 			double const comp1{ outer(theDirX, theDirY) };
 			return ang::atan2(comp1, comp0);
