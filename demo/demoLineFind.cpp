@@ -294,6 +294,7 @@ main
 		// Construct edge evaluator to work on gradient grid
 		sig::EdgeEval const edgeEval(gradGrid);
 
+/*
 		// Fetch best estimated spot locations
 		std::vector<sig::SpotWgt> const spotWgts
 			{ edgeEval.spotWeightsOverall(gradGrid.hwSize()) };
@@ -311,6 +312,7 @@ main
 			sim::TestResult const testResult{ nn, expSW, gotSW };
 			testResults.emplace_back(testResult);
 		}
+*/
 
 
 		//
