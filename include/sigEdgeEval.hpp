@@ -118,8 +118,26 @@ namespace sig
 			return oss.str();
 		}
 
-
 	}; // ItemWgt
+
+	//! Display a collection of ItemWgt types
+	template <typename Type>
+	inline
+	std::string
+	infoStringFor
+		( std::vector<Type> const & itemWgts
+		, std::string const & name
+		)
+	{
+		std::ostringstream oss;
+		oss << name << ".size: " << itemWgts.size();
+		for (Type const & itemWgt : itemWgts)
+		{
+			oss << '\n' << name << ": " << itemWgt.infoString();
+		}
+		return oss.str();
+	}
+
 
 	//! An img::Ray item and associated weight
 	using RayWgt = ItemWgt<img::Ray>;
@@ -295,7 +313,9 @@ namespace sig
 			{
 				// for small distancs, dist is approximately the angle diff
 				double const & angDiff = distMin;
-				constexpr double sigma{ 1./8. }; // about +/-7 degrees
+			//	constexpr double sigma{ 1./8. }; // about +/-7 degrees
+			//	constexpr double sigma{ 1./4. }; // about +/-15 degrees
+				constexpr double sigma{ 1./2. }; // about +/-30 degrees
 				double const arg{ angDiff / sigma };
 				double const wgt{ std::exp(-arg*arg) };
 				nwMin = NdxWgt{ ndxMin, wgt };
@@ -545,6 +565,7 @@ namespace sig
 			) const
 		{
 			img::Ray ray{}; // null instance
+			double wgt{ std::numeric_limits<double>::quiet_NaN() };
 			img::Vector<double> sumLoc{ 0., 0. };
 			img::Vector<double> sumDir{ 0., 0. };
 			double sumWgt{ 0. };
@@ -566,8 +587,9 @@ namespace sig
 				img::Vector<double> const rayLoc{ (1./sumWgt) * sumLoc };
 				img::Vector<double> const rayDir{ direction(sumDir) };
 				ray = img::Ray{ rayLoc, rayDir };
+				wgt = sumWgt;
 			}
-			RayWgt const rayWgt{ ray, sumWgt };
+			RayWgt const rayWgt{ ray, wgt };
 			return rayWgt;
 		}
 
@@ -765,6 +787,7 @@ namespace sig
 			std::vector<EdgeGroup> edgeGroups;
 			std::size_t const numGroups{ theNdxAngWeights.wide() };
 			std::size_t const numElem{ theNdxAngWeights.high() };
+			edgeGroups.reserve(numGroups);
 			for (std::size_t col{0u} ; col < numGroups ; ++col)
 			{
 				std::vector<NdxWgt> ndxWgts;
@@ -776,6 +799,14 @@ namespace sig
 					{
 						NdxWgt const ndxWgt{ ndx, wgt };
 						ndxWgts.emplace_back(ndxWgt);
+/*
+std::cout
+	<< "edgeGroup:AddNdxWgt:rowcol"
+	<< ' ' << row << ' ' << col
+	<< "  ndxWgt: " << ndxWgt.infoString()
+	<< '\n';
+*/
+
 					}
 				}
 				edgeGroups.emplace_back(EdgeGroup{ ndxWgts });
@@ -796,7 +827,7 @@ namespace sig
 			std::ostringstream oss;
 			oss << theNdxAngWeights.infoStringContents(title, cfmt);
 			oss << '\n';
-			oss << "angles:";
+			oss << "GroupTable:angles:";
 			for (AngleWgt const & angWgt : theAngWgts)
 			{
 				using engabra::g3::io::fixed;
@@ -869,10 +900,11 @@ namespace sig
 				// edgels likely to be on opposite radial edges
 				for (std::size_t ndx1{0u} ; ndx1 < numElem ; ++ndx1)
 				{
+
 					// construct EdgeInfo tracking instance
 					img::Edgel const & edgel = edgels[ndx1];
-					sig::EdgeInfo edgeInfo1(edgel);
-					edgeInfos.emplace_back(edgeInfo1);
+					edgeInfos.emplace_back(sig::EdgeInfo(edgel));
+					sig::EdgeInfo & edgeInfo1 = edgeInfos.back();
 
 					// compare from start until *before* last item just added
 					std::size_t const numLast{ edgeInfos.size() - 1u };
@@ -1185,16 +1217,14 @@ for (AngleWgt const & peakAW : peakAWs)
 		inline
 		std::vector<NdxWgt>
 		rayNdxWeights
-			( SpotWgt const & candidateSW
+			( img::Spot const & spotCandidate
+			, double const & wgtCandidate
 			, std::vector<RayWgt> const & rayWgts
 			) const
 		{
 			std::vector<NdxWgt> colinRayNdxWgts;
 			std::size_t const numRWs{ rayWgts.size() };
 			colinRayNdxWgts.reserve(numRWs);
-
-			img::Spot const & spotCandidate = candidateSW.item();
-			double const & wgtCandidate = candidateSW.weight();
 
 			// consider all edge rays in "voting" on quality of the
 			// candidate center spot location.
@@ -1228,18 +1258,25 @@ for (AngleWgt const & peakAW : peakAWs)
 
 		//! Spot/weights fit onto most collinear edge rays
 		inline
-		std::vector<SpotWgt>
-		spotWeightsFit
-			( std::vector<SpotWgt> const & srcSpotWgts
+		std::vector<QuadWgt>
+		fitQuadWgtsFor
+			( std::vector<QuadWgt> const & quadWgts
 			, std::vector<RayWgt> const & rayWgts
 			) const
 		{
-			std::vector<SpotWgt> fitSpotWgts;
-			fitSpotWgts.reserve(srcSpotWgts.size());
-			for (SpotWgt const & srcSpotWgt : srcSpotWgts)
+			std::vector<QuadWgt> fitQuadWgts;
+			fitQuadWgts.reserve(quadWgts.size());
+			for (QuadWgt const & quadWgt : quadWgts)
 			{
+				sig::QuadTarget const & sigQuad = quadWgt.item();
+				double const & srcWgt = quadWgt.weight();
+
+				// Determine ray weighting based on collinearity with srcSpot
+				img::Spot const srcSpot{ sigQuad.centerSpot() };
 				std::vector<NdxWgt> const rayNWs
-					{ rayNdxWeights(srcSpotWgt, rayWgts) };
+					{ rayNdxWeights(srcSpot, srcWgt, rayWgts) };
+
+				// require at least 4 radial edges for a quad target image
 				if (3u < rayNWs.size())
 				{
 					CenterSolver solver;
@@ -1248,24 +1285,33 @@ for (AngleWgt const & peakAW : peakAWs)
 						std::size_t const & rayNdx = rayNW.item();
 						double const & rayWgt = rayNW.weight();
 						img::Ray const & ray = rayWgts[rayNdx].item();
-						double const obsWgt{ rayWgt * srcSpotWgt.weight() };
+						double const obsWgt{ rayWgt * srcWgt };
 						solver.addRay(ray, obsWgt);
 					}
 
 					SpotWgt const fitSpotWgt{ solver.solutionSpotWeight() };
-					fitSpotWgts.emplace_back(fitSpotWgt);
+					sig::QuadTarget const fitSigQuad
+						{ fitSpotWgt.item() // use fit center location
+						, sigQuad.theDirX // keep src axis direction
+						, sigQuad.theDirY // keep src axis direction
+						};
+					double const & sigma = fitSpotWgt.weight();
+					// compute weight relative to 1-pix sigma
+					double const wgt{ std::exp(-sigma*sigma) };
+					QuadWgt const fitQuadWgt{ fitSigQuad, wgt };
+					fitQuadWgts.emplace_back(fitQuadWgt);
 				}
 			}
 
 			// sort with highest weight (most likely spot) first
 			std::sort
-				( fitSpotWgts.begin(), fitSpotWgts.end()
-				, [] (SpotWgt const & sw1, SpotWgt const & sw2)
-					// reverse compare order to sort largest weight first
-					{ return sw2.theWeight < sw1.theWeight; }
+				( fitQuadWgts.begin(), fitQuadWgts.end()
+				, [] (QuadWgt const & qw1, QuadWgt const & qw2)
+					// Reverse compare to sort with largest weights first
+					{ return (qw2.weight() < qw1.weight()); }
 				);
 
-			return fitSpotWgts;
+			return fitQuadWgts;
 		}
 
 		//! Search for combo of radLines fitting sig::QuadTarget
@@ -1365,36 +1411,35 @@ std::cout
 	<< ' ' << radLines[npiNext].infoString()
 	<< ' ' << "wgtNext: " << wgtNext
 	<< '\n';
+std::cout
+	<< ' ' << "wgtBoth: " << wgtBoth
+	<< '\n';
 */
 
-							constexpr double wgtBothMin{ .005 }; // arbitrary
-							if (wgtBothMin < wgtBoth)
-							{
-								// "X" axis candidate
-								img::Vector<double> const deltaCurr
-									{ radLines[ndxCurr].lineDirection()
-									- radLines[npiCurr].lineDirection()
-									};
-								// "Y" axis candidate
-								img::Vector<double> const deltaNext
-									{ radLines[ndxNext].lineDirection()
-									- radLines[npiNext].lineDirection()
-									};
+							// "X" axis candidate
+							img::Vector<double> const deltaCurr
+								{ radLines[ndxCurr].lineDirection()
+								- radLines[npiCurr].lineDirection()
+								};
+							// "Y" axis candidate
+							img::Vector<double> const deltaNext
+								{ radLines[ndxNext].lineDirection()
+								- radLines[npiNext].lineDirection()
+								};
 
-								// compute average edge directions
-								img::Vector<double> const dirX
-									{ direction(deltaCurr) };
-								img::Vector<double> const dirY
-									{ direction(deltaNext) };
+							// compute average edge directions
+							img::Vector<double> const dirX
+								{ direction(deltaCurr) };
+							img::Vector<double> const dirY
+								{ direction(deltaNext) };
 
-								// generate candidate signal
-								sig::QuadTarget const sigQuad
-									{ centerSpot, dirX, dirY };
+							// generate candidate signal
+							sig::QuadTarget const sigQuad
+								{ centerSpot, dirX, dirY };
 
-								// combine opposing edge weights for signal wgt
-								QuadWgt const quadWgt{ sigQuad, wgtBoth };
-								quadWgts.emplace_back(quadWgt);
-							}
+							// combine opposing edge weights for signal wgt
+							QuadWgt const quadWgt{ sigQuad, wgtBoth };
+							quadWgts.emplace_back(quadWgt);
 						}
 
 					} // next is oppositely directed
@@ -1454,13 +1499,16 @@ std::cout
 					);
 			}
 
-			for (QuadWgt const & oneQW : allQWs)
+			/*
+			for (QuadWgt const & allQW : allQWs)
 			{
-				std::cout << "\noneQW: " << oneQW.infoString() << '\n';
+				std::cout << "\nallQW: " << allQW.infoString() << '\n';
 			}
+			*/
 
 			return allQWs;
 		}
+
 
 		//! Collection of center point candidates
 		inline
@@ -1474,28 +1522,64 @@ std::cout
 			std::vector<RayWgt> const rayWgts
 				{ groupRayWeights(edgeGroups()) };
 
+constexpr bool showInfo{ false };
+if (showInfo)
+{
+std::cout << "\n\n=============###############\n";
+std::cout << infoStringFor(rayWgts, "rayWgt") << '\n';
+}
+
 			// Compute pairwise intersection of rays
 			std::vector<SpotWgt> const pairSpotWgts
 				{ spotWeightsPairwise(rayWgts, hwSize) };
+
+if (showInfo)
+{
+std::cout << '\n';
+std::cout << infoStringFor(pairSpotWgts, "pairSpotWgt") << '\n';
+}
 
 			// Spots with weighting based on consensus of all rays
 			std::vector<SpotWgt> const qualSpotWgts
 				{ spotWeightsConsensus(pairSpotWgts, rayWgts) };
 
-			//! Spot locations fit to most qualified rays
-			std::vector<SpotWgt> fitSpotWgts
-				{ spotWeightsFit(qualSpotWgts, rayWgts) };
+if (showInfo)
+{
+std::cout << '\n';
+std::cout << infoStringFor(qualSpotWgts, "qualSpotWgt") << '\n';
+}
 
 			// Check which spots are consistent with quad target geometry
-			std::vector<QuadWgt> fitQuadWgts
-				{ sigQuadEstimates(fitSpotWgts, rayWgts) };
+			std::vector<QuadWgt> const quadWgts
+				{ sigQuadEstimates(qualSpotWgts, rayWgts) };
 
-			std::sort
-				( fitQuadWgts.begin(), fitQuadWgts.end()
-				, [] (QuadWgt const & qw1, QuadWgt const & qw2)
-					// Reverse compare to sort with largest weights first
-					{ return (qw2.weight() < qw1.weight()); }
-				);
+if (showInfo)
+{
+std::cout << '\n';
+std::cout << infoStringFor(quadWgts, "quadWgts") << '\n';
+}
+
+			//! Spot locations fit to most qualified rays
+			std::vector<QuadWgt> const fitQuadWgts
+				{ fitQuadWgtsFor(quadWgts, rayWgts) };
+
+if (showInfo)
+{
+std::cout << '\n';
+std::cout << infoStringFor(fitQuadWgts, "fitQuadWgts") << '\n';
+}
+
+if (showInfo)
+{
+std::cout << '\n';
+std::cout << "theEdgeInfos.size: " << theEdgeInfos.size() << '\n';
+std::cout << "rayWgts.size: " << rayWgts.size() << '\n';
+std::cout << "pairSpotWgts.size: " << pairSpotWgts.size() << '\n';
+std::cout << "qualSpotWgts.size: " << qualSpotWgts.size() << '\n';
+std::cout << "quadWgts.size: " << quadWgts.size() << '\n';
+std::cout << "fitQuadWgts.size: " << fitQuadWgts.size() << '\n';
+std::cout << '\n';
+}
 
 			return fitQuadWgts;
 		}
