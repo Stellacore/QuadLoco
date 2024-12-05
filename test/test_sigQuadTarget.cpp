@@ -97,7 +97,7 @@ namespace
 
 		if (! (gotSame == expSame))
 		{
-			oss << "Failure of imgQuadTarget half turn test\n";
+			oss << "Failure of sigQuadTarget half turn test\n";
 			oss << "imgQuadA: " << imgQuadA << '\n';
 			oss << "imgQuadB: " << imgQuadB << '\n';
 		}

@@ -280,7 +280,7 @@ namespace sim
 		//! Geometry of perspective image created by quadImage()
 		inline
 		sig::QuadTarget
-		imgQuadTarget
+		sigQuadTarget
 			() const
 		{
 			using namespace engabra::g3;
@@ -305,8 +305,8 @@ namespace sim
 			Vector<double> const xDir{ direction(xMidInDet - centerInDet) };
 			Vector<double> const yDir{ direction(yMidInDet - centerInDet) };
 
-			sig::QuadTarget const imgQuad{ center, xDir, yDir };
-			return imgQuad;
+			sig::QuadTarget const simQuad{ center, xDir, yDir };
+			return simQuad;
 		}
 
 

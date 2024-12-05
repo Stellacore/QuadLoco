@@ -87,7 +87,7 @@ namespace
 		std::size_t const numOverSample{ 128u };
 		if (ptSigQuad)
 		{
-			*ptSigQuad = render.imgQuadTarget();
+			*ptSigQuad = render.sigQuadTarget();
 		}
 		return render.quadImage(numOverSample);
 	}
