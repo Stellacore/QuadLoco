@@ -66,17 +66,14 @@ namespace
 
 		// NOTE: image is 2D space, but implemented with engaba::g3
 		//       as hack/easy way to provide basic vector ops support.
-		using namespace engabra::g3;
-		static BiVector const dirAngle{ e12 };
-		Vector const center{ 34.5, 67.8, 0. };
+		quadloco::img::Spot const center{ 34.5, 67.8 };
 
 		// setup direction of axes
 		constexpr double angleX{  .125 };
 		constexpr double angleY{ 1.250 };
-		using std::cos;
-		using std::sin;
-		Vector const dirX{ direction(Vector{ cos(angleX), sin(angleX), 0. }) };
-		Vector const dirY{ direction(Vector{ cos(angleY), sin(angleY), 0. }) };
+		using quadloco::img::Vector;
+		Vector<double> const dirX{ std::cos(angleX), std::sin(angleX) };
+		Vector<double> const dirY{ std::cos(angleY), std::sin(angleY) };
 
 		// construct a quad
 		quadloco::sig::QuadTarget const imgQuad{ center,  dirX,  dirY };
