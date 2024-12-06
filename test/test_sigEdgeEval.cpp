@@ -60,21 +60,20 @@ namespace
 			{ obj::QuadTarget
 				( 1.00
 			//	, QuadTarget::None
-				, QuadTarget::WithSurround | QuadTarget::WithTriangle
+			//	, QuadTarget::WithSurround
 			//	, QuadTarget::WithTriangle
+				, QuadTarget::WithSurround | QuadTarget::WithTriangle
 				)
 			, obj::Camera
-//				{ ras::SizeHW{ 128u, 128u }
-//				, 300. // pd
+				{ ras::SizeHW{ 128u, 128u }
+				, 128. // pd
 //{ ras::SizeHW{ 16u, 16u }
-//				,  55. // pd
-//{ ras::SizeHW{ 10u, 10u }
-//				,  40. // pd
-{ ras::SizeHW{   20u,   20u }
-				,   20. // pd
+//				,  16. // pd
+//{ ras::SizeHW{   11u,   11u }
+//				,   11. // pd
 				}
 			, rigibra::Transform
-				{ engabra::g3::Vector{ 0., 0., 1. }
+				{ engabra::g3::Vector{ 0., 0., 1.+1./16. }
 				, rigibra::Attitude
 					{ rigibra::PhysAngle
 						{ engabra::g3::BiVector{ 0., 0., 0. } }
@@ -84,12 +83,11 @@ namespace
 		using namespace quadloco::sim;
 		sim::Render const render
 			( config
-			, Sampler::None
-		//	, Sampler::AddSceneBias | Sampler::AddImageNoise
+		//	, Sampler::None
+			, Sampler::AddSceneBias | Sampler::AddImageNoise
 		//	, Sampler::AddImageNoise
 			);
-		std::size_t const numOverSample{ 1024u };
-//std::size_t const numOverSample{    0u };
+		std::size_t const numOverSample{ 128u };
 		if (ptSigQuad)
 		{
 			*ptSigQuad = render.sigQuadTarget();
@@ -142,36 +140,41 @@ namespace
 
 		// [DoxyExample01]
 
+// Save data to files
 
-/*
-std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
+// pixels
 (void)io::writeStretchPGM("pixGrid.pgm", pixGrid);
 
-sig::GroupTable const groupTab{ edgeEval.groupTable() };
-std::cout << groupTab.infoStringContents("groupTab", "%5.3f") << '\n';
-
-std::vector<sig::EdgeGroup> const edgeGroups{ edgeEval.edgeGroups() };
-std::vector<sig::RayWgt> const rayWgts
-	{ edgeEval.groupRayWeights(edgeGroups) };
-std::cout << infoStringFor(rayWgts, "t.rayWgts") << '\n';
-
-ras::Grid<float> const eiGrid
+// EdgeInfo-mag
+ras::Grid<float> const edgeInfoGrid
 	{ edgeEval.edgeInfoGrid(gradGrid.hwSize()) };
-std::cout << eiGrid.infoStringContents("eiGrid", "%5.2f") << '\n';
-(void)io::writeStretchPGM("edgeInfoMag.pgm", eiGrid);
+(void)io::writeStretchPGM("edgeInfoMag.pgm", edgeInfoGrid);
 
-std::cout << "sigQuadWgts.size: " << sigQuadWgts.size() << '\n';
+// Edge ray data
+std::ofstream ofsRay("ray.dat");
+std::vector<sig::EdgeGroup> const edgeGroups{ edgeEval.edgeGroups() };
+std::vector<sig::RayWgt> const rayWgts{ edgeEval.groupRayWeights(edgeGroups) };
+ofsRay << infoStringFor(rayWgts, "t.rayWgts") << '\n';
 
 std::ofstream ofsSpot("spot.dat");
 for (sig::QuadWgt const & sigQuadWgt : sigQuadWgts)
 {
-	std::cout << sigQuadWgt << '\n';
 	ofsSpot << "sigQuadWgt:"
 		<< ' ' << sigQuadWgt.item().centerSpot()
 		<< ' ' << engabra::g3::io::fixed(sigQuadWgt.weight())
 		<< '\n';
 }
+
+
+/*
+std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
+
+sig::GroupTable const groupTab{ edgeEval.groupTable() };
+std::cout << groupTab.infoStringContents("groupTab", "%5.3f") << '\n';
+std::cout << infoStringFor(sigQuadWgts, "t.sigQuadWgt") << '\n';
 */
+std::ofstream ofsEdgeInfo("edgeInfoMag.dat");
+ofsEdgeInfo << edgeInfoGrid.infoStringContents("# edgeInfoGrid", "%15.12f") << '\n';
 
 		std::vector<sig::AngleWgt> const peakAWs
 			{ edgeEval.peakAngleWeights() };
