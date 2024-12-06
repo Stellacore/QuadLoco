@@ -58,18 +58,20 @@ namespace
 		using namespace quadloco::obj;
 		sim::Config const config
 			{ obj::QuadTarget
-				( .25
+				( 1.00
 			//	, QuadTarget::None
-			//	, QuadTarget::WithSurround | QuadTarget::WithTriangle
-				, QuadTarget::WithTriangle
+				, QuadTarget::WithSurround | QuadTarget::WithTriangle
+			//	, QuadTarget::WithTriangle
 				)
 			, obj::Camera
 //				{ ras::SizeHW{ 128u, 128u }
 //				, 300. // pd
 //{ ras::SizeHW{ 16u, 16u }
 //				,  55. // pd
-{ ras::SizeHW{ 10u, 10u }
-				,  40. // pd
+//{ ras::SizeHW{ 10u, 10u }
+//				,  40. // pd
+{ ras::SizeHW{   20u,   20u }
+				,   20. // pd
 				}
 			, rigibra::Transform
 				{ engabra::g3::Vector{ 0., 0., 1. }
@@ -82,11 +84,12 @@ namespace
 		using namespace quadloco::sim;
 		sim::Render const render
 			( config
-		//	, Sampler::None
-			, Sampler::AddSceneBias | Sampler::AddImageNoise
+			, Sampler::None
+		//	, Sampler::AddSceneBias | Sampler::AddImageNoise
 		//	, Sampler::AddImageNoise
 			);
 		std::size_t const numOverSample{ 1024u };
+//std::size_t const numOverSample{    0u };
 		if (ptSigQuad)
 		{
 			*ptSigQuad = render.sigQuadTarget();
@@ -119,10 +122,6 @@ namespace
 		// categorize edgels as candidates for (radial) quad target edge groups
 		sig::EdgeEval const edgeEval(gradGrid);
 
-std::vector<sig::EdgeGroup> const edgeGroups{ edgeEval.edgeGroups() };
-std::vector<sig::RayWgt> const rayWgts
-	{ edgeEval.groupRayWeights(edgeGroups) };
-
 		// estimate center location - return order is
 		// most likely location at front with decreasing likelihood following)
 		std::vector<sig::QuadWgt> const sigQuadWgts
@@ -132,44 +131,47 @@ std::vector<sig::RayWgt> const rayWgts
 		if (! sigQuadWgts.empty())
 		{
 			// use first spotWgt (one with highest weight) as 'best' estimate
-			gotCenterSpot = sigQuadWgts.front().item().centerSpot();
+			// NOTE: the simulation oversampling treats pixels as areas
+			//       whereas the image processing treats them as point
+			//       samples. Therefore, add {.5,.5} to match the simulation.
+			gotCenterSpot = img::Spot
+					{ sigQuadWgts.front().item().centerSpot()
+					+ img::Spot{ .5, .5 }
+					};
 		}
 
 		// [DoxyExample01]
 
 
+/*
 std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
 (void)io::writeStretchPGM("pixGrid.pgm", pixGrid);
-/*
+
 sig::GroupTable const groupTab{ edgeEval.groupTable() };
 std::cout << groupTab.infoStringContents("groupTab", "%5.3f") << '\n';
 
-std::cout << "rayWgts.size: " << rayWgts.size() << '\n';
-std::ofstream ofsRay("ray.dat");
-		for (sig::RayWgt const & rayWgt : rayWgts)
-		{
-			std::cout << rayWgt << '\n';
-			ofsRay << "rayWgt: " << rayWgt << '\n';
-		}
+std::vector<sig::EdgeGroup> const edgeGroups{ edgeEval.edgeGroups() };
+std::vector<sig::RayWgt> const rayWgts
+	{ edgeEval.groupRayWeights(edgeGroups) };
+std::cout << infoStringFor(rayWgts, "t.rayWgts") << '\n';
 
-*/
 ras::Grid<float> const eiGrid
 	{ edgeEval.edgeInfoGrid(gradGrid.hwSize()) };
 std::cout << eiGrid.infoStringContents("eiGrid", "%5.2f") << '\n';
 (void)io::writeStretchPGM("edgeInfoMag.pgm", eiGrid);
 
 std::cout << "sigQuadWgts.size: " << sigQuadWgts.size() << '\n';
+
 std::ofstream ofsSpot("spot.dat");
-
-		for (sig::QuadWgt const & sigQuadWgt : sigQuadWgts)
-		{
-			std::cout << sigQuadWgt << '\n';
-			ofsSpot << "sigQuadWgt:"
-				<< ' ' << sigQuadWgt.item().centerSpot()
-				<< ' ' << engabra::g3::io::fixed(sigQuadWgt.weight())
-				<< '\n';
-		}
-
+for (sig::QuadWgt const & sigQuadWgt : sigQuadWgts)
+{
+	std::cout << sigQuadWgt << '\n';
+	ofsSpot << "sigQuadWgt:"
+		<< ' ' << sigQuadWgt.item().centerSpot()
+		<< ' ' << engabra::g3::io::fixed(sigQuadWgt.weight())
+		<< '\n';
+}
+*/
 
 		std::vector<sig::AngleWgt> const peakAWs
 			{ edgeEval.peakAngleWeights() };
