@@ -65,9 +65,11 @@ namespace
 				)
 			, obj::Camera
 //				{ ras::SizeHW{ 128u, 128u }
-//				, 100. // pd
-{ ras::SizeHW{ 16u, 16u }
-				,  55. // pd
+//				, 300. // pd
+//{ ras::SizeHW{ 16u, 16u }
+//				,  55. // pd
+{ ras::SizeHW{ 10u, 10u }
+				,  40. // pd
 				}
 			, rigibra::Transform
 				{ engabra::g3::Vector{ 0., 0., 1. }
@@ -84,7 +86,7 @@ namespace
 			, Sampler::AddSceneBias | Sampler::AddImageNoise
 		//	, Sampler::AddImageNoise
 			);
-		std::size_t const numOverSample{ 128u };
+		std::size_t const numOverSample{ 1024u };
 		if (ptSigQuad)
 		{
 			*ptSigQuad = render.sigQuadTarget();
@@ -117,6 +119,10 @@ namespace
 		// categorize edgels as candidates for (radial) quad target edge groups
 		sig::EdgeEval const edgeEval(gradGrid);
 
+std::vector<sig::EdgeGroup> const edgeGroups{ edgeEval.edgeGroups() };
+std::vector<sig::RayWgt> const rayWgts
+	{ edgeEval.groupRayWeights(edgeGroups) };
+
 		// estimate center location - return order is
 		// most likely location at front with decreasing likelihood following)
 		std::vector<sig::QuadWgt> const sigQuadWgts
@@ -131,12 +137,10 @@ namespace
 
 		// [DoxyExample01]
 
-/*
-std::vector<sig::EdgeGroup> const edgeGroups{ edgeEval.edgeGroups() };
-std::vector<sig::RayWgt> const rayWgts
-	{ edgeEval.groupRayWeights(edgeGroups) };
 
 std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
+(void)io::writeStretchPGM("pixGrid.pgm", pixGrid);
+/*
 sig::GroupTable const groupTab{ edgeEval.groupTable() };
 std::cout << groupTab.infoStringContents("groupTab", "%5.3f") << '\n';
 
@@ -148,13 +152,15 @@ std::ofstream ofsRay("ray.dat");
 			ofsRay << "rayWgt: " << rayWgt << '\n';
 		}
 
+*/
 ras::Grid<float> const eiGrid
 	{ edgeEval.edgeInfoGrid(gradGrid.hwSize()) };
+std::cout << eiGrid.infoStringContents("eiGrid", "%5.2f") << '\n';
 (void)io::writeStretchPGM("edgeInfoMag.pgm", eiGrid);
-*/
 
 std::cout << "sigQuadWgts.size: " << sigQuadWgts.size() << '\n';
 std::ofstream ofsSpot("spot.dat");
+
 		for (sig::QuadWgt const & sigQuadWgt : sigQuadWgts)
 		{
 			std::cout << sigQuadWgt << '\n';
@@ -177,11 +183,26 @@ std::ofstream ofsSpot("spot.dat");
 		}
 
 		double const tolCenter{ .5 };
-		if (! nearlyEquals(gotCenterSpot, expCenterSpot, tolCenter))
+		img::Spot const difCenterSpot{ gotCenterSpot - expCenterSpot };
+		double const difMag{ magnitude(difCenterSpot) };
+		if (! nearlyEqualsAbs(gotCenterSpot, expCenterSpot, tolCenter))
 		{
 			oss << "Failure of gotCenterSpot test\n";
 			oss << "exp: " << expCenterSpot << '\n';
 			oss << "got: " << gotCenterSpot << '\n';
+			oss << "dif: " << difCenterSpot << '\n';
+			oss << "err: " << difMag << '\n';
+			oss << "tol: " << tolCenter << '\n';
+		}
+		else
+		{
+			std::cout << "\n\n SUCCESS center test\n";
+			std::cout << "exp: " << expCenterSpot << '\n';
+			std::cout << "got: " << gotCenterSpot << '\n';
+		//	std::cout << "dif: " << difCenterSpot << '\n';
+			std::cout << "err: " << difMag << '\n';
+		//	std::cout << "tol: " << tolCenter << '\n';
+			std::cout << "\n";
 		}
 	}
 
