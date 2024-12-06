@@ -32,6 +32,7 @@
  */
 
 
+#include "sigCenterFitter.hpp"
 #include "sigEdgeLine.hpp"
 #include "sigItemWgt.hpp"
 
@@ -118,94 +119,6 @@ namespace sig
 		return SpotWgt{ meetSpot, meetWgt };
 	}
 
-
-	//! Least square solver for point central to multiple edgerays
-	struct CenterSolver
-	{
-		double theAtA00{ 0. };
-		double theAtA01{ 0. };
-		//uble theAtA10{ 0. }; // symmetric coefficient matrix
-		double theAtA11{ 0. };
-		double theAtB0{ 0. };
-		double theAtB1{ 0. };
-
-		//! Incorporate ray into solution process
-		inline
-		void
-		addRay
-			( img::Ray const & ray
-			, double const & wgt
-			)
-		{
-			// access data: points on edge, edge dirs, and edge weights
-			img::Vector<double> const & pnt = ray.start();
-			img::Vector<double> const & dir = ray.direction();
-			double const bj{ dot(dir, pnt) };
-			// accumulate normal system
-			theAtA00 += wgt * dir[0]*dir[0];
-			theAtA01 += wgt * dir[0]*dir[1];
-			//eAtA10 += wgt * dir[1]*dir[0]; // symmetric
-			theAtA11 += wgt * dir[1]*dir[1];
-			theAtB0  += wgt * dir[0] * bj;
-			theAtB1  += wgt * dir[1] * bj;
-		}
-
-		//! Least-Square spot location with max eigenvalue weight
-		inline
-		SpotWgt
-		solutionSpotWeight
-			() const
-		{
-			SpotWgt solnSW{};
-
-			// coefficient matrix
-			double const & fwd00 = theAtA00;
-			double const & fwd01 = theAtA01;
-			double const & fwd10 = theAtA01; // theAtA10; // symmetric
-			double const & fwd11 = theAtA11;
-			// determinant
-			double const det{ fwd00*fwd11 - fwd01*fwd10 };
-			if (std::numeric_limits<double>::epsilon() < std::abs(det))
-			{
-				// inverse normal matrix
-				double const scl{ 1. / det };
-				double const inv00{  scl*fwd11 };
-				double const inv01{ -scl*fwd01 };
-				//uble const inv10{ -scl*fwd10 }; // symmetric
-				double const inv11{  scl*fwd00 };
-
-				// least square spot solution
-				double const & inv10 = inv01; // symmetric
-				img::Spot const solnSpot
-					{ inv00*theAtB0 + inv01*theAtB1
-					, inv10*theAtB0 + inv11*theAtB1
-					};
-
-				double solnWgt{ std::numeric_limits<double>::quiet_NaN() };
-
-				// characteristic polynomial (quadratic coefficient == 1)
-				double const beta{ -.5 * (fwd00 + fwd11) };
-				double const & gamma = det;
-				double const lamMid{ -beta };
-				double const radicand{ beta*beta - gamma };
-				if (! (radicand < 0.)) // theoretically true (for proper code)
-				{
-					// compute eigen values
-					double const root{ std::sqrt(radicand) };
-					double const lamNeg{ lamMid - root };
-					double const lamPos{ lamMid + root };
-					double const lamBig
-						{ std::max(std::abs(lamNeg), std::abs(lamPos)) };
-
-					// standard deviation
-					solnWgt = std::sqrt(std::abs(lamBig));
-				}
-				solnSW = SpotWgt{ solnSpot, solnWgt };
-			}
-			return solnSW;
-		}
-
-	}; // CenterSolver
 
 
 	//! Utility filter to determine if spots should be used.
@@ -1001,17 +914,17 @@ for (AngleWgt const & peakAW : peakAWs)
 				// require at least 4 radial edges for a quad target image
 				if (3u < rayNWs.size())
 				{
-					CenterSolver solver;
+					CenterFitter fitter;
 					for (NdxWgt const & rayNW : rayNWs)
 					{
 						std::size_t const & rayNdx = rayNW.item();
 						double const & rayWgt = rayNW.weight();
 						img::Ray const & ray = rayWgts[rayNdx].item();
 						double const obsWgt{ rayWgt * srcWgt };
-						solver.addRay(ray, obsWgt);
+						fitter.addRay(ray, obsWgt);
 					}
 
-					SpotWgt const fitSpotWgt{ solver.solutionSpotWeight() };
+					SpotWgt const fitSpotWgt{ fitter.solutionSpotWeight() };
 					sig::QuadTarget const fitSigQuad
 						{ fitSpotWgt.item() // use fit center location
 						, srcQuad.theDirX // keep src axis direction

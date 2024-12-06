@@ -55,8 +55,9 @@ set(unitTests
 	test_rasgrid  # pixel/grid functions (e.g. image processing)
 	test_rasRowCol  # discete raster cell locations
 	test_rasSizeHW  # basic "high/wide" area boundary (half open)
-	test_sigEdgeEval  # Edgel evaluator checking likelihood on quad radii
-	test_sigEdgeInfo  # Edgel characteristics tracking 
+	test_sigCenterFitter  # least square solution for center of edge rays
+	test_sigEdgeEval  # edgel evaluator checking likelihood on quad radii
+	test_sigEdgeInfo  # edgel characteristics tracking 
 	test_sigEdgeLine  # A semi-infinite radial line for edgel candidate
 	test_sigFindAD  # find maxima in sig::ParmAD space
 	test_sigItemWgt  # pairing of template item type and associated weight
