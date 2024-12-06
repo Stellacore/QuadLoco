@@ -32,6 +32,8 @@
  */
 
 
+#include "sigItemWgt.hpp"
+
 #include "angLikely.hpp"
 #include "imgArea.hpp"
 #include "opsgrid.hpp"
@@ -63,119 +65,6 @@ namespace sig
 	constexpr double sEdgeMissMax{ 2. };
 
 
-
-	//! Candidate item and associated weight
-	template <typename ItemType>
-	struct ItemWgt
-	{
-		ItemType theItem{};
-		double theWeight{ std::numeric_limits<double>::quiet_NaN() };
-
-		//! True if this instance contains valid data
-		inline
-		bool
-		isValid
-			() const
-		{
-			return engabra::g3::isValid(theWeight);
-		}
-
-		//! Item instance
-		inline
-		ItemType const &
-		item
-			() const
-		{
-			return theItem;
-		}
-
-		//! Weight value
-		inline
-		double const &
-		weight
-			() const
-		{
-			return theWeight;
-		}
-
-		//! Descriptive information about this instance.
-		inline
-		std::string
-		infoString
-			( std::string const & title = {}
-			) const
-		{
-			std::ostringstream oss;
-			if (! title.empty())
-			{
-				oss << title << ' ';
-			}
-			oss
-				<< "item: " << theItem
-				<< ' '
-				<< "wgt: " << engabra::g3::io::fixed(theWeight);
-				;
-			return oss.str();
-		}
-
-	}; // ItemWgt
-
-	//! Display a collection of ItemWgt types
-	template <typename Type>
-	inline
-	std::string
-	infoStringFor
-		( std::vector<Type> const & itemWgts
-		, std::string const & name
-		)
-	{
-		std::ostringstream oss;
-		oss << name << ".size: " << itemWgts.size();
-		for (Type const & itemWgt : itemWgts)
-		{
-			oss << '\n' << name << ": " << itemWgt.infoString();
-		}
-		return oss.str();
-	}
-
-
-	//! An img::Ray item and associated weight
-	using RayWgt = ItemWgt<img::Ray>;
-
-	//! An img::Spot item and associated weight
-	using SpotWgt = ItemWgt<img::Spot>;
-
-	//! An index item and associated weight
-	using NdxWgt = ItemWgt<std::size_t>;
-
-	//! A sig::QuadTarget item and associated weight
-	using QuadWgt = ItemWgt<sig::QuadTarget>;
-
-
-	//! An angle item and associated weight
-	struct AngleWgt : public ItemWgt<double>
-	{
-		// overload ItemWgt formatting (brute force, non-virtual)
-		//! Descriptive information about this instance.
-		inline
-		std::string
-		infoString
-			( std::string const & title = {}
-			) const
-		{
-			std::ostringstream oss;
-			if (! title.empty())
-			{
-				oss << title << ' ';
-			}
-			oss
-				<< "item: " << engabra::g3::io::fixed(item())
-				<< ' '
-				<< "wgt: " << engabra::g3::io::fixed(weight())
-				;
-			return oss.str();
-		}
-	};
 
 	//! Radially directed line (from origin to infinity)
 	struct EdgeLine
@@ -1594,33 +1483,5 @@ std::cout << '\n';
 
 } // [quadloco]
 
-
-namespace
-{
-	//! Put item.infoString() to stream
-	template <typename ItemType>
-	inline
-	std::ostream &
-	operator<<
-		( std::ostream & ostrm
-		, quadloco::sig::ItemWgt<ItemType> const & item
-		)
-	{
-		ostrm << item.infoString();
-		return ostrm;
-	}
-
-	//! True if item is not null
-	template <typename ItemType>
-	inline
-	bool
-	isValid
-		( quadloco::sig::ItemWgt<ItemType> const & item
-		)
-	{
-		return item.isValid();
-	}
-
-} // [anon/global]
 
 
