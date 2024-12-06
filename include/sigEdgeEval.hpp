@@ -784,10 +784,10 @@ namespace sig
 		edgeGroups
 			() const
 		{
-			std::vector<EdgeGroup> edgeGroups;
+			std::vector<EdgeGroup> eGroups;
 			std::size_t const numGroups{ theNdxAngWeights.wide() };
 			std::size_t const numElem{ theNdxAngWeights.high() };
-			edgeGroups.reserve(numGroups);
+			eGroups.reserve(numGroups);
 			for (std::size_t col{0u} ; col < numGroups ; ++col)
 			{
 				std::vector<NdxWgt> ndxWgts;
@@ -799,19 +799,11 @@ namespace sig
 					{
 						NdxWgt const ndxWgt{ ndx, wgt };
 						ndxWgts.emplace_back(ndxWgt);
-/*
-std::cout
-	<< "edgeGroup:AddNdxWgt:rowcol"
-	<< ' ' << row << ' ' << col
-	<< "  ndxWgt: " << ndxWgt.infoString()
-	<< '\n';
-*/
-
 					}
 				}
-				edgeGroups.emplace_back(EdgeGroup{ ndxWgts });
+				eGroups.emplace_back(EdgeGroup{ ndxWgts });
 			}
-			return edgeGroups;
+			return eGroups;
 		}
 
 		//! Description including contents of theNdxAngWeight table
@@ -885,7 +877,7 @@ std::cout
 		inline
 		static
 		std::vector<sig::EdgeInfo>
-		edgeInfosFor
+		edgeInfosLikelyRadial
 			( std::vector<img::Edgel> const & edgels
 			)
 		{
@@ -900,15 +892,16 @@ std::cout
 				// edgels likely to be on opposite radial edges
 				for (std::size_t ndx1{0u} ; ndx1 < numElem ; ++ndx1)
 				{
-
 					// construct EdgeInfo tracking instance
 					img::Edgel const & edgel = edgels[ndx1];
 					edgeInfos.emplace_back(sig::EdgeInfo(edgel));
+
+					// update just inserted edgel with prior edgels (below)
 					sig::EdgeInfo & edgeInfo1 = edgeInfos.back();
 
-					// compare from start until *before* last item just added
-					std::size_t const numLast{ edgeInfos.size() - 1u };
-					for (std::size_t ndx2{0u} ; ndx2 < numLast ; ++ndx2)
+					// compare from begin thru just *before* last item added
+					std::size_t const numPrev{ edgeInfos.size() - 1u };
+					for (std::size_t ndx2{0u} ; ndx2 < numPrev ; ++ndx2)
 					{
 						// combinatorially consider other edges and
 						// update each with consideration of the other
@@ -918,6 +911,9 @@ std::cout
 					}
 				}
 			}
+
+			// filter very low weight edges
+// TODO - determine what is a low weight
 			return edgeInfos;
 		}
 
@@ -929,7 +925,10 @@ std::cout
 		EdgeEval
 			( ras::Grid<img::Grad> const & gradGrid
 			)
-			: theEdgeInfos{ edgeInfosFor(dominantEdgelsFrom(gradGrid)) }
+			: theEdgeInfos
+				{ edgeInfosLikelyRadial	
+					(dominantEdgelsFrom(gradGrid))
+				}
 		{ }
 
 		// TODO - should go someplace else - EdgeInfo functions maybe?
@@ -1268,11 +1267,13 @@ for (AngleWgt const & peakAW : peakAWs)
 			fitQuadWgts.reserve(quadWgts.size());
 			for (QuadWgt const & quadWgt : quadWgts)
 			{
-				sig::QuadTarget const & sigQuad = quadWgt.item();
+				// start with nominal Quad signal (use to qualify rays)
+				sig::QuadTarget const & srcQuad = quadWgt.item();
 				double const & srcWgt = quadWgt.weight();
 
-				// Determine ray weighting based on collinearity with srcSpot
-				img::Spot const srcSpot{ sigQuad.centerSpot() };
+				// Determine ray weighting based on collinearity and
+				// consistency with nominal srcQuad
+				img::Spot const srcSpot{ srcQuad.centerSpot() };
 				std::vector<NdxWgt> const rayNWs
 					{ rayNdxWeights(srcSpot, srcWgt, rayWgts) };
 
@@ -1292,8 +1293,8 @@ for (AngleWgt const & peakAW : peakAWs)
 					SpotWgt const fitSpotWgt{ solver.solutionSpotWeight() };
 					sig::QuadTarget const fitSigQuad
 						{ fitSpotWgt.item() // use fit center location
-						, sigQuad.theDirX // keep src axis direction
-						, sigQuad.theDirY // keep src axis direction
+						, srcQuad.theDirX // keep src axis direction
+						, srcQuad.theDirY // keep src axis direction
 						};
 					double const & sigma = fitSpotWgt.weight();
 					// compute weight relative to 1-pix sigma
@@ -1518,11 +1519,12 @@ std::cout
 				//!< If size isValid(), use it to filter candidate spots
 			) const
 		{
+
 			// Define candidate edgerays and associated weights
 			std::vector<RayWgt> const rayWgts
 				{ groupRayWeights(edgeGroups()) };
 
-constexpr bool showInfo{ false };
+constexpr bool showInfo{ true };
 if (showInfo)
 {
 std::cout << "\n\n=============###############\n";
