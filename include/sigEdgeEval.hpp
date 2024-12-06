@@ -32,6 +32,7 @@
  */
 
 
+#include "sigEdgeLine.hpp"
 #include "sigItemWgt.hpp"
 
 #include "angLikely.hpp"
@@ -63,179 +64,10 @@ namespace sig
 	constexpr double sRaySeparation{ 2.5 };
 	//! Maximum misclosure distance between spot and associated edge line
 	constexpr double sEdgeMissMax{ 2. };
+	//! Relative uncertainty in opposing edge line angle
+	constexpr double sEdgeLineAngleSigma{ 1./2. }; // about +/-30 degrees
 
 
-
-	//! Radially directed line (from origin to infinity)
-	struct EdgeLine
-	{
-		//! Angle of line
-		double theAngle{ std::numeric_limits<double>::quiet_NaN() };
-		//! Size of rotation [-1,+1] - outer product radDir and edgeDir
-		double theEdgeTurn{ std::numeric_limits<double>::quiet_NaN() };
-
-		//! Construct from a central spot and ray direction
-		inline
-		static
-		EdgeLine
-		from
-			( img::Spot const & centerSpot
-			, img::Ray const & edgeRay
-			)
-		{
-			img::Vector<double> const radDir
-				{ direction(edgeRay.start() - centerSpot) };
-			double const theta{ ang::atan2(radDir[1], radDir[0]) };
-			double const dTheta{ outer(radDir, edgeRay.direction()) };
-			return EdgeLine{ theta, dTheta };
-		}
-
-		//! True if members have valid data
-		inline
-		bool
-		isValid
-			() const
-		{
-			return
-				(  engabra::g3::isValid(theAngle)
-				&& engabra::g3::isValid(theEdgeTurn)
-				);
-		}
-
-		//! Angle of this radial line
-		inline
-		double const &
-		angle
-			() const
-		{
-			return theAngle;
-		}
-
-		//! Spot on unit circle at angle()
-		inline
-		img::Spot
-		unitSpot
-			() const
-		{
-			return img::Spot{ lineDirection() };
-		}
-
-		//! Spot on unit circle at angle()
-		inline
-		img::Vector<double>
-		lineDirection
-			() const
-		{
-			return img::Spot
-				{ std::cos(theAngle)
-				, std::sin(theAngle)
-				};
-		}
-
-		//! The value of the turning moment (edge tangency)
-		inline
-		double const &
-		turnDirection
-			() const
-		{
-			return theEdgeTurn;
-		}
-
-		//! True if other has opposing tangental edge direction 
-		inline
-		bool
-		isTurningOppositeTo
-			( EdgeLine const & other
-			) const
-		{
-			return ((theEdgeTurn * other.theEdgeTurn) < 0.);
-		}
-
-		//! True if this and other have same directions on turning moments
-		inline
-		bool
-		isTurningSameAs
-			( EdgeLine const & other
-			) const
-		{
-			return (! isTurningOppositeTo(other));
-		}
-
-		//! Index for EdgeLine most nearly opposing this current one
-		inline
-		NdxWgt
-		opposingNdxWgt
-			( std::vector<EdgeLine> const & others
-			, std::size_t const & ndxCurr
-			) const
-		{
-			NdxWgt nwMin{};
-
-			// use points on unit circle to perform proximity math
-			// to bipass having to deal with angle phase wrapping
-			img::Spot const currDirSpot{ unitSpot() };
-			// find other unit circle locations near to this anti podal point
-			img::Spot const antiDirSpot{ -currDirSpot };
-
-			// find minimum distance (but only for same turning direction)
-			std::size_t ndxMin{ std::numeric_limits<std::size_t>::max() };
-			double distMin{ std::numeric_limits<double>::max() };
-			for (std::size_t ndx{0u} ; ndx < others.size() ; ++ndx)
-			{
-				if (ndxCurr != ndx)
-				{
-					EdgeLine const & other = others[ndx];
-					if (this->isTurningSameAs(other))
-					{
-						double const dist
-							{ magnitude(antiDirSpot - other.unitSpot()) };
-						if (dist < distMin)
-						{
-							ndxMin = ndx;
-							distMin = dist;
-						}
-					}
-				}
-			}
-
-			if (ndxMin < others.size())
-			{
-				// for small distancs, dist is approximately the angle diff
-				double const & angDiff = distMin;
-			//	constexpr double sigma{ 1./8. }; // about +/-7 degrees
-			//	constexpr double sigma{ 1./4. }; // about +/-15 degrees
-				constexpr double sigma{ 1./2. }; // about +/-30 degrees
-				double const arg{ angDiff / sigma };
-				double const wgt{ std::exp(-arg*arg) };
-				nwMin = NdxWgt{ ndxMin, wgt };
-			}
-
-			return nwMin;
-		}
-
-		//! Descriptive information about this instance.
-		inline
-		std::string
-		infoString
-			( std::string const & title = {}
-			) const
-		{
-			std::ostringstream oss;
-			if (! title.empty())
-			{
-				oss << title << ' ';
-			}
-			oss
-				<< "angle: " << engabra::g3::io::fixed(theAngle)
-				<< ' '
-				<< "edgeTurn: " << engabra::g3::io::fixed(theEdgeTurn)
-				;
-
-			return oss.str();
-		}
-
-
-	}; // EdgeLine
 
 	//! Candidate center point
 	inline
@@ -1226,7 +1058,7 @@ for (AngleWgt const & peakAW : peakAWs)
 			std::sort
 				( radLines.begin(), radLines.end()
 				, [] (EdgeLine const & e1, EdgeLine const & e2)
-					{ return (e1.angle() < e2.angle()); }
+					{ return (e1.angleOfLine() < e2.angleOfLine()); }
 				);
 
 /*
@@ -1244,7 +1076,7 @@ std::cout << "=========\n";
 			for ( ; ndxCurr < numRad ; ++ndxCurr)
 			{
 				EdgeLine const & radCurr = radLines[ndxCurr];
-				if (0. < radCurr.turnDirection())
+				if (0. < radCurr.turnMoment())
 				{
 					break;
 				}
@@ -1266,13 +1098,17 @@ std::cout << "=========\n";
 				// (use positive outer product to handle phase wrap issues)
 				if (0. < outer(lineDirCurr, lineDirNext))
 				{
-					if (radNext.isTurningOppositeTo(radCurr))
+					if (radNext.isTurnDirOppositeTo(radCurr))
 					{
 						// find radLine most closely opposing Curr and Next
 						NdxWgt const nwCurr
-							{ radCurr.opposingNdxWgt(radLines, ndxCurr) };
+							{ radCurr.opposingNdxWgt
+								(radLines, ndxCurr, sEdgeLineAngleSigma)
+							};
 						NdxWgt const nwNext
-							{ radNext.opposingNdxWgt(radLines, ndxNext) };
+							{ radNext.opposingNdxWgt
+								(radLines, ndxNext, sEdgeLineAngleSigma)
+							};
 						if (nwCurr.isValid() && nwNext.isValid())
 						{
 							std::size_t const & npiCurr = nwCurr.item();
