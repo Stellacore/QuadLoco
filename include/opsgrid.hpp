@@ -160,6 +160,49 @@ namespace grid
 		return pixEdgels;
 	}
 
+	//! Functor for checking if a (row,col) location is inside padded boundary
+	struct Inside
+	{
+		std::size_t theBegRow{ 0u };
+		std::size_t theBegCol{ 0u };
+		std::size_t theEndRow{ 0u };
+		std::size_t theEndCol{ 0u };
+
+		//! Construct to test inside hwSize within 'pad' cell border all around
+		inline
+		explicit
+		Inside
+			( ras::SizeHW const & hwSize
+			, std::size_t const & pad
+			)
+		{
+			bool const highNuf{ (2u*pad) < hwSize.high() };
+			bool const wideNuf{ (2u*pad) < hwSize.wide() };
+			if (highNuf && wideNuf)
+			{
+				theBegRow = pad;
+				theBegCol = pad;
+				theEndRow = hwSize.high() - pad;
+				theEndCol = hwSize.wide() - pad;
+			}
+		}
+
+		//! True if row,col is inside hwSize accounting for border pad border
+		inline
+		bool
+		operator()
+			( std::size_t const & row
+			, std::size_t const & col
+			) const
+		{
+			return
+				(  (theBegRow < row) && (row < theEndRow)
+				&& (theBegCol < col) && (col < theEndCol)
+				);
+		}
+
+	};
+
 	//! Collection edgels that have corroborating neighbors
 	inline
 	std::vector<img::Edgel>
@@ -176,6 +219,10 @@ namespace grid
 		{
 			pixEdgels.reserve(numElem);
 
+			// testing
+			Inside const inFull(gradGrid.hwSize(), 2u);
+			Inside const inEdge(gradGrid.hwSize(), 1u);
+
 			std::size_t const rowLast{ gradGrid.high() - 1u };
 			std::size_t const colLast{ gradGrid.wide() - 1u };
 
@@ -185,6 +232,16 @@ namespace grid
 			{
 				for (std::size_t col{1u} ; col < colLast ; ++col)
 				{
+					// adjust tolerance at edge boundary
+					double minProjDist{ supportMultiplier };
+					if (! inFull(row, col))
+					{
+						if (inEdge(row, col))
+						{
+							minProjDist *= .5;
+						}
+					}
+
 					// gradient at center
 					img::Grad const & gradCenter = gradGrid(row, col);
 					if (gradCenter.isValid())
@@ -207,12 +264,13 @@ namespace grid
 								};
 							if (gradHoodSum.isValid())
 							{
-								img::Grad const gradSum{ gradHoodSum + gradCenter };
+								img::Grad const gradSum
+									{ gradHoodSum + gradCenter };
 								img::Grad const gDir{ gradCenter };
 								double const projDist
 									{ (1./gMag) * dot(gradSum, gDir) };
 
-								if (supportMultiplier < projDist)
+								if (minProjDist < projDist)
 								{
 									// assured to be valid at this point since
 									// only processing non-trivial gradients
