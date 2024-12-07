@@ -53,74 +53,9 @@ namespace quadloco
 namespace sig
 {
 
-	//! Indices and weights for grouping EdgeInfo in association with an angle.
-	struct EdgeGroupNdxWgts
-	{
-		//! Index/Weights making a group in (external) EdgeInfo collection
-		std::vector<NdxWgt> theNdxWgts;
+	//! Grouping of index/weights (into assumed external EdgeInfo collection)
+	using GroupNWs = std::vector<NdxWgt>;
 
-		//! Average EdgeInfo.consideredWeight() for all edgels in this group.
-		inline
-		double
-		consideredWeight
-			( std::vector<sig::EdgeInfo> const & edgeInfos
-			) const
-		{
-			double aveWgt{ 0. };
-			double sumWgt{ 0. };
-			double count{ 0. };
-			for (NdxWgt const & ndxWgt : theNdxWgts)
-			{
-				std::size_t const & ndx = ndxWgt.item();
-				EdgeInfo const & edgeInfo = edgeInfos[ndx];
-				double const wgtRadial{ edgeInfo.consideredWeight() };
-				sumWgt += wgtRadial;
-				count += 1.;
-			}
-			if (0. < count)
-			{
-				aveWgt = (1./count) * sumWgt;
-			}
-			return aveWgt;
-		}
-
-		//! Ray best fitting (gradient-weighted average) edge direction
-		inline
-		RayWgt
-		fitRayWeight
-			( std::vector<sig::EdgeInfo> const & edgeInfos
-			) const
-		{
-			img::Ray ray{}; // null instance
-			double wgt{ std::numeric_limits<double>::quiet_NaN() };
-			img::Vector<double> sumLoc{ 0., 0. };
-			img::Vector<double> sumDir{ 0., 0. };
-			double sumWgt{ 0. };
-			for (NdxWgt const & ndxWgt : theNdxWgts)
-			{
-				std::size_t const & ndx = ndxWgt.item();
-				EdgeInfo const & edgeInfo = edgeInfos[ndx];
-				img::Edgel const & edgel = edgeInfos[ndx].edgel();
-				double const wgtRadial{ edgeInfo.consideredWeight() };
-				double const & wgtGradMag = edgel.magnitude(); // gradient mag
-				// double const wgtTotal{ wgtRadial * wgtGradMag };
-				// NOTE: wgt on gradient is (wgtGradMag*direction==gradient()
-				sumDir = sumDir + wgtRadial *              edgel.gradient();
-				sumLoc = sumLoc + wgtRadial * wgtGradMag * edgel.location();
-				sumWgt += wgtRadial * wgtGradMag;
-			}
-			if (0. < sumWgt)
-			{
-				img::Vector<double> const rayLoc{ (1./sumWgt) * sumLoc };
-				img::Vector<double> const rayDir{ direction(sumDir) };
-				ray = img::Ray{ rayLoc, rayDir };
-				wgt = sumWgt;
-			}
-			RayWgt const rayWgt{ ray, wgt };
-			return rayWgt;
-		}
-
-	}; // EdgeGroupNdxWgts
 
 	//! \brief Estimate the association between EdgeInfo items and angle values.
 	class EdgeGrouper
@@ -217,12 +152,11 @@ namespace sig
 
 		//! Index/Weights from table classified by peakAngle (from ctor info)
 		inline
-// TODO - return something more basic?
-		std::vector<EdgeGroupNdxWgts>
-		edgeGroups
+		std::vector<GroupNWs>
+		groupNdxWeights
 			() const
 		{
-			std::vector<EdgeGroupNdxWgts> eGroups;
+			std::vector<GroupNWs> eGroups;
 			std::size_t const numGroups{ theNdxAngWeights.wide() };
 			std::size_t const numElem{ theNdxAngWeights.high() };
 			eGroups.reserve(numGroups);
@@ -239,9 +173,47 @@ namespace sig
 						ndxWgts.emplace_back(ndxWgt);
 					}
 				}
-				eGroups.emplace_back(EdgeGroupNdxWgts{ ndxWgts });
+				eGroups.emplace_back(GroupNWs{ ndxWgts });
 			}
 			return eGroups;
+		}
+
+		//! Ray best fitting (gradient-weighted average) edge direction
+		inline
+		static
+		RayWgt
+		fitRayWeightFor
+			( std::vector<NdxWgt> const & theNdxWgts
+			, std::vector<sig::EdgeInfo> const & edgeInfos
+			)
+		{
+			img::Ray ray{}; // null instance
+			double wgt{ std::numeric_limits<double>::quiet_NaN() };
+			img::Vector<double> sumLoc{ 0., 0. };
+			img::Vector<double> sumDir{ 0., 0. };
+			double sumWgt{ 0. };
+			for (NdxWgt const & ndxWgt : theNdxWgts)
+			{
+				std::size_t const & ndx = ndxWgt.item();
+				EdgeInfo const & edgeInfo = edgeInfos[ndx];
+				img::Edgel const & edgel = edgeInfos[ndx].edgel();
+				double const wgtRadial{ edgeInfo.consideredWeight() };
+				double const & wgtGradMag = edgel.magnitude(); // gradient mag
+				// double const wgtTotal{ wgtRadial * wgtGradMag };
+				// NOTE: wgt on gradient is (wgtGradMag*direction==gradient()
+				sumDir = sumDir + wgtRadial *              edgel.gradient();
+				sumLoc = sumLoc + wgtRadial * wgtGradMag * edgel.location();
+				sumWgt += wgtRadial * wgtGradMag;
+			}
+			if (0. < sumWgt)
+			{
+				img::Vector<double> const rayLoc{ (1./sumWgt) * sumLoc };
+				img::Vector<double> const rayDir{ direction(sumDir) };
+				ray = img::Ray{ rayLoc, rayDir };
+				wgt = sumWgt;
+			}
+			RayWgt const rayWgt{ ray, wgt };
+			return rayWgt;
 		}
 
 		//! Edge ray (aligned with gradients) candidates for radial edges
@@ -253,12 +225,13 @@ namespace sig
 		{
 			std::vector<RayWgt> rayWgts;
 
-			std::vector<EdgeGroupNdxWgts> const groups{ edgeGroups() };
+			std::vector<GroupNWs> const groupNWs{ groupNdxWeights() };
 
-			rayWgts.reserve(groups.size());
-			for (EdgeGroupNdxWgts const & group : groups)
+			rayWgts.reserve(groupNWs.size());
+			for (GroupNWs const & groupNW : groupNWs)
 			{
-				RayWgt const rayWgt{ group.fitRayWeight(edgeInfos) };
+				RayWgt const rayWgt
+					{ fitRayWeightFor(groupNW, edgeInfos) };
 				if (rayWgt.isValid())
 				{
 					rayWgts.emplace_back(rayWgt);
@@ -272,7 +245,6 @@ namespace sig
 				);
 			return rayWgts;
 		}
-
 
 		//! Description including contents of theNdxAngWeight table
 		inline
@@ -297,7 +269,6 @@ namespace sig
 		}
 
 	}; // EdgeGrouper
-
 
 
 } // [sig]
