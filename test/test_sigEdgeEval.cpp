@@ -147,11 +147,17 @@ namespace
 (void)io::writeStretchPGM("pixGrid.pgm", pixGrid);
 
 // EdgeInfo-mag
-ras::Grid<float> const edgeInfoGrid
+ras::Grid<float> const edgeInfoWeightGrid
 	{ sig::util::edgeInfoWeightGrid
 		(gradGrid.hwSize(), edgeEval.edgeInfos())
 	};
-(void)io::writeStretchPGM("edgeInfoMag.pgm", edgeInfoGrid);
+(void)io::writeStretchPGM("edgeInfoWgt.pgm", edgeInfoWeightGrid);
+ras::Grid<float> const edgeInfoAngleGrid
+	{ sig::util::edgeInfoWeightGrid
+		(gradGrid.hwSize(), edgeEval.edgeInfos())
+	};
+(void)io::writeStretchPGM("edgeInfoAng.pgm", edgeInfoAngleGrid);
+
 
 // Edge ray data
 std::ofstream ofsRay("ray.dat");
@@ -179,7 +185,10 @@ std::cout << groupTab.infoStringContents("groupTab", "%5.3f") << '\n';
 std::cout << infoStringFor(sigQuadWgts, "t.sigQuadWgt") << '\n';
 */
 std::ofstream ofsEdgeInfo("edgeInfoMag.dat");
-ofsEdgeInfo << edgeInfoGrid.infoStringContents("# edgeInfoGrid", "%15.12f") << '\n';
+ofsEdgeInfo << edgeInfoWeightGrid.infoStringContents
+	("# edgeInfoWeightGrid", "%15.12f") << '\n';
+ofsEdgeInfo << edgeInfoAngleGrid.infoStringContents
+	("# edgeInfoAngleGrid", "%15.12f") << '\n';
 
 		double const tolCenter{ .5 };
 		img::Spot const difCenterSpot{ gotCenterSpot - expCenterSpot };

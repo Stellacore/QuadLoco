@@ -37,6 +37,7 @@
 #include "sigEdgeInfo.hpp"
 
 #include <algorithm>
+#include <functional>
 #include <vector>
 
 
@@ -52,12 +53,13 @@ namespace sig
 namespace util
 {
 
-	//! \brief Grid of values with cells set to edgeInfo.consideredWeight()
+	//! \brief Grid of values with cells set to func(edgeInfo).
 	inline
 	ras::Grid<float>
-	edgeInfoWeightGrid
+	edgeInfoGrid
 		( ras::SizeHW const & hwSize
 		, std::vector<sig::EdgeInfo> const & edgeInfos
+		, std::function<float(sig::EdgeInfo const & ei)> const & func
 		)
 	{
 		ras::Grid<float> eiGrid(hwSize);
@@ -66,9 +68,42 @@ namespace util
 		{
 			ras::RowCol const rowcol
 				{ cast::rasRowCol(edgeInfo.edgel().start()) };
-			eiGrid(rowcol) = (float)edgeInfo.consideredWeight();
+			eiGrid(rowcol) = func(edgeInfo);
 		}
 		return eiGrid;
+	}
+
+
+	//! \brief Grid of values with cells set to edgeInfo.consideredWeight()
+	inline
+	ras::Grid<float>
+	edgeInfoWeightGrid
+		( ras::SizeHW const & hwSize
+		, std::vector<sig::EdgeInfo> const & edgeInfos
+		)
+	{
+		return edgeInfoGrid
+			( hwSize
+			, edgeInfos
+			, [] (sig::EdgeInfo const & ei)
+				{ return (float)ei.consideredWeight(); }
+			);
+	}
+
+	//! \brief Grid of values with cells set to edgeInfo.consideredAngle()
+	inline
+	ras::Grid<float>
+	edgeInfoAngleGrid
+		( ras::SizeHW const & hwSize
+		, std::vector<sig::EdgeInfo> const & edgeInfos
+		)
+	{
+		return edgeInfoGrid
+			( hwSize
+			, edgeInfos
+			, [] (sig::EdgeInfo const & ei)
+				{ return (float)ei.consideredAngle(); }
+			);
 	}
 
 
