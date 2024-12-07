@@ -54,7 +54,7 @@ namespace quadloco
 namespace sig
 {
 	//! Attenuation power on dot product
-	constexpr double sCosPower{ 10. };
+	constexpr double sAlignSigmaEdgeAngle{ .45 }; // about +/-25 deg
 	//! Multiply threshold for neighborhood gradient agreement
 	constexpr double sLinkEdgeDist{ 2.50 };
 	//! Use to estimate expected maximum number of strong edgels
@@ -75,7 +75,6 @@ namespace sig
 
 	//! Candidate center point
 	inline
-	static
 	SpotWgt
 	intersectionOf
 		( RayWgt const & rw1
@@ -87,7 +86,6 @@ namespace sig
 		fitter.addRay(rw2.item(), rw2.weight());
 		return fitter.solutionSpotWeight();
 	}
-
 
 
 	//! \brief Table of probabilities for spot(row) and ray(col) combinations.
@@ -254,8 +252,8 @@ namespace sig
 						// combinatorially consider other edges and
 						// update each with consideration of the other
 						sig::EdgeInfo & edgeInfo2 = edgeInfos[ndx2];
-						edgeInfo1.consider(edgeInfo2.edgel());
-						edgeInfo2.consider(edgeInfo1.edgel());
+						edgeInfo1.considerOther(edgeInfo2.edgel());
+						edgeInfo2.considerOther(edgeInfo1.edgel());
 					}
 				}
 			}
@@ -733,13 +731,13 @@ std::cout
 		{
 
 			// Define candidate edgerays and associated weights
-			EdgeGrouper const edgeGrouper
-				(theEdgeInfos, sNumAngleBins, sCosPower);
 			std::vector<RayWgt> const rayWgts
-				{ edgeGrouper.groupRayWeights(theEdgeInfos) };
+				{ EdgeGrouper::mainEdgeRayWeightsFor
+					(theEdgeInfos, sNumAngleBins, sAlignSigmaEdgeAngle)
+				};
 
 
-constexpr bool showInfo{ true };
+constexpr bool showInfo{ false };
 if (showInfo)
 {
 std::cout << "\n\n=============###############\n";

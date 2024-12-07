@@ -30,6 +30,9 @@
 
 #include "sigEdgeGrouper.hpp"
 
+#include "imgEdgel.hpp"
+
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 
@@ -46,6 +49,7 @@ namespace
 
 		using namespace quadloco;
 
+		/*
 		sig::EdgeGrouper const aNull{};
 		bool const expIsValid{ false };
 		bool const gotIsValid{ isValid(aNull) };
@@ -57,7 +61,43 @@ namespace
 			oss << "Failure of gotIsValid aNull test\n";
 			oss << "aNull: " << aNull << '\n';
 		}
+		*/
 	}
+
+	//! Fuctor to test if two edgels represent approximiately same edge
+	struct NearlySameEdgel
+	{
+		double const theTol{ -1. };
+
+		//! True directions are about the same and locations on same line
+		inline
+		bool
+		operator()
+			( quadloco::img::Ray const & ray1
+			, quadloco::img::Ray const & ray2
+			) const
+		{
+			using namespace quadloco::img;
+			bool same{ false };
+			Vector<double> const & dir1 = ray1.direction();
+			Vector<double> const & dir2 = ray2.direction();
+			double const dotPro{ dot(dir1, dir2) };
+			if (0. < dotPro)
+			{
+				double const align{ outer(dir1, dir2) };
+				if (std::abs(align) < theTol)
+				{
+					double const proj12{ ray1.distanceAlong(ray2.start()) };
+					double const proj21{ ray2.distanceAlong(ray1.start()) };
+					double const colinErr
+						{ .5 * (std::abs(proj12) + std::abs(proj21)) };
+					same = (colinErr < theTol);
+				}
+			}
+			return same;
+		}
+
+	}; // NearlySameEdgel
 
 	//! Examples for documentation
 	void
@@ -69,29 +109,93 @@ namespace
 
 		using namespace quadloco;
 
+		// A collection of edgels consistent with an (ideal) quad target
+		using namespace quadloco::img;
+		std::vector<Edgel> const edgels
+			// (Note location units expected to have magnitude of pixels)
+			{	// Radial edgels
+			  Edgel{ Spot{  5.,  0. }, Grad{  0.,  1. } }  // 0
+			, Edgel{ Spot{  0.,  5. }, Grad{ -1.,  0. } }  // 1
+			, Edgel{ Spot{ -5.,  0. }, Grad{  0., -1. } }  // 2
+			, Edgel{ Spot{  0., -5. }, Grad{  1.,  0. } }  // 3
+				// Triangle corner edgels
+			, Edgel{ Spot{  5.,  5. }, Grad{  1.,  1. } }  // 4
+			, Edgel{ Spot{ -5., -5. }, Grad{ -1., -1. } }  // 5
+				// Target limit edgels
+			, Edgel{ Spot{  8.,  0. }, Grad{ -1.,  0. } }  // 6
+			, Edgel{ Spot{  0.,  8. }, Grad{  0., -1. } }  // 7
+			, Edgel{ Spot{ -8.,  0. }, Grad{  1.,  0. } }  // 8
+			, Edgel{ Spot{  0., -8. }, Grad{  0.,  1. } }  // 9
+			};
+
+		// Simulate processing that detects these edgels
+		std::vector<sig::EdgeInfo> edgeInfos;
+		edgeInfos.reserve(edgels.size());
+		for (Edgel const & edgel : edgels)
+		{
+			edgeInfos.emplace_back(sig::EdgeInfo(edgel));
+		}
+		// have each EdgeInfo consider all other edgels
+		for (sig::EdgeInfo & edgeInfo : edgeInfos)
+		{
+			for (Edgel const & edgel : edgels)
+			{
+				// consideration of self should have no effect (zero weight)
+				edgeInfo.considerOther(edgel);
+			}
+		}
+
+		// Mean edge rays that are most consistent with quad target
+		constexpr std::size_t numAngBins{ 32u };
+		constexpr double alignSigma{ .45 };
+		std::vector<sig::RayWgt> mainEdgeRayWgts
+			{ sig::EdgeGrouper::mainEdgeRayWeightsFor
+				(edgeInfos, numAngBins, alignSigma)
+			};
+
 		// [DoxyExample01]
 
-/*
-		constexpr std::size_t numAngBins{ 32u };
-		std::vector<sig::AngleWgt> const peakAWs
-			{ edgeEval.peakAngleWeights(numAngBins) };
 
-		// should be four or more radial directions for simulated quad image
-		if (! (3u < peakAWs.size()))
+		// The first four test case edgels should all be found
+		std::vector<img::Ray> const expEdges
+			{ edgels.begin(), edgels.begin()+4u };
+
+		// check if each one is found
+		std::vector<bool> wasFounds(expEdges.size(), false);
+		NearlySameEdgel sameEdgel{ .001 };
+		for (std::size_t nExp{0u} ; nExp < expEdges.size(); ++nExp)
 		{
-			oss << "Failure of sufficient angle peak detection test\n";
-			oss << "exp: (3u < peakAWs.size())\n";
-			oss << "got: " << peakAWs.size() << '\n';
+			img::Ray const & expEdge = expEdges[nExp];
+			for (sig::RayWgt const & mainEdgeRayWgt : mainEdgeRayWgts)
+			{
+				img::Ray const & gotEdge = mainEdgeRayWgt.item();
+				if (sameEdgel(expEdge, gotEdge))
+				{
+					wasFounds[nExp] = true;
+					break;
+				}
+			}
 		}
-*/
-
-
-		// TODO replace this with real test code
-		std::string const fname(__FILE__);
-		bool const isTemplate{ (std::string::npos != fname.find("/_.cpp")) };
-		if (! isTemplate)
+		bool hitErr{ false };
+		for (std::size_t nExp{0u} ; nExp < expEdges.size(); ++nExp)
 		{
-			oss << "Failure to implement real test\n";
+			img::Ray const & expEdge = expEdges[nExp];
+			img::Ray const & gotEdge = mainEdgeRayWgts[nExp].item();
+			if (! wasFounds[nExp])
+			{
+				hitErr = true;
+				oss << "Failure of find expected edge test\n";
+				oss << "expEdge: " << expEdge << '\n';
+			}
+		}
+		if (hitErr)
+		{
+			oss << "gotEdges\n";
+			for (sig::RayWgt const & mainEdgeRayWgt : mainEdgeRayWgts)
+			{
+				img::Ray const & gotEdge = mainEdgeRayWgt.item();
+				oss << "gotEdge: " << gotEdge << '\n';
+			}
 		}
 	}
 
@@ -105,7 +209,7 @@ main
 	int status{ 1 };
 	std::stringstream oss;
 
-//	test0(oss);
+	test0(oss);
 	test1(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered

@@ -66,12 +66,14 @@ namespace
 				, QuadTarget::WithSurround | QuadTarget::WithTriangle
 				)
 			, obj::Camera
-				{ ras::SizeHW{ 128u, 128u }
-				, 128. // pd
+//				{ ras::SizeHW{ 128u, 128u }
+//				, 128. // pd
 //{ ras::SizeHW{ 16u, 16u }
 //				,  16. // pd
-//{ ras::SizeHW{   11u,   11u }
-//				,   11. // pd
+{ ras::SizeHW{   14u,   14u }
+				,   14. // pd
+//{ ras::SizeHW{    7u,    7u }
+//				,    7. // pd
 				}
 			, rigibra::Transform
 				{ engabra::g3::Vector{ 0., 0., 1.+1./16. }
@@ -88,7 +90,7 @@ namespace
 			, Sampler::AddSceneBias | Sampler::AddImageNoise
 		//	, Sampler::AddImageNoise
 			);
-		std::size_t const numOverSample{ 128u };
+		std::size_t const numOverSample{ 1024u };
 		if (ptSigQuad)
 		{
 			*ptSigQuad = render.sigQuadTarget();
@@ -153,7 +155,7 @@ ras::Grid<float> const edgeInfoWeightGrid
 	};
 (void)io::writeStretchPGM("edgeInfoWgt.pgm", edgeInfoWeightGrid);
 ras::Grid<float> const edgeInfoAngleGrid
-	{ sig::util::edgeInfoWeightGrid
+	{ sig::util::edgeInfoAngleGrid
 		(gradGrid.hwSize(), edgeEval.edgeInfos())
 	};
 (void)io::writeStretchPGM("edgeInfoAng.pgm", edgeInfoAngleGrid);
@@ -204,12 +206,13 @@ ofsEdgeInfo << edgeInfoAngleGrid.infoStringContents
 		}
 		else
 		{
-			std::cout << "\n\n SUCCESS center test\n";
-			std::cout << "exp: " << expCenterSpot << '\n';
-			std::cout << "got: " << gotCenterSpot << '\n';
-		//	std::cout << "dif: " << difCenterSpot << '\n';
-			std::cout << "err: " << difMag << '\n';
-		//	std::cout << "tol: " << tolCenter << '\n';
+			constexpr char pad[] = "   ";
+			std::cout << "\n\nSuccessful center test\n";
+			std::cout << pad << "exp: " << expCenterSpot << '\n';
+			std::cout << pad << "got: " << gotCenterSpot << '\n';
+		//	std::cout << pad << "dif: " << difCenterSpot << '\n';
+			std::cout << pad << "err: " << difMag << '\n';
+		//	std::cout << pad << "tol: " << tolCenter << '\n';
 			std::cout << "\n";
 		}
 	}

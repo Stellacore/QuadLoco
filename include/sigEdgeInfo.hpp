@@ -51,7 +51,7 @@ namespace sig
 		//! The edgel for which realtionships are being tracked
 		img::Edgel const theEdgel{};
 
-		// Tracking information (from consider() function)
+		// Tracking information (from considerOther() function)
 
 		//! Sum of weights suggesting part of a radial edge
 		double theWgtRadialSum{ engabra::g3::null<double>() };
@@ -196,20 +196,20 @@ namespace sig
 		// Accumulation/tracking functions
 		//
 
-		/*! \brief Use someEdgel to update tracking information
+		/*! \brief Use otherEdgel to update tracking information
 		 *
-		 * Assess how much support someEdgel provides to this instance
+		 * Assess how much support otherEdgel provides to this instance
 		 * in context of this edgel being part of a quad target
-		 * - is someEdgel dir almost oppositely directed (opposite radii)
-		 * - is someEdgel position nearly collinear (same/opposite radii)
+		 * - is otherEdgel dir almost oppositely directed (opposite radii)
+		 * - is otherEdgel position nearly collinear (same/opposite radii)
 		 */
 		// This is probably not a good idea (linked edgels should handle)
-		// - is someEdgel dir similarly directed (on same radial line?)
+		// - is otherEdgel dir similarly directed (on same radial line?)
 		inline
 		void
-		consider
-			( img::Edgel const & someEdgel
-				//!< Adapt this edgel's tracking info based on someEdgel
+		considerOther
+			( img::Edgel const & otherEdgel
+				//!< Adapt this edgel's tracking info based on otherEdgel
 			, double const & lineGapSigma = 2.
 				//!< Std deviation expected in collinearity of opposite radii
 			, double const & antiAlignPower = 30.
@@ -219,9 +219,9 @@ namespace sig
 			// opposed direction
 
 			// Negative dot product to determine the degree to which
-			// the this and someEdgel are facing opposite directions
+			// the this and otherEdgel are facing opposite directions
 			double const dotFacing
-				{ -dot(theEdgel.direction(), someEdgel.direction()) };
+				{ -dot(theEdgel.direction(), otherEdgel.direction()) };
 
 			// skip evaluation of not well anti-aligned edgels
 			// (also: code below only valid for positive dotFacing values)
@@ -230,7 +230,7 @@ namespace sig
 			{
 				// Relative gap between lines defined by both edgels
 				double const lineGapDist
-					{ averageLineGapDist(theEdgel, someEdgel) };
+					{ averageLineGapDist(theEdgel, otherEdgel) };
 
 				// don't waste time computing on large gaps
 				double const lineGapMax{ 4. * lineGapSigma };
@@ -243,19 +243,19 @@ namespace sig
 					double const wgtFacing
 						{ std::pow(dotFacing, antiAlignPower) };
 
-					// Pseudo-probability that this and someEdgel are near same
+					// Pseudo-probability that this and otherEdgel are near same
 					// line in space within normal PDF having lineGapSigma
 					double const wgtLineGap
 						{ weightCollinear(lineGapDist, lineGapSigma) };
 
-					// Pseudo probability that this and someEdge are on opposite
+					// Pseudo prob that this and otherEdge are on opposite
 					// radial edges (e.g. of a perspective quad target image)
 					double const wgtRadial
 						{ wgtFacing * wgtLineGap };
 
 					// (unitary) "average" direction of this edgel and other
 					img::Vector<double> const pairDir
-						{ directionAdjustedTo(someEdgel) };
+						{ directionAdjustedTo(otherEdgel) };
 
 					// update tracking information
 					theWgtRadialSum += wgtRadial;

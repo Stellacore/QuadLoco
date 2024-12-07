@@ -359,8 +359,8 @@ main
 			{
 				sig::EdgeInfo & edgeInfo2 = edgeInfos[ndx2];
 
-				edgeInfo1.consider(edgeInfo2.edgel());
-				edgeInfo2.consider(edgeInfo1.edgel());
+				edgeInfo1.considerOther(edgeInfo2.edgel());
+				edgeInfo2.considerOther(edgeInfo1.edgel());
 			}
 		}
 
