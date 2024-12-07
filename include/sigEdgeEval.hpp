@@ -91,7 +91,7 @@ namespace sig
 
 
 	//! \brief Table of probabilities for spot(row) and ray(col) combinations.
-	class SpotRayProbs
+	class ProbTabSpotRay
 	{
 		//! (Pseudo)Probability of agreeemt between spots(row) and rays(col).
 		ras::Grid<double> theProbTab;
@@ -145,7 +145,7 @@ namespace sig
 		//! Allocate and zero probability table.
 		inline
 		explicit
-		SpotRayProbs
+		ProbTabSpotRay
 			( std::vector<SpotWgt> const & spotWgts
 			, std::vector<RayWgt> const & rayWgts
 			)
@@ -176,7 +176,7 @@ namespace sig
 			return rws;
 		}
 
-	}; // SpotRayProbs
+	}; // ProbTabSpotRay
 
 
 	//! \brief Evaluator of edgels that are likely part of quad target image
@@ -323,7 +323,7 @@ namespace sig
 		//! Spots (and weights) associated with pairwise edgeray intersections
 		inline
 		std::vector<SpotWgt>
-		spotWeightsPairwise
+		spotWeightsPairMeet
 			( std::vector<RayWgt> const & rayWgts
 			, ras::SizeHW const & hwSize
 			) const
@@ -382,7 +382,7 @@ namespace sig
 			std::vector<SpotWgt> spotWgts;
 			spotWgts.reserve(inSpotWgts.size());
 
-			SpotRayProbs const spotRayProbs(inSpotWgts, rayWgts);
+			ProbTabSpotRay const spotRayProbs(inSpotWgts, rayWgts);
 
 			std::size_t const numSW{ inSpotWgts.size() };
 
@@ -679,7 +679,7 @@ std::cout
 			allQWs.reserve(spotWgts.size());
 
 			// Collinearity probabilities for rays
-			SpotRayProbs const spotRayProbs(spotWgts, rayWgts);
+			ProbTabSpotRay const spotRayProbs(spotWgts, rayWgts);
 			std::size_t const numSW{ spotWgts.size() };
 
 
@@ -748,7 +748,7 @@ std::cout << infoStringFor(rayWgts, "rayWgt") << '\n';
 
 			// Compute pairwise intersection of rays
 			std::vector<SpotWgt> const pairSpotWgts
-				{ spotWeightsPairwise(rayWgts, hwSize) };
+				{ spotWeightsPairMeet(rayWgts, hwSize) };
 
 if (showInfo)
 {
