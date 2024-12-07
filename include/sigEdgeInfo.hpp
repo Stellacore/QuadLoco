@@ -333,7 +333,6 @@ std::cout
 	}; // EdgeInfo
 
 
-
 } // [sig]
 
 } // [quadloco]

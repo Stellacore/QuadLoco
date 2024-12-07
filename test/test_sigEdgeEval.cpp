@@ -34,6 +34,7 @@
 #include "objQuadTarget.hpp"
 #include "opsgrid.hpp"
 #include "sigEdgeEval.hpp"
+#include "sigutil.hpp"
 #include "simConfig.hpp"
 #include "simRender.hpp"
 
@@ -147,7 +148,9 @@ namespace
 
 // EdgeInfo-mag
 ras::Grid<float> const edgeInfoGrid
-	{ edgeEval.edgeInfoGrid(gradGrid.hwSize()) };
+	{ sig::util::edgeInfoWeightGrid
+		(gradGrid.hwSize(), edgeEval.edgeInfos())
+	};
 (void)io::writeStretchPGM("edgeInfoMag.pgm", edgeInfoGrid);
 
 // Edge ray data

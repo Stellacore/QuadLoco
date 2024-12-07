@@ -176,7 +176,7 @@ namespace sig
 			return rws;
 		}
 
-	};
+	}; // SpotRayProbs
 
 
 	//! \brief Evaluator of edgels that are likely part of quad target image
@@ -267,7 +267,7 @@ namespace sig
 
 	public:
 
-		// Process gradients into non-isolated edges
+		//! \brief Process gradients into non-isolated edges.
 		inline
 		explicit
 		EdgeEval
@@ -278,39 +278,6 @@ namespace sig
 					(dominantEdgelsFrom(gradGrid))
 				}
 		{ }
-
-		// TODO - should go someplace else - EdgeInfo functions maybe?
-		//! Significant edgeInfo organized into a grid
-		inline
-		ras::Grid<float>
-		edgeInfoGrid
-			( ras::SizeHW const & hwSize
-			) const
-		{
-			ras::Grid<float> eiGrid(hwSize);
-			std::fill(eiGrid.begin(), eiGrid.end(), 0.f);
-			for (sig::EdgeInfo const & edgeInfo : theEdgeInfos)
-			{
-				ras::RowCol const rowcol
-					{ cast::rasRowCol(edgeInfo.edgel().start()) };
-				eiGrid(rowcol) = (float)edgeInfo.consideredWeight();
-			}
-			return eiGrid;
-		}
-
-		//! Collection of edge elements being used for evaluation
-		inline
-		std::vector<img::Edgel>
-		edgelsInUse
-			() const
-		{
-			std::vector<img::Edgel> edgels;
-			for (sig::EdgeInfo const & edgeInfo : theEdgeInfos)
-			{
-				edgels.emplace_back(edgeInfo.edgel());
-			}
-			return edgels;
-		}
 
 		/*! \brief Pseudo-probability that edge ray spots are NOT colocated.
 		 *
@@ -832,6 +799,15 @@ std::cout << '\n';
 }
 
 			return fitQuadWgts;
+		}
+
+		//! The edge info data being used for evaluation
+		inline
+		std::vector<sig::EdgeInfo> const &
+		edgeInfos
+			() const
+		{
+			return theEdgeInfos;
 		}
 
 
