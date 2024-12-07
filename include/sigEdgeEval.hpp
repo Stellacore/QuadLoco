@@ -69,6 +69,9 @@ namespace sig
 	constexpr double sEdgeLineAngleSigma{ 1./2. }; // about +/-30 degrees
 
 
+	//! Clarification that ray is associated with raster edge gradient
+	using EdgeRay = img::Ray;
+
 
 	//! Candidate center point
 	inline
@@ -87,9 +90,9 @@ namespace sig
 
 
 	//! Indices and weights for grouping EdgeInfo in association with an angle.
-	struct EdgeGroup
+	struct EdgeGroupNdxWgts
 	{
-		//! Index/Weights for assumed (external) EdgeInfo collection
+		//! Index/Weights making a group in (external) EdgeInfo collection
 		std::vector<NdxWgt> theNdxWgts;
 
 		//! Average EdgeInfo.consideredWeight() for all edgels in this group.
@@ -153,7 +156,7 @@ namespace sig
 			return rayWgt;
 		}
 
-	}; // EdgeGroup
+	}; // EdgeGroupNdxWgts
 
 
 
@@ -340,11 +343,11 @@ namespace sig
 
 		//! Index/Weights from table classified by peakAngle (from ctor info)
 		inline
-		std::vector<EdgeGroup>
+		std::vector<EdgeGroupNdxWgts>
 		edgeGroups
 			() const
 		{
-			std::vector<EdgeGroup> eGroups;
+			std::vector<EdgeGroupNdxWgts> eGroups;
 			std::size_t const numGroups{ theNdxAngWeights.wide() };
 			std::size_t const numElem{ theNdxAngWeights.high() };
 			eGroups.reserve(numGroups);
@@ -361,7 +364,7 @@ namespace sig
 						ndxWgts.emplace_back(ndxWgt);
 					}
 				}
-				eGroups.emplace_back(EdgeGroup{ ndxWgts });
+				eGroups.emplace_back(EdgeGroupNdxWgts{ ndxWgts });
 			}
 			return eGroups;
 		}
@@ -599,12 +602,12 @@ for (AngleWgt const & peakAW : peakAWs)
 
 		//! Index/Weights from table classified by peakAngle (from ctor info)
 		inline
-		std::vector<EdgeGroup>
+		std::vector<EdgeGroupNdxWgts>
 		edgeGroups
 			() const
 		{
 			GroupTable const groupTab{ groupTable() };
-			std::vector<EdgeGroup> const groups{ groupTab.edgeGroups() };
+			std::vector<EdgeGroupNdxWgts> const groups{ groupTab.edgeGroups() };
 			return groups;
 		}
 
@@ -612,12 +615,12 @@ for (AngleWgt const & peakAW : peakAWs)
 		inline
 		std::vector<RayWgt>
 		groupRayWeights
-			( std::vector<EdgeGroup> const & groups
+			( std::vector<EdgeGroupNdxWgts> const & groups
 			) const
 		{
 			std::vector<RayWgt> rayWgts;
 			rayWgts.reserve(groups.size());
-			for (EdgeGroup const & group : groups)
+			for (EdgeGroupNdxWgts const & group : groups)
 			{
 				RayWgt const rayWgt{ group.fitRayWeight(theEdgeInfos) };
 				if (rayWgt.isValid())
@@ -634,14 +637,14 @@ for (AngleWgt const & peakAW : peakAWs)
 			return rayWgts;
 		}
 
-		/*! \brief Pseudo-probability that edge ray spots are NOT coincident.
+		/*! \brief Pseudo-probability that edge ray spots are NOT colocated.
 		 *
-		 * Spot locations should be seprated by a couple pixels
+		 * Spot locations should be separated by a couple pixels
 		 * due to the multi-pixel span of gradient computation. (In practice
 		 * resolution of the image will be a factor, but that's likely
 		 * less than or comparable to gradient computation span).
 		 *
-		 * Consider two grid cells seprated by one empty cell, the
+		 * Consider two grid cells separated by one empty cell, the
 		 * distance between them is 2 in a cardinal direction and 2.8
 		 * in diagonal one. Therefore, one might expect a separation
 		 * of less than this to be an artifact. E.g. less than 2-2.8
