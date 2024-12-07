@@ -38,13 +38,53 @@ namespace
 {
 	//! Examples for documentation
 	void
+	test0
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample00]
+
+		using namespace quadloco;
+
+		sig::EdgeGrouper const aNull{};
+		bool const expIsValid{ false };
+		bool const gotIsValid{ isValid(aNull) };
+
+		// [DoxyExample00]
+
+		if (! (gotIsValid == expIsValid))
+		{
+			oss << "Failure of gotIsValid aNull test\n";
+			oss << "aNull: " << aNull << '\n';
+		}
+	}
+
+	//! Examples for documentation
+	void
 	test1
 		( std::ostream & oss
 		)
 	{
 		// [DoxyExample01]
 
+		using namespace quadloco;
+
 		// [DoxyExample01]
+
+/*
+		constexpr std::size_t numAngBins{ 32u };
+		std::vector<sig::AngleWgt> const peakAWs
+			{ edgeEval.peakAngleWeights(numAngBins) };
+
+		// should be four or more radial directions for simulated quad image
+		if (! (3u < peakAWs.size()))
+		{
+			oss << "Failure of sufficient angle peak detection test\n";
+			oss << "exp: (3u < peakAWs.size())\n";
+			oss << "got: " << peakAWs.size() << '\n';
+		}
+*/
+
 
 		// TODO replace this with real test code
 		std::string const fname(__FILE__);

@@ -1,4 +1,3 @@
-//
 // MIT License
 //
 // Copyright (c) 2024 Stellacore Corporation
@@ -311,69 +310,6 @@ namespace sig
 				edgels.emplace_back(edgeInfo.edgel());
 			}
 			return edgels;
-		}
-
-		//! Determine most likely edgel angle directions (perp to radial edges)
-		inline
-		std::vector<AngleWgt>
-		peakAngleWeights
-			( std::size_t const & numAngBins = sNumAngleBins
-			) const
-		{
-			std::vector<AngleWgt> peakAWs;
-
-			// create angle value accumulation (circular-wrapping) buffer
-			ang::Likely angleProbs(numAngBins);
-			for (sig::EdgeInfo const & edgeInfo : theEdgeInfos)
-			{
-				double const fwdAngle{ edgeInfo.consideredAngle() };
-				double const weight{ edgeInfo.consideredWeight() };
-				angleProbs.add(fwdAngle, weight, 2u);
-
-				// also add opposite angle to create angle prob buffer
-				// peaks that are symmetrically balanced (to faciliate 
-				// edge group duo extraction below)
-				double const revAngle
-					{ ang::principalAngle(fwdAngle + ang::piOne()) };
-				angleProbs.add(revAngle, weight, 2u);
-			}
-
-			// get peaks from angular accumulation buffer
-			std::vector<double> const peakAngles{ angleProbs.anglesOfPeaks() };
-			for (double const & peakAngle : peakAngles)
-			{
-				double const peakValue
-					{ angleProbs.binSumAtAngle(peakAngle) };
-				AngleWgt const angleWgt
-					{ peakAngle
-					, peakValue
-					};
-				peakAWs.emplace_back(angleWgt);
-			}
-
-/*
-std::cout << angleProbs.infoString("angleProbs") << '\n';
-std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
-
-std::vector<std::size_t> const peakMaxNdxs{ angleProbs.indicesOfPeaks() };
-for (std::size_t const & peakMaxNdx : peakMaxNdxs)
-{
-	std::cout << "  peakMaxNdx: " << std::setw(4u) << peakMaxNdx << '\n';
-}
-std::cout << "--\n";
-
-std::cout << "--\n";
-
-for (AngleWgt const & peakAW : peakAWs)
-{
-	std::cout
-		<< "  peakAngle: " << engabra::g3::io::fixed(peakAW.item())
-		<< "  peakValue: " << engabra::g3::io::fixed(peakAW.weight())
-		<< '\n';
-}
-*/
-
-			return peakAWs;
 		}
 
 		/*! \brief Pseudo-probability that edge ray spots are NOT colocated.
@@ -830,9 +766,8 @@ std::cout
 		{
 
 			// Define candidate edgerays and associated weights
-			std::vector<AngleWgt> const peakAWs{ peakAngleWeights() };
-
-			EdgeGrouper const edgeGrouper(theEdgeInfos, peakAWs, sCosPower);
+			EdgeGrouper const edgeGrouper
+				(theEdgeInfos, sNumAngleBins, sCosPower);
 			std::vector<RayWgt> const rayWgts
 				{ edgeGrouper.groupRayWeights(theEdgeInfos) };
 

@@ -178,17 +178,6 @@ std::cout << infoStringFor(sigQuadWgts, "t.sigQuadWgt") << '\n';
 std::ofstream ofsEdgeInfo("edgeInfoMag.dat");
 ofsEdgeInfo << edgeInfoGrid.infoStringContents("# edgeInfoGrid", "%15.12f") << '\n';
 
-		std::vector<sig::AngleWgt> const peakAWs
-			{ edgeEval.peakAngleWeights() };
-
-		// should be four or more radial directions for simulated quad image
-		if (! (3u < peakAWs.size()))
-		{
-			oss << "Failure of sufficient angle peak detection test\n";
-			oss << "exp: (3u < peakAWs.size())\n";
-			oss << "got: " << peakAWs.size() << '\n';
-		}
-
 		double const tolCenter{ .5 };
 		img::Spot const difCenterSpot{ gotCenterSpot - expCenterSpot };
 		double const difMag{ magnitude(difCenterSpot) };

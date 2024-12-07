@@ -32,6 +32,8 @@
  */
 
 
+#include "ang.hpp"
+#include "angLikely.hpp"
 #include "imgEdgel.hpp"
 #include "imgRay.hpp"
 #include "imgVector.hpp"
@@ -53,6 +55,150 @@ namespace quadloco
 namespace sig
 {
 
+	//! Determine most likely edgel angle directions (perp to radial edges)
+	inline
+	std::vector<AngleWgt>
+	peakAngleWeights
+		( std::vector<sig::EdgeInfo> const & edgeInfos
+		, std::size_t const & numAngBins
+		)
+	{
+		std::vector<AngleWgt> peakAWs;
+
+		// create angle value accumulation (circular-wrapping) buffer
+		ang::Likely angleProbs(numAngBins);
+		for (sig::EdgeInfo const & edgeInfo : edgeInfos)
+		{
+			double const fwdAngle{ edgeInfo.consideredAngle() };
+			double const weight{ edgeInfo.consideredWeight() };
+			angleProbs.add(fwdAngle, weight, 2u);
+
+			// also add opposite angle to create angle prob buffer
+			// peaks that are symmetrically balanced (to faciliate 
+			// edge group duo extraction below)
+			double const revAngle
+				{ ang::principalAngle(fwdAngle + ang::piOne()) };
+			angleProbs.add(revAngle, weight, 2u);
+		}
+
+		// get peaks from angular accumulation buffer
+		std::vector<double> const peakAngles{ angleProbs.anglesOfPeaks() };
+		for (double const & peakAngle : peakAngles)
+		{
+			double const peakValue
+				{ angleProbs.binSumAtAngle(peakAngle) };
+			AngleWgt const angleWgt
+				{ peakAngle
+				, peakValue
+				};
+			peakAWs.emplace_back(angleWgt);
+		}
+
+/*
+std::cout << angleProbs.infoString("angleProbs") << '\n';
+std::cout << angleProbs.infoStringContents("angleProbs") << '\n';
+
+std::vector<std::size_t> const peakMaxNdxs{ angleProbs.indicesOfPeaks() };
+for (std::size_t const & peakMaxNdx : peakMaxNdxs)
+{
+std::cout << "  peakMaxNdx: " << std::setw(4u) << peakMaxNdx << '\n';
+}
+std::cout << "--\n";
+
+std::cout << "--\n";
+
+for (AngleWgt const & peakAW : peakAWs)
+{
+std::cout
+	<< "  peakAngle: " << engabra::g3::io::fixed(peakAW.item())
+	<< "  peakValue: " << engabra::g3::io::fixed(peakAW.weight())
+	<< '\n';
+}
+*/
+
+		return peakAWs;
+	}
+
+	//! Collection of unitary directions corresponding with angle values.
+	inline
+	std::vector<img::Vector<double> >
+	directionsFor
+		( std::vector<AngleWgt> const & peakAWs
+		)
+	{
+		std::vector<img::Vector<double> > dirs;
+		dirs.reserve(peakAWs.size());
+		for (AngleWgt const & peakAW : peakAWs)
+		{
+			double const & angle = peakAW.item();
+			dirs.emplace_back
+				(img::Vector<double>{ std::cos(angle), std::sin(angle)} );
+		}
+		return dirs;
+	}
+
+	/*! \brief Create pseudo-probabilities of edges belonging to angles
+	 *
+	 * The table rows correspond to indices in the edge info struture
+	 * and the table columns correspond with elements from the angles
+	 * collection.
+	 *
+	 * Table values are an accumulation of weighted gradients, where
+	 * the weight factor is computed based on proximity to angle
+	 * directions.
+	 *
+	 * The maximum weight in a row - suggests the angle to which the
+	 * row edgel is most closely algined (e.g. classification of
+	 * edgels into angle categories).
+	 *
+	 * The larger weights down a column suggest which edgels are likely
+	 * to associated with that particular angle (e.g. be on an edge
+	 * with that direction).
+	 */
+	inline
+	ras::Grid<double>
+	probGridEdgeAngle
+		( std::vector<sig::EdgeInfo> const & edgeInfos
+		, std::vector<AngleWgt> const & peakAWs
+		, double const & cosPower
+		)
+	{
+		ras::Grid<double> tab(edgeInfos.size(), peakAWs.size());
+		std::fill(tab.begin(), tab.end(), 0.);
+		//
+		// get directions for each peak in angle domain
+		using DirVec = img::Vector<double>;
+		std::vector<DirVec> const aDirs{ directionsFor(peakAWs) };
+		//
+		// for each edgeInfo, compute pseudo-prob relations to each peak
+		std::size_t const numEdges{ edgeInfos.size() };
+		std::size_t const numAngles{ peakAWs.size() };
+		//
+		// edge indices in rows
+		for (std::size_t eNdx{0u} ; eNdx < numEdges ; ++eNdx)
+		{
+			std::size_t const & row = eNdx;
+			img::Edgel const & edgel = edgeInfos[eNdx].edgel();
+			DirVec const eDir{ edgel.direction() };
+			//
+			// angle indices in columns
+			for (std::size_t aNdx{0u} ; aNdx < numAngles ; ++aNdx)
+			{
+				std::size_t const & col = aNdx;
+				DirVec const & aDir = aDirs[aNdx];
+				double const align{ dot(eDir, aDir) };
+				if (.75 < align)
+				{
+					double const dirWgt{ std::powf(align, cosPower) };
+					tab(row,col) += dirWgt * edgel.magnitude();
+				}
+			}
+		}
+		return tab;
+	}
+
+
+
 	//! Grouping of index/weights (into assumed external EdgeInfo collection)
 	using GroupNWs = std::vector<NdxWgt>;
 
@@ -61,94 +207,56 @@ namespace sig
 	class EdgeGrouper
 	{
 		std::vector<AngleWgt> const theAngWgts;
-		ras::Grid<double> const theNdxAngWeights;
-
-		//! Collection of unitary directions corresponding with angle values.
-		inline
-		static
-		std::vector<img::Vector<double> >
-		directionsFor
-			( std::vector<AngleWgt> const & peakAWs
-			)
-		{
-			std::vector<img::Vector<double> > dirs;
-			dirs.reserve(peakAWs.size());
-			for (AngleWgt const & peakAW : peakAWs)
-			{
-				double const & angle = peakAW.item();
-				dirs.emplace_back
-					(img::Vector<double>{ std::cos(angle), std::sin(angle)} );
-			}
-			return dirs;
-		}
-
-		/*! \brief Create pseudo-probabilities of edges belonging to angles
-		 *
-		 * The table rows correspond to indices in the edge info struture
-		 * and the table columns correspond with elements from the angles
-		 * collection.
-		 *
-		 * Table values are an accumulation of weighted gradients, where
-		 * the weight factor is computed based on proximity to angle
-		 * directions.
-		 *
-		 * The maximum weight in a row - suggests the angle to which the
-		 * row edgel is most closely algined (e.g. classification of
-		 * edgels into angle categories).
-		 *
-		 * The larger weights down a column suggest which edgels are likely
-		 * to associated with that particular angle (e.g. be on an edge
-		 * with that direction).
-		 */
-		inline
-		static
-		ras::Grid<double>
-		fillTable
-			( std::vector<sig::EdgeInfo> const & edgeInfos
-			, std::vector<AngleWgt> const & peakAWs
-			, double const & cosPower
-			)
-		{
-			ras::Grid<double> tab(edgeInfos.size(), peakAWs.size());
-			std::fill(tab.begin(), tab.end(), 0.);
-
-			std::vector<img::Vector<double> > const aDirs
-				{ directionsFor(peakAWs) };
-			std::size_t const numEdges{ edgeInfos.size() };
-			std::size_t const numAngles{ peakAWs.size() };
-			for (std::size_t eNdx{0u} ; eNdx < numEdges ; ++eNdx)
-			{
-				std::size_t const & row = eNdx;
-				img::Edgel const & edgel = edgeInfos[eNdx].edgel();
-				img::Vector<double> const eDir{ edgel.direction() };
-				for (std::size_t aNdx{0u} ; aNdx < numAngles ; ++aNdx)
-				{
-					std::size_t const & col = aNdx;
-					img::Vector<double> const & aDir = aDirs[aNdx];
-
-					double const align{ dot(eDir, aDir) };
-					if (.75 < align)
-					{
-						double const dirWgt{ std::powf(align, cosPower) };
-						tab(row,col) += dirWgt * edgel.magnitude();
-					}
-				}
-			}
-			return tab;
-		}
+		ras::Grid<double> const theEdgeAngProbs;
 
 	public:
 
-		//! Populate edge/angle weight table - ref: fillTable().
+		//! Construct a null instance
 		inline
+		explicit
+		EdgeGrouper
+			() = default;
+
+		//! Populate edge/angle weight table - ref: probGridEdgeAngle().
+		inline
+		explicit
 		EdgeGrouper
 			( std::vector<sig::EdgeInfo> const & edgeInfos
 			, std::vector<AngleWgt> const & peakAWs
 			, double const & cosPower
 			)
 			: theAngWgts{ peakAWs }
-			, theNdxAngWeights{ fillTable(edgeInfos, theAngWgts, cosPower) }
+			, theEdgeAngProbs
+				{ probGridEdgeAngle(edgeInfos, theAngWgts, cosPower) }
 		{ }
+
+		//! Edge ray (aligned with gradients) candidates for radial edges
+		inline
+		explicit
+		EdgeGrouper
+			( std::vector<sig::EdgeInfo> const & edgeInfos
+			, std::size_t const & numAngleBins
+			, double const & cosPower
+			)
+			: EdgeGrouper
+				( edgeInfos
+				, peakAngleWeights(edgeInfos, numAngleBins)
+				, cosPower
+				)
+		{ }
+
+
+		//! True if NdxAng grid is valid
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  (! theAngWgts.empty())
+				&& theEdgeAngProbs.isValid()
+				);
+		}
 
 		//! Index/Weights from table classified by peakAngle (from ctor info)
 		inline
@@ -157,8 +265,8 @@ namespace sig
 			() const
 		{
 			std::vector<GroupNWs> eGroups;
-			std::size_t const numGroups{ theNdxAngWeights.wide() };
-			std::size_t const numElem{ theNdxAngWeights.high() };
+			std::size_t const numGroups{ theEdgeAngProbs.wide() };
+			std::size_t const numElem{ theEdgeAngProbs.high() };
 			eGroups.reserve(numGroups);
 			for (std::size_t col{0u} ; col < numGroups ; ++col)
 			{
@@ -166,7 +274,7 @@ namespace sig
 				for (std::size_t row{0u} ; row < numElem ; ++row)
 				{
 					std::size_t const & ndx = row;
-					double const & wgt = theNdxAngWeights(row, col);
+					double const & wgt = theEdgeAngProbs(row, col);
 					if (0. < wgt)
 					{
 						NdxWgt const ndxWgt{ ndx, wgt };
@@ -246,6 +354,28 @@ namespace sig
 			return rayWgts;
 		}
 
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "theAngWgts.size: " << theAngWgts.size()
+				<< " "
+				<< "theEdgeAngProbs: " << theEdgeAngProbs
+				;
+
+			return oss.str();
+		}
+
+
 		//! Description including contents of theNdxAngWeight table
 		inline
 		std::string
@@ -257,7 +387,9 @@ namespace sig
 			) const
 		{
 			std::ostringstream oss;
-			oss << theNdxAngWeights.infoStringContents(title, cfmt);
+			oss << infoString(title);
+			oss << '\n';
+			oss << theEdgeAngProbs.infoStringContents(title, cfmt);
 			oss << '\n';
 			oss << "EdgeGrouper:angles:";
 			for (AngleWgt const & angWgt : theAngWgts)
@@ -274,4 +406,31 @@ namespace sig
 } // [sig]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::sig::EdgeGrouper const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::sig::EdgeGrouper const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
 
