@@ -79,85 +79,11 @@ namespace sig
 		, RayWgt const & rw2
 		)
 	{
-		img::Spot meetSpot{}; // null
-		double meetWgt{ 0. };
-		// access data: points on edge, edge dirs, and edge weights
-		img::Vector<double> const & s1 = rw1.item().start();
-		img::Vector<double> const & s2 = rw2.item().start();
-		img::Vector<double> const & d1 = rw1.item().direction();
-		img::Vector<double> const & d2 = rw2.item().direction();
-		double const & wgtRay1 = rw1.theWeight;
-		double const & wgtRay2 = rw2.theWeight;
-		// coefficient matrix
-		double const & fwd00 = d1[0];
-		double const & fwd01 = d1[1];
-		double const & fwd10 = d2[0];
-		double const & fwd11 = d2[1];
-		// determinant
-		double const det{ fwd00*fwd11 - fwd01*fwd10 };
-		if (std::numeric_limits<double>::epsilon() < std::abs(det))
-		{
-			// right hand side vector
-			double const rhs0{ dot(d1, s1) };
-			double const rhs1{ dot(d2, s2) };
-			// inverse coefficient matrix
-			double const & inv00 = fwd11;
-			double const inv01{ -fwd01 };
-			double const inv10{ -fwd10 };
-			double const & inv11 = fwd00;
-			// solve for intersection location
-			double const scl{ 1. / det };
-			meetSpot = img::Spot
-				{ scl * (inv00*rhs0 + inv01*rhs1)
-				, scl * (inv10*rhs0 + inv11*rhs1)
-				};
-			// use coefficient matrix determinant as intersection weight
-			// combined with input data weights.
-			double const wgtMeet{ std::abs(det) };
-			meetWgt = wgtMeet * wgtRay1 * wgtRay2;
-		}
-		return SpotWgt{ meetSpot, meetWgt };
+		CenterFitter fitter;
+		fitter.addRay(rw1.item(), rw1.weight());
+		fitter.addRay(rw2.item(), rw2.weight());
+		return fitter.solutionSpotWeight();
 	}
-
-
-
-	//! Utility filter to determine if spots should be used.
-	struct SpotFilter
-	{
-		bool theUseArea{ false };
-		img::Area theArea{};
-
-		/*! Determine when to use spots
-		 *
-		 * Use always if hwSize is not valid
-		 * Otherwise, if hwSize is valid, only use spots inside the area.
-		 */
-		inline
-		explicit
-		SpotFilter
-			( ras::SizeHW const & hwSize
-			)
-			: theUseArea{ hwSize.isValid() }
-			, theArea
-				{ img::Span{ 0., static_cast<double>(hwSize.high())}
-				, img::Span{ 0., static_cast<double>(hwSize.wide())}
-				}
-		{ }
-
-		//! True if spot should be utilized
-		inline
-		bool
-		useSpot
-			( img::Spot const & spot
-			) const
-		{
-			return
-				(  theUseArea
-				&& theArea.contains(spot)
-				);
-		}
-
-	};
 
 
 	//! Indices and weights for grouping EdgeInfo in association with an angle.
@@ -758,7 +684,10 @@ for (AngleWgt const & peakAW : peakAWs)
 			) const
 		{
 			std::vector<SpotWgt> spotWgts;
-			SpotFilter const spotFilter(hwSize);
+			img::Area const hwArea
+				{ img::Span{ 0., static_cast<double>(hwSize.high())}
+				, img::Span{ 0., static_cast<double>(hwSize.wide())}
+				};
 
 			// get edge rays likely associated with radial quad edges
 			std::size_t const numEdges{ rayWgts.size() };
@@ -779,7 +708,7 @@ for (AngleWgt const & peakAW : peakAWs)
 					if (tmpSpotWgt.isValid())
 					{
 						// ... within the hwSize shape (if one provided)
-						if (spotFilter.useSpot(tmpSpotWgt.item()))
+						if (hwArea.contains(tmpSpotWgt.item()))
 						{
 							// weight by geometric distinctiveness
 							double const wgtDistinct
