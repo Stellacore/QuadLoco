@@ -152,9 +152,11 @@ ras::Grid<float> const edgeInfoGrid
 
 // Edge ray data
 std::ofstream ofsRay("ray.dat");
+/*
 std::vector<sig::EdgeGroupNdxWgts> const edgeGroups{ edgeEval.edgeGroups() };
 std::vector<sig::RayWgt> const rayWgts{ edgeEval.groupRayWeights(edgeGroups) };
 ofsRay << infoStringFor(rayWgts, "t.rayWgts") << '\n';
+*/
 
 std::ofstream ofsSpot("spot.dat");
 for (sig::QuadWgt const & sigQuadWgt : sigQuadWgts)

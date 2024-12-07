@@ -590,27 +590,6 @@ for (AngleWgt const & peakAW : peakAWs)
 			return peakAWs;
 		}
 
-		//! \brief Weight table reflecting edgeInfo membership to angle group
-		inline
-		GroupTable
-		groupTable
-			() const
-		{
-			std::vector<AngleWgt> const peakAWs{ peakAngleWeights() };
-			return GroupTable(theEdgeInfos, peakAWs);
-		}
-
-		//! Index/Weights from table classified by peakAngle (from ctor info)
-		inline
-		std::vector<EdgeGroupNdxWgts>
-		edgeGroups
-			() const
-		{
-			GroupTable const groupTab{ groupTable() };
-			std::vector<EdgeGroupNdxWgts> const groups{ groupTab.edgeGroups() };
-			return groups;
-		}
-
 		//! Edge ray (aligned with gradients) candidates for radial edges
 		inline
 		std::vector<RayWgt>
@@ -1091,8 +1070,13 @@ std::cout
 		{
 
 			// Define candidate edgerays and associated weights
-			std::vector<RayWgt> const rayWgts
-				{ groupRayWeights(edgeGroups()) };
+			std::vector<AngleWgt> const peakAWs{ peakAngleWeights() };
+
+			std::vector<EdgeGroupNdxWgts> const eGroups
+				{ GroupTable(theEdgeInfos, peakAWs).edgeGroups() };
+
+			std::vector<RayWgt> const rayWgts{ groupRayWeights(eGroups) };
+
 
 constexpr bool showInfo{ true };
 if (showInfo)
