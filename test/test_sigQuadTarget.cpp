@@ -76,7 +76,9 @@ namespace
 		Vector<double> const dirY{ std::cos(angleY), std::sin(angleY) };
 
 		// construct a quad
-		quadloco::sig::QuadTarget const imgQuad{ center,  dirX,  dirY };
+		constexpr double centerSigma{ 1./16. };
+		quadloco::sig::QuadTarget const imgQuad
+			{ center,  dirX,  dirY, centerSigma };
 
 		// get (image space) angle from X to Y
 		double expAngleYwX{ angleY - angleX };
@@ -84,7 +86,8 @@ namespace
 
 		// the (ideal) images are symmetric under half turn rotation
 		quadloco::sig::QuadTarget const imgQuadA{ imgQuad }; // copy ctor
-		quadloco::sig::QuadTarget const imgQuadB{ center, -dirX, -dirY };
+		quadloco::sig::QuadTarget const imgQuadB
+			{ center, -dirX, -dirY, centerSigma };
 		bool const expSame{ true };
 		bool const gotSame{ nearlyEquals(imgQuadA, imgQuadB) };
 

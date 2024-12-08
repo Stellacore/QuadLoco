@@ -302,7 +302,8 @@ namespace sim
 			Vector<double> const xDir{ direction(xMidInDet - centerInDet) };
 			Vector<double> const yDir{ direction(yMidInDet - centerInDet) };
 
-			sig::QuadTarget const simQuad{ center, xDir, yDir };
+			constexpr double centerSigma{ 1./1024. };
+			sig::QuadTarget const simQuad{ center, xDir, yDir, centerSigma };
 			return simQuad;
 		}
 
