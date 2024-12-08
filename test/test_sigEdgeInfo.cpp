@@ -67,11 +67,12 @@ namespace
 		img::Edgel const otherEdgel{ otherSpot, otherGrad };
 
 		// update currEdgeInfo with other edgel candidates (here only 1 other)
-		currEdgeInfo.consider(otherEdgel);
+		currEdgeInfo.considerOther(otherEdgel);
 		double const gotWgt1{ currEdgeInfo.consideredWeight() };
-		currEdgeInfo.consider(otherEdgel); // typically many *different* others
+		// typically many *different* others - but here only one available
+		currEdgeInfo.considerOther(otherEdgel);
 		double const gotWgt2{ currEdgeInfo.consideredWeight() };
-		// gotWgt[12] reflect running weight updated after each consider() call
+		// gotWgt{1,2} reflect running weight after considerOther() calls
 
 		// Pseudo-probability of belonging to a (quad target) radial edge
 		double const gotWgt{ currEdgeInfo.consideredWeight() };

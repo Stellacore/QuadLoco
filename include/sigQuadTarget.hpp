@@ -35,6 +35,8 @@
 #include "ang.hpp"
 #include "imgSpot.hpp"
 
+#include <Engabra>
+
 #include <array>
 #include <cmath>
 #include <iostream>
@@ -63,11 +65,13 @@ namespace sig
 		 * edges that has foreground (white) to the right side of
 		 * the edge, and background (dark) to the left of the edge.
 		 */
-		img::Vector<double> theDirX;
-
+		img::Vector<double> theDirX{};
 
 		//! \brief Second of two *UNITARY* directions - target "y-axis".
-		img::Vector<double> theDirY;
+		img::Vector<double> theDirY{};
+
+		//! Uncertainty associated with theCenter location
+		double theCenterSigma{ std::numeric_limits<double>::quiet_NaN() };
 
 
 		//! True if this instance contains valid data (not null)
@@ -83,12 +87,40 @@ namespace sig
 				);
 		}
 
+		//! Location of intersection of axes
 		inline
 		img::Spot
 		centerSpot
 			() const
 		{
 			return theCenter;
+		}
+
+		//! Scalar uncertainty in centerSpot() location (from construction)
+		inline
+		double const &
+		centerSigma
+			() const
+		{
+			return theCenterSigma;
+		}
+
+		//! Direction of 'X-axis" (with a background spot to left)
+		inline
+		img::Vector<double> const &
+		dirX
+			() const
+		{
+			return theDirX;
+		}
+
+		//! Direction of 'Y-axis" (with a background spot to right)
+		inline
+		img::Vector<double> const &
+		dirY
+			() const
+		{
+			return theDirY;
 		}
 
 		//! True if theDirX(wedge)theDirY is aligned with e12
@@ -122,7 +154,6 @@ namespace sig
 		angleSizeYwX
 			() const
 		{
-			double angSize{ 0. };
 			double const comp0{ dot(theDirX, theDirY) };
 			double const comp1{ outer(theDirX, theDirY) };
 			return ang::atan2(comp1, comp0);
@@ -177,11 +208,13 @@ namespace sig
 					<< "  isStable: " << std::boolalpha << isStable()
 					<< "  isDextral: " << std::boolalpha << isDextral()
 				<< '\n'
-				<< "center(r,c): " << theCenter
+				<< "center(r,c): " << centerSpot()
+					<< ' '
+					<< "sigma: " << engabra::g3::io::fixed(centerSigma())
 				<< '\n'
-				<< "  dirX(r,c): " << theDirX
+				<< "  dirX(r,c): " << dirX()
 				<< '\n'
-				<< "  dirY(r,c): " << theDirY
+				<< "  dirY(r,c): " << dirY()
 				;
 			return oss.str();
 		}

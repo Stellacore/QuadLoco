@@ -118,6 +118,21 @@ namespace img
 		//! True if this is same as other within tolerance
 		inline
 		bool
+		nearlyEqualsAbs
+			( Vector const & other
+			, Type const tol = std::numeric_limits<Type>::epsilon()
+			) const
+		{
+			using engabra::g3::nearlyEqualsAbs;
+			return
+				{  nearlyEqualsAbs(theData[0], other.theData[0], tol)
+				&& nearlyEqualsAbs(theData[1], other.theData[1], tol)
+				};
+		}
+
+		//! True if this is same as other within tolerance
+		inline
+		bool
 		nearlyEquals
 			( Vector const & other
 			, Type const tol = std::numeric_limits<Type>::epsilon()
@@ -294,6 +309,19 @@ namespace
 		)
 	{
 		return item.isValid();
+	}
+
+	//! True if both instances are same within tolerance
+	template <typename Type>
+	inline
+	bool
+	nearlyEqualsAbs
+		( quadloco::img::Vector<Type> const & itemA
+		, quadloco::img::Vector<Type> const & itemB
+		, Type const tol = std::numeric_limits<Type>::epsilon()
+		)
+	{
+		return itemA.nearlyEqualsAbs(itemB, tol);
 	}
 
 	//! True if both instances are same within tolerance

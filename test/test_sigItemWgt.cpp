@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::sig::QuadTarget
+\brief Unit tests (and example) code for quadloco::sig::ItemWgt
 */
 
 
-#include "sigQuadTarget.hpp"
+#include "sigItemWgt.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -44,65 +44,32 @@ namespace
 	{
 		// [DoxyExample00]
 
-		quadloco::sig::QuadTarget const aNull{};
+		using namespace quadloco;
+		sig::ItemWgt<char> const aNull{};
+		bool const expIsValid{ false };
+		bool const gotIsValid{ isValid(aNull) };
+
+		std::string const expItem("str");
+		double const expWgt{ 1.25 };
+		sig::ItemWgt<std::string> const anIW{ expItem, expWgt };
+		std::string const & gotItem = anIW.item();
+		double const & gotWgt = anIW.weight();
 
 		// [DoxyExample00]
 
-		if ( isValid(aNull))
+		if (! (gotIsValid == expIsValid))
 		{
-			oss << "Failure of null isValid(aNull) test\n";
+			oss << "Failure of aNull validity test\n";
 			oss << "aNull: " << aNull << '\n';
 		}
-	}
 
-
-	//! Examples for documentation
-	void
-	test1
-		( std::ostream & oss
-		)
-	{
-		// [DoxyExample01]
-
-		// NOTE: image is 2D space, but implemented with engaba::g3
-		//       as hack/easy way to provide basic vector ops support.
-		quadloco::img::Spot const center{ 34.5, 67.8 };
-
-		// setup direction of axes
-		constexpr double angleX{  .125 };
-		constexpr double angleY{ 1.250 };
-		using quadloco::img::Vector;
-		Vector<double> const dirX{ std::cos(angleX), std::sin(angleX) };
-		Vector<double> const dirY{ std::cos(angleY), std::sin(angleY) };
-
-		// construct a quad
-		constexpr double centerSigma{ 1./16. };
-		quadloco::sig::QuadTarget const imgQuad
-			{ center,  dirX,  dirY, centerSigma };
-
-		// get (image space) angle from X to Y
-		double expAngleYwX{ angleY - angleX };
-		double const gotAngleYwX{ imgQuad.angleSizeYwX() };
-
-		// the (ideal) images are symmetric under half turn rotation
-		quadloco::sig::QuadTarget const imgQuadA{ imgQuad }; // copy ctor
-		quadloco::sig::QuadTarget const imgQuadB
-			{ center, -dirX, -dirY, centerSigma };
-		bool const expSame{ true };
-		bool const gotSame{ nearlyEquals(imgQuadA, imgQuadB) };
-
-		// [DoxyExample01]
-
-		if (! isValid(imgQuad))
+		if (! (gotItem == expItem))
 		{
-			oss << "Failure of isValid(imgQuad) test\n";
+			oss << "Failure of gotItem test\n";
 		}
-
-		if (! (gotSame == expSame))
+		if (! engabra::g3::nearlyEquals(gotWgt, expWgt))
 		{
-			oss << "Failure of sigQuadTarget half turn test\n";
-			oss << "imgQuadA: " << imgQuadA << '\n';
-			oss << "imgQuadB: " << imgQuadB << '\n';
+			oss << "Failure of gotWgt test\n";
 		}
 	}
 
@@ -117,7 +84,7 @@ main
 	std::stringstream oss;
 
 	test0(oss);
-	test1(oss);
+//	test1(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

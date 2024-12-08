@@ -306,7 +306,6 @@ namespace obj
 		{
 			// default to nan for outside of target area
 			double value{ std::numeric_limits<double>::quiet_NaN() };
-
 			if (theArea.contains(spotOnQuad))
 			{
 				// this code effectively defines the pattern
@@ -314,7 +313,8 @@ namespace obj
 				double const & loc0 = spotOnQuad[0];
 				double const & loc1 = spotOnQuad[1];
 
-				// a useful case for tertiary conditional operator
+				// determine quadrant via signs (++, +-, --, -+)
+				// a useful case for tertiary conditional operator :-)
 				double const sign0{ (loc0 < 0.) ? -1. : 1. };
 				double const sign1{ (loc1 < 0.) ? -1. : 1. };
 				double const signEval{ sign0 * sign1 };

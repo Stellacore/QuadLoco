@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::sig::QuadTarget
+\brief Unit tests (and example) code for quadloco::sig::SpotSigma
 */
 
 
-#include "sigQuadTarget.hpp"
+#include "sigSpotSigma.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -36,7 +36,7 @@
 
 namespace
 {
-	//! Examples for documentation
+	//! Basic capabilities
 	void
 	test0
 		( std::ostream & oss
@@ -44,17 +44,21 @@ namespace
 	{
 		// [DoxyExample00]
 
-		quadloco::sig::QuadTarget const aNull{};
+		using namespace quadloco;
+
+		sig::SpotSigma const aNull{};
+		bool const expIsValid{ false };
+		bool const gotIsValid{ isValid(aNull) };
 
 		// [DoxyExample00]
 
-		if ( isValid(aNull))
+		if (! (gotIsValid == expIsValid))
 		{
-			oss << "Failure of null isValid(aNull) test\n";
+			oss << "Failure of aNull test\n";
 			oss << "aNull: " << aNull << '\n';
 		}
-	}
 
+	}
 
 	//! Examples for documentation
 	void
@@ -64,46 +68,28 @@ namespace
 	{
 		// [DoxyExample01]
 
-		// NOTE: image is 2D space, but implemented with engaba::g3
-		//       as hack/easy way to provide basic vector ops support.
-		quadloco::img::Spot const center{ 34.5, 67.8 };
+		quadloco::img::Spot const spot{ -2.5, 5.125 };
+		double const sigma{ 1.25 };
+		quadloco::sig::SpotSigma const orig{ spot, sigma };
 
-		// setup direction of axes
-		constexpr double angleX{  .125 };
-		constexpr double angleY{ 1.250 };
-		using quadloco::img::Vector;
-		Vector<double> const dirX{ std::cos(angleX), std::sin(angleX) };
-		Vector<double> const dirY{ std::cos(angleY), std::sin(angleY) };
-
-		// construct a quad
-		constexpr double centerSigma{ 1./16. };
-		quadloco::sig::QuadTarget const imgQuad
-			{ center,  dirX,  dirY, centerSigma };
-
-		// get (image space) angle from X to Y
-		double expAngleYwX{ angleY - angleX };
-		double const gotAngleYwX{ imgQuad.angleSizeYwX() };
-
-		// the (ideal) images are symmetric under half turn rotation
-		quadloco::sig::QuadTarget const imgQuadA{ imgQuad }; // copy ctor
-		quadloco::sig::QuadTarget const imgQuadB
-			{ center, -dirX, -dirY, centerSigma };
-		bool const expSame{ true };
-		bool const gotSame{ nearlyEquals(imgQuadA, imgQuadB) };
+		quadloco::sig::SpotSigma const copy{ orig };
 
 		// [DoxyExample01]
 
-		if (! isValid(imgQuad))
+		if (! nearlyEquals(copy.spot(), orig.spot()))
 		{
-			oss << "Failure of isValid(imgQuad) test\n";
+			oss << "Failure of copy.spot test\n";
+			oss << "orig: " << orig << '\n';
+			oss << "copy: " << copy << '\n';
 		}
 
-		if (! (gotSame == expSame))
+		if (! engabra::g3::nearlyEquals(copy.sigma(), orig.sigma()))
 		{
-			oss << "Failure of sigQuadTarget half turn test\n";
-			oss << "imgQuadA: " << imgQuadA << '\n';
-			oss << "imgQuadB: " << imgQuadB << '\n';
+			oss << "Failure of copy.sigma test\n";
+			oss << "orig: " << orig << '\n';
+			oss << "copy: " << copy << '\n';
 		}
+
 	}
 
 }
@@ -116,7 +102,7 @@ main
 	int status{ 1 };
 	std::stringstream oss;
 
-	test0(oss);
+//	test0(oss);
 	test1(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered

@@ -166,7 +166,7 @@ namespace sim
 
 		//! Location on QuadTarget (in quad frame) associated with detSpot
 		inline
-		engabra::g3::Vector
+		img::Spot
 		quadLocFor
 			( img::Spot const & detSpot
 			) const
@@ -184,8 +184,9 @@ namespace sim
 
 			// intersect quad frame ray with quad plane
 			Vector const pntInQuad{ intersectOnE12(staInQuad, dirInQuad) };
+			img::Spot const spot{ cast::imgSpot(pntInQuad) };
 
-			return pntInQuad;
+			return spot;
 		}
 
 		//! Provide a pseudo-random linear bias across the scene
@@ -219,16 +220,12 @@ namespace sim
 			) const
 		{
 			double intenSample{ engabra::g3::null<double>() };
-
-			engabra::g3::Vector const pntInQuad{ quadLocFor(detSpot) };
-			if (engabra::g3::isValid(pntInQuad))
+			img::Spot const spotInQuad{ quadLocFor(detSpot) };
+			if (spotInQuad.isValid())
 			{
 				// sample intensity from quad target
-				img::Spot const spotInQuad{ pntInQuad[0], pntInQuad[1] };
-				// target signal intensity
 				intenSample = theObjQuad.quadSignalAt(spotInQuad);
 			}
-
 			// return the sample value
 			return intenSample;
 		}
@@ -252,7 +249,7 @@ namespace sim
 			for (std::size_t nn{0u} ; nn < numSamps ; ++nn)
 			{
 				// place first spot on exact pixel location
-				img::Spot const halfSpot{ .5, .5 };
+				static img::Spot const halfSpot{ .5, .5 };
 				img::Spot delta{ 0., 0. };
 				if (0u < nn)
 				{
@@ -280,7 +277,7 @@ namespace sim
 		//! Geometry of perspective image created by quadImage()
 		inline
 		sig::QuadTarget
-		imgQuadTarget
+		sigQuadTarget
 			() const
 		{
 			using namespace engabra::g3;
@@ -305,8 +302,9 @@ namespace sim
 			Vector<double> const xDir{ direction(xMidInDet - centerInDet) };
 			Vector<double> const yDir{ direction(yMidInDet - centerInDet) };
 
-			sig::QuadTarget const imgQuad{ center, xDir, yDir };
-			return imgQuad;
+			constexpr double centerSigma{ 1./1024. };
+			sig::QuadTarget const simQuad{ center, xDir, yDir, centerSigma };
+			return simQuad;
 		}
 
 
@@ -334,8 +332,7 @@ namespace sim
 				// with quad plane location may be just outside the
 				// quad boundary, but is close enough to use for scene
 				// illumination bias
-				engabra::g3::Vector const pntInQuad{ quadLocFor(detSpot) };
-				img::Spot const spotInQuad{ pntInQuad[0], pntInQuad[1] };
+				img::Spot const spotInQuad{ quadLocFor(detSpot) };
 
 				// illumination bias across target
 				double valueBias{ 0. };
