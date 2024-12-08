@@ -121,8 +121,8 @@ namespace sim
 		// quad target size
 		static obj::QuadTarget const objQuad
 			( .125
-			, obj::QuadTarget::WithSurround
-			| obj::QuadTarget::WithTriangle
+		//	, obj::QuadTarget::WithSurround | obj::QuadTarget::WithTriangle
+			, obj::QuadTarget::WithTriangle
 			);
 
 		// simulate a collection with slightly different perspectives
