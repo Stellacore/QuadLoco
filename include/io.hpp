@@ -37,7 +37,9 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <limits>
 #include <fstream>
+#include <sstream>
 
 
 namespace quadloco
@@ -47,6 +49,146 @@ namespace quadloco
  */
 namespace io
 {
+	//! Remove everything after '#' character
+	inline
+	std::string
+	stripped
+		( std::string const & line
+		)
+	{
+		return line.substr(0, line.find("#", 0));
+	}
+
+	//! Utility for handling PGM header data i/o
+	struct Header
+	{
+		std::string theMagic;
+		unsigned int theHigh;
+		unsigned int theWide;
+		unsigned int theMaxPix;
+
+		//! Populate header from input stream (positioned at start of file)
+		inline
+		static
+		Header
+		fromStream
+			( std::ifstream & ifs
+			)
+		{
+			// read header info
+			std::string magic{};
+			unsigned int high{ 0u };
+			unsigned int wide{ 0u };
+			unsigned int maxPix{ 0u };
+			std::string line;
+
+			bool haveMagic{ false };
+			bool haveHigh{ false };
+			bool haveWide{ false };
+			bool haveMaxPix{ false };
+			bool haveAll{ false };
+
+			while ( ifs.good() && (! ifs.eof()) && (! haveAll))
+			{
+				line.clear();
+				std::getline(ifs, line);
+				std::string const strip{ stripped(line) };
+
+				if (! strip.empty())
+				{
+					std::istringstream iss(stripped(line));
+					if (iss.good() && (! haveMagic))
+					{
+						iss >> magic;
+						haveMagic = (! iss.fail()) && (! magic.empty());
+					}
+
+					if (iss.good() && (! haveWide))
+					{
+						iss >> wide;
+						haveWide = (! iss.fail()) && (0u < wide);
+					}
+
+					if (iss.good() && (! haveHigh))
+					{
+						iss >> high;
+						haveHigh = (! iss.fail()) && (0u < high);
+					}
+
+					if (iss.good() && (! haveMaxPix))
+					{
+						iss >> maxPix;
+						haveMaxPix = (! iss.fail()) && (0u < maxPix);
+					}
+
+					haveAll
+						=  haveMagic
+						&& haveWide
+						&& haveHigh
+						&& haveMaxPix
+						;
+					if (haveAll)
+					{
+						break;
+					}
+				}
+			}
+
+			return Header(magic, high, wide, maxPix);
+		}
+
+		//! Value construction
+		inline
+		explicit
+		Header
+			( std::string const & magic
+			, unsigned int const & high
+			, unsigned int const & wide
+			, unsigned int const & maxPix
+			)
+			: theMagic{ magic }
+			, theHigh{ high }
+			, theWide{ wide }
+			, theMaxPix{ maxPix }
+		{ }
+
+		//! Populate values consistent with grid instance
+		template <typename Type>
+		inline
+		explicit
+		Header
+			( ras::Grid<Type> const & grid
+			)
+			: theMagic("P5")
+			, theHigh{ static_cast<unsigned int>(grid.high()) }
+			, theWide{ static_cast<unsigned int>(grid.wide()) }
+			, theMaxPix{ std::numeric_limits<Type>::max() }
+		{ }
+
+		//! A SizeHW with (theHigh,theWide) values in one place
+		inline
+		ras::SizeHW
+		hwSize
+			() const
+		{
+			return ras::SizeHW{ theHigh, theWide };
+		}
+
+		//! Put data to output file stream (assume positioned at start)
+		inline
+		void
+		toStream
+			( std::ofstream & ofs
+			) const
+		{
+			ofs
+				<< "P5"
+				// NOTE switched order (wide,high) in PGM
+				<< '\n' << theWide << ' ' << theHigh << ' ' << theMaxPix
+				<< '\n';
+		}
+
+	}; // Header
 
 	//! Write grid contents in PGM file format
 	inline
@@ -62,16 +204,12 @@ namespace io
 			| std::ios_base::binary
 			| std::ios_base::trunc
 			);
-		ofs << "P5\n" << ugrid.wide() << ' ' << ugrid.high() << " 255";
-		ofs << '\n';
-		for (std::size_t row{0u} ; row < ugrid.high() ; ++row)
-		{
-			for (std::size_t col{0u} ; col < ugrid.wide() ; ++col)
-			{
-				ofs << ugrid(row, col);
-			}
-		}
-		ofs << '\n';
+		Header const hdr(ugrid);
+		hdr.toStream(ofs);
+
+		// write block of data to stream
+		ofs.write(reinterpret_cast<char const *>(ugrid.cbegin()), ugrid.size());
+
 		return (! ofs.fail());
 	}
 
@@ -90,25 +228,18 @@ namespace io
 			);
 
 		// read header info
-		std::string magic;
-		unsigned int high, wide;
-		unsigned int maxPix;
-		ifs >> magic;
-		ifs >> wide >> high;
-		ifs >> maxPix;
+		Header const hdr{ Header::fromStream(ifs) };
+		std::string const magic{ hdr.theMagic };
+		ras::SizeHW const hwSize{ hdr.hwSize() };
+		unsigned int const maxPix{ hdr.theMaxPix };
 
 		// if valid header info, then read pixel values
-		ras::SizeHW const hwSize{ high, wide };
 		if (hwSize.isValid() && (255u == maxPix))
 		{
 			ugrid = ras::Grid<uint8_t>(hwSize);
-			for (std::size_t row{0u} ; row < ugrid.high() ; ++row)
-			{
-				for (std::size_t col{0u} ; col < ugrid.wide() ; ++col)
-				{
-					ifs >> ugrid(row, col);
-				}
-			}
+
+			// read block of data into image
+			ifs.read(reinterpret_cast<char*>(ugrid.begin()), ugrid.size());
 		}
 
 		return ugrid;
