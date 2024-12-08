@@ -503,6 +503,7 @@ namespace sig
 						{ fitSpotSigma.spot() // use fit center location
 						, srcQuad.theDirX // keep src axis direction
 						, srcQuad.theDirY // keep src axis direction
+						, fitSpotSigma.sigma() // estimated center uncertainty
 						};
 					double const & sigma = fitSpotSigma.weight();
 					// compute weight relative to 1-pix sigma

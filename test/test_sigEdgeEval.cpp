@@ -126,6 +126,7 @@ namespace
 			{ edgeEval.sigQuadWeights(gradGrid.hwSize()) };
 
 		img::Spot gotCenterSpot{};
+		double gotCenterSigma{ std::numeric_limits<double>::quiet_NaN() };
 		if (! sigQuadWgts.empty())
 		{
 			// use first spotWgt (one with highest weight) as 'best' estimate
@@ -136,6 +137,7 @@ namespace
 					{ sigQuadWgts.front().item().centerSpot()
 					+ img::Spot{ .5, .5 }
 					};
+			gotCenterSigma = sigQuadWgts.front().item().centerSigma();
 		}
 
 		// [DoxyExample01]
@@ -196,7 +198,8 @@ ofsEdgeInfo << edgeInfoAngleGrid.infoStringContents
 		{
 			oss << "Failure of gotCenterSpot test\n";
 			oss << "exp: " << expCenterSpot << '\n';
-			oss << "got: " << gotCenterSpot << '\n';
+			oss << "got: " << gotCenterSpot
+				<< "   sigma: " << gotCenterSigma << '\n';
 			oss << "dif: " << difCenterSpot << '\n';
 			oss << "err: " << difMag << '\n';
 			oss << "tol: " << tolCenter << '\n';
@@ -206,7 +209,8 @@ ofsEdgeInfo << edgeInfoAngleGrid.infoStringContents
 			constexpr char pad[] = "   ";
 			std::cout << "\n\nSuccessful center test\n";
 			std::cout << pad << "exp: " << expCenterSpot << '\n';
-			std::cout << pad << "got: " << gotCenterSpot << '\n';
+			std::cout << pad << "got: " << gotCenterSpot
+				<< "   sigma: " << gotCenterSigma << '\n';
 		//	std::cout << pad << "dif: " << difCenterSpot << '\n';
 			std::cout << pad << "err: " << difMag << '\n';
 		//	std::cout << pad << "tol: " << tolCenter << '\n';
