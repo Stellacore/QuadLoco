@@ -66,9 +66,10 @@ namespace sim
 	//! Center point comparison
 	struct TestResult
 	{
-		std::size_t const theNdx;
-		sig::SpotWgt const theExpSW{};
-		sig::SpotWgt const theGotSW{};
+		std::size_t const theNdx{};
+		sig::QuadTarget const theExpQuad{};
+		sig::QuadTarget const theGotQuad{};
+		double const theGotWgt{};
 
 		//! Descriptive information about this instance.
 		inline
@@ -82,8 +83,8 @@ namespace sim
 			{
 				oss << title << ' ';
 			}
-			img::Spot const & expSpot = theExpSW.item();
-			img::Spot const & gotSpot = theGotSW.item();
+			img::Spot const expSpot{ theExpQuad.centerSpot() };
+			img::Spot const gotSpot{ theGotQuad.centerSpot() };
 			img::Spot const difSpot{ gotSpot - expSpot };
 			using engabra::g3::io::fixed;
 			oss
@@ -91,10 +92,29 @@ namespace sim
 				<< "  "
 				<< "difSpot: " << difSpot
 				<< "  "
-				<< "expSpot: " << expSpot
+				<< "  wgt: " << fixed(theGotWgt)
 				<< "  "
-				<< "gotSpot: " << gotSpot
-				<< "  wgt: " << fixed(theGotSW.weight())
+				<< "  sigma: " << fixed(theGotQuad.centerSigma())
+				;
+
+			return oss.str();
+		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoStringDetail
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			oss << infoString(title);
+			using engabra::g3::io::fixed;
+			oss
+				<< '\n'
+				<< "expQuad: " << theExpQuad
+				<< '\n'
+				<< "gotQuad: " << theGotQuad
 				;
 
 			return oss.str();
@@ -193,12 +213,10 @@ main
 		{
 			if (isValid(sigQuadWgt))
 			{
-				sig::QuadTarget const & sigQuad = sigQuadWgt.item();
+				sig::QuadTarget const & gotQuad = sigQuadWgt.item();
 				double const & wgt = sigQuadWgt.weight();
-				img::Spot const gotSpot{ sigQuad.centerSpot() };
-				sig::SpotWgt const gotSW{ gotSpot, wgt };
 
-				sim::TestResult const testResult{ nn, expSW, gotSW };
+				sim::TestResult const testResult{ nn, expQuad, gotQuad, wgt };
 				testResults.emplace_back(testResult);
 			}
 		}
