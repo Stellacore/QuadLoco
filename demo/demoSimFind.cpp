@@ -195,7 +195,6 @@ main
 			{
 				sig::QuadTarget const & sigQuad = sigQuadWgt.item();
 				double const & wgt = sigQuadWgt.weight();
-std::cout << "wgt: " << wgt << '\n';
 				img::Spot const gotSpot{ sigQuad.centerSpot() };
 				sig::SpotWgt const gotSW{ gotSpot, wgt };
 
@@ -204,7 +203,7 @@ std::cout << "wgt: " << wgt << '\n';
 			}
 		}
 
-	}
+	} // testCases
 
 	std::cout << '\n';
 

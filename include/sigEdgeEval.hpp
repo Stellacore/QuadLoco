@@ -84,7 +84,8 @@ namespace sig
 		CenterFitter fitter;
 		fitter.addRay(rw1.item(), rw1.weight());
 		fitter.addRay(rw2.item(), rw2.weight());
-		return fitter.solutionSpotWeight();
+		SpotSigma const spotSigma{ fitter.solutionSpotSigma() };
+		return SpotWgt{ spotSigma.spot(), spotSigma.weight() };
 	}
 
 
@@ -358,7 +359,7 @@ namespace sig
 								{ separationWeight(rw1.item(), rw2.item()) };
 							SpotWgt const useSpotWgt
 								{ tmpSpotWgt.item()
-								, wgtDistinct * tmpSpotWgt.theWeight
+								, wgtDistinct * tmpSpotWgt.weight()
 								};
 							spotWgts.emplace_back(useSpotWgt);
 						}
@@ -496,13 +497,14 @@ namespace sig
 						fitter.addRay(ray, obsWgt);
 					}
 
-					SpotWgt const fitSpotWgt{ fitter.solutionSpotWeight() };
+					SpotSigma const fitSpotSigma
+						{ fitter.solutionSpotSigma() };
 					sig::QuadTarget const fitSigQuad
-						{ fitSpotWgt.item() // use fit center location
+						{ fitSpotSigma.spot() // use fit center location
 						, srcQuad.theDirX // keep src axis direction
 						, srcQuad.theDirY // keep src axis direction
 						};
-					double const & sigma = fitSpotWgt.weight();
+					double const & sigma = fitSpotSigma.weight();
 					// compute weight relative to 1-pix sigma
 					double const wgt{ std::exp(-sigma*sigma) };
 					QuadWgt const fitQuadWgt{ fitSigQuad, wgt };

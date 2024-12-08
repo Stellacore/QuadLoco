@@ -35,7 +35,6 @@
 #include "imgRay.hpp"
 #include "imgSpot.hpp"
 #include "imgVector.hpp"
-#include "sigItemWgt.hpp"
 
 #include <cmath>
 #include <limits>
@@ -127,6 +126,17 @@ namespace sig
 			() const
 		{
 			return theSigma;
+		}
+
+		//! Weight associated with sigma value relative to expected uncertainty
+		inline
+		double
+		weight
+			( double const & expSigma = 1.
+			) const
+		{
+			double const argZ{ sigma() / expSigma };
+			return std::exp(-argZ*argZ);
 		}
 
 		//! Descriptive information about this instance.
@@ -256,80 +266,6 @@ namespace sig
 		}
 
 
-		//! Least-Square spot location with max eigenvalue weight
-		inline
-		SpotWgt
-		solutionSpotWeight
-			() const
-		{
-			SpotWgt solnSW{};
-
-std::cout << "solutionSpotWeight:" << '\n';
-			// coefficient matrix
-			double const & fwd00 = theAtA00;
-			double const & fwd01 = theAtA01;
-			double const & fwd10 = theAtA01; // theAtA10; // symmetric
-			double const & fwd11 = theAtA11;
-			// determinant
-			double const det{ fwd00*fwd11 - fwd01*fwd10 };
-			if (std::numeric_limits<double>::epsilon() < std::abs(det))
-			{
-				// inverse normal matrix
-				double const scl{ 1. / det };
-				double const inv00{  scl*fwd11 };
-				double const inv01{ -scl*fwd01 };
-				//uble const inv10{ -scl*fwd10 }; // symmetric
-				double const inv11{  scl*fwd00 };
-
-				// least square spot solution
-				double const & inv10 = inv01; // symmetric
-				img::Spot const solnSpot
-					{ inv00*theAtB0 + inv01*theAtB1
-					, inv10*theAtB0 + inv11*theAtB1
-					};
-
-std::cout << "invMatrix(0,*) :"
-	<< ' ' << engabra::g3::io::fixed(inv00)
-	<< ' ' << engabra::g3::io::fixed(inv01)
-	<< '\n';
-std::cout << "invMatrix(1,*) :"
-	<< ' ' << engabra::g3::io::fixed(inv10)
-	<< ' ' << engabra::g3::io::fixed(inv11)
-	<< '\n';
-
-				double solnWgt{ std::numeric_limits<double>::quiet_NaN() };
-
-				// covariance matrix eigen values are parameter variances
-				// characteristic polynomial (quadratic coefficient == 1)
-				double const beta{ -.5 * (inv00 + inv11) };
-				double const & gamma = scl; // det of inverse is 1/det of fwd
-				double const lamMid{ -beta };
-				double const radicand{ beta*beta - gamma };
-std::cout << "radicand: " << radicand << '\n';
-				if (! (radicand < 0.)) // theoretically true (for proper code)
-				{
-					// compute eigen values
-					double const root{ std::sqrt(radicand) };
-					double const lamNeg{ lamMid - root };
-					double const lamPos{ lamMid + root };
-					double const lamBig
-						{ std::max(std::abs(lamNeg), std::abs(lamPos)) };
-std::cout << "lambda{Neg,Pos}:"
-	<< ' ' << engabra::g3::io::fixed(lamNeg)
-	<< ' ' << engabra::g3::io::fixed(lamPos)
-	<< '\n';
-
-					// standard deviation
-					double const sigma{ std::sqrt(std::abs(lamBig)) };
-					double const arg{ 1. / sigma };
-std::cout << "\n*** sigma: " << sigma << '\n';
-					solnWgt = std::exp(-arg*arg);
-				}
-				solnSW = SpotWgt{ solnSpot, solnWgt };
-			}
-			return solnSW;
-		}
-
 		//! Descriptive information about this instance.
 		inline
 		std::string
@@ -362,7 +298,7 @@ std::cout << "\n*** sigma: " << sigma << '\n';
 					<< ' ' << fixed(theAtB1)
 				<< '\n';
 				;
-			oss << "soln: " << solutionSpotWeight();
+			oss << "soln: " << solutionSpotSigma().infoString();
 			return oss.str();
 		}
 
