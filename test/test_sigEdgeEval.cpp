@@ -116,9 +116,6 @@ namespace
 		// compute gradient elements
 		ras::Grid<img::Grad> const gradGrid
 			{ ops::grid::gradientGridFor(pixGrid) };
-		// assess significant gradients in context with other
-		std::vector<img::Edgel> const edgels
-			{ ops::grid::linkedEdgelsFrom(gradGrid) };
 
 		// categorize edgels as candidates for (radial) quad target edge groups
 		sig::EdgeEval const edgeEval(gradGrid);

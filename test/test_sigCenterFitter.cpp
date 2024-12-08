@@ -91,19 +91,20 @@ namespace
 		fitter.addRay(edgeRays[2], wgt);
 
 		// fetch solution and weight
-		quadloco::sig::SpotWgt const solnSpotWgt{ fitter.solutionSpotWeight() };
+		quadloco::sig::SpotSigma const solnSpotSigma
+			{ fitter.solutionSpotSigma() };
 		// check if solution is valid
-		bool const gotValidSoln{ isValid(solnSpotWgt) };
+		bool const gotValidSoln{ isValid(solnSpotSigma) };
 		// if solution is not valid, both these are null
-		quadloco::img::Spot const & gotCenter = solnSpotWgt.item();
-		double const & gotWgt = solnSpotWgt.weight();
+		quadloco::img::Spot const & gotCenter = solnSpotSigma.spot();
+		double const & gotWgt = solnSpotSigma.sigma();
 
 		// [DoxyExample01]
 
 		if (! gotValidSoln)
 		{
 			oss << "Failure of gotValidSolution test\n";
-			oss << "solnSpotWgt: " << solnSpotWgt << '\n';
+			oss << "solnSpotSigma: " << solnSpotSigma << '\n';
 			oss << "fitter\n" << fitter << '\n';
 		}
 
@@ -118,6 +119,49 @@ namespace
 
 	}
 
+	//! Evaluate weight (covariance) estimation
+	void
+	test2
+		( std::ostream & oss
+		)
+	{
+		using namespace quadloco::img;
+
+		// NOTE: these are edge rays, and the EdgeLines are perpenduclar
+		//       to these.  The desired solution is where the EdgeLine
+		//       intersect.
+		std::vector<Ray> const edgeRays
+			{ Ray{ Spot{  0.,  1. }, Grad{  1.,  0. } }
+			, Ray{ Spot{  0., -1. }, Grad{  1.,  0. } }
+			, Ray{ Spot{  1.,  0. }, Grad{  0.,  1. } }
+			, Ray{ Spot{ -1.,  0. }, Grad{  0.,  1. } }
+			};
+		Spot const expCenter{ 3., 2. };
+
+		// use CenterFitter to find center (add all rays with same weight
+		quadloco::sig::CenterFitter fitter{};
+		constexpr double wgt{ 1. };
+		fitter.addRay(edgeRays[0], wgt);
+		fitter.addRay(edgeRays[1], wgt);
+		fitter.addRay(edgeRays[2], wgt);
+		fitter.addRay(edgeRays[3], wgt);
+
+		// each input ray is 1 pixel error from solution
+		double const expRmse{ 1. };
+
+		// fetch solution and weight
+		quadloco::sig::SpotSigma const solnSpotSigma
+			{ fitter.solutionSpotSigma() };
+		double const & gotRmse = solnSpotSigma.sigma();
+
+		if (! engabra::g3::nearlyEquals(gotRmse, expRmse))
+		{
+			oss << "Failure of gotRmse test\n";
+			oss << "exp: " << expRmse << '\n';
+			oss << "got: " << gotRmse << '\n';
+		}
+
+	}
 }
 
 //! Standard test case main wrapper
@@ -130,6 +174,7 @@ main
 
 	test0(oss);
 	test1(oss);
+	test2(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{
