@@ -31,10 +31,11 @@
  */
 
 
-#include "sigEdgeGrouper.hpp"
 #include "sigCenterFitter.hpp"
+#include "sigEdgeGrouper.hpp"
 #include "sigEdgeLine.hpp"
 #include "sigItemWgt.hpp"
+#include "sigutil.hpp"
 
 #include "angLikely.hpp"
 #include "imgArea.hpp"
@@ -809,6 +810,43 @@ std::cout << '\n';
 			() const
 		{
 			return theEdgeInfos;
+		}
+
+		//! Grid for visualization of dominant edgels (magnitude)
+		inline
+		static
+		ras::Grid<float>
+		infoGridDominantEdgelMag
+			( ras::Grid<img::Grad> const & gradGrid
+			)
+		{
+			ras::Grid<float> magGrid(gradGrid.hwSize());
+			std::fill(magGrid.begin(), magGrid.end(), 0.);
+			std::vector<img::Edgel> const edgels
+				{ dominantEdgelsFrom(gradGrid) };
+			for (img::Edgel const & edgel : edgels)
+			{
+				magGrid(cast::rasRowCol(edgel.location())) = edgel.magnitude();
+			}
+			return magGrid;
+		}
+
+		//! Grid for visualization of edgels likely to be on radial lines
+		inline
+		static
+		ras::Grid<float>
+		infoGridLikelyRadial
+			( ras::Grid<img::Grad> const & gradGrid
+			)
+		{
+			ras::Grid<float> magGrid(gradGrid.hwSize());
+			std::fill(magGrid.begin(), magGrid.end(), 0.);
+
+			std::vector<img::Edgel> const edgels
+				{ dominantEdgelsFrom(gradGrid) };
+			std::vector<sig::EdgeInfo> const edgeInfos
+				{ edgeInfosLikelyRadial(edgels) };
+			return sig::util::edgeInfoWeightGrid(magGrid.hwSize(), edgeInfos);
 		}
 
 
