@@ -129,7 +129,7 @@ namespace
 
 		// NOTE: these are edge rays, and the EdgeLines are perpenduclar
 		//       to these.  The desired solution is where the EdgeLine
-		//       intersect.
+		//       instances all intersect (at origin)
 		std::vector<Ray> const edgeRays
 			{ Ray{ Spot{  0.,  1. }, Grad{  1.,  0. } }
 			, Ray{ Spot{  0., -1. }, Grad{  1.,  0. } }
@@ -141,13 +141,16 @@ namespace
 		// use CenterFitter to find center (add all rays with same weight
 		quadloco::sig::CenterFitter fitter{};
 		constexpr double wgt{ 1. };
-		fitter.addRay(edgeRays[0], wgt);
-		fitter.addRay(edgeRays[1], wgt);
-		fitter.addRay(edgeRays[2], wgt);
-		fitter.addRay(edgeRays[3], wgt);
+		for (Ray const & edgeRay : edgeRays)
+		{
+			fitter.addRay(edgeRay, wgt);
+		}
 
-		// each input ray is 1 pixel error from solution
-		double const expRmse{ 1. };
+		// each input ray is 1 pixel error from solution (at center)
+		// Therefore, estimated residual should be 1 unit.
+		// But the estimated parameter fit uncertainty should be
+		// sqrt(1/(N-2)) of this. E.g. expect 1.*sqrt(1/2)
+		double const expRmse{ std::sqrt(1./((double)edgeRays.size() - 2.)) };
 
 		// fetch solution and weight
 		quadloco::sig::SpotSigma const solnSpotSigma

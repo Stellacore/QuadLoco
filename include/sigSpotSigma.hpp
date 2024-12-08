@@ -90,12 +90,32 @@ namespace sig
 					// standard deviation is root of eigen value
 					if (1u < numObs)
 					{
+					// For estimating residual magnitudes
 						// adjust eigen value by statistical dof multiplier
 						// given numObs observations and 2 parameter freedoms
-						double const dNumObs{ (double)numObs };
-						double const meanMult{ dNumObs / (dNumObs - 2.) };
-						double const var{ meanMult * lamBig };
-						sigma = std::sqrt(var);
+					//	double const dNumObs{ (double)numObs };
+					//	double const meanMult{ dNumObs / (dNumObs - 2.) };
+					//	double const var{ meanMult * lamBig };
+					//	sigma = std::sqrt(var);
+						// 
+						// For estimating parameter uncertainty
+						sigma = std::sqrt(lamBig);
+
+						/*
+						using engabra::g3::io::fixed;
+						std::cout << "covar0*: "
+							<< ' ' << fixed(covar00)
+							<< ' ' << fixed(covar01)
+							<< '\n';
+						std::cout << "covar1*: "
+							<< ' ' << fixed(covar10)
+							<< ' ' << fixed(covar11)
+							<< '\n';
+						std::cout << "lamNeg: " << fixed(lamNeg) << '\n';
+						std::cout << "lamPos: " << fixed(lamPos) << '\n';
+						std::cout << " sigma: " << fixed(sigma) << '\n';
+						*/
+
 					}
 				}
 			}
