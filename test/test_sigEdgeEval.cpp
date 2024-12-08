@@ -34,6 +34,7 @@
 #include "objQuadTarget.hpp"
 #include "opsgrid.hpp"
 #include "sigEdgeEval.hpp"
+#include "sigutil.hpp"
 #include "simConfig.hpp"
 #include "simRender.hpp"
 
@@ -60,21 +61,22 @@ namespace
 			{ obj::QuadTarget
 				( 1.00
 			//	, QuadTarget::None
-				, QuadTarget::WithSurround | QuadTarget::WithTriangle
+			//	, QuadTarget::WithSurround
 			//	, QuadTarget::WithTriangle
+				, QuadTarget::WithSurround | QuadTarget::WithTriangle
 				)
 			, obj::Camera
 //				{ ras::SizeHW{ 128u, 128u }
-//				, 300. // pd
+//				, 128. // pd
 //{ ras::SizeHW{ 16u, 16u }
-//				,  55. // pd
-//{ ras::SizeHW{ 10u, 10u }
-//				,  40. // pd
-{ ras::SizeHW{   20u,   20u }
-				,   20. // pd
+//				,  16. // pd
+{ ras::SizeHW{   14u,   14u }
+				,   14. // pd
+//{ ras::SizeHW{    7u,    7u }
+//				,    7. // pd
 				}
 			, rigibra::Transform
-				{ engabra::g3::Vector{ 0., 0., 1. }
+				{ engabra::g3::Vector{ 0., 0., 1.+1./16. }
 				, rigibra::Attitude
 					{ rigibra::PhysAngle
 						{ engabra::g3::BiVector{ 0., 0., 0. } }
@@ -84,12 +86,11 @@ namespace
 		using namespace quadloco::sim;
 		sim::Render const render
 			( config
-			, Sampler::None
-		//	, Sampler::AddSceneBias | Sampler::AddImageNoise
+		//	, Sampler::None
+			, Sampler::AddSceneBias | Sampler::AddImageNoise
 		//	, Sampler::AddImageNoise
 			);
 		std::size_t const numOverSample{ 1024u };
-//std::size_t const numOverSample{    0u };
 		if (ptSigQuad)
 		{
 			*ptSigQuad = render.sigQuadTarget();
@@ -115,9 +116,6 @@ namespace
 		// compute gradient elements
 		ras::Grid<img::Grad> const gradGrid
 			{ ops::grid::gradientGridFor(pixGrid) };
-		// assess significant gradients in context with other
-		std::vector<img::Edgel> const edgels
-			{ ops::grid::linkedEdgelsFrom(gradGrid) };
 
 		// categorize edgels as candidates for (radial) quad target edge groups
 		sig::EdgeEval const edgeEval(gradGrid);
@@ -142,47 +140,54 @@ namespace
 
 		// [DoxyExample01]
 
+// Save data to files
 
-/*
-std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
+// pixels
 (void)io::writeStretchPGM("pixGrid.pgm", pixGrid);
 
-sig::GroupTable const groupTab{ edgeEval.groupTable() };
-std::cout << groupTab.infoStringContents("groupTab", "%5.3f") << '\n';
+// EdgeInfo-mag
+ras::Grid<float> const edgeInfoWeightGrid
+	{ sig::util::edgeInfoWeightGrid
+		(gradGrid.hwSize(), edgeEval.edgeInfos())
+	};
+(void)io::writeStretchPGM("edgeInfoWgt.pgm", edgeInfoWeightGrid);
+ras::Grid<float> const edgeInfoAngleGrid
+	{ sig::util::edgeInfoAngleGrid
+		(gradGrid.hwSize(), edgeEval.edgeInfos())
+	};
+(void)io::writeStretchPGM("edgeInfoAng.pgm", edgeInfoAngleGrid);
 
-std::vector<sig::EdgeGroup> const edgeGroups{ edgeEval.edgeGroups() };
-std::vector<sig::RayWgt> const rayWgts
-	{ edgeEval.groupRayWeights(edgeGroups) };
-std::cout << infoStringFor(rayWgts, "t.rayWgts") << '\n';
 
-ras::Grid<float> const eiGrid
-	{ edgeEval.edgeInfoGrid(gradGrid.hwSize()) };
-std::cout << eiGrid.infoStringContents("eiGrid", "%5.2f") << '\n';
-(void)io::writeStretchPGM("edgeInfoMag.pgm", eiGrid);
-
-std::cout << "sigQuadWgts.size: " << sigQuadWgts.size() << '\n';
+// Edge ray data
+std::ofstream ofsRay("ray.dat");
+/*
+std::vector<sig::EdgeGroupNdxWgts> const edgeGroups{ edgeEval.edgeGroups() };
+std::vector<sig::RayWgt> const rayWgts{ edgeEval.groupRayWeights(edgeGroups) };
+ofsRay << infoStringFor(rayWgts, "t.rayWgts") << '\n';
+*/
 
 std::ofstream ofsSpot("spot.dat");
 for (sig::QuadWgt const & sigQuadWgt : sigQuadWgts)
 {
-	std::cout << sigQuadWgt << '\n';
 	ofsSpot << "sigQuadWgt:"
 		<< ' ' << sigQuadWgt.item().centerSpot()
 		<< ' ' << engabra::g3::io::fixed(sigQuadWgt.weight())
 		<< '\n';
 }
+
+
+/*
+std::cout << pixGrid.infoStringContents("pixGrid", "%5.2f") << '\n';
+
+sig::GroupTable const groupTab{ edgeEval.groupTable() };
+std::cout << groupTab.infoStringContents("groupTab", "%5.3f") << '\n';
+std::cout << infoStringFor(sigQuadWgts, "t.sigQuadWgt") << '\n';
 */
-
-		std::vector<sig::AngleWgt> const peakAWs
-			{ edgeEval.peakAngleWeights() };
-
-		// should be four or more radial directions for simulated quad image
-		if (! (3u < peakAWs.size()))
-		{
-			oss << "Failure of sufficient angle peak detection test\n";
-			oss << "exp: (3u < peakAWs.size())\n";
-			oss << "got: " << peakAWs.size() << '\n';
-		}
+std::ofstream ofsEdgeInfo("edgeInfoMag.dat");
+ofsEdgeInfo << edgeInfoWeightGrid.infoStringContents
+	("# edgeInfoWeightGrid", "%15.12f") << '\n';
+ofsEdgeInfo << edgeInfoAngleGrid.infoStringContents
+	("# edgeInfoAngleGrid", "%15.12f") << '\n';
 
 		double const tolCenter{ .5 };
 		img::Spot const difCenterSpot{ gotCenterSpot - expCenterSpot };
@@ -198,12 +203,13 @@ for (sig::QuadWgt const & sigQuadWgt : sigQuadWgts)
 		}
 		else
 		{
-			std::cout << "\n\n SUCCESS center test\n";
-			std::cout << "exp: " << expCenterSpot << '\n';
-			std::cout << "got: " << gotCenterSpot << '\n';
-		//	std::cout << "dif: " << difCenterSpot << '\n';
-			std::cout << "err: " << difMag << '\n';
-		//	std::cout << "tol: " << tolCenter << '\n';
+			constexpr char pad[] = "   ";
+			std::cout << "\n\nSuccessful center test\n";
+			std::cout << pad << "exp: " << expCenterSpot << '\n';
+			std::cout << pad << "got: " << gotCenterSpot << '\n';
+		//	std::cout << pad << "dif: " << difCenterSpot << '\n';
+			std::cout << pad << "err: " << difMag << '\n';
+		//	std::cout << pad << "tol: " << tolCenter << '\n';
 			std::cout << "\n";
 		}
 	}

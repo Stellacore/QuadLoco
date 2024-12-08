@@ -39,6 +39,7 @@
 #include <limits>
 #include <sstream>
 #include <string>
+#include <vector>
 
 
 namespace quadloco
@@ -242,5 +243,21 @@ namespace
 	{
 		return itemA.nearlyEquals(itemB, tol);
 	}
+
+	//! Put collection of edge rays to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, std::vector<quadloco::img::Ray> const & edgeRays
+		)
+	{
+		for (quadloco::img::Ray const & edgeRay : edgeRays)
+		{
+			ostrm << edgeRay << '\n';
+		}
+		return ostrm;
+	}
+
 
 } // [anon/global]
