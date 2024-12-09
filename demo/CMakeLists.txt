@@ -29,6 +29,8 @@ set(ProgNames
 	demo_version
 
 	demoEdgeDirAD
+	demoFinder
+	demoPGM
 	demoSimFind
 
 	)

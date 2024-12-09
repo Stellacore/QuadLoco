@@ -31,8 +31,12 @@
  *
  */
 
+//#include "io.hpp"
+//#include "opsgrid.hpp"
+
 
 #include "cast.hpp"
+#include "imgArea.hpp"
 #include "rasGrid.hpp"
 #include "sigEdgeInfo.hpp"
 
@@ -52,6 +56,101 @@ namespace sig
  */
 namespace util
 {
+	//! Convert grid elements to float
+	inline
+	ras::Grid<float>
+	toFloat
+		( ras::Grid<uint8_t> const & uGrid
+		)
+	{
+		ras::Grid<float> fGrid(uGrid.hwSize());
+		ras::Grid<uint8_t>::const_iterator inIter{ uGrid.cbegin() };
+		ras::Grid<float>::iterator outIter{ fGrid.begin() };
+		while (uGrid.cend() != inIter)
+		{
+			*outIter++ = *inIter++;
+		}
+		return fGrid;
+	}
+
+	//! A Larger grid produced with (nearest neighbor) up sampling.
+	template <typename PixType>
+	inline
+	ras::Grid<PixType>
+	toLarger
+		( ras::Grid<PixType> const & inGrid
+		, std::size_t const & upFactor
+		)
+	{
+		ras::Grid<PixType> upGrid
+			( upFactor * inGrid.high()
+			, upFactor * inGrid.wide()
+			);
+		for (std::size_t inRow{0u} ; inRow < inGrid.high() ; ++inRow)
+		{
+			std::size_t const outRow0{ upFactor * inRow };
+			for (std::size_t inCol{0u} ; inCol < inGrid.wide() ; ++inCol)
+			{
+				std::size_t const outCol0{ upFactor * inCol };
+				for (std::size_t wRow{0u} ; wRow < upFactor ; ++wRow)
+				{
+					std::size_t const outRow{ outRow0 + wRow };
+					for (std::size_t wCol{0u} ; wCol < upFactor ; ++wCol)
+					{
+						std::size_t const outCol{ outCol0 + wCol };
+						upGrid(outRow, outCol) = inGrid(inRow, inCol);
+					}
+				}
+			}
+		}
+		return upGrid;
+	}
+
+	//! Draw a (bright on black) radiometric mark at spot
+	template <typename PixType>
+	inline
+	void
+	drawSpot
+		( ras::Grid<PixType> * const & ptGrid
+		, img::Spot const & spot
+		)
+	{
+		if (ptGrid && (2u < ptGrid->high()) && (2u < ptGrid->wide()))
+		{
+			ras::Grid<PixType> & grid = *ptGrid;
+
+			// find min max
+			using InIt = ras::Grid<PixType>::const_iterator;
+			std::pair<InIt, InIt> const iterMM
+				{ std::minmax_element(grid.cbegin(), grid.cend()) };
+			PixType const min{ *(iterMM.first) };
+			PixType const max{ *(iterMM.second) };
+
+			// boundary clipping
+			img::Area const clipArea
+				{ img::Span{ 1., (double)(ptGrid->high() - 1u) }
+				, img::Span{ 1., (double)(ptGrid->wide() - 1u) }
+				};
+
+			PixType const & back = min;
+			PixType const & fore = max;
+			ras::RowCol const rc0{ cast::rasRowCol(spot) };
+			if (clipArea.contains(cast::imgSpot(rc0)))
+			{
+				grid(rc0.row() - 1u, rc0.col() - 1u) = back;
+				grid(rc0.row() - 1u, rc0.col()     ) = back;
+				grid(rc0.row() - 1u, rc0.col() + 1u) = back;
+				grid(rc0.row()     , rc0.col() - 1u) = back;
+				grid(rc0.row()     , rc0.col()     ) = fore;
+				grid(rc0.row()     , rc0.col() + 1u) = back;
+				grid(rc0.row() + 1u, rc0.col() - 1u) = back;
+				grid(rc0.row() + 1u, rc0.col()     ) = back;
+				grid(rc0.row() + 1u, rc0.col() + 1u) = back;
+			}
+		}
+
+	}
+
 
 	//! \brief Grid of values with cells set to func(edgeInfo).
 	inline
