@@ -500,8 +500,12 @@ namespace sig
 
 					SpotSigma const fitSpotSigma
 						{ fitter.solutionSpotSigma() };
+					img::Spot const centerSpotPixMiddle
+						{ fitSpotSigma.spot() // fit center location
+						+ img::Spot{ .5, .5 } // report subpix center
+						};
 					sig::QuadTarget const fitSigQuad
-						{ fitSpotSigma.spot() // use fit center location
+						{ centerSpotPixMiddle
 						, srcQuad.theDirX // keep src axis direction
 						, srcQuad.theDirY // keep src axis direction
 						, fitSpotSigma.sigma() // estimated center uncertainty
