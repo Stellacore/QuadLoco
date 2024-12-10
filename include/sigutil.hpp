@@ -106,6 +106,58 @@ namespace util
 		return upGrid;
 	}
 
+	//! Convert gradients to magnitude
+	inline
+	ras::Grid<float>
+	magnitudeGridFor
+		( ras::Grid<img::Grad> const & gradGrid
+		)
+	{
+		ras::Grid<float> magGrid(gradGrid.hwSize());
+		std::fill
+			( magGrid.begin(), magGrid.end()
+			, std::numeric_limits<float>::quiet_NaN()
+			);
+
+		ras::Grid<img::Grad>::const_iterator inIter{ gradGrid.cbegin() };
+		ras::Grid<float>::iterator outIter{ magGrid.begin() };
+		while (gradGrid.cend() != inIter)
+		{
+			*outIter++ = magnitude(*inIter++);
+		}
+		return magGrid;
+	}
+
+	//! Convert gradients to angle of grdient
+	inline
+	ras::Grid<float>
+	angleGridFor
+		( ras::Grid<img::Grad> const & gradGrid
+		)
+	{
+		ras::Grid<float> angGrid(gradGrid.hwSize());
+		std::fill
+			( angGrid.begin(), angGrid.end()
+			, std::numeric_limits<float>::quiet_NaN()
+			);
+
+		ras::Grid<img::Grad>::const_iterator inIter{ gradGrid.cbegin() };
+		ras::Grid<float>::iterator outIter{ angGrid.begin() };
+		while (gradGrid.cend() != inIter)
+		{
+			double angle{ std::numeric_limits<double>::quiet_NaN() };
+			img::Grad const grad{ *inIter++ };
+			if (isValid(grad))
+			{
+				img::Vector<double> const dir{ direction(grad) };
+				angle = ang::atan2(dir[1], dir[0]);
+			}
+			*outIter++ = angle;
+		}
+		return angGrid;
+	}
+
+
 	//! Draw a (bright on black) radiometric mark at spot
 	template <typename PixType>
 	inline
