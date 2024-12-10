@@ -35,6 +35,8 @@
 #include "pix.hpp"
 #include "rasGrid.hpp"
 
+#include <Engabra>
+
 #include <cstdint>
 #include <filesystem>
 #include <limits>
@@ -261,6 +263,45 @@ namespace io
 
 		// write resulting uGrid
 		return io::writePGM(pgmPath, uGrid);
+	}
+
+
+	//! \brief Put grid coordinates to data file
+	inline
+	bool
+	writeAsciiFile
+		( std::filesystem::path const & outPath
+		, ras::Grid<float> const & grid
+		, std::string const & cfmtPerField
+		, float const & valueForNull
+		)
+	{
+		std::ofstream ofs(outPath);
+		std::size_t const high{ grid.hwSize().high() };
+		std::size_t const wide{ grid.hwSize().wide() };
+		ofs << "# High: " << high << '\n';
+		ofs << "# Wide: " << wide << '\n';
+		ofs << "# valueForNull: " << valueForNull << '\n';
+		for (std::size_t row{0u} ; row < high ; ++row)
+		{
+			for (std::size_t col{0u} ; col < wide ; ++col)
+			{
+				float const & gVal = grid(row,col);
+				float useVal{ valueForNull };
+				if (engabra::g3::isValid(gVal))
+				{
+					useVal = gVal;
+				}
+
+				constexpr std::size_t bufSize{ 1024u };
+				char buf[bufSize+1u]; // hopefully large enough
+				std::snprintf(buf, bufSize, cfmtPerField.c_str(), useVal);
+				ofs << ' ' << buf;
+
+			}
+			ofs << '\n';
+		}
+		return (! ofs.fail());
 	}
 
 } // [io]
