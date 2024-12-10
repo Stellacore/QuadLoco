@@ -50,9 +50,70 @@ namespace quadloco
 		( ras::Grid<float> const & srcGrid
 		)
 	{
+		std::filesystem::path srcPgmPath("df_srcGrid.pgm");
+		std::filesystem::path srcDatPath("df_srcGrid.dat");
+		std::filesystem::path gmagPgmPath("df_gmagGrid.pgm");
+		std::filesystem::path gmagDatPath("df_gmagGrid.dat");
+		std::filesystem::path gangPgmPath("df_gangGrid.pgm");
+		std::filesystem::path gangDatPath("df_gangGrid.dat");
+		std::filesystem::path domPgmPath("df_domGrid.pgm");
+		std::filesystem::path domDatPath("df_domGrid.dat");
+		std::filesystem::path radPgmPath("df_radGrid.pgm");
+		std::filesystem::path radDatPath("df_radGrid.dat");
+		std::filesystem::path wgtPgmPath("df_wgtGrid.pgm");
+		std::filesystem::path wgtDatPath("df_wgtGrid.dat");
+
+
+		constexpr bool saveDiagnostics{ true };
+
+		//
+		// Start with source image
+		//
 		sig::QuadTarget sigQuad;
+		if (saveDiagnostics)
+		{
+			bool const okPgm
+				{ io::writeStretchPGM(srcPgmPath, srcGrid) };
+			bool const okDat
+				{ io::writeAsciiFile(srcDatPath, srcGrid, "%9.3f", -1.f) };
+			std::cout << "@@@ writing: " << srcPgmPath << okPgm << '\n';
+			std::cout << "@@@ writing: " << srcDatPath << okDat << '\n';
+		}
+
+		//
+		// Gradient grid (in place gradients)
+		//
 		ras::Grid<img::Grad> const gradGrid
 			{ ops::grid::gradientGridFor(srcGrid) };
+		if (saveDiagnostics)
+		{
+			{
+			ras::Grid<float> const gmagGrid
+				{ sig::util::magnitudeGridFor(gradGrid) };
+			bool const okPgm
+				{ io::writeStretchPGM(gmagPgmPath, gmagGrid) };
+			bool const okDat
+				{ io::writeAsciiFile(gmagDatPath, gmagGrid, "%9.3f", -1.f) };
+			std::cout << "@@@ writing: " << gmagPgmPath << okPgm << '\n';
+			std::cout << "@@@ writing: " << gmagDatPath << okDat << '\n';
+			}
+
+			{
+			ras::Grid<float> const gangGrid
+				{ sig::util::angleGridFor(gradGrid) };
+			bool const okPgm
+				{ io::writeStretchPGM(gangPgmPath, gangGrid) };
+			bool const okDat
+				{ io::writeAsciiFile(gangDatPath, gangGrid, "%9.6f", -1.f) };
+			std::cout << "@@@ writing: " << gangPgmPath << okPgm << '\n';
+			std::cout << "@@@ writing: " << gangDatPath << okDat << '\n';
+			}
+
+		}
+
+		//
+		// Edgel Collections
+		//
 		sig::EdgeEval const edgeEval(gradGrid);
 		std::vector<sig::QuadWgt> const sigQuadWgts
 			{ edgeEval.sigQuadWeights(gradGrid.hwSize()) };
@@ -61,24 +122,44 @@ namespace quadloco
 			sigQuad = sigQuadWgts.front().item();
 		}
 
-		(void)io::writeStretchPGM("grid00Input.pgm", srcGrid);
+		if (saveDiagnostics)
+		{
+			{
+			ras::Grid<float> const domGrid
+				{ edgeEval.infoGridDominantEdgelMag(gradGrid) };
+			bool const okPgm
+				{ io::writeStretchPGM(domPgmPath, domGrid) };
+			bool const okDat
+				{ io::writeAsciiFile(domDatPath, domGrid, "%9.3f", -1.f) };
+			std::cout << "@@@ writing: " << domPgmPath << okPgm << '\n';
+			std::cout << "@@@ writing: " << domDatPath << okDat << '\n';
+			}
 
-		ras::Grid<float> const gridEdgeDom
-			{ edgeEval.infoGridDominantEdgelMag(gradGrid) };
-		(void)io::writeStretchPGM("grid01EdgeDom.pgm", gridEdgeDom);
+			{
+			ras::Grid<float> const radGrid
+				{ edgeEval.infoGridLikelyRadial(gradGrid) };
+			bool const okPgm
+				{ io::writeStretchPGM(radPgmPath, radGrid) };
+			bool const okDat
+				{ io::writeAsciiFile(radDatPath, radGrid, "%9.3f", -1.f) };
+			std::cout << "@@@ writing: " << radPgmPath << okPgm << '\n';
+			std::cout << "@@@ writing: " << radDatPath << okDat << '\n';
+			}
 
-		ras::Grid<float> const gridRadLike
-			{ edgeEval.infoGridLikelyRadial(gradGrid) };
-		(void)io::writeStretchPGM("grid02RadLike.pgm", gridRadLike);
+			{
+			ras::Grid<float> const wgtGrid
+				{ sig::util::edgeInfoWeightGrid
+					(gradGrid.hwSize(), edgeEval.edgeInfos())
+				};
+			bool const okPgm
+				{ io::writeStretchPGM(wgtPgmPath, wgtGrid) };
+			bool const okDat
+				{ io::writeAsciiFile(wgtDatPath, wgtGrid, "%9.3f", -1.f) };
+			std::cout << "@@@ writing: " << wgtPgmPath << okPgm << '\n';
+			std::cout << "@@@ writing: " << wgtDatPath << okDat << '\n';
+			}
 
-std::cout << "gradGrid: " << gradGrid << '\n';
-
-// EdgeInfo-mag
-ras::Grid<float> const edgeInfoWeightGrid
-	{ sig::util::edgeInfoWeightGrid
-		(gradGrid.hwSize(), edgeEval.edgeInfos())
-	};
-(void)io::writeStretchPGM("edgeInfoWgt.pgm", edgeInfoWeightGrid);
+		}
 
 		return sigQuad;
 	}
