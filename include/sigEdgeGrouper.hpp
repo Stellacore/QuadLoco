@@ -48,6 +48,8 @@
 #include <string>
 #include <vector>
 
+#include <fstream>
+
 
 namespace quadloco
 {
@@ -564,6 +566,8 @@ std::cout << "--\n";
 			// determine groups of edgels (with similar angle orientations)
 			std::vector<GroupNWs> const groupByAngles{ ndxWgtByAngle() };
 
+writeGroupNWs(groupByAngles, "groupNWs.dat", edgeInfos);
+
 constexpr double tolCollin{ 10. };
 			std::vector<GroupNWs> const groupNWs
 				{ splitByColin(groupByAngles, edgeInfos, tolCollin) };
@@ -588,8 +592,56 @@ constexpr double tolCollin{ 10. };
 						// reverse directions to sort largest weight first
 						{ return rw2.theWeight < rw1.theWeight; }
 					);
+writeRayWgts(rayWgts, "rayWgts.dat");
+
 			}
 			return rayWgts;
+		}
+
+		//! Write group index data to file
+		inline
+		static
+		void
+		writeGroupNWs
+			( std::vector<GroupNWs> const & groupNWss
+			, std::string const & fname
+			, std::vector<sig::EdgeInfo> const & edgeInfos
+			)
+		{
+			std::ofstream ofs(fname);
+			std::size_t idGroup{ 0u };
+			for (GroupNWs const & groupNWs : groupNWss)
+			{
+				for (NdxWgt const & groupNW : groupNWs)
+				{
+					EdgeInfo const & ei = edgeInfos[groupNW.item()];
+					ofs
+						<< ei.edgel().location()
+						<< ' '
+						<< ei.edgel().gradient()
+						<< ' '
+						<< idGroup
+						<< ' '
+						<< groupNW.weight()
+						<< '\n';
+				}
+				++idGroup;
+			}
+		}
+
+		inline
+		static
+		void
+		writeRayWgts
+			( std::vector<RayWgt> const & rayWgts
+			, std::string const & fname
+			)
+		{
+			std::ofstream ofs(fname);
+			for (RayWgt const & rayWgt : rayWgts)
+			{
+				ofs << rayWgt << '\n';
+			}
 		}
 
 		//! Descriptive information about this instance.
