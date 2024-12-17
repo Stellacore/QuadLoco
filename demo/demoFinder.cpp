@@ -117,6 +117,10 @@ namespace quadloco
 		sig::EdgeEval const edgeEval(gradGrid);
 		std::vector<sig::QuadWgt> const sigQuadWgts
 			{ edgeEval.sigQuadWeights(gradGrid.hwSize()) };
+for (sig::QuadWgt const & sigQuadWgt : sigQuadWgts)
+{
+	std::cout << "sigQuadWgt:\n" << sigQuadWgt << '\n';
+}
 		if (! sigQuadWgts.empty())
 		{
 			sigQuad = sigQuadWgts.front().item();
@@ -192,7 +196,9 @@ main
 
 	// load image
 	ras::Grid<std::uint8_t> const srcGrid{ io::readPGM(srcPath) };
-	ras::Grid<float> const useGrid{ sig::util::toFloat(srcGrid) };
+//	ras::Grid<float> const useGrid{ sig::util::toFloat(srcGrid, 0) };
+	ras::Grid<float> const useGrid
+		{ sig::util::toSmooth(sig::util::toFloat(srcGrid, 0)) };
 
 	// find center
 	sig::QuadTarget const sigQuad{ bestQuadTargetFor(useGrid) };
