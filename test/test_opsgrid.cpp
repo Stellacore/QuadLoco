@@ -32,6 +32,7 @@
 
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
+#include "raskernel.hpp"
 #include "rasRowCol.hpp"
 #include "simgrid.hpp"
 
@@ -304,7 +305,7 @@ namespace
 
 	}
 
-	//! Check magnitude and angle grid extraction
+	//! check generic digital filtering operation
 	void
 	test4
 		( std::ostream & oss
@@ -375,6 +376,37 @@ namespace
 		}
 	}
 
+	//! check smoothing filter
+	void
+	test5
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample05]
+
+		using namespace quadloco;
+
+		// construct a Gaussian filter window
+		std::size_t const halfSize{ 3u };
+		constexpr double sigma{ 1.25 };
+		ras::Grid<float> const gFilter
+			{ ras::kernel::gauss<float>(halfSize, sigma) };
+
+		// integral of filter weights should be unity
+		float const expSum{ 1.f };
+		float const gotSum
+			{ std::accumulate(gFilter.cbegin(), gFilter.cend(), 0.f) };
+
+		// [DoxyExample05]
+
+		// check if filter has unit integral
+		if (! engabra::g3::nearlyEquals(gotSum, expSum))
+		{
+			oss << "Failure of filter unit integral test\n";
+			oss << "exp: " << expSum << '\n';
+			oss << "got: " << gotSum << '\n';
+		}
+	}
 }
 
 //! Standard test case main wrapper
@@ -390,6 +422,7 @@ main
 	test2(oss);
 	test3(oss);
 	test4(oss);
+	test5(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{
