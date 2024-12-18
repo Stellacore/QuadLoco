@@ -47,7 +47,6 @@ set(unitTests
 	test_opsEigen2D  # Eigen value decompositions
 	test_opsFence  # bounding region determination
 	test_opsgrid  # Edgel extraction
-	test_opsGridFilter  # pixel grid sampling functions
 	test_opsPeakFinder  # peak finding in an array
 	test_pix  # pixel image manipulations
 	test_prbGauss1D  # Gaussian probability density functions in 1D
