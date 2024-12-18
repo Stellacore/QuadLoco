@@ -345,6 +345,74 @@ namespace grid
 		return grid;
 	}
 
+	//! A Larger grid produced with (nearest neighbor) up sampling.
+	template <typename Type>
+	inline
+	ras::Grid<Type>
+	filtered
+		( ras::Grid<Type> const & srcGrid
+		, ras::Grid<Type> const & filter
+		)
+	{
+		ras::Grid<Type> outGrid;
+		auto const isOdd
+			{ [] (std::size_t const & val) { return (1 == val % 2u); } };
+
+		// Are all conditions satisfied for (easy) filtering computation
+		if ( srcGrid.isValid()
+		  && filter.isValid()
+		  && isOdd(filter.high())
+		  && isOdd(filter.wide())
+		  && ((filter.high() + 1u) < srcGrid.high())
+		  && ((filter.wide() + 1u) < srcGrid.wide())
+		   )
+		{
+			outGrid = ras::Grid<Type>(srcGrid.hwSize());
+			constexpr Type nan{ std::numeric_limits<double>::quiet_NaN() };
+			// TBD - maybe change to set explicitly only the edge values
+			std::fill(outGrid.begin(), outGrid.end(), nan);
+
+			int const halfHigh{ static_cast<int>(filter.high() / 2u) };
+			int const halfWide{ static_cast<int>(filter.wide() / 2u) };
+
+			int const wHigh{ (int)filter.high() };
+			int const wWide{ (int)filter.wide() };
+
+			// loop over active area of source/output grids
+			int const srcRowEnd{ static_cast<int>(srcGrid.high()) - halfHigh };
+			int const srcColEnd{ static_cast<int>(srcGrid.wide()) - halfWide };
+			for (int srcRow{halfHigh} ; srcRow < srcRowEnd ; ++srcRow)
+			{
+				int const srcRow0{ srcRow - halfHigh };
+				for (int srcCol{halfWide} ; srcCol < srcColEnd ; ++srcCol)
+				{
+					int const srcCol0{ srcCol - halfWide };
+
+					// integrate values over weighted window
+					Type sumVals{ 0 };
+					for (int wRow{0} ; wRow < wHigh ; ++wRow)
+					{
+						int const inRow{ srcRow0 + wRow };
+						for (int wCol{0} ; wCol < wWide ; ++wCol)
+						{
+							int const inCol{ srcCol0 + wCol };
+
+							// integrate over window using filter for weights
+							Type const & wgt = filter(wRow, wCol);
+							Type const & src = srcGrid(inRow, inCol);
+							sumVals += wgt * src;
+						}
+					}
+
+					// update evolving return storage
+					outGrid(srcRow, srcCol) = sumVals;
+				}
+			}
+		} // good inputs
+
+		return outGrid;
+	}
+
 
 } // grid
 
