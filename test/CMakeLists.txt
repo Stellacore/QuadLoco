@@ -44,6 +44,7 @@ set(unitTests
 	test_objCamera  # simplified ideal perspective camera
 	test_objQuadTarget  # represent physical target object
 	test_opsAdderAD  # accumulatio buffer for hough alpha,delta parms
+	test_opsEigen2D  # Eigen value decompositions
 	test_opsFence  # bounding region determination
 	test_opsgrid  # Edgel extraction
 	test_opsGridFilter  # pixel grid sampling functions
