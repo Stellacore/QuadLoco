@@ -54,7 +54,7 @@ namespace ops
 
 namespace grid
 {
-	/*! Compute img::Grad for each pixel location (except at edges)
+	/*! \brief Compute img::Grad for each pixel location (except at edges).
 	 *
 	 * The stepHalf determine how wide an increment is used to estimate
 	 * the edge in each direction. E.g., for a one dimensional signal
@@ -345,13 +345,37 @@ namespace grid
 		return grid;
 	}
 
-	//! A Larger grid produced with (nearest neighbor) up sampling.
-	template <typename Type>
+	/*! \brief Apply func within hwBox moving across srcGrid
+	 *
+	 * A moving window, of size hwBox, moves across srcGrid. Every cell
+	 * in srcGrid is visted other than the first/last hwBox.{high,wide}()
+	 * rows/columns around the boarder (which are set to NaN in output).
+	 *
+	 * At each input cell the functor, boxFunc, is allowed to assess
+	 * srcGrid information (via a call to boxFunc.consider() for every
+	 * srcGrid cell. After doing this for every srcCell that falls
+	 * within the (then current) hwBox windows, the evaluation function,
+	 * boxFunc(), is called and result is assigned to the output grid
+	 * cell (at the same row,col location as the srcGrid cell then
+	 * being evaluated.
+	 *
+	 * \note
+	 * boxFunc must provide the following methods:
+	 * \arg boxFunc{}; // default ctor
+	 * \arg boxFunc.reset(srcValue)
+	 * \arg boxFunc.consider(srcValue, boxRow, boxCol);
+	 * \arg boxFunc();
+	 *
+	 * Example
+	 * \snippet include/opsgrid.hpp DoxyExampleBoxFunc
+	 */
+	template <typename Type, typename BoxFunctor>
 	inline
 	ras::Grid<Type>
-	filtered
+	functionResponse
 		( ras::Grid<Type> const & srcGrid
-		, ras::Grid<Type> const & filter
+		, ras::SizeHW const & hwBox
+		, BoxFunctor & boxFunc
 		)
 	{
 		ras::Grid<Type> outGrid;
@@ -360,11 +384,11 @@ namespace grid
 
 		// Are all conditions satisfied for (easy) filtering computation
 		if ( srcGrid.isValid()
-		  && filter.isValid()
-		  && isOdd(filter.high())
-		  && isOdd(filter.wide())
-		  && ((filter.high() + 1u) < srcGrid.high())
-		  && ((filter.wide() + 1u) < srcGrid.wide())
+		  && hwBox.isValid()
+		  && isOdd(hwBox.high())
+		  && isOdd(hwBox.wide())
+		  && ((hwBox.high() + 1u) < srcGrid.high())
+		  && ((hwBox.wide() + 1u) < srcGrid.wide())
 		   )
 		{
 			outGrid = ras::Grid<Type>(srcGrid.hwSize());
@@ -372,11 +396,11 @@ namespace grid
 			// TBD - maybe change to set explicitly only the edge values
 			std::fill(outGrid.begin(), outGrid.end(), nan);
 
-			int const halfHigh{ static_cast<int>(filter.high() / 2u) };
-			int const halfWide{ static_cast<int>(filter.wide() / 2u) };
+			int const halfHigh{ static_cast<int>(hwBox.high() / 2u) };
+			int const halfWide{ static_cast<int>(hwBox.wide() / 2u) };
 
-			int const wHigh{ (int)filter.high() };
-			int const wWide{ (int)filter.wide() };
+			int const wHigh{ (int)hwBox.high() };
+			int const wWide{ (int)hwBox.wide() };
 
 			// loop over active area of source/output grids
 			int const srcRowEnd{ static_cast<int>(srcGrid.high()) - halfHigh };
@@ -388,8 +412,10 @@ namespace grid
 				{
 					int const srcCol0{ srcCol - halfWide };
 
+					/// reset filter to new source position
+					boxFunc.reset(srcGrid(srcRow, srcCol));
+
 					// integrate values over weighted window
-					Type sumVals{ 0 };
 					for (int wRow{0} ; wRow < wHigh ; ++wRow)
 					{
 						int const inRow{ srcRow0 + wRow };
@@ -397,20 +423,82 @@ namespace grid
 						{
 							int const inCol{ srcCol0 + wCol };
 
-							// integrate over window using filter for weights
-							Type const & wgt = filter(wRow, wCol);
-							Type const & src = srcGrid(inRow, inCol);
-							sumVals += wgt * src;
+							// allow functor to consider this input value
+							boxFunc.consider
+								( srcGrid(inRow, inCol)
+								, static_cast<std::size_t>(wRow)
+								, static_cast<std::size_t>(wCol)
+								);
 						}
 					}
 
 					// update evolving return storage
-					outGrid(srcRow, srcCol) = sumVals;
+					outGrid(srcRow, srcCol) = boxFunc();
 				}
 			}
 		} // good inputs
 
 		return outGrid;
+	}
+
+	//! \brief Result of running filter window over srcGrid.
+	template <typename Type>
+	inline
+	ras::Grid<Type>
+	filtered
+		( ras::Grid<Type> const & srcGrid
+		, ras::Grid<Type> const & filter
+		)
+	{
+		// [DoxyExampleBoxFunc]
+
+		//! Standard digital filter accumulation functor.
+		struct FilterSum
+		{
+			//! Filter weights (arbitrarily set by consumer)
+			ras::Grid<Type> const * const ptFilter;
+
+			//! Filter response: updated by consider(), reported by operator()
+			Type theSum{ static_cast<Type>(0) };
+
+			//! Zero running sum (e.g. call every new window position)
+			inline
+			void
+			reset
+				( Type const & // srcValueAtCenter
+					// source cell value not needed here for simple filters
+				)
+			{
+				theSum = static_cast<Type>(0);
+			}
+
+			//! Weight srcValue by filter(wRow,wCol) and add into sum
+			inline
+			void
+			consider
+				( Type const & srcValue
+				, std::size_t const & wRow
+				, std::size_t const & wCol
+				)
+			{
+				Type const & wgt = (*ptFilter)(wRow, wCol);
+				theSum += wgt * srcValue;
+			}
+
+			//! Filter-weighted sum of values consider()'ed
+			inline
+			Type const &
+			operator()
+				() const
+			{
+				return theSum;
+			}
+		};
+
+		// [DoxyExampleBoxFunc]
+
+		FilterSum bFunc{ &filter };
+		return functionResponse(srcGrid, filter.hwSize(), bFunc);
 	}
 
 
