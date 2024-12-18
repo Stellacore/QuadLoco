@@ -183,6 +183,68 @@ namespace
 
 	}
 
+	//! Examples for documentation
+	void
+	test2
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample02]
+
+		using namespace quadloco;
+
+		// null grid should be (! nearlyEqual to all)
+		ras::Grid<double> const null{};
+
+		//! Grid of one size
+		ras::Grid<double> gridA(2u, 1u);
+		ras::Grid<double>::iterator itA{ gridA.begin() };
+		*itA++ =  .5;
+		*itA++ = 1.5;
+
+		//! Grid of different size but same content
+		ras::Grid<double> gridB(1u, 2u);
+		ras::Grid<double>::iterator itB{ gridB.begin() };
+		*itB++ =  .5;
+		*itB++ = 1.5;
+
+		bool showDetail{ false };
+
+		// null not nearly equal to anything
+		if (! (! nearlyEquals(null, null)))
+		{
+			oss << "Failure of null,null test\n";
+			showDetail = true;
+		}
+		if (! (! nearlyEquals(gridA, null)))
+		{
+			oss << "Failure of gridA,null test\n";
+			showDetail = true;
+		}
+
+		// non-null grid equal to self
+		if (! nearlyEquals(gridA, gridA))
+		{
+			oss << "Failure of gridA,gridA test\n";
+			showDetail = true;
+		}
+
+		// grids with same content but different sizes are not nearly same
+		if (! (! nearlyEquals(gridA, gridB)))
+		{
+			oss << "Failure of gridA,gridB test\n";
+			showDetail = true;
+		}
+
+		if (showDetail)
+		{
+			oss << gridA.infoStringContents("gridA", "%5.3f") << '\n';
+			oss << gridB.infoStringContents("gridB", "%5.3f") << '\n';
+		}
+
+		// [DoxyExample02]
+
+	}
 }
 
 //! Check behavior of NS
@@ -195,6 +257,7 @@ main
 
 	test0(oss);
 	test1(oss);
+	test2(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{
