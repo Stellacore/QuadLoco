@@ -84,7 +84,7 @@ namespace kernel
 			{
 				double const yy{ static_cast<double>(col) - xy0 };
 
-				double const radSq{ xx*xx + yy*yy };
+				double const radSq{ (xx*xx + yy*yy) / sigma };
 				double const value{ std::exp(-radSq) };
 				sum += value;
 				filter(row, col) = static_cast<Type>(value);
