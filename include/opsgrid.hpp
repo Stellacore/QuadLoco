@@ -34,6 +34,7 @@
 
 #include "imgEdgel.hpp"
 #include "imgGrad.hpp"
+#include "opsfilter.hpp"
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
 #include "rasRowCol.hpp"
@@ -367,7 +368,7 @@ namespace grid
 	 * \arg boxFunc();
 	 *
 	 * Example
-	 * \snippet include/opsgrid.hpp DoxyExampleBoxFunc
+	 * \snippet include/opsfilter.hpp DoxyExampleBoxFunc
 	 */
 	template <typename Type, typename BoxFunctor>
 	inline
@@ -412,28 +413,47 @@ namespace grid
 				{
 					int const srcCol0{ srcCol - halfWide };
 
-					/// reset filter to new source position
-					boxFunc.reset(srcGrid(srcRow, srcCol));
+					Type outVal{ nan };
 
-					// integrate values over weighted window
-					for (int wRow{0} ; wRow < wHigh ; ++wRow)
+					// reset filter to new source position
+					Type const & refVal = srcGrid(srcRow, srcCol);
+					if (engabra::g3::isValid(refVal))
 					{
-						int const inRow{ srcRow0 + wRow };
-						for (int wCol{0} ; wCol < wWide ; ++wCol)
-						{
-							int const inCol{ srcCol0 + wCol };
+						boxFunc.reset(refVal);
 
-							// allow functor to consider this input value
-							boxFunc.consider
-								( srcGrid(inRow, inCol)
-								, static_cast<std::size_t>(wRow)
-								, static_cast<std::size_t>(wCol)
-								);
+						// integrate values over weighted window
+						for (int wRow{0} ; wRow < wHigh ; ++wRow)
+						{
+							int const inRow{ srcRow0 + wRow };
+							for (int wCol{0} ; wCol < wWide ; ++wCol)
+							{
+								int const inCol{ srcCol0 + wCol };
+
+								// have functor consider this value
+								Type const & srcVal = srcGrid(inRow, inCol);
+								if (engabra::g3::isValid(srcVal))
+								{
+									boxFunc.consider
+										( srcVal
+										, static_cast<std::size_t>(wRow)
+										, static_cast<std::size_t>(wCol)
+										);
+								}
+								else
+								{
+									// upon encountering a null,
+									// abandon entire window/box processing
+									goto NextWindow;
+								}
+							}
 						}
+
+						outVal = boxFunc();
 					}
+					NextWindow:
 
 					// update evolving return storage
-					outGrid(srcRow, srcCol) = boxFunc();
+					outGrid(srcRow, srcCol) = outVal;
 				}
 			}
 		} // good inputs
@@ -450,55 +470,23 @@ namespace grid
 		, ras::Grid<Type> const & filter
 		)
 	{
-		// [DoxyExampleBoxFunc]
-
-		//! Standard digital filter accumulation functor.
-		struct FilterSum
-		{
-			//! Filter weights (arbitrarily set by consumer)
-			ras::Grid<Type> const * const ptFilter;
-
-			//! Filter response: updated by consider(), reported by operator()
-			Type theSum{ static_cast<Type>(0) };
-
-			//! Zero running sum (e.g. call every new window position)
-			inline
-			void
-			reset
-				( Type const & // srcValueAtCenter
-					// source cell value not needed here for simple filters
-				)
-			{
-				theSum = static_cast<Type>(0);
-			}
-
-			//! Weight srcValue by filter(wRow,wCol) and add into sum
-			inline
-			void
-			consider
-				( Type const & srcValue
-				, std::size_t const & wRow
-				, std::size_t const & wCol
-				)
-			{
-				Type const & wgt = (*ptFilter)(wRow, wCol);
-				theSum += wgt * srcValue;
-			}
-
-			//! Filter-weighted sum of values consider()'ed
-			inline
-			Type const &
-			operator()
-				() const
-			{
-				return theSum;
-			}
-		};
-
-		// [DoxyExampleBoxFunc]
-
-		FilterSum bFunc{ &filter };
+		ops::filter::WeightedSum bFunc{ &filter };
 		return functionResponse(srcGrid, filter.hwSize(), bFunc);
+	}
+
+	//! \brief Result of a sum-square difference filter
+	template <typename Type>
+	inline
+	ras::Grid<Type>
+	sumSquareDiffGridFor
+		( ras::Grid<Type> const & srcGrid
+			//!< Input data
+		, ras::SizeHW const & hwBox
+			//!< Size of moving window
+		)
+	{
+		ops::filter::SumSquareDiff<Type> bFunc{};
+		return functionResponse(srcGrid, hwBox, bFunc);
 	}
 
 
