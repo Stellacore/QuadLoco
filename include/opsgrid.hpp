@@ -37,6 +37,7 @@
 #include "opsfilter.hpp"
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
+#include "raskernel.hpp"
 #include "rasRowCol.hpp"
 #include "rasSizeHW.hpp"
 
@@ -470,6 +471,25 @@ namespace grid
 		, ras::Grid<Type> const & filter
 		)
 	{
+		ops::filter::WeightedSum bFunc{ &filter };
+		return functionResponse(srcGrid, filter.hwSize(), bFunc);
+	}
+
+	//! \brief Result of a sum-square difference filter
+	template <typename Type>
+	inline
+	ras::Grid<Type>
+	smoothGridFor
+		( ras::Grid<Type> const & srcGrid
+			//!< Input data
+		, std::size_t const & halfSize
+			//!< Halfsize for moving window
+		, double const & sigma
+			//!< Standard deviation of Gaussian to use for smoothing
+		)
+	{
+		ras::Grid<Type> const filter
+			{ ras::kernel::gauss<Type>(halfSize, sigma) };
 		ops::filter::WeightedSum bFunc{ &filter };
 		return functionResponse(srcGrid, filter.hwSize(), bFunc);
 	}
