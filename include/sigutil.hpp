@@ -37,6 +37,7 @@
 
 #include "cast.hpp"
 #include "imgArea.hpp"
+#include "opsgrid.hpp"
 #include "rasGrid.hpp"
 #include "sigEdgeInfo.hpp"
 
@@ -189,7 +190,7 @@ namespace util
 			// find min max
 			using InIt = ras::Grid<PixType>::const_iterator;
 			std::pair<InIt, InIt> const iterMM
-				{ std::minmax_element(grid.cbegin(), grid.cend()) };
+				{ ops::grid::minmax_valid(grid.cbegin(), grid.cend()) };
 			PixType const min{ *(iterMM.first) };
 			PixType const max{ *(iterMM.second) };
 

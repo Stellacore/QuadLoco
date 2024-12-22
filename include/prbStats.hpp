@@ -32,6 +32,7 @@
  */
 
 
+#include "opsgrid.hpp"
 #include "pix.hpp"
 
 #include <algorithm>
@@ -149,7 +150,7 @@ namespace prb
 				theCount += (std::size_t)(std::distance(beg, end));
 				// update the min/max
 				std::pair<FwdIter, FwdIter>
-					const itPair{ std::minmax_element(beg, end) };
+					const itPair{ ops::grid::minmax_valid(beg, end) };
 				Type const & valMin = *(itPair.first);
 				if (valMin < theMin)
 				{
