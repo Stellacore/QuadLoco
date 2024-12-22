@@ -241,8 +241,6 @@ namespace sim
 			) const
 		{
 			double intensity{ engabra::g3::null<double>() };
-			static std::mt19937 gen(48997969u);
-			static std::normal_distribution<double> distro(.0, .5);
 			double sum{ 0. };
 			double count{ 0. };
 			std::size_t const numSamps{ 1u + numOverSamps };
@@ -253,6 +251,8 @@ namespace sim
 				img::Spot delta{ 0., 0. };
 				if (0u < nn)
 				{
+					static std::mt19937 gen(48997969u);
+					static std::normal_distribution<double> distro(.0, .5);
 					delta = img::Spot{ distro(gen), distro(gen) };
 				}
 
