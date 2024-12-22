@@ -48,6 +48,8 @@
 #include <string>
 #include <vector>
 
+#include <fstream>
+
 
 namespace quadloco
 {
@@ -315,7 +317,7 @@ std::cout << "--\n";
 		 */
 		inline
 		std::vector<GroupNWs>
-		groupNdxWeights
+		ndxWgtByAngle
 			() const
 		{
 			std::vector<GroupNWs> eGroups;
@@ -344,6 +346,123 @@ std::cout << "--\n";
 				eGroups.emplace_back(GroupNWs{ edgeInfoNdxWgts });
 			}
 			return eGroups;
+		}
+
+		/* \brief Split largeGroup into smaller ones with better aligned edgels.
+		 *
+		 * From large group, pick an arbitrary (e.g. first) index to
+		 * begin the smaller group.
+		 * 
+		 * Then step through all edgels remaining in the largeGroup and
+		 * move the aligned ones into the new small group.
+		 *
+		 */
+		inline
+		static
+		std::vector<GroupNWs>
+		splitOneGroup
+			( GroupNWs const & largeGroup
+			, std::vector<sig::EdgeInfo> const & edgeInfos
+			, double const & tolCollin
+			)
+		{
+			std::vector<GroupNWs> smallGroups;
+
+			std::vector<bool> isDone(largeGroup.size(), false);
+			std::vector<bool>::const_iterator itFind
+				{ std::find(isDone.cbegin(), isDone.cend(), false) };
+			std::size_t numLeft{ largeGroup.size() };
+			while ((0u < numLeft) && (isDone.cend() != itFind))
+			{
+				GroupNWs smallGroup;
+				smallGroup.reserve(numLeft); // conservative on size
+				// get first one
+				std::size_t const doNdx0
+					{ (std::size_t)std::distance(isDone.cbegin(), itFind) };
+
+				// get corresponding ndx/weight
+				NdxWgt const & nw0 = largeGroup[doNdx0];
+				std::size_t const & ndx0 = nw0.item();
+				img::Edgel const & edgel0 = edgeInfos[ndx0].edgel();
+
+				// add edgel0 to start small group
+				smallGroup.emplace_back(nw0);
+				isDone[doNdx0] = true;
+				--numLeft;
+				if (0u == numLeft)
+				{
+					break;
+				}
+				// (running average ray for small group
+				img::Vector<double> sumStart{ edgel0.start() };
+				img::Vector<double> sumDir{ edgel0.direction() };
+				double sumCount{ 1. };
+
+				// find the rest
+				for (std::size_t doNdx1{doNdx0+1} ; doNdx1 < isDone.size()
+					; ++doNdx1)
+				{
+					if (! isDone[doNdx1])
+					{
+						double const scl{ 1. / sumCount };
+						img::Ray const aveRay
+							{ scl * sumStart
+							, direction(sumDir)
+							};
+
+						NdxWgt const & nw1 = largeGroup[doNdx1];
+						std::size_t const & ndx1 = nw1.item();
+						img::Edgel const & edgel = edgeInfos[ndx1].edgel();
+						if (nearlyCollinear(edgel, aveRay, tolCollin))
+						{
+							smallGroup.emplace_back(nw1);
+							isDone[doNdx1] = true;
+							--numLeft;
+							sumStart = sumStart + edgel.start();
+							sumDir = sumDir + edgel.direction();
+							sumCount += 1.;
+							if (0u == numLeft)
+							{
+								break;
+							}
+						}
+					}
+					// else // skip already evaluated/consumed indices
+				}
+
+				// return small group from this run through 'isDone' list
+				smallGroups.emplace_back(smallGroup);
+
+				// find the next 'yet-to-be-processed' edgel
+				itFind = std::find(isDone.cbegin(), isDone.cend(), false);
+			}
+
+			return smallGroups;
+		}
+
+		//! Split largeGroups into smaller groups with colinear edgels
+		inline
+		static
+		std::vector<GroupNWs>
+		splitByColin
+			( std::vector<GroupNWs> const & largeGroups
+			, std::vector<sig::EdgeInfo> const & edgeInfos
+			, double const & tolCollin
+			)
+		{
+			std::vector<GroupNWs> splitGroups;
+
+			for (GroupNWs const & largeGroup : largeGroups)
+			{
+				std::vector<GroupNWs> const smallGroups
+					{ splitOneGroup(largeGroup, edgeInfos, tolCollin) };
+				splitGroups.insert
+					( splitGroups.end()
+					, smallGroups.cbegin(), smallGroups.cend()
+					);
+			}
+
+			return splitGroups;
 		}
 
 
@@ -445,26 +564,84 @@ std::cout << "--\n";
 			std::vector<RayWgt> rayWgts;
 
 			// determine groups of edgels (with similar angle orientations)
-			std::vector<GroupNWs> const groupNWs{ groupNdxWeights() };
+			std::vector<GroupNWs> const groupByAngles{ ndxWgtByAngle() };
 
-			// determine representative edge-ray for each group
-			rayWgts.reserve(groupNWs.size());
-			for (GroupNWs const & groupNW : groupNWs)
+writeGroupNWs(groupByAngles, "groupNWs.dat", edgeInfos);
+
+constexpr double tolCollin{ 10. };
+			std::vector<GroupNWs> const groupNWs
+				{ splitByColin(groupByAngles, edgeInfos, tolCollin) };
+			if (! groupNWs.empty())
 			{
-				// compute average edgeRay for this group
-				RayWgt const rayWgt{ meanEdgeRayWgtFor(groupNW, edgeInfos) };
-				if (rayWgt.isValid())
+
+				// determine representative edge-ray for each group
+				rayWgts.reserve(groupNWs.size());
+				for (GroupNWs const & groupNW : groupNWs)
 				{
-					rayWgts.emplace_back(rayWgt);
+					// compute average edgeRay for this group
+					RayWgt const rayWgt
+						{ meanEdgeRayWgtFor(groupNW, edgeInfos) };
+					if (rayWgt.isValid())
+					{
+						rayWgts.emplace_back(rayWgt);
+					}
 				}
+				std::sort
+					( rayWgts.begin(), rayWgts.end()
+					, [] (RayWgt const & rw1, RayWgt const & rw2)
+						// reverse directions to sort largest weight first
+						{ return rw2.theWeight < rw1.theWeight; }
+					);
+writeRayWgts(rayWgts, "rayWgts.dat");
+
 			}
-			std::sort
-				( rayWgts.begin(), rayWgts.end()
-				, [] (RayWgt const & rw1, RayWgt const & rw2)
-					// reverse directions to sort largest weight first
-					{ return rw2.theWeight < rw1.theWeight; }
-				);
 			return rayWgts;
+		}
+
+		//! Write group index data to file
+		inline
+		static
+		void
+		writeGroupNWs
+			( std::vector<GroupNWs> const & groupNWss
+			, std::string const & fname
+			, std::vector<sig::EdgeInfo> const & edgeInfos
+			)
+		{
+			std::ofstream ofs(fname);
+			std::size_t idGroup{ 0u };
+			for (GroupNWs const & groupNWs : groupNWss)
+			{
+				for (NdxWgt const & groupNW : groupNWs)
+				{
+					EdgeInfo const & ei = edgeInfos[groupNW.item()];
+					ofs
+						<< ei.edgel().location()
+						<< ' '
+						<< ei.edgel().gradient()
+						<< ' '
+						<< idGroup
+						<< ' '
+						<< groupNW.weight()
+						<< '\n';
+				}
+				++idGroup;
+			}
+		}
+
+		inline
+		static
+		void
+		writeRayWgts
+			( std::vector<RayWgt> const & rayWgts
+			, std::string const & fname
+			)
+		{
+			std::ofstream ofs(fname);
+			for (RayWgt const & rayWgt : rayWgts)
+			{
+				ofs << rayWgt << '\n';
+			}
 		}
 
 		//! Descriptive information about this instance.

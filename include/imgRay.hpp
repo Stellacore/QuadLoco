@@ -36,6 +36,7 @@
 
 #include <Engabra>
 
+#include <algorithm>
 #include <limits>
 #include <sstream>
 #include <string>
@@ -257,6 +258,25 @@ namespace
 			ostrm << edgeRay << '\n';
 		}
 		return ostrm;
+	}
+
+	//! True if edgel is colinear with ray within (positional) tolerance
+	inline
+	static
+	bool
+	nearlyCollinear
+		( quadloco::img::Ray const & ray1
+		, quadloco::img::Ray const & ray2
+		, double const & tolDelta
+		)
+	{
+		quadloco::img::Vector<double> const & s1 = ray1.start();
+		quadloco::img::Vector<double> const & s2 = ray2.start();
+		double const dist12{ ray1.distanceAlong(s2) };
+		double const dist21{ ray2.distanceAlong(s1) };
+		double const distMax
+			{ std::max(std::abs(dist12), std::abs(dist21)) };
+		return (distMax < tolDelta);
 	}
 
 

@@ -500,21 +500,22 @@ namespace sig
 
 					SpotSigma const fitSpotSigma
 						{ fitter.solutionSpotSigma() };
-					img::Spot const centerSpotPixMiddle
-						{ fitSpotSigma.spot() // fit center location
-						+ img::Spot{ .5, .5 } // report subpix center
-						};
-					sig::QuadTarget const fitSigQuad
-						{ centerSpotPixMiddle
-						, srcQuad.theDirX // keep src axis direction
-						, srcQuad.theDirY // keep src axis direction
-						, fitSpotSigma.sigma() // estimated center uncertainty
-						};
-					double const & sigma = fitSpotSigma.weight();
-					// compute weight relative to 1-pix sigma
-					double const wgt{ std::exp(-sigma*sigma) };
-					QuadWgt const fitQuadWgt{ fitSigQuad, wgt };
-					fitQuadWgts.emplace_back(fitQuadWgt);
+					if (isValid(fitSpotSigma))
+					{
+						img::Spot const centerSpotPixMiddle
+							{ fitSpotSigma.spot() // fit center location
+							+ img::Spot{ .5, .5 } // report subpix center
+							};
+						sig::QuadTarget const fitSigQuad
+							{ centerSpotPixMiddle
+							, srcQuad.theDirX // keep src axis direction
+							, srcQuad.theDirY // keep src axis direction
+							, fitSpotSigma.sigma() // est. center uncertainty
+							};
+						double const wgt{ fitSpotSigma.weight() };
+						QuadWgt const fitQuadWgt{ fitSigQuad, wgt };
+						fitQuadWgts.emplace_back(fitQuadWgt);
+					}
 				}
 			}
 
