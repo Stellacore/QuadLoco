@@ -42,6 +42,7 @@
 #include "rasSizeHW.hpp"
 
 #include <algorithm>
+#include <iterator>
 #include <limits>
 #include <vector>
 
@@ -56,6 +57,65 @@ namespace ops
 
 namespace grid
 {
+
+	//! Iterators to min/max *valid* (not null) elements in collection
+	template <typename Iter>
+	inline
+	std::pair<Iter, Iter>
+	minmax_valid
+		( Iter const & beg
+		, Iter const & end
+		)
+	{
+		std::pair<Iter, Iter> itPair{ end, end };
+		Iter & itMin = itPair.first;
+		Iter & itMax = itPair.second;
+		using ValType = typename std::iterator_traits<Iter>::value_type;
+		ValType min{ engabra::g3::null<ValType>() };
+		ValType max{ engabra::g3::null<ValType>() };
+		for (Iter iter{beg} ; end != iter ; ++iter)
+		{
+			ValType const & value = *iter;
+			if (engabra::g3::isValid(value))
+			{
+				bool setMin{ false };
+				// track min
+				if (engabra::g3::isValid(min))
+				{
+					setMin = (value < min);
+				}
+				else
+				{
+					setMin = true;
+				}
+				if (setMin)
+				{
+					min = value;
+					itMin = iter;
+				}
+
+				// track max
+				bool setMax{ false };
+				if (engabra::g3::isValid(max))
+				{
+					setMax = (max < value);
+				}
+				else
+				{
+					setMax = true;
+				}
+				if (setMax)
+				{
+					max = value;
+					itMax = iter;
+				}
+			}
+		}
+		return itPair;
+	}
+
+
+
 	/*! \brief Compute img::Grad for each pixel location (except at edges).
 	 *
 	 * The stepHalf determine how wide an increment is used to estimate
