@@ -535,46 +535,56 @@ namespace ras
 			return oss.str();
 		}
 
-
-/*
-		//! exactly equals operator
+		//! General nearly(whatever) operation
+		template <typename Func>
 		inline
 		bool
-		operator==
-			( Grid const & rhs
-			) const;
+		nearlyFunc
+			( ras::Grid<Type> const & other
+			, Func const & func
+			) const
+		{
+			bool same
+				{  isValid() && other.isValid()
+				&& (hwSize() == other.hwSize())
+				};
+			if (same)
+			{
+				same = std::equal(cbegin(), cend(), other.cbegin(), func);
+			}
+			return same;
+		}
+			
 
-		//! Cast to different element type
-		template <typename OutType>
+		//! True if *all* individual elements are nearly same within tol
 		inline
-		ras::Grid<OutType>
-		castGrid
-			() const;
+		bool
+		nearlyEquals
+			( ras::Grid<Type> const & other
+			, double const & tol = std::numeric_limits<Type>::epsilon()
+			) const
+		{
+			return nearlyFunc
+				( other
+				, [&tol] (Type const & vA, Type const & vB)
+					{ return engabra::g3::nearlyEquals(vA, vB, tol); }
+				);
+		}
 
-		//! Number of valid column entires in specified row
+		//! True if *all* individual elements are nearly same within tol
 		inline
-		size_t
-		validCountInRow
-			( size_t const & rowNdx
-			) const;
-
-		//! Number of valid rows entires in specified column
-		inline
-		size_t
-		validCountInCol
-			( size_t const & colNdx
-			) const;
-*/
-
-/*
-		//! destructive resize
-		inline
-		void
-		resize
-			( size_t const & high
-			, size_t const & wide
-			);
-*/
+		bool
+		nearlyEqualsAbs
+			( ras::Grid<Type> const & other
+			, double const & tol = std::numeric_limits<Type>::epsilon()
+			) const
+		{
+			return nearlyFunc
+				( other
+				, [&tol] (Type const & vA, Type const & vB)
+					{ return engabra::g3::nearlyEqualsAbs(vA, vB, tol); }
+				);
+		}
 
 	};
 
@@ -587,7 +597,7 @@ namespace ras
 namespace
 {
 	//! Put obj.infoString() to stream
-	template < typename Type >
+	template <typename Type >
 	inline
 	std::ostream &
 	operator<<
@@ -597,6 +607,32 @@ namespace
 	{
 		ostrm << obj.infoString();
 		return ostrm;
+	}
+
+	//! True if the two grids are relatively equal within tolerance
+	template <typename Type>
+	inline
+	bool
+	nearlyEquals
+		( quadloco::ras::Grid<Type> const & itemA
+		, quadloco::ras::Grid<Type> const & itemB
+		, double const & tol = std::numeric_limits<Type>::epsilon()
+		)
+	{
+		return itemA.nearlyEquals(itemB, tol);
+	}
+
+	//! True if the two grids are absolutely equal within tolerance
+	template <typename Type>
+	inline
+	bool
+	nearlyEqualsAbs
+		( quadloco::ras::Grid<Type> const & itemA
+		, quadloco::ras::Grid<Type> const & itemB
+		, double const & tol = std::numeric_limits<Type>::epsilon()
+		)
+	{
+		return itemA.nearlyEqualsAbs(itemB, tol);
 	}
 
 } // [anon/global]

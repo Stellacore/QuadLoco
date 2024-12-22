@@ -37,6 +37,7 @@
 
 #include "cast.hpp"
 #include "imgArea.hpp"
+#include "opsgrid.hpp"
 #include "rasGrid.hpp"
 #include "sigEdgeInfo.hpp"
 
@@ -87,60 +88,6 @@ namespace util
 		}
 		return fGrid;
 	}
-
-	//! A Larger grid produced with (nearest neighbor) up sampling.
-	inline
-	ras::Grid<float>
-	toSmooth
-		( ras::Grid<float> const & inGrid
-//		, std::size_t const & wHalf
-		)
-	{
-		ras::Grid<float> outGrid(inGrid.hwSize());
-		constexpr float nan{ std::numeric_limits<double>::quiet_NaN() };
-		std::fill(outGrid.begin(), outGrid.end(), nan);
-
-		constexpr int wHalf{ 1 };
-		constexpr int wSize{ 2*wHalf + 1 };
-		ras::Grid<float> wgts(wSize, wSize);
-		wgts(0,0) = .5f;
-		wgts(0,1) = .8f;
-		wgts(0,2) = .5f;
-		wgts(1,0) = .8f;
-		wgts(1,1) = 1.f;
-		wgts(1,2) = .8f;
-		wgts(2,0) = .5f;
-		wgts(2,1) = .8f;
-		wgts(2,2) = .5f;
-		float const sumWgts{ 4.f*.5f + 4.f*.8f + .1f };
-
-		int const inRowEnd{ static_cast<int>(inGrid.high()) - wHalf };
-		int const inColEnd{ static_cast<int>(inGrid.wide()) - wHalf };
-		for (int inRow{wHalf} ; inRow < inRowEnd ; ++inRow)
-		{
-			int const inRow0{ inRow - wHalf };
-			for (int inCol{wHalf} ; inCol < inColEnd ; ++inCol)
-			{
-				int const inCol0{ inCol - wHalf };
-
-				// window processing
-				float sumVals{ 0.f };
-				for (int wRow{0} ; wRow < 2*wHalf ; ++wRow)
-				{
-					int const inRow{ inRow0 + wRow };
-					for (int wCol{0} ; wCol < 2*wHalf ; ++wCol)
-					{
-						int const inCol{ inCol0 + wCol };
-						sumVals += wgts(wRow, wCol) * inGrid(inRow, inCol);
-					}
-				}
-				outGrid(inRow, inCol) = sumVals / sumWgts;
-
-			}
-		}
-		return outGrid;
-	}
-
 
 	//! A Larger grid produced with (nearest neighbor) up sampling.
 	template <typename PixType>
@@ -243,7 +190,7 @@ namespace util
 			// find min max
 			using InIt = ras::Grid<PixType>::const_iterator;
 			std::pair<InIt, InIt> const iterMM
-				{ std::minmax_element(grid.cbegin(), grid.cend()) };
+				{ ops::grid::minmax_valid(grid.cbegin(), grid.cend()) };
 			PixType const min{ *(iterMM.first) };
 			PixType const max{ *(iterMM.second) };
 

@@ -30,7 +30,10 @@
 
 #include "opsgrid.hpp"
 
+#include "rasgrid.hpp"
 #include "rasGrid.hpp"
+#include "raskernel.hpp"
+#include "rasRowCol.hpp"
 #include "simgrid.hpp"
 
 #include <algorithm>
@@ -224,7 +227,6 @@ namespace
 		( std::ostream & oss
 		)
 	{
-
 		// [DoxyExample03]
 
 		using namespace quadloco;
@@ -303,7 +305,165 @@ namespace
 
 	}
 
+	//! check generic digital filtering operation
+	void
+	test4
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample04]
 
+		using namespace quadloco;
+
+		// simulate a data grid of values (impulse function)
+		// filter (5x7) below is exact fit into this
+		// with total number of nan filled rows/columns of 4 and 6
+		ras::SizeHW const hwValues{ 5u+4u, 7u+6u };
+		ras::RowCol const rcImpulse{ hwValues.high()/2u, hwValues.wide()/2u };
+		ras::Grid<double> srcValues(hwValues);
+		std::fill(srcValues.begin(), srcValues.end(), 0.);
+		srcValues(rcImpulse) = 1.;
+
+		// define a filter grid to apply to source image
+		// Note filtering assume an odd size on each dimension
+		std::size_t const halfHigh{ 2u }; // no result this many rows each edge
+		std::size_t const halfWide{ 3u }; // no result this many cols each edge
+		ras::SizeHW const hwFilter
+			{ (2u*halfHigh + 1u)  // e.g. 5u
+			, (2u*halfWide + 1u)  // e.g. 7u
+			};
+		ras::Grid<double> expFilter(hwFilter);
+		std::iota(expFilter.begin(), expFilter.end(), 10.); // arbitrary
+
+		// run filter across image
+		ras::Grid<double> const gotValues
+			{ ops::grid::filtered(srcValues, expFilter) };
+
+		/*
+		std::cout
+			<< srcValues.infoStringContents("srcValues:", "%5.1f")
+			<< '\n'
+			<< expFilter.infoStringContents("expFilter:", "%5.1f")
+			<< '\n'
+			<< gotValues.infoStringContents("gotValues:", "%5.1f")
+			<< '\n'
+			;
+		*/
+
+		// filtered impulse function produces point reflected filter values
+		// values in the output grid.
+		img::ChipSpec const responseChip
+			{ ras::RowCol
+				{ (rcImpulse.row() - (expFilter.high()/2u))
+				, (rcImpulse.col() - (expFilter.wide()/2u))
+				}
+			, ras::SizeHW{ expFilter.hwSize() }
+			};
+		ras::Grid<double> const gotFilter // impulse response
+			{ ras::grid::subGridValuesFrom(gotValues, responseChip) };
+
+		// [DoxyExample04]
+
+		// For the impulse test data, response output is point reflection
+		// reversed. Therefore, reverse the 'exp' values before testing.
+		std::reverse(expFilter.begin(), expFilter.end());
+		if (! nearlyEqualsAbs(gotFilter, expFilter))
+		{
+			oss << "Failure of gotFilter impulse response test\n";
+			oss << "responseChip: " << responseChip << '\n';
+			oss << expFilter.infoStringContents("exp:", "%5.2f") << '\n';
+			oss << gotFilter.infoStringContents("got:", "%5.2f") << '\n';
+		}
+	}
+
+	//! check smoothing filter
+	void
+	test5
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample05]
+
+		using namespace quadloco;
+
+		// construct a Gaussian filter window
+		std::size_t const halfSize{ 3u };
+		constexpr double sigma{ 1.25 };
+		ras::Grid<float> const gFilter
+			{ ras::kernel::gauss<float>(halfSize, sigma) };
+
+		// integral of filter weights should be unity
+		float const expSum{ 1.f };
+		float const gotSum
+			{ std::accumulate(gFilter.cbegin(), gFilter.cend(), 0.f) };
+
+		// [DoxyExample05]
+
+		// check if filter has unit integral
+		float const tol{ 4.f*std::numeric_limits<float>::epsilon() };
+		if (! engabra::g3::nearlyEquals(gotSum, expSum, tol))
+		{
+			using namespace engabra::g3::io;
+			oss << "Failure of filter unit integral test\n";
+			oss << "exp: " << fixed(expSum) << '\n';
+			oss << "got: " << fixed(gotSum) << '\n';
+			oss << "dif: " << enote(gotSum-expSum) << '\n';
+		}
+	}
+
+	//! check min,max finding
+	void
+	test6
+		( std::ostream & oss
+		)
+	{
+		using namespace quadloco;
+
+		ras::Grid<double> const aNull{};
+		using ItInt = ras::Grid<double>::const_iterator;
+		std::pair<ItInt, ItInt> const itMM
+			{ ops::grid::minmax_valid(aNull.cbegin(), aNull.cend()) };
+		if (! ((aNull.cend() == itMM.first) && (aNull.cend() == itMM.second)))
+		{
+			oss << "Failure of aNull minmax_valid test\n";
+		}
+
+		// [DoxyExample06]
+
+		constexpr float fNan{ std::numeric_limits<float>::quiet_NaN() };
+
+		ras::Grid<float> fGrid(3u, 3u);
+		std::fill(fGrid.begin(), fGrid.end(), fNan);
+		float const expMin{ -3.f };
+		float const expMax{  5.f };
+		fGrid(1u, 2u) = expMin;
+		fGrid(1u, 1u) = .5f*(expMin + expMax);
+		fGrid(2u, 2u) = expMax;
+
+		using ItFlt = ras::Grid<float>::const_iterator;
+		std::pair<ItFlt, ItFlt> const itPair
+			{ ops::grid::minmax_valid(fGrid.cbegin(), fGrid.cend()) };
+		float gotMin{ fNan };
+		float gotMax{ fNan };
+		if ((fGrid.cend() != itPair.first) && (fGrid.cend() != itPair.second))
+		{
+			gotMin = *(itPair.first);
+			gotMax = *(itPair.second);
+		}
+
+		// [DoxyExample06]
+
+		// compare should be exact (no computations, just copies)
+		if (! ((gotMin == expMin) && (gotMax == expMax)))
+		{
+			oss << "Failure of fGrid minmax_valid test\n";
+			oss << "expMin: " << expMin << '\n';
+			oss << "expMax: " << expMax << '\n';
+			oss << "gotMin: " << gotMin << '\n';
+			oss << "gotMax: " << gotMax << '\n';
+		}
+
+	}
 }
 
 //! Standard test case main wrapper
@@ -318,6 +478,9 @@ main
 	test1(oss);
 	test2(oss);
 	test3(oss);
+	test4(oss);
+	test5(oss);
+	test6(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

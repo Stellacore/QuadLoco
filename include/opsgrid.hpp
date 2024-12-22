@@ -34,12 +34,15 @@
 
 #include "imgEdgel.hpp"
 #include "imgGrad.hpp"
+#include "opsfilter.hpp"
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
+#include "raskernel.hpp"
 #include "rasRowCol.hpp"
 #include "rasSizeHW.hpp"
 
 #include <algorithm>
+#include <iterator>
 #include <limits>
 #include <vector>
 
@@ -54,7 +57,66 @@ namespace ops
 
 namespace grid
 {
-	/*! Compute img::Grad for each pixel location (except at edges)
+
+	//! Iterators to min/max *valid* (not null) elements in collection
+	template <typename Iter>
+	inline
+	std::pair<Iter, Iter>
+	minmax_valid
+		( Iter const & beg
+		, Iter const & end
+		)
+	{
+		std::pair<Iter, Iter> itPair{ end, end };
+		Iter & itMin = itPair.first;
+		Iter & itMax = itPair.second;
+		using ValType = typename std::iterator_traits<Iter>::value_type;
+		ValType min{ engabra::g3::null<ValType>() };
+		ValType max{ engabra::g3::null<ValType>() };
+		for (Iter iter{beg} ; end != iter ; ++iter)
+		{
+			ValType const & value = *iter;
+			if (engabra::g3::isValid(value))
+			{
+				bool setMin{ false };
+				// track min
+				if (engabra::g3::isValid(min))
+				{
+					setMin = (value < min);
+				}
+				else
+				{
+					setMin = true;
+				}
+				if (setMin)
+				{
+					min = value;
+					itMin = iter;
+				}
+
+				// track max
+				bool setMax{ false };
+				if (engabra::g3::isValid(max))
+				{
+					setMax = (max < value);
+				}
+				else
+				{
+					setMax = true;
+				}
+				if (setMax)
+				{
+					max = value;
+					itMax = iter;
+				}
+			}
+		}
+		return itPair;
+	}
+
+
+
+	/*! \brief Compute img::Grad for each pixel location (except at edges).
 	 *
 	 * The stepHalf determine how wide an increment is used to estimate
 	 * the edge in each direction. E.g., for a one dimensional signal
@@ -343,6 +405,175 @@ namespace grid
 		}
 
 		return grid;
+	}
+
+	/*! \brief Apply func within hwBox moving across srcGrid
+	 *
+	 * A moving window, of size hwBox, moves across srcGrid. Every cell
+	 * in srcGrid is visted other than the first/last hwBox.{high,wide}()
+	 * rows/columns around the boarder (which are set to NaN in output).
+	 *
+	 * At each input cell the functor, boxFunc, is allowed to assess
+	 * srcGrid information (via a call to boxFunc.consider() for every
+	 * srcGrid cell. After doing this for every srcCell that falls
+	 * within the (then current) hwBox windows, the evaluation function,
+	 * boxFunc(), is called and result is assigned to the output grid
+	 * cell (at the same row,col location as the srcGrid cell then
+	 * being evaluated.
+	 *
+	 * \note
+	 * boxFunc must provide the following methods:
+	 * \arg boxFunc{}; // default ctor
+	 * \arg boxFunc.reset(srcValue)
+	 * \arg boxFunc.consider(srcValue, boxRow, boxCol);
+	 * \arg boxFunc();
+	 *
+	 * Example
+	 * \snippet include/opsfilter.hpp DoxyExampleBoxFunc
+	 */
+	template <typename OutType, typename SrcType, typename BoxFunctor>
+	inline
+	ras::Grid<OutType>
+	functionResponse
+		( ras::Grid<SrcType> const & srcGrid
+		, ras::SizeHW const & hwBox
+		, BoxFunctor & boxFunc
+		)
+	{
+		ras::Grid<OutType> outGrid;
+		auto const isOdd
+			{ [] (std::size_t const & val) { return (1 == val % 2u); } };
+
+		// Are all conditions satisfied for (easy) filtering computation
+		if ( srcGrid.isValid()
+		  && hwBox.isValid()
+		  && isOdd(hwBox.high())
+		  && isOdd(hwBox.wide())
+		  && ((hwBox.high() + 1u) < srcGrid.high())
+		  && ((hwBox.wide() + 1u) < srcGrid.wide())
+		   )
+		{
+			outGrid = ras::Grid<OutType>(srcGrid.hwSize());
+			constexpr OutType nanOut
+				{ std::numeric_limits<double>::quiet_NaN() };
+			// TBD - maybe change to set explicitly only the edge values
+			std::fill(outGrid.begin(), outGrid.end(), nanOut);
+
+			int const halfHigh{ static_cast<int>(hwBox.high() / 2u) };
+			int const halfWide{ static_cast<int>(hwBox.wide() / 2u) };
+
+			int const wHigh{ (int)hwBox.high() };
+			int const wWide{ (int)hwBox.wide() };
+
+			// loop over active area of source/output grids
+			int const srcRowEnd{ static_cast<int>(srcGrid.high()) - halfHigh };
+			int const srcColEnd{ static_cast<int>(srcGrid.wide()) - halfWide };
+			for (int srcRow{halfHigh} ; srcRow < srcRowEnd ; ++srcRow)
+			{
+				int const srcRow0{ srcRow - halfHigh };
+				for (int srcCol{halfWide} ; srcCol < srcColEnd ; ++srcCol)
+				{
+					int const srcCol0{ srcCol - halfWide };
+
+					OutType outVal{ nanOut };
+
+					// reset filter to new source position
+					SrcType const & refVal = srcGrid(srcRow, srcCol);
+					if (engabra::g3::isValid(refVal))
+					{
+						boxFunc.reset(refVal);
+
+						// integrate values over weighted window
+						for (int wRow{0} ; wRow < wHigh ; ++wRow)
+						{
+							int const inRow{ srcRow0 + wRow };
+							for (int wCol{0} ; wCol < wWide ; ++wCol)
+							{
+								int const inCol{ srcCol0 + wCol };
+
+								// have functor consider this value
+								SrcType const & srcVal = srcGrid(inRow, inCol);
+								if (engabra::g3::isValid(srcVal))
+								{
+									boxFunc.consider
+										( srcVal
+										, static_cast<std::size_t>(wRow)
+										, static_cast<std::size_t>(wCol)
+										);
+								}
+								else
+								{
+									// upon encountering a null,
+									// abandon entire window/box processing
+									goto NextWindow;
+								}
+							}
+						}
+
+						outVal = boxFunc();
+					}
+					NextWindow:
+
+					// update evolving return storage
+					outGrid(srcRow, srcCol) = outVal;
+				}
+			}
+		} // good inputs
+
+		return outGrid;
+	}
+
+	//! \brief Result of running filter window over srcGrid.
+	template <typename OutType, typename SrcType>
+	inline
+	ras::Grid<OutType>
+	filtered
+		( ras::Grid<SrcType> const & srcGrid
+		, ras::Grid<OutType> const & filter
+		)
+	{
+		ops::filter::WeightedSum bFunc{ &filter };
+		return functionResponse
+			<OutType, SrcType>
+			(srcGrid, filter.hwSize(), bFunc);
+	}
+
+	//! \brief Result of a sum-square difference filter
+	template <typename OutType, typename SrcType>
+	inline
+	ras::Grid<OutType>
+	smoothGridFor
+		( ras::Grid<SrcType> const & srcGrid
+			//!< Input data
+		, std::size_t const & halfSize
+			//!< Halfsize for moving window
+		, double const & sigma
+			//!< Standard deviation of Gaussian to use for smoothing
+		)
+	{
+		ras::Grid<OutType> const filter
+			{ ras::kernel::gauss<OutType>(halfSize, sigma) };
+		ops::filter::WeightedSum<OutType> bFunc{ &filter };
+		return functionResponse
+			<OutType, SrcType>
+			(srcGrid, filter.hwSize(), bFunc);
+	}
+
+	//! \brief Result of a sum-square difference filter
+	template <typename OutType, typename SrcType>
+	inline
+	ras::Grid<OutType>
+	sumSquareDiffGridFor
+		( ras::Grid<SrcType> const & srcGrid
+			//!< Input data
+		, ras::SizeHW const & hwBox
+			//!< Size of moving window
+		)
+	{
+		ops::filter::SumSquareDiff<OutType> bFunc{};
+		return functionResponse
+			<OutType, SrcType>
+			(srcGrid, hwBox, bFunc);
 	}
 
 

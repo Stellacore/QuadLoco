@@ -188,15 +188,21 @@ namespace grid
 		, img::ChipSpec const & chipSpec
 		)
 	{
-		ras::Grid<Type> values(chipSpec.hwSize());
-		for (std::size_t rowChip{0u} ; rowChip < chipSpec.high() ; ++rowChip)
+		ras::Grid<Type> values;
+		if (chipSpec.fitsInto(fullGrid.hwSize()))
 		{
-			for (std::size_t colChip{0u} ; colChip < chipSpec.wide()
-				; ++colChip)
+			std::size_t const high{ chipSpec.high() };
+			std::size_t const wide{ chipSpec.wide() };
+			values = ras::Grid<Type>(chipSpec.hwSize());
+			for (std::size_t rowChip{0u} ; rowChip < high ; ++rowChip)
 			{
-				ras::RowCol const rcChip{ rowChip, colChip };
-				ras::RowCol const rcFull{ chipSpec.rcFullForChipRC(rcChip) };
-				values(rcChip) = fullGrid(rcFull);
+				for (std::size_t colChip{0u} ; colChip < wide ; ++colChip)
+				{
+					ras::RowCol const rcChip{ rowChip, colChip };
+					ras::RowCol const rcFull
+						{ chipSpec.rcFullForChipRC(rcChip) };
+					values(rcChip) = fullGrid(rcFull);
+				}
 			}
 		}
 		return values;
