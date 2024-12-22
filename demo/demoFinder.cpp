@@ -196,12 +196,14 @@ main
 
 	// load image
 	ras::Grid<std::uint8_t> const srcGrid{ io::readPGM(srcPath) };
-//	ras::Grid<float> const useGrid{ sig::util::toFloat(srcGrid, 0) };
-	ras::Grid<float> const useGrid
-		{ sig::util::toSmooth(sig::util::toFloat(srcGrid, 0)) };
+	ras::Grid<float> const useGrid{ sig::util::toFloat(srcGrid, 0) };
+
+	// smooth source signal
+	ras::Grid<float> const smoGrid
+		{ ops::grid::smoothGridFor<float>(useGrid, 5u, 2.5) };
 
 	// find center
-	sig::QuadTarget const sigQuad{ bestQuadTargetFor(useGrid) };
+	sig::QuadTarget const sigQuad{ bestQuadTargetFor(smoGrid) };
 	img::Spot const useCenter{ sigQuad.centerSpot() };
 
 	// upsample image and draw center in enlarged grid

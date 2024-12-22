@@ -371,16 +371,16 @@ namespace grid
 	 * Example
 	 * \snippet include/opsfilter.hpp DoxyExampleBoxFunc
 	 */
-	template <typename Type, typename BoxFunctor>
+	template <typename OutType, typename SrcType, typename BoxFunctor>
 	inline
-	ras::Grid<Type>
+	ras::Grid<OutType>
 	functionResponse
-		( ras::Grid<Type> const & srcGrid
+		( ras::Grid<SrcType> const & srcGrid
 		, ras::SizeHW const & hwBox
 		, BoxFunctor & boxFunc
 		)
 	{
-		ras::Grid<Type> outGrid;
+		ras::Grid<OutType> outGrid;
 		auto const isOdd
 			{ [] (std::size_t const & val) { return (1 == val % 2u); } };
 
@@ -393,10 +393,11 @@ namespace grid
 		  && ((hwBox.wide() + 1u) < srcGrid.wide())
 		   )
 		{
-			outGrid = ras::Grid<Type>(srcGrid.hwSize());
-			constexpr Type nan{ std::numeric_limits<double>::quiet_NaN() };
+			outGrid = ras::Grid<OutType>(srcGrid.hwSize());
+			constexpr OutType nanOut
+				{ std::numeric_limits<double>::quiet_NaN() };
 			// TBD - maybe change to set explicitly only the edge values
-			std::fill(outGrid.begin(), outGrid.end(), nan);
+			std::fill(outGrid.begin(), outGrid.end(), nanOut);
 
 			int const halfHigh{ static_cast<int>(hwBox.high() / 2u) };
 			int const halfWide{ static_cast<int>(hwBox.wide() / 2u) };
@@ -414,10 +415,10 @@ namespace grid
 				{
 					int const srcCol0{ srcCol - halfWide };
 
-					Type outVal{ nan };
+					OutType outVal{ nanOut };
 
 					// reset filter to new source position
-					Type const & refVal = srcGrid(srcRow, srcCol);
+					SrcType const & refVal = srcGrid(srcRow, srcCol);
 					if (engabra::g3::isValid(refVal))
 					{
 						boxFunc.reset(refVal);
@@ -431,7 +432,7 @@ namespace grid
 								int const inCol{ srcCol0 + wCol };
 
 								// have functor consider this value
-								Type const & srcVal = srcGrid(inRow, inCol);
+								SrcType const & srcVal = srcGrid(inRow, inCol);
 								if (engabra::g3::isValid(srcVal))
 								{
 									boxFunc.consider
@@ -463,24 +464,26 @@ namespace grid
 	}
 
 	//! \brief Result of running filter window over srcGrid.
-	template <typename Type>
+	template <typename OutType, typename SrcType>
 	inline
-	ras::Grid<Type>
+	ras::Grid<OutType>
 	filtered
-		( ras::Grid<Type> const & srcGrid
-		, ras::Grid<Type> const & filter
+		( ras::Grid<SrcType> const & srcGrid
+		, ras::Grid<OutType> const & filter
 		)
 	{
 		ops::filter::WeightedSum bFunc{ &filter };
-		return functionResponse(srcGrid, filter.hwSize(), bFunc);
+		return functionResponse
+			<OutType, SrcType>
+			(srcGrid, filter.hwSize(), bFunc);
 	}
 
 	//! \brief Result of a sum-square difference filter
-	template <typename Type>
+	template <typename OutType, typename SrcType>
 	inline
-	ras::Grid<Type>
+	ras::Grid<OutType>
 	smoothGridFor
-		( ras::Grid<Type> const & srcGrid
+		( ras::Grid<SrcType> const & srcGrid
 			//!< Input data
 		, std::size_t const & halfSize
 			//!< Halfsize for moving window
@@ -488,25 +491,29 @@ namespace grid
 			//!< Standard deviation of Gaussian to use for smoothing
 		)
 	{
-		ras::Grid<Type> const filter
-			{ ras::kernel::gauss<Type>(halfSize, sigma) };
-		ops::filter::WeightedSum bFunc{ &filter };
-		return functionResponse(srcGrid, filter.hwSize(), bFunc);
+		ras::Grid<OutType> const filter
+			{ ras::kernel::gauss<OutType>(halfSize, sigma) };
+		ops::filter::WeightedSum<OutType> bFunc{ &filter };
+		return functionResponse
+			<OutType, SrcType>
+			(srcGrid, filter.hwSize(), bFunc);
 	}
 
 	//! \brief Result of a sum-square difference filter
-	template <typename Type>
+	template <typename OutType, typename SrcType>
 	inline
-	ras::Grid<Type>
+	ras::Grid<OutType>
 	sumSquareDiffGridFor
-		( ras::Grid<Type> const & srcGrid
+		( ras::Grid<SrcType> const & srcGrid
 			//!< Input data
 		, ras::SizeHW const & hwBox
 			//!< Size of moving window
 		)
 	{
-		ops::filter::SumSquareDiff<Type> bFunc{};
-		return functionResponse(srcGrid, hwBox, bFunc);
+		ops::filter::SumSquareDiff<OutType> bFunc{};
+		return functionResponse
+			<OutType, SrcType>
+			(srcGrid, hwBox, bFunc);
 	}
 
 

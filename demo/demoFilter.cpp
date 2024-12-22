@@ -72,7 +72,7 @@ main
 
 	// smooth source signal
 	ras::Grid<float> const smoGrid
-		{ ops::grid::smoothGridFor<float>(useGrid, 3u, 1.5f) };
+		{ ops::grid::smoothGridFor<float>(useGrid, 5u, 2.5) };
 
 	// create filtered image
 	ras::SizeHW const hwBox{ 5u, 5u };
@@ -90,5 +90,10 @@ main
 
 	return 0;
 }
+
+
+
+
+
 
 
