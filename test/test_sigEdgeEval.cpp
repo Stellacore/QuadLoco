@@ -48,6 +48,18 @@
 
 namespace
 {
+	inline
+	quadloco::obj::Camera
+	isoCamera
+		( std::size_t const & numPixOnEdge
+		)
+	{
+		return quadloco::obj::Camera
+			{ quadloco::ras::SizeHW{ numPixOnEdge, numPixOnEdge }
+			, static_cast<double>(numPixOnEdge) // pd
+			};
+	}
+
 	//! Simulate a strong signal quad image
 	inline
 	quadloco::ras::Grid<float>
@@ -65,18 +77,17 @@ namespace
 			//	, QuadTarget::WithTriangle
 				, QuadTarget::WithSurround | QuadTarget::WithTriangle
 				)
-			, obj::Camera
-//				{ ras::SizeHW{ 128u, 128u }
-//				, 128. // pd
-//{ ras::SizeHW{ 16u, 16u }
-//				,  16. // pd
-{ ras::SizeHW{   14u,   14u }
-				,   14. // pd
-//{ ras::SizeHW{    7u,    7u }
-//				,    7. // pd
-				}
+			//
+//			, isoCamera(128u)
+//			, isoCamera( 32u)
+//			, isoCamera( 31u)
+//			, isoCamera( 16u)
+			, isoCamera( 15u)
+//			, isoCamera(  8u)
+//			, isoCamera(  7u)
+			//
 			, rigibra::Transform
-				{ engabra::g3::Vector{ 0., 0., 1.+1./16. }
+				{ engabra::g3::Vector{ 0., 0., 1. }
 				, rigibra::Attitude
 					{ rigibra::PhysAngle
 						{ engabra::g3::BiVector{ 0., 0., 0. } }
@@ -86,11 +97,11 @@ namespace
 		using namespace quadloco::sim;
 		sim::Render const render
 			( config
-		//	, Sampler::None
-			, Sampler::AddSceneBias | Sampler::AddImageNoise
+			, Sampler::None
+//			, Sampler::AddSceneBias | Sampler::AddImageNoise
 		//	, Sampler::AddImageNoise
 			);
-		std::size_t const numOverSample{ 1024u };
+		std::size_t const numOverSample{ 64u };
 		if (ptSigQuad)
 		{
 			*ptSigQuad = render.sigQuadTarget();
@@ -135,7 +146,6 @@ namespace
 			//       samples. Therefore, add {.5,.5} to match the simulation.
 			gotCenterSpot = img::Spot
 					{ sigQuadWgts.front().item().centerSpot()
-					+ img::Spot{ .5, .5 }
 					};
 			gotCenterSigma = sigQuadWgts.front().item().centerSigma();
 		}
@@ -146,6 +156,20 @@ namespace
 
 // pixels
 (void)io::writeStretchPGM("pixGrid.pgm", pixGrid);
+
+// gradient values
+ras::Grid<float> const gradRow
+	{ sig::util::rowCompGridFor(gradGrid) };
+ras::Grid<float> const gradCol
+	{ sig::util::colCompGridFor(gradGrid) };
+(void)io::writeStretchPGM("gradRow.pgm", gradRow);
+(void)io::writeStretchPGM("gradCol.pgm", gradCol);
+ras::Grid<float> const gradMag
+	{ sig::util::magnitudeGridFor(gradGrid) };
+ras::Grid<float> const gradAng
+	{ sig::util::angleGridFor(gradGrid) };
+(void)io::writeStretchPGM("gradMag.pgm", gradMag);
+(void)io::writeStretchPGM("gradAng.pgm", gradAng);
 
 // EdgeInfo-mag
 ras::Grid<float> const edgeInfoWeightGrid
@@ -206,8 +230,8 @@ ofsEdgeInfo << edgeInfoAngleGrid.infoStringContents
 		}
 		else
 		{
-			constexpr char pad[] = "   ";
-			std::cout << "\n\nSuccessful center test\n";
+			constexpr char pad[] = "    ";
+			std::cout << "\n\n:-) Successful center test\n";
 			std::cout << pad << "exp: " << expCenterSpot << '\n';
 			std::cout << pad << "got: " << gotCenterSpot
 				<< "   sigma: " << gotCenterSigma << '\n';
