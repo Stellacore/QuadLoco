@@ -33,6 +33,7 @@
 
 #include "sigCenterFitter.hpp"
 #include "sigEdgeGrouper.hpp"
+#include "sigedgel.hpp"
 #include "sigEdgeLine.hpp"
 #include "sigItemWgt.hpp"
 #include "sigutil.hpp"
@@ -56,10 +57,10 @@ namespace sig
 {
 	//! Attenuation power on dot product
 	constexpr double sAlignSigmaEdgeAngle{ .45 }; // about +/-25 deg
-	//! Multiply threshold for neighborhood gradient agreement
-	constexpr double sLinkEdgeDist{ 2.50 };
-	//! Use to estimate expected maximum number of strong edgels
-	constexpr std::size_t sDiagMultiple{ 6u };
+//	//! Multiply threshold for neighborhood gradient agreement
+//	constexpr double sLinkEdgeDist{ 2.50 };
+//	//! Use to estimate expected maximum number of strong edgels
+//	constexpr std::size_t sDiagMultiple{ 6u };
 	//! Number of bins to use in angle direction peak detection
 	constexpr std::size_t sNumAngleBins{ 32u };
 	//! Expected minimum proximity of two adjacent radial edge rays
@@ -184,87 +185,6 @@ namespace sig
 	{
 		std::vector<sig::EdgeInfo> const theEdgeInfos;
 
-	// static functions
-
-		//! Extract the largest magnitude edgels from grid
-		inline
-		static
-		std::vector<img::Edgel>
-		dominantEdgelsFrom
-			( ras::Grid<img::Grad> const & gradGrid
-			, double const & linkEdgeDist = sLinkEdgeDist
-			, std::size_t const & diagMultiple = sDiagMultiple
-			)
-		{
-			// get all strongly linked edgels
-			std::vector<img::Edgel> edgels
-				{ ops::grid::linkedEdgelsFrom(gradGrid, linkEdgeDist) };
-
-			// conservative estimate of how many to search knowing that
-			// a quad target should be consuming large part of grid
-			double const diag{ gradGrid.hwSize().diagonal() };
-			std::size_t const estNumToUse
-				{ static_cast<std::size_t>((double)diagMultiple * diag) };
-			std::size_t const numToUse{ std::min(estNumToUse, edgels.size()) };
-
-			// move strongest edges near front
-			std::partial_sort
-				( edgels.begin(), edgels.begin()+numToUse
-				, edgels.end()
-				, [] (img::Edgel const & e1, img::Edgel const & e2)
-					// sort in *desending* order
-					{ return (e2.magnitude() < e1.magnitude()); }
-				);
-
-			// ignore less significant edges in return structure
-			edgels.resize(numToUse);
-			return edgels;
-		}
-
-		//! Determine (*combinatorially*) edgel radial edge (pseudo)likelihood
-		inline
-		static
-		std::vector<sig::EdgeInfo>
-		edgeInfosLikelyRadial
-			( std::vector<img::Edgel> const & edgels
-			)
-		{
-			// Individual edge properties
-			std::vector<sig::EdgeInfo> edgeInfos;
-			std::size_t const numElem{ edgels.size() };
-			if (2u < numElem)
-			{
-				edgeInfos.reserve(numElem);
-
-				// compute useful edgel properties suggesting
-				// edgels likely to be on opposite radial edges
-				for (std::size_t ndx1{0u} ; ndx1 < numElem ; ++ndx1)
-				{
-					// construct EdgeInfo tracking instance
-					img::Edgel const & edgel = edgels[ndx1];
-					edgeInfos.emplace_back(sig::EdgeInfo(edgel));
-
-					// update just inserted edgel with prior edgels (below)
-					sig::EdgeInfo & edgeInfo1 = edgeInfos.back();
-
-					// compare from begin thru just *before* last item added
-					std::size_t const numPrev{ edgeInfos.size() - 1u };
-					for (std::size_t ndx2{0u} ; ndx2 < numPrev ; ++ndx2)
-					{
-						// combinatorially consider other edges and
-						// update each with consideration of the other
-						sig::EdgeInfo & edgeInfo2 = edgeInfos[ndx2];
-						edgeInfo1.considerOther(edgeInfo2.edgel());
-						edgeInfo2.considerOther(edgeInfo1.edgel());
-					}
-				}
-			}
-
-			// filter very low weight edges
-// TODO - determine what is a low weight
-			return edgeInfos;
-		}
-
 	public:
 
 		//! \brief Process gradients into non-isolated edges.
@@ -274,8 +194,8 @@ namespace sig
 			( ras::Grid<img::Grad> const & gradGrid
 			)
 			: theEdgeInfos
-				{ edgeInfosLikelyRadial	
-					(dominantEdgelsFrom(gradGrid))
+				{ edgel::edgeInfosLikelyRadial	
+					(edgel::dominantEdgelsFrom(gradGrid))
 				}
 		{ }
 
@@ -828,7 +748,7 @@ std::cout << '\n';
 			ras::Grid<float> magGrid(gradGrid.hwSize());
 			std::fill(magGrid.begin(), magGrid.end(), 0.);
 			std::vector<img::Edgel> const edgels
-				{ dominantEdgelsFrom(gradGrid) };
+				{ edgel::dominantEdgelsFrom(gradGrid) };
 			for (img::Edgel const & edgel : edgels)
 			{
 				magGrid(cast::rasRowCol(edgel.location())) = edgel.magnitude();
@@ -846,11 +766,10 @@ std::cout << '\n';
 		{
 			ras::Grid<float> magGrid(gradGrid.hwSize());
 			std::fill(magGrid.begin(), magGrid.end(), 0.);
-
 			std::vector<img::Edgel> const edgels
-				{ dominantEdgelsFrom(gradGrid) };
+				{ edgel::dominantEdgelsFrom(gradGrid) };
 			std::vector<sig::EdgeInfo> const edgeInfos
-				{ edgeInfosLikelyRadial(edgels) };
+				{ edgel::edgeInfosLikelyRadial(edgels) };
 			return sig::util::edgeInfoWeightGrid(magGrid.hwSize(), edgeInfos);
 		}
 

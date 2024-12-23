@@ -28,6 +28,8 @@
 */
 
 
+#include "sigedgel.hpp"
+
 #include "imgEdgel.hpp"
 #include "io.hpp"
 #include "objCamera.hpp"
@@ -152,7 +154,22 @@ namespace
 
 		// [DoxyExample01]
 
-// Save data to files
+//
+// === Diagnostics
+//
+
+	std::vector<img::Edgel> const domEdgels
+		{ sig::edgel::dominantEdgelsFrom(gradGrid) };
+	std::ofstream ofsDEs("edgeDom.dat");
+	for (img::Edgel const & domEdgel : domEdgels)
+	{
+		ofsDEs << domEdgel << '\n';
+	}
+
+
+//
+// === Save data to files
+//
 
 // pixels
 (void)io::writeStretchPGM("pixGrid.pgm", pixGrid);
