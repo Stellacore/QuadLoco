@@ -119,12 +119,35 @@ namespace sig
 			img::Vector<double> const & dirSelf = theEdgel.direction();
 			img::Vector<double> const & dirOther = other.direction();
 			//
-			// NOTE: treat dirFrom as positive direction and negate dirInto
+			// NOTE: treat dirSelf as positive direction and negate dirOther
 			//
 			img::Vector<double> const negOther{ -dirOther };
 			img::Vector<double> const sumDirs{ dirSelf + negOther };
 			img::Vector<double> const meanDir{ direction(sumDirs) };
 			return meanDir;
+		}
+
+		//! Composite gradient associated edgel pair (positive with ndx1)
+		inline
+		img::Vector<double>
+		directionForLocation
+			( img::Edgel const & other
+			) const
+		{
+			// reference direction (for plus/minus)
+			img::Vector<double> const & dirSelf = theEdgel.direction();
+
+			img::Vector<double> const & locSelf = theEdgel.start();
+			img::Vector<double> const & locOther = other.start();
+			img::Vector<double> const diffDir{ direction(locOther - locSelf) };
+			img::Vector<double> const perpDir{ -diffDir[1], diffDir[0] };
+			double sgn{ 1. };
+			if (dot(dirSelf, perpDir) < 0.)
+			{
+				sgn = -1.;
+			}
+			img::Vector<double> const edgeDir{ sgn * perpDir };
+			return edgeDir;
 		}
 
 	public:
@@ -256,6 +279,9 @@ namespace sig
 					// (unitary) "average" direction of this edgel and other
 					img::Vector<double> const pairDir
 						{ directionAdjustedTo(otherEdgel) };
+					// this tends to bias edges for wide responses
+					// e.g. two cell wide edges create a circular pattern
+					//	{ directionForLocation(otherEdgel) };
 
 					// update tracking information
 					theWgtRadialSum += wgtRadial;
