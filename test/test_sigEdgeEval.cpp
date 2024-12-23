@@ -83,8 +83,8 @@ namespace
 //			, isoCamera(128u)
 //			, isoCamera( 32u)
 //			, isoCamera( 31u)
-//			, isoCamera( 16u)
-			, isoCamera( 15u)
+			, isoCamera( 16u)
+//			, isoCamera( 15u)
 //			, isoCamera(  8u)
 //			, isoCamera(  7u)
 			//
@@ -99,8 +99,8 @@ namespace
 		using namespace quadloco::sim;
 		sim::Render const render
 			( config
-			, Sampler::None
-//			, Sampler::AddSceneBias | Sampler::AddImageNoise
+		//	, Sampler::None
+			, Sampler::AddSceneBias | Sampler::AddImageNoise
 		//	, Sampler::AddImageNoise
 			);
 		std::size_t const numOverSample{ 64u };
@@ -123,7 +123,10 @@ namespace
 
 		// simulate quad target image and extract edgels
 		quadloco::sig::QuadTarget sigQuad{};  // set by simulation
-		ras::Grid<float> const pixGrid{ simulatedQuadGrid(&sigQuad) };
+		ras::Grid<float> const srcGrid{ simulatedQuadGrid(&sigQuad) };
+		ras::Grid<float> const & pixGrid = srcGrid;
+//		ras::Grid<float> const pixGrid
+//			{ ops::grid::smoothGridFor<float>(srcGrid, 1u, 0.75) };
 		img::Spot const expCenterSpot{ sigQuad.centerSpot() };
 
 		// compute gradient elements
@@ -159,7 +162,7 @@ namespace
 //
 
 	std::vector<img::Edgel> const domEdgels
-		{ sig::edgel::dominantEdgelsFrom(gradGrid) };
+		{ sig::edgel::dominantEdgelsFrom(gradGrid, 2.5, 4u) };
 	std::ofstream ofsDEs("edgeDom.dat");
 	for (img::Edgel const & domEdgel : domEdgels)
 	{

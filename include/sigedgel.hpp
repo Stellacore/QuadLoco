@@ -51,29 +51,45 @@ namespace sig
 //! \brief Functions and utilities for working with edgel collections
 namespace edgel
 {
-	//! Multiply threshold for neighborhood gradient agreement
-	constexpr double sLinkEdgeDist{ 2.50 };
-	//! Use to estimate expected maximum number of strong edgels
-	constexpr std::size_t sDiagMultiple{ 6u };
+	/*! \brief Multiplication threshold for neighborhood gradient agreement.
+	 *
+	 * This value is used to compare gradient values in neighboring cells.
+	 * Compute the sum of the 8-neighbor gradients projected onto the
+	 * gradient direction at the neighborhood center. If the ratio of
+	 * neighbor projections compared with center gradient magnitude is
+	 * this large (or more), then consider the neighborhood center gradient
+	 * to be "corroborated" by neighbors.
+	 */
+	constexpr double sHoodSupportRatio{ 2.50 };
+
+	/*! \brief Limit number of "strong" edgels values considered for geometry.
+	 *
+	 * In an extreme case, the target radial edges might be aligned with
+	 * the image chip diagonal. If each edge is two pixels wide, the
+	 * radial edgs would account for 4*diag number of pixels. For triangle
+	 * clipped targets, the triangle bases could each have multiple pixel
+	 * wide edges - so add another 2*diag for that.
+	 */
+	constexpr std::size_t sDiagSizeMultiple{ 6u };
 
 	//! Extract the largest magnitude edgels from grid
 	inline
 	std::vector<img::Edgel>
 	dominantEdgelsFrom
 		( ras::Grid<img::Grad> const & gradGrid
-		, double const & linkEdgeDist = sLinkEdgeDist
-		, std::size_t const & diagMultiple = sDiagMultiple
+		, double const & hoodSupportRatio = sHoodSupportRatio
+		, std::size_t const & diagSizeMultiple = sDiagSizeMultiple
 		)
 	{
 		// get all strongly linked edgels
 		std::vector<img::Edgel> edgels
-			{ ops::grid::linkedEdgelsFrom(gradGrid, linkEdgeDist) };
+			{ ops::grid::linkedEdgelsFrom(gradGrid, hoodSupportRatio) };
 
 		// conservative estimate of how many to search knowing that
 		// a quad target should be consuming large part of grid
 		double const diag{ gradGrid.hwSize().diagonal() };
 		std::size_t const estNumToUse
-			{ static_cast<std::size_t>((double)diagMultiple * diag) };
+			{ static_cast<std::size_t>((double)diagSizeMultiple * diag) };
 		std::size_t const numToUse{ std::min(estNumToUse, edgels.size()) };
 
 		// move strongest edges near front

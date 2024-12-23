@@ -42,6 +42,7 @@
 #include "rasSizeHW.hpp"
 
 #include <algorithm>
+#include <array>
 #include <iterator>
 #include <limits>
 #include <vector>
@@ -294,16 +295,6 @@ namespace grid
 			{
 				for (std::size_t col{1u} ; col < colLast ; ++col)
 				{
-					// adjust tolerance at edge boundary
-					double minProjDist{ supportMultiplier };
-					if (! inFull(row, col))
-					{
-						if (inEdge(row, col))
-						{
-							minProjDist *= .5;
-						}
-					}
-
 					// gradient at center
 					img::Grad const & gradCenter = gradGrid(row, col);
 					if (gradCenter.isValid())
@@ -313,26 +304,40 @@ namespace grid
 							{ std::numeric_limits<double>::epsilon() };
 						if (tol < gMag)
 						{
-							// sum gradients for neighbor hood
-							img::Grad const gradHoodSum
-								{ gradGrid(row - 1u, col - 1u)
-								+ gradGrid(row - 1u, col     )
-								+ gradGrid(row - 1u, col + 1u)
-								+ gradGrid(row     , col - 1u)
-								+ gradGrid(row     , col + 1u)
-								+ gradGrid(row + 1u, col - 1u)
-								+ gradGrid(row + 1u, col     )
-								+ gradGrid(row + 1u, col + 1u)
+							std::array<img::Grad const *, 8u> ptHoods
+								{ &(gradGrid(row-1u, col-1u))
+								, &(gradGrid(row-1u, col   ))
+								, &(gradGrid(row-1u, col+1u))
+								, &(gradGrid(row   , col-1u))
+								//&(gradGrid(row   , col   ))
+								, &(gradGrid(row   , col+1u))
+								, &(gradGrid(row+1u, col-1u))
+								, &(gradGrid(row+1u, col   ))
+								, &(gradGrid(row+1u, col+1u))
 								};
-							if (gradHoodSum.isValid())
+							img::Vector<double> hoodSum{ 0., 0. };
+							double count{ 0. };
+							for (img::Grad const * const & ptHood : ptHoods)
 							{
-								img::Grad const gradSum
-									{ gradHoodSum + gradCenter };
-								img::Grad const gDir{ gradCenter };
-								double const projDist
-									{ (1./gMag) * dot(gradSum, gDir) };
+								img::Grad const & hoodGrad = *ptHood;
+								if (isValid(hoodGrad))
+								{
+									hoodSum = hoodSum + hoodGrad;
+									count += 1.;
+								}
+							}
 
-								if (minProjDist < projDist)
+							// check for at least one valid 8-neighbor
+							if (0. < count)
+							{
+								double const scl
+									{ (8./count) // normalize to full hood size
+									* (1./gMag) // unitize gradCenter in dot()
+									};
+								double const sumProj
+									{ scl * dot(hoodSum, gradCenter) };
+								double const hoodRatio{ sumProj / gMag };
+								if (supportMultiplier < hoodRatio)
 								{
 									// assured to be valid at this point since
 									// only processing non-trivial gradients

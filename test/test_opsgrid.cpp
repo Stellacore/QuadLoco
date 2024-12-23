@@ -65,13 +65,11 @@ namespace
 				, img::Grad{  0., 1. }
 				}
 			};
-		// span hwSize *except* for *TWO* border pixels on each end of edge.
-		// (one border cell is lost to gradient edge, second lost to
-		// neighbor support computations (which then hit the null border))
-		// and edge gradients are equal across two rows(cols) of the grid
+		// span hwSize *except* for *one* border pixel on each end of edge.
+		// (one border cell is lost to gradient edge)
 		std::vector<std::size_t> const expLinkSizes
-			{ 2u * (hwSize.wide() - 4u) // for horizontal edge (spanning cols)
-			, 2u * (hwSize.high() - 4u) // for vertical edge (spanning rows)
+			{ 2u * (hwSize.wide() - 2u) // for horizontal edge (spanning cols)
+			, 2u * (hwSize.high() - 2u) // for vertical edge (spanning rows)
 			};
 
 		for (std::size_t ntest{0u} ; ntest < expEdgels.size() ; ++ntest)
