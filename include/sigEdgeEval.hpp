@@ -622,7 +622,7 @@ std::cout
 				std::vector<NdxWgt> const rayNdxWgts
 					{ spotRayProbs.rayNdxWgtsFor(ndxSW) };
 				std::vector<EdgeLine> radLines;
-				for (NdxWgt const rayNdxWgt : rayNdxWgts)
+				for (NdxWgt const & rayNdxWgt : rayNdxWgts)
 				{
 					std::size_t const & rayNdx = rayNdxWgt.item();
 					img::Ray const & ray = rayWgts[rayNdx].item();
