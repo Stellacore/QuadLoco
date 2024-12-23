@@ -122,6 +122,48 @@ namespace util
 		return upGrid;
 	}
 
+	//! Return grid containing result of applying function to each input cell
+	template <typename Func>
+	inline
+	ras::Grid<float>
+	resultGridFor
+		( ras::Grid<img::Grad> const & gradGrid
+		, Func const & funcOfGrad
+		)
+	{
+		ras::Grid<float> outGrid(gradGrid.hwSize());
+		std::transform
+			( gradGrid.cbegin(), gradGrid.cend()
+			, outGrid.begin()
+			, funcOfGrad
+			);
+		return outGrid;
+	}
+
+	//! Convert gradients to magnitude
+	inline
+	ras::Grid<float>
+	rowCompGridFor
+		( ras::Grid<img::Grad> const & gradGrid
+		)
+	{
+		auto const rowCompFunc
+			{ [] (img::Grad const & grad) { return grad.drow(); } };
+		return resultGridFor(gradGrid, rowCompFunc);
+	}
+
+	//! Convert gradients to magnitude
+	inline
+	ras::Grid<float>
+	colCompGridFor
+		( ras::Grid<img::Grad> const & gradGrid
+		)
+	{
+		auto const colCompFunc
+			{ [] (img::Grad const & grad) { return grad.dcol(); } };
+		return resultGridFor(gradGrid, colCompFunc);
+	}
+
 	//! Convert gradients to magnitude
 	inline
 	ras::Grid<float>
@@ -129,19 +171,9 @@ namespace util
 		( ras::Grid<img::Grad> const & gradGrid
 		)
 	{
-		ras::Grid<float> magGrid(gradGrid.hwSize());
-		std::fill
-			( magGrid.begin(), magGrid.end()
-			, std::numeric_limits<float>::quiet_NaN()
-			);
-
-		ras::Grid<img::Grad>::const_iterator inIter{ gradGrid.cbegin() };
-		ras::Grid<float>::iterator outIter{ magGrid.begin() };
-		while (gradGrid.cend() != inIter)
-		{
-			*outIter++ = magnitude(*inIter++);
-		}
-		return magGrid;
+		auto const magFunc
+			{ [] (img::Grad const & grad) { return magnitude(grad); } };
+		return resultGridFor(gradGrid, magFunc);
 	}
 
 	//! Convert gradients to angle of grdient
@@ -151,26 +183,11 @@ namespace util
 		( ras::Grid<img::Grad> const & gradGrid
 		)
 	{
-		ras::Grid<float> angGrid(gradGrid.hwSize());
-		std::fill
-			( angGrid.begin(), angGrid.end()
-			, std::numeric_limits<float>::quiet_NaN()
-			);
-
-		ras::Grid<img::Grad>::const_iterator inIter{ gradGrid.cbegin() };
-		ras::Grid<float>::iterator outIter{ angGrid.begin() };
-		while (gradGrid.cend() != inIter)
-		{
-			double angle{ std::numeric_limits<double>::quiet_NaN() };
-			img::Grad const grad{ *inIter++ };
-			if (isValid(grad))
-			{
-				img::Vector<double> const dir{ direction(grad) };
-				angle = ang::atan2(dir[1], dir[0]);
-			}
-			*outIter++ = angle;
-		}
-		return angGrid;
+		auto const angFunc
+			{ [] (img::Grad const & grad)
+				{ return ang::atan2(grad.dy(), grad.dx()); }
+			};
+		return resultGridFor(gradGrid, angFunc);
 	}
 
 
