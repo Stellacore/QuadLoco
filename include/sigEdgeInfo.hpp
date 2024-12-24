@@ -140,7 +140,7 @@ namespace sig
 			img::Vector<double> const & locSelf = theEdgel.start();
 			img::Vector<double> const & locOther = other.start();
 			img::Vector<double> const diffDir{ direction(locOther - locSelf) };
-			img::Vector<double> const perpDir{ -diffDir[1], diffDir[0] };
+			img::Vector<double> const perpDir{ ccwPerp(diffDir) };
 			double sgn{ 1. };
 			if (dot(dirSelf, perpDir) < 0.)
 			{
