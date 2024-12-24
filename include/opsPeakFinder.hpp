@@ -53,6 +53,13 @@ namespace ops
 	{
 		std::vector<std::vector<std::size_t> > const thePeakNdxGrps{};
 
+		//! Treat input domain is circular (wrap around) or linear (no wrap)
+		enum DataDomain
+		{
+			  Circle //!< Input data domain wraps around (e.g. angles)
+			, Linear //!< Input data domain is finite and unwrapped
+		};
+
 		//! Data value transition type (current pixel w.r.t. prevous pixel)
 		enum Flag
 		{
@@ -138,12 +145,35 @@ namespace ops
 			return ndxFlags;
 		}
 
+		//! Flag associated with transition of values from previous to current
+		template <typename Type>
+		inline
+		static
+		Flag
+		flagFor
+			( Type const & valPrev
+			, Type const & valCurr
+			)
+		{
+			Flag flag{ Flat };
+			if (valPrev < valCurr)
+			{
+				flag = Rise;
+			}
+			else
+			if (valCurr < valPrev)
+			{
+				flag = Drop;
+			}
+			return flag;
+		}
+
 		//! Determine value transition flag at ndxCurr from itBeg
 		template <typename FwdIter>
 		inline
 		static
 		Flag
-		flagForIndex
+		flagForIndexCircle
 			( std::size_t const & ndxCurr
 			, std::size_t const & numElem
 			, FwdIter const & itBeg
@@ -157,18 +187,58 @@ namespace ops
 			Type const & valPrev = *itPrev;
 			Type const & valCurr = *itCurr;
 
+			return flagFor(valPrev, valCurr);
+		}
+
+		//! Determine value transition flag at ndxCurr from itBeg
+		template <typename FwdIter>
+		inline
+		static
+		Flag
+		flagForIndexLinear
+			( std::size_t const & ndxCurr
+			, std::size_t const & numElem
+			, FwdIter const & itBeg
+			)
+		{
 			Flag flag{ Flat };
-			if (valPrev < valCurr)
+			if (0u == ndxCurr)
 			{
-				flag = Rise;
+				FwdIter const itCurr{ itBeg + ndxCurr };
+				using Type = FwdIter::value_type;
+				Type const & valCurr = *itCurr;
+				Type const valPrev{ 0 };
+
+				flag = flagFor(valPrev, valCurr);
 			}
 			else
-			if (valCurr < valPrev)
 			{
-				flag = Drop;
+				flag = flagForIndexCircle(ndxCurr, numElem, itBeg);
 			}
-
 			return flag;
+		}
+
+		//! Determine value transition flag at ndxCurr from itBeg
+		template <typename FwdIter>
+		inline
+		static
+		Flag
+		flagForIndex
+			( std::size_t const & ndxCurr
+			, std::size_t const & numElem
+			, FwdIter const & itBeg
+			, DataDomain const & dataDomain
+			)
+		{
+			if (Circle == dataDomain)
+			{
+				return flagForIndexCircle(ndxCurr, numElem, itBeg);
+			}
+			else
+			// if (Linear == dataDomain)
+			{
+				return flagForIndexLinear(ndxCurr, numElem, itBeg);
+			}
 		}
 
 		//! Return collections of indices associated with data peaks
@@ -179,6 +249,7 @@ namespace ops
 		peakIndexGroups
 			( FwdIter const & itBeg
 			, FwdIter const & itEnd
+			, DataDomain const & dataDomain = Circle
 			)
 		{
 			std::vector<std::vector<std::size_t> > peakNdxGrps;
@@ -194,7 +265,8 @@ namespace ops
 
 				// set initial tracking flag state based on wrap around
 				// condition from first element
-				Flag const flag0{ flagForIndex(0, numElem, itBeg) };
+				Flag const flag0
+					{ flagForIndex(0, numElem, itBeg, dataDomain) };
 				bool trackingPeak{ (Drop == flag0) };
 
 				std::vector<std::size_t> currPeakNdxs;
@@ -207,7 +279,8 @@ namespace ops
 					std::size_t const & ndx = nnRev;
 
 					// NOTE: Could compute transition flags here as needed.
-					Flag const flag{ flagForIndex(ndx, numElem, itBeg) };
+					Flag const flag
+						{ flagForIndex(ndx, numElem, itBeg, dataDomain) };
 
 					if (trackingPeak)
 					{
@@ -275,8 +348,9 @@ namespace ops
 		PeakFinder
 			( FwdIter const & itBeg
 			, FwdIter const & itEnd
+			, DataDomain const & dataDomain = Circle
 			)
-			: thePeakNdxGrps{ peakIndexGroups(itBeg, itEnd) }
+			: thePeakNdxGrps{ peakIndexGroups(itBeg, itEnd, dataDomain) }
 		{ }
 
 		//! Location of peaks (midpoint of flat-top peaks)
