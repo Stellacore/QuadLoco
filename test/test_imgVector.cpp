@@ -99,7 +99,7 @@ namespace
 
 	}
 
-	//! Examples for documentation
+	//! Check basic operations
 	void
 	test1
 		( std::ostream & oss
@@ -132,6 +132,43 @@ namespace
 		// [DoxyExample01]
 	}
 
+	//! Check vector operators
+	void
+	test2
+		( std::ostream & oss
+		)
+	{
+		using namespace quadloco;
+
+		// Construct a vector prependicular to staring vector
+		img::Vector<float> const aVec{ 3., -2. };
+		img::Vector<float> const perp{ ccwPerp(aVec) };
+
+		// For the perpendicular, dot product with original is zero
+		float const gotDot{ dot(aVec, perp) };
+		float const expDot{ 0.f };
+
+		// For the perpendicular, outer product with original is magSq
+		float const gotOut{ outer(aVec, perp) };
+		float const expOut{ magnitude(aVec) * magnitude(perp) };
+
+		if (! engabra::g3::nearlyEquals(gotDot, expDot))
+		{
+			oss << "Failure of gotDot test\n";
+			oss << "exp: " << expDot << '\n';
+			oss << "got: " << gotDot << '\n';
+		}
+
+		if (! engabra::g3::nearlyEquals(gotDot, expDot))
+		{
+			oss << "Failure of gotOut test\n";
+			oss << "exp: " << expOut << '\n';
+			oss << "got: " << gotOut << '\n';
+		}
+
+		// [DoxyExample02]
+		// [DoxyExample02]
+	}
 }
 
 //! Standard test case main wrapper
@@ -144,6 +181,7 @@ main
 
 	test0(oss);
 	test1(oss);
+	test2(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{
