@@ -35,7 +35,10 @@
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "opsgrid.hpp"
+#include "opsPeakFinder.hpp"
+#include "prbHisto.hpp"
 #include "sigEdgeEval.hpp"
+#include "sigedgel.hpp"
 #include "sigutil.hpp"
 #include "simConfig.hpp"
 #include "simRender.hpp"
@@ -161,12 +164,128 @@ namespace
 // === Diagnostics
 //
 
+	// Extract strongest gradient edges
 	std::vector<img::Edgel> const domEdgels
 		{ sig::edgel::dominantEdgelsFrom(gradGrid, 2.5, 4u) };
 	std::ofstream ofsDEs("edgeDom.dat");
 	for (img::Edgel const & domEdgel : domEdgels)
 	{
 		ofsDEs << domEdgel << '\n';
+	}
+
+	// Assign weights to these based on degree of radial corroberation
+	std::vector<sig::EdgeInfo> const edgeInfos
+		{ sig::edgel::edgeInfosLikelyRadial(domEdgels) };
+	std::ofstream ofsEIs("edgeInfos.dat");
+	for (sig::EdgeInfo const & edgeInfo : edgeInfos)
+	{
+		using engabra::g3::io::fixed;
+		ofsEIs
+			<< "location: " << edgeInfo.edgeLocation()
+			<< " considerDir: " << edgeInfo.consideredDirection()
+			<< " wgt: " << fixed(edgeInfo.consideredWeight())
+			<< '\n';
+	}
+
+// TODO - angles peaks are duplicated (because of symmetry accumulation)
+//        can be optimized (ideally by peak accumulation in half size array)
+	// Estimate dominant edge direction angles
+	std::size_t const numAngBins{ gradGrid.hwSize().perimeter() };
+	std::vector<sig::AngleWgt> const angWgts
+		{ sig::EdgeGrouper::peakAngleWeights(edgeInfos, numAngBins) };
+
+	// loop over peaks in gradient direction angle
+	// for each one, determine peaks in edgel locations along that direction
+std::size_t lineCount{ 0u };
+	for (sig::AngleWgt const & angWgt : angWgts)
+	{
+		double const & angle = angWgt.item();
+		double const & wgt = angWgt.weight();
+		img::Vector<double> const angleDir{ cos(angle), sin(angle) };
+
+		double const diag{ gradGrid.hwSize().diagonal() };
+		std::size_t const numDistBins{ (std::size_t)diag };
+		img::Span const distSpan{ -diag, diag };
+		prb::Histo distHist(4u*numDistBins, distSpan);
+		for (sig::EdgeInfo const & edgeInfo : edgeInfos)
+		{
+			img::Vector<double> const & loc = edgeInfo.edgeLocation();
+			double const proj{ dot(loc, angleDir) };
+			constexpr double sigma{ 2. };
+			distHist.addValue(proj, sigma);
+		}
+
+		std::vector<double> const & binProbs = distHist.probabilities();
+		ops::PeakFinder const peakFinder
+			(binProbs.cbegin(), binProbs.cend(), ops::PeakFinder::Linear);
+		std::vector<std::size_t> const peakNdxs{ peakFinder.peakIndices() };
+
+		std::cout << '\n';
+		std::cout << "angWgt: " << angWgt << '\n';
+		// std::cout << '\n';
+		// std::cout << distHist.infoStringContents("distHist") << '\n';
+		for (std::size_t const & peakNdx : peakNdxs)
+		{
+			std::cout << "peak:"
+				<< " ndx: " << std::setw(3u) << peakNdx
+				<< " val: " << std::setw(9u) << std::fixed
+					<< distHist.valueAtIndex(peakNdx)
+				<< " prob: " << std::setw(9u) << std::fixed
+					<< distHist.probabilityAtIndex(peakNdx)
+				<< '\n';
+
+			double const distProb{ distHist.probabilityAtIndex(peakNdx) };
+
+			double const dist{ distHist.valueAtIndex(peakNdx) };
+			img::Spot const start{ dist * angleDir };
+			img::Spot const lineDir{ ccwPerp(angleDir) };
+			img::Ray const lineRay{ start, lineDir };
+
+			std::cout << "lineRay: " << lineRay << '\n';
+
+			std::ostringstream msg;
+			msg << "line" << (100u + lineCount++) << ".dat";
+			std::ofstream ofsLine(msg.str());
+			for (sig::EdgeInfo const & edgeInfo : edgeInfos)
+			{
+				img::Vector<double> const & loc = edgeInfo.edgeLocation();
+				img::Vector<double> const lineDir
+					{ lineRay.direction() };
+				img::Vector<double> const edgeDir
+					{ edgeInfo.edgel().direction() };
+				double const align{ outer(lineDir, edgeDir) };
+
+				double const rej{ lineRay.distanceFrom(loc) };
+				double const sigma{ 1. };
+				double const arg{ rej / sigma };
+				double const wgt{ distProb * align * std::exp(-arg*arg) };
+
+				ofsLine
+					<< loc
+					<< ' '
+					<< std::setw(12u) << std::fixed << wgt
+					<< ' '
+					<< std::setw(12u) << std::fixed << rej
+					<< '\n';
+				/*
+					<< "loc: " << loc
+					<< ' '
+					<< "rej: " << std::setw(12u) << std::fixed << rej
+					<< ' '
+					<< "wgt: " << std::setw(12u) << std::fixed << wgt
+					<< '\n';
+				*/
+			}
+
+		}
+
+	}
+
+
+	std::ofstream ofsAWs("angWgts.dat");
+	for (sig::AngleWgt const & angWgt : angWgts)
+	{
+		ofsAWs << "angWgt: " << angWgt << '\n';
 	}
 
 
