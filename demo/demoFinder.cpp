@@ -84,7 +84,7 @@ namespace quadloco
 		// Gradient grid (in place gradients)
 		//
 		ras::Grid<img::Grad> const gradGrid
-			{ ops::grid::gradientGridFor(srcGrid) };
+			{ ops::grid::gradientGridBy8x(srcGrid) };
 		if (saveDiagnostics)
 		{
 			{

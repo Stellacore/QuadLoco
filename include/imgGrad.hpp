@@ -46,7 +46,7 @@ namespace img
 	/*! \brief GRADent ELement structure representing a directed edge gradient.
 	 *
 	 * \note For computing gradient values over entire ras::Grid instances
-	 * refer to functions in rasgrid.hpp (e.g. gradientGridFor()).
+	 * refer to functions in rasgrid.hpp (e.g. gradientGridBy8x()).
 	 */
 	struct Grad : public img::Vector<double>
 	{

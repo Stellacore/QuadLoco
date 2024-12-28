@@ -34,6 +34,7 @@
 #include "rasGrid.hpp"
 #include "raskernel.hpp"
 #include "rasRowCol.hpp"
+#include "sigutil.hpp"
 #include "simgrid.hpp"
 
 #include <algorithm>
@@ -53,7 +54,7 @@ namespace
 
 		// simulate grid with an sharp edge in it
 
-		// simulate grid with strong edge constistent with expEdgel
+		// simulate grid with strong edge consistent with expEdgel
 		ras::SizeHW const hwSize{ 7u, 8u };
 		std::vector<img::Edgel> const expEdgels
 			{ img::Edgel
@@ -82,7 +83,7 @@ namespace
 			ras::Grid<float> const pixGrid
 				{ sim::gridWithEdge(hwSize, expEdgel, sim::Step) };
 			ras::Grid<img::Grad> const gradGrid
-				{ ops::grid::gradientGridFor(pixGrid) };
+				{ ops::grid::gradientGridBy8x(pixGrid) };
 
 			// extract edgels from grid data
 
@@ -163,7 +164,7 @@ namespace
 				std::cout << '\n';
 			}
 
-		}
+		} // individual image edge tests
 
 		// check if linkEdgels is a subset of allEdgels
 	}
@@ -189,13 +190,9 @@ namespace
 		std::fill(tbPixels.begin(), tbPixels.end(), backVal);
 		std::fill(lrPixels.begin(), lrPixels.end(), backVal);
 
-		// Step sizes used to evaluate gradient for this test
-		constexpr std::size_t stepHalf{ 1u };
-		constexpr std::size_t stepFull{ 2u * stepHalf };
-
 		// set foreground for bottom half of the horizontal edge grid
 		std::fill(tbPixels.beginRow(ndxHalf), tbPixels.end(), foreVal);
-		quadloco::img::Grad const tbExpGrad{ 10./(double)stepFull, 0. };
+		quadloco::img::Grad const tbExpGrad{ 10., 0. };
 
 		// Use ChipSpec to set right half foreground for vertical edge grid
 		quadloco::img::ChipSpec const lrFillSpec
@@ -203,18 +200,16 @@ namespace
 			, quadloco::ras::SizeHW{ lrPixels.high(), lrPixels.wide()/2u }
 			};
 		quadloco::ras::grid::setSubGridValues(&lrPixels, lrFillSpec, foreVal);
-		quadloco::img::Grad const lrExpGrad{ 0., 10./(double)stepFull };
+		quadloco::img::Grad const lrExpGrad{ 0., 10. };
 
-		// Compute edge gradient across stepFull pixels
+		// Compute edge gradient across all pixels
 
 		// gradient magnitude prop to:
-		// [gridVal(rc + stepHalf) - gridVal(rc - stepHalf)] / (2*stepHalf)
-		// Vertical grid gradients
 		quadloco::ras::Grid<quadloco::img::Grad> const lrGrads
-			{ quadloco::ops::grid::gradientGridFor(lrPixels, stepHalf) };
+			{ quadloco::ops::grid::gradientGridBy8x(lrPixels) };
 		// Horizontal grid gradients
 		quadloco::ras::Grid<quadloco::img::Grad> const tbGrads
-			{ quadloco::ops::grid::gradientGridFor(tbPixels, stepHalf) };
+			{ quadloco::ops::grid::gradientGridBy8x(tbPixels) };
 
 		// [DoxyExample02]
 	}
@@ -240,8 +235,16 @@ namespace
 
 		// compute gradient grid
 		ras::Grid<img::Grad> const gradGrid
-// TODO - name? For? From?
-			{ ops::grid::gradientGridFor(fullGrid) };
+			{ ops::grid::gradientGridBy8x(fullGrid) };
+
+		/*
+		std::cout << fullGrid
+			.infoStringContents("fullGrid", "%5.2f") << '\n';
+		std::cout << sig::util::magnitudeGridFor(gradGrid)
+			.infoStringContents("edgeMag", "%5.2f") << '\n';
+		std::cout << sig::util::angleGridFor(gradGrid)
+			.infoStringContents("edgeAng", "%5.2f") << '\n';
+		*/
 
 		// extract edgels from this grid
 		std::vector<img::Edgel> const edgels
@@ -266,7 +269,8 @@ namespace
 		std::size_t const expNumGrad
 			{ 4u * (chip.hwSize().high() - 2u) // gradients span two cells
 			+ 4u * (chip.hwSize().wide() - 2u)
-			+ 4u * 3u  // each corner has 3 non zero gradients
+		//	+ 4u * 3u  // Cardinal Edges: each corner has 3 non zero gradients
+			+ 4u * 4u  // 8-neighbor Edges: each corner has 4 non zero gradients
 			};
 
 		std::size_t const gotNumMag

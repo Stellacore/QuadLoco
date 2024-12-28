@@ -198,7 +198,7 @@ main
 
 		// compute gradient at each pixel (interior to edge padding)
 		ras::Grid<img::Grad> const gradGrid
-			{ ops::grid::gradientGridFor(pixGrid) };
+			{ ops::grid::gradientGridBy8x(pixGrid) };
 
 		// evaluate gradients...
 		sig::EdgeEval const edgeEval(gradGrid);

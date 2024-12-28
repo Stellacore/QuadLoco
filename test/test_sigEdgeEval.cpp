@@ -134,7 +134,7 @@ namespace
 
 		// compute gradient elements
 		ras::Grid<img::Grad> const gradGrid
-			{ ops::grid::gradientGridFor(pixGrid) };
+			{ ops::grid::gradientGridBy8x(pixGrid) };
 
 		// categorize edgels as candidates for (radial) quad target edge groups
 		sig::EdgeEval const edgeEval(gradGrid);
@@ -246,6 +246,7 @@ std::size_t lineCount{ 0u };
 			std::ostringstream msg;
 			msg << "line" << (100u + lineCount++) << ".dat";
 			std::ofstream ofsLine(msg.str());
+			ofsLine << "# Row, Col, Wgt, Rejection\n";
 			for (sig::EdgeInfo const & edgeInfo : edgeInfos)
 			{
 				img::Vector<double> const & loc = edgeInfo.edgeLocation();
