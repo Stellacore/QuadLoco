@@ -92,6 +92,8 @@ namespace sig
 		//! Pseudo-probability values of edgels(rows) at each angle peak(cols).
 		ras::Grid<double> const theProbGridEdgeAngle;
 
+	public:
+
 		//! Determine most likely edgel angle directions (perp to radial edges)
 		inline
 		static
@@ -171,6 +173,8 @@ std::cout << "--\n";
 			return peakAWs;
 		}
 
+	private:
+
 		//! Collection of unitary directions corresponding with angle values.
 		inline
 		static
@@ -189,6 +193,8 @@ std::cout << "--\n";
 			}
 			return dirs;
 		}
+
+	public:
 
 		/*! \brief Create pseudo-probabilities of edges belonging to angles
 		 *
@@ -255,6 +261,8 @@ std::cout << "--\n";
 			}
 			return tab;
 		}
+
+	private:
 
 		//! Ray best fitting (gradient-weighted average) edge ray for a group
 		inline
@@ -610,6 +618,7 @@ writeRayWgts(rayWgts, "rayWgts.dat");
 		{
 			std::ofstream ofs(fname);
 			std::size_t idGroup{ 0u };
+			ofs << "# location, gradient, idGroup, weight\n";
 			for (GroupNWs const & groupNWs : groupNWss)
 			{
 				for (NdxWgt const & groupNW : groupNWs)
