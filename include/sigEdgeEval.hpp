@@ -746,7 +746,8 @@ std::cout << '\n';
 			)
 		{
 			ras::Grid<float> magGrid(gradGrid.hwSize());
-			std::fill(magGrid.begin(), magGrid.end(), 0.);
+			constexpr float nan{ std::numeric_limits<float>::quiet_NaN() };
+			std::fill(magGrid.begin(), magGrid.end(), nan);
 			std::vector<img::Edgel> const edgels
 				{ edgel::dominantEdgelsFrom(gradGrid) };
 			for (img::Edgel const & edgel : edgels)
@@ -764,13 +765,11 @@ std::cout << '\n';
 			( ras::Grid<img::Grad> const & gradGrid
 			)
 		{
-			ras::Grid<float> magGrid(gradGrid.hwSize());
-			std::fill(magGrid.begin(), magGrid.end(), 0.);
 			std::vector<img::Edgel> const edgels
 				{ edgel::dominantEdgelsFrom(gradGrid) };
 			std::vector<sig::EdgeInfo> const edgeInfos
 				{ edgel::edgeInfosLikelyRadial(edgels) };
-			return sig::util::edgeInfoWeightGrid(magGrid.hwSize(), edgeInfos);
+			return sig::util::edgeInfoWeightGrid(gradGrid.hwSize(), edgeInfos);
 		}
 
 

@@ -467,7 +467,8 @@ namespace grid
 		)
 	{
 		ras::Grid<float> grid(hwSize);
-		std::fill(grid.begin(), grid.end(), 0.f);
+		constexpr float nan{ std::numeric_limits<float>::quiet_NaN() };
+		std::fill(grid.begin(), grid.end(), nan);
 		for (std::size_t nn{0u} ; nn < numToUse ; ++nn)
 		{
 			img::Edgel const & edgel = edgels[nn];
