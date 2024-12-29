@@ -55,7 +55,7 @@ namespace
 {
 	inline
 	quadloco::obj::Camera
-	isoCamera
+	cameraFitTo
 		( std::size_t const & numPixOnEdge
 		)
 	{
@@ -83,13 +83,13 @@ namespace
 				, QuadTarget::WithSurround | QuadTarget::WithTriangle
 				)
 			//
-//			, isoCamera(128u)
-//			, isoCamera( 32u)
-//			, isoCamera( 31u)
-			, isoCamera( 16u)
-//			, isoCamera( 15u)
-//			, isoCamera(  8u)
-//			, isoCamera(  7u)
+//			, cameraFitTo(128u)
+//			, cameraFitTo( 32u)
+//			, cameraFitTo( 31u)
+			, cameraFitTo( 16u)
+//			, cameraFitTo( 15u)
+//			, cameraFitTo(  8u)
+//			, cameraFitTo(  7u)
 			//
 			, rigibra::Transform
 				{ engabra::g3::Vector{ 0., 0., 1. }
@@ -165,17 +165,17 @@ namespace
 //
 
 	// Extract strongest gradient edges
-	std::vector<img::Edgel> const domEdgels
+	std::vector<img::Edgel> const corrEdgels
 		{ sig::edgel::dominantEdgelsFrom(gradGrid, 2.5, 4u) };
 	std::ofstream ofsDEs("edgeDom.dat");
-	for (img::Edgel const & domEdgel : domEdgels)
+	for (img::Edgel const & corrEdgel : corrEdgels)
 	{
-		ofsDEs << domEdgel << '\n';
+		ofsDEs << corrEdgel << '\n';
 	}
 
 	// Assign weights to these based on degree of radial corroberation
 	std::vector<sig::EdgeInfo> const edgeInfos
-		{ sig::edgel::edgeInfosLikelyRadial(domEdgels) };
+		{ sig::edgel::edgeInfosLikelyRadial(corrEdgels) };
 	std::ofstream ofsEIs("edgeInfos.dat");
 	for (sig::EdgeInfo const & edgeInfo : edgeInfos)
 	{
