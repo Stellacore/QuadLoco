@@ -179,35 +179,55 @@ namespace pix
 		return quadloco::img::Span{ (double)fMin, (double)useMax };
 	}
 
-	//! uint8_t value corresponding to fpix value within fSpan range
+	/*! uint8_t value corresponding to fpix value within fSpan range
+	 *
+	 * Returned upix values are mapped as
+	 * \arg u8Undr : fpix  < fSpan.min()
+	 * \arg u8Dark : fpix == fSpan.min()
+	 * \arg   ...  : fSpan.min() <= fpix < fSpan.max()
+	 * \arg u8Lite : fpix == (fSpan.max() - epsilon) 
+	 * \arg u8Over : fSpan.max() <= fpix
+	 *
+	 * An fgrid value at fSpan.begin() maps to u8Dark
+	 */
 	inline
 	uint8_t
 	uPix8
 		( fpix_t const & fpix
 		, img::Span const & fSpan
-		, img::Span const & uSpan
 		)
 	{
 		uint8_t upix{ u8Null };
 		if (isValid(fpix))
 		{
-			double const frac{ fSpan.fractionAtValue((double)fpix) };
-			double const value{ uSpan.valueAtFraction(frac) };
-			upix = static_cast<uint8_t>(std::floor(value));
+			fpix_t const & fBeg = fSpan.min();
+			fpix_t const & fEnd = fSpan.max();
+			if (fpix < fBeg)
+			{
+				upix = u8Undr;
+			}
+			else
+			if (fpix < fEnd)
+			{
+				// "Normal" range between Dark and Lite
+				// NOTE: uSpan.max() is *out* of valid span so that
+				//       fraction interp goes only to (u8Over-1)==u8Lite
+				constexpr img::Span uSpan{ (double)u8Dark, (double)u8Over };
+				double const frac{ fSpan.fractionAtValue((double)fpix) };
+				double const value{ uSpan.valueAtFraction(frac) };
+				upix = static_cast<uint8_t>(std::floor(value));
+			}
+			else
+			{
+				upix = u8Over;
+			}
 		}
 		return upix;
 	}
 
-	/*! \brief A uint8_t grid that maps fgrid values via fSpan range
+	/*! \brief A uint8_t grid that maps fgrid values via fSpan range.
 	 *
-	 * Returned upix values are mapped as
-	 * \arg u8Undr : fpix  < fSpan.cbegin()
-	 * \arg u8Dark : fpix == fSpan.cbegin()
-	 * \arg   ...  : fSpan.cbegin() <= fpix < fSpan.cend()
-	 * \arg u8Lite : fpix == (fSpan.cend() - epsilon) 
-	 * \arg u8Over : fpix == fSpan.cend()
-
-	 * An fgrid value at fSpan.begin() maps to u8Dark
+	 * ref uPix8() for details on value mapping.
 	 */
 	inline
 	ras::Grid<uint8_t>
@@ -218,12 +238,11 @@ namespace pix
 	{
 		ras::Grid<uint8_t> ugrid{ fgrid.hwSize() };
 
-		constexpr img::Span uSpan{ (double)u8Dark, (double)u8Over };
 		ras::Grid<fpix_t>::const_iterator itIn{ fgrid.cbegin() };
 		ras::Grid<uint8_t>::iterator itOut{ ugrid.begin() };
 		while (ugrid.end() != itOut)
 		{
-			*itOut++ = uPix8(*itIn++, fSpan, uSpan);
+			*itOut++ = uPix8(*itIn++, fSpan);
 		}
 		return ugrid;
 	}
