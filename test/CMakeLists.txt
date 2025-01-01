@@ -52,6 +52,7 @@ set(unitTests
 	test_prbGauss1D  # Gaussian probability density functions in 1D
 	test_prbHisto  # histogram data modeling
 	test_prbquad  # probabilitic assessor of quad target pixel patterns
+	test_prbStats  # statistics from running data stream
 	test_rasGrid  # general raster grid storage and access
 	test_rasgrid  # pixel/grid functions (e.g. image processing)
 	test_rasRowCol  # discete raster cell locations

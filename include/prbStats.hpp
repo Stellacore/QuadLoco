@@ -35,6 +35,8 @@
 #include "opsgrid.hpp"
 #include "pix.hpp"
 
+#include <Engabra>
+
 #include <algorithm>
 #include <iterator>
 #include <limits>
@@ -49,16 +51,42 @@ namespace quadloco
 namespace prb
 {
 
-	//! Tracking class to monitor min/max of multiple collections
+	//! Tracking class to monitor min/max/ave/var of multiple collections
 	template <typename Type>
 	class Stats
 	{
 		std::size_t theCount{ 0u };
-		Type theSum{ 0 };
 		Type theMin{ std::numeric_limits<Type>::max() };
 		Type theMax{ std::numeric_limits<Type>::lowest() };
 
+		Type theMean{ std::numeric_limits<Type>::quiet_NaN() };
+		Type theVar{ 0 };
+
 	public: // static
+
+		//! Standard deviation of sample values about given mean
+		inline
+		static
+		Type
+		variance
+			( std::vector<Type> const & samps
+			, Type const & mean
+			)
+		{
+			Type var{ pix::null<Type>() };
+			if (1u < samps.size()) // need at least one sample for average
+			{
+				Type sumSq{ 0 };
+				for (std::size_t nn{0u} ; nn < samps.size() ; ++nn)
+				{
+					Type const dev{ samps[nn] - mean };
+					sumSq = sumSq + (dev * dev);
+				}
+				double const dof{ (double)(samps.size() - 1u ) };
+				var = (Type)((1./dof) * sumSq);
+			}
+			return var;
+		}
 
 		//! Standard deviation of sample values about given mean
 		inline
@@ -69,19 +97,7 @@ namespace prb
 			, Type const & mean
 			)
 		{
-			Type dev{ pix::null<Type>() };
-			if (1u < samps.size()) // need at least one sample for average
-			{
-				Type sumSq{ 0 };
-				for (std::size_t nn{0u} ; nn < samps.size() ; ++nn)
-				{
-					Type const dev{ samps[nn] - mean };
-					sumSq = sumSq + (dev * dev);
-				}
-				double const dof{ (double)(samps.size() - 1u ) };
-				dev = std::sqrt((Type)((1./dof) * sumSq));
-			}
-			return dev;
+			return std::sqrt(variance(samps, mean));
 		}
 
 	public:
@@ -102,36 +118,41 @@ namespace prb
 			consider(beg, end);
 		}
 
-		//! Smallest element considered
+		//! Adjust the current min/max values to accomodate all samps
 		inline
-		Type const &
-		min
-			() const
+		void
+		consider
+			( Type const & value
+			)
 		{
-			return theMin;
-		}
+			// update the count
+			++theCount;
 
-		//! Smallest element considered
-		inline
-		Type
-		mean
-			() const
-		{
-			Type result{ pix::null<Type>() };
-			if (0u < theCount)
+			// update running stats
+			if (1u == theCount)
 			{
-				result = (Type)((1./(double)theCount) * theSum);
+				theMean = value;
+				theVar = 0.; // initialize for recurrsive use next time
 			}
-			return result;
-		}
+			else
+			{
+				Type const prevMean{ theMean };
+				Type const prevVar{ theVar };
 
-		//! Largest element considered
-		inline
-		Type const &
-		max
-			() const
-		{
-			return theMax;
+				// Welford's method
+				theMean = prevMean + (value - prevMean)/theCount; 
+				theVar = prevVar + (value-prevMean)*(value - theMean);
+			}
+
+			// update the tracking stats
+			if (value < theMin)
+			{
+				theMin = value;
+			}
+			if (theMax < value)
+			{
+				theMax = value;
+			}
 		}
 
 		//! Adjust the current min/max values to accomodate all samps
@@ -143,25 +164,75 @@ namespace prb
 			, FwdIter const & end
 			)
 		{
-			if (end != beg)
+			for (FwdIter iter{beg} ; end != iter ; ++iter)
 			{
-				// update the sum
-				theSum = std::accumulate(beg, end, theSum);
-				theCount += (std::size_t)(std::distance(beg, end));
-				// update the min/max
-				std::pair<FwdIter, FwdIter>
-					const itPair{ ops::grid::minmax_valid(beg, end) };
-				Type const & valMin = *(itPair.first);
-				if (valMin < theMin)
-				{
-					theMin = valMin;
-				}
-				Type const & valMax = *(itPair.second);
-				if (theMax < valMax)
-				{
-					theMax = valMax;
-				}
+				consider(*iter);
 			}
+		}
+
+		//! Smallest element considered thus far
+		inline
+		Type
+		min
+			() const
+		{
+			Type result{ std::numeric_limits<Type>::quiet_NaN() };
+			if (0u < theCount)
+			{
+				result = theMin;
+			}
+			return result;
+		}
+
+		//! Largest element considered thus far
+		inline
+		Type
+		max
+			() const
+		{
+			Type result{ std::numeric_limits<Type>::quiet_NaN() };
+			if (0u < theCount)
+			{
+				result = theMax;
+			}
+			return result;
+		}
+
+		//! Average of elements considered thus far
+		inline
+		Type
+		mean
+			() const
+		{
+			Type result{ std::numeric_limits<Type>::quiet_NaN() };
+			if (0u < theCount)
+			{
+				result = theMean;
+			}
+			return result;
+		}
+
+		//! Variance of elements considered thus far
+		inline
+		Type
+		variance
+			() const
+		{
+			Type result{ std::numeric_limits<Type>::quiet_NaN() };
+			if (1u < theCount)
+			{
+				result = theVar / static_cast<Type>(theCount - 1u);
+			}
+			return result;
+		}
+
+		//! Variance of elements considered thus far
+		inline
+		Type
+		deviation
+			() const
+		{
+			return std::sqrt(variance());
 		}
 
 		//! Descriptive information about this instance
@@ -174,18 +245,19 @@ namespace prb
 			std::ostringstream oss;
 			if (! title.empty())
 			{
-				oss << title << ' ';
+				oss << title << '\n';
 			}
+			using engabra::g3::io::fixed;
 			oss
-				<< "count: " << theCount
-				<< ' '
-				<< "sum: " << theSum
-				<< ' '
-				<< "min: " << min()
-				<< ' '
-				<< "mean: " << mean()
-				<< ' '
-				<< "max: " << max()
+				<< " count: " << theCount
+				<< '\n'
+				<< "   min: " << fixed(min())
+				<< '\n'
+				<< "  mean: " << fixed(mean())
+				<< '\n'
+				<< "   max: " << fixed(max())
+				<< '\n'
+				<< "   dev: " << fixed(deviation())
 				;
 			return oss.str();
 		}
