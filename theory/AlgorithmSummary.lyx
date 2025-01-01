@@ -445,6 +445,20 @@ This also results in associating a weight with each corrEdgel (TODO/TBD
  address EdgelInfo collection?)
 \end_layout
 
+\begin_layout Itemize
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+TODO
+\end_layout
+
+\end_inset
+
+/TBD Modify this algorithm to use (or additionally use?) scatter matrix
+ information determined base on distribution of strong edges in neighborhood.
+\end_layout
+
 \end_deeper
 \begin_layout Standard
 The first three steps are similar (but not identical) to a Canny edge detection
@@ -484,28 +498,77 @@ thinning
 \end_layout
 
 \begin_layout Itemize
-TBD
+Here, perhaps 
+\begin_inset Quotes eld
+\end_inset
+
+blob detect
+\begin_inset Quotes erd
+\end_inset
+
+ images into groups based on both adjacency and support by edge direction?
+ and by probability of grad+grad+offset?
+\end_layout
+
+\begin_layout Itemize
+===
+\end_layout
+
+\begin_layout Itemize
+Create radEdgeInfo collection (EdgeInfo is structure containing Edgel along
+ with a weight value and also additional context info).
+ In effect, this is a process of assigning weight values to each corrEdgel.
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
-Create radEdgels collection?
-\end_layout
+The corrEdgels are compared with each other and each is assigned a weight
+ based on how many of the other corrEdgels are 
+\begin_inset Quotes eld
+\end_inset
 
-\begin_layout Itemize
-Assign weights to domEdgels?
-\end_layout
+likely
+\begin_inset Quotes erd
+\end_inset
 
-\begin_layout Itemize
-These qualified edgels are compared with each other one and assigned a weight
- based on how many other edgels are candidates to be "radially opposite"
+ to be "radially opposite".
+ I.e., a pseudo probability is assigned to each corrEdgel combinatorially
  (i.e.
- have a gradient direction that is almost opposite from self, and orthogonality
- of other pixel offset direction with respect to self gradient, and vice
- versa).
+ this is an 
+\begin_inset Formula $N^{2}$
+\end_inset
+
+ process for a number, 
+\begin_inset Formula $N$
+\end_inset
+
+, of corrEdgels).
+ The probability value is highest when two corrEdgels have a gradient direction
+ that is almost opposite each other, and the difference in their locations
+ is most orthogonal to the two gradients.
 \end_layout
 
 \end_deeper
+\begin_layout Standard
+This 
+\begin_inset Quotes eld
+\end_inset
+
+likely radial
+\begin_inset Quotes erd
+\end_inset
+
+ qualification step is highly specific to the known properties of a quad
+ target image signal.
+ It exploits the fact that perspective projection preserves straight lines,
+ and that the radiometric intensity gradients of opposing radial target
+ edges are therefore oppositely directed in the quad target image.
+\end_layout
+
+\begin_layout Itemize
+Grouping of radEdgels into collections distinguished by gradient angle.
+\end_layout
+
 \begin_layout Itemize
 Classify radEdgels into groups defined by a common gradient angle direction.
 \begin_inset Newline newline
