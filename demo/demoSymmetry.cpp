@@ -122,15 +122,17 @@ namespace quadloco
 		explicit
 		SymRing
 			( ras::Grid<float> const * const & ptSrc
-			, float const & midValue
+			, prb::Stats<float> const & srcStats
 			, std::size_t const & halfSize
 			)
 			: thePtSrc{ ptSrc }
-			, theMidValue{ midValue }
+			, theMidValue{ .5f * (srcStats.max() + srcStats.min()) }
 			, theHalf{ static_cast<int>(halfSize + 1u) }
 			, theRelRCs{}
 		{
-			std::size_t const numPerim{ 8u * halfSize }; // exceeding 2*pi*r^2
+			// perimeter shold be 2*pi*r < 7*r,
+			// but allow for duplicates during initial compuation
+			std::size_t const numPerim{ 2u * (7u * halfSize) };
 			theRelRCs.reserve(numPerim);
 
 			// generate row/col offsets within anulus
@@ -182,26 +184,6 @@ namespace quadloco
 			std::vector<RelRC>::iterator const newEnd
 				{ std::unique(theRelRCs.begin(), theRelRCs.end()) };
 			theRelRCs.resize(std::distance(theRelRCs.begin(), newEnd));
-
-std::ostringstream msg;
-
-for (RelRC const & relRC : theRelRCs)
-{
-	using engabra::g3::io::fixed;
-	msg
-		<< "  rc: " << fixed(relRC.theRelRow) << ' ' << fixed(relRC.theRelCol)
-		<< '\n';
-}
-
-std::cout << msg.str() << '\n';
-
-std::ofstream ofs("foo");
-ofs << msg.str() << std::endl;
-
-/*
-exit(8);
-*/
-
 		}
 
 		inline
@@ -237,14 +219,6 @@ exit(8);
 				ringVals.resize(theRelRCs.size());
 			}
 
-
-bool show{ (36u == row) && (69u == col) };
-show = false;
-if (show)
-{
-	std::cout << "row: " << row << "  col" << col << '\n';
-}
-
 			// annulus indices in monotonic angular sequence
 			std::size_t const fullRingSize{ theRelRCs.size() };
 			std::size_t const halfRingSize{ fullRingSize / 2u };
@@ -255,20 +229,6 @@ if (show)
 			{
 				RelRC const & relRC = theRelRCs[nn];
 				float const & srcVal = srcGrid(relRC.srcRowCol(row, col));
-if (show)
-{
-	using engabra::g3::io::fixed;
-	ras::RowCol const srcRC{ relRC.srcRowCol(row, col) };
-	std::cout
-		<< "  relRC:"
-			<< ' ' << std::setw(3u) << relRC.theRelRow
-			<< ' ' << std::setw(3u) << relRC.theRelCol
-		<< "  srcRC:"
-			<< ' ' << std::setw(3u) << srcRC.row()
-			<< ' ' << std::setw(3u) << srcRC.col()
-		<< "  srcVal: " << (srcVal - theMidValue)
-		<< '\n';
-}
 				if (pix::isValid(srcVal))
 				{
 					float const delta{ srcVal - theMidValue };
@@ -313,6 +273,7 @@ if (show)
 				float const arg{ difSig / sigma };
 				float const rng{ max - min };
 
+/*
 using engabra::g3::io::fixed;
 std::cout
 	<< "  rng: " << fixed(rng, 4u, 1u)
@@ -320,30 +281,10 @@ std::cout
 	<< "  sigma: " << fixed(sigma, 4u, 1u)
 	<< "  arg: " << fixed(arg)
 	<< '\n';
-/*
 */
 
-				outVal = sumSqDif;
-				outVal = 1.f/sumSqDif;
-				outVal = difSig;
-				outVal = arg;
-
-				outVal = rng;
 				outVal = rng * std::exp(-arg*arg);
 			}
-
-if (show)
-{
-	std::ostringstream msg;
-	msg << "ringVals:\n";
-	for (std::size_t nn{0u} ; nn < fullRingSize ; ++nn)
-	{
-		msg << ' ' << engabra::g3::io::fixed(ringVals[nn]);
-	}
-	std::cout << msg.str() << '\n';
-}
-/*
-*/
 
 			return outVal;
 		}
@@ -362,8 +303,7 @@ if (show)
 		ras::Grid<float> symGrid(srcGrid.hwSize());
 		std::fill(symGrid.begin(), symGrid.end(), pix::fNull);
 
-		float const midValue{ .5f * (srcStats.max() + srcStats.min()) };
-		SymRing const symRing(&srcGrid, midValue, ringHalfSize);
+		SymRing const symRing(&srcGrid, srcStats, ringHalfSize);
 
 		std::size_t const halfSize{ symRing.halfSize() };
 		std::size_t const fullSize{ symRing.fullSize() };
