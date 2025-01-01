@@ -213,6 +213,20 @@ namespace prb
 			return result;
 		}
 
+		//! Difference max()-min()
+		inline
+		Type
+		range
+			() const
+		{
+			Type result{ std::numeric_limits<Type>::quiet_NaN() };
+			if (0u < theCount)
+			{
+				result = max() - min();
+			}
+			return result;
+		}
+
 		//! Average of elements considered thus far
 		inline
 		Type
