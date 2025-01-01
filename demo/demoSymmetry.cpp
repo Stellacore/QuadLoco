@@ -120,19 +120,26 @@ namespace quadloco
 	 *
 	 * The response value is a pseudo-probability based on how well
 	 * the source data values in the annulus exhibit both "high contrast"
-	 * and "half-turn rotation symmetry".
+	 * and "half-turn rotation symmetry" and the annular region contains
+	 * a "Balance" of small and large values.
+	 *
+	 * Contributions in filter response (via operator()) include:
+	 *
+	 * \arg Balance: This is a threshhold criteria requiring the annular
+	 *      region to have at least 'N' (diametrically opposite) pairs with
+	 *      an average value above the theSrcMidValue and at least 'N' pairs
+	 *      with an average value below that value. (N == theMinPosNeg)
 	 *
 	 * \arg High Contrast: The range betwee lo/hi values within the
-	 *      annulus should be more than rangeFrac times the overall
-	 *      srcStats.range()
+	 *      annulus is used as a weight that modifies the symmetry
+	 *      rotation pseudo-probability.
 	 *
 	 * \arg Half-Turn Symmetry: Values in one half of the annulus, when
-	 *      considered in angular increasing order, should match the
-	 *      values in the second half in that same order.
-	 *
-	 * The high contrast metric is TODO
-	 *
-	 * The the symmetry metric is TODO
+	 *      considered in increasing angle order, should match the
+	 *      values in the second half in that same order. The sum of
+	 *      squared differences between the "first-half" and "second
+	 *      half" provides a measure of dissimilarity. This is converted
+	 *      to a pseudo-probability of sameness (via std::exp(-ssd*ssd)).
 	 */
 	struct SymRing
 	{
@@ -143,6 +150,8 @@ namespace quadloco
 
 		int const theHalf{};
 		std::vector<RelRC> theRelRCs{};
+
+		static constexpr std::size_t theMinPosNeg{ 1u };
 
 		inline
 		explicit
@@ -225,19 +234,20 @@ namespace quadloco
 				{ std::unique(theRelRCs.begin(), theRelRCs.end()) };
 			theRelRCs.resize(std::distance(theRelRCs.begin(), newEnd));
 
-/*
-std::cout << "theRelRCs.size(): " << theRelRCs.size() << '\n';
-for (RelRC const & relRC : theRelRCs)
-{
-	std::cout << "relRC:"
-		<< ' ' << relRC.theRelRow
-		<< ' ' << relRC.theRelCol
-		<< '\n';
-}
-*/
+			/*
+			std::cout << "theRelRCs.size(): " << theRelRCs.size() << '\n';
+			for (RelRC const & relRC : theRelRCs)
+			{
+				std::cout << "relRC:"
+					<< ' ' << relRC.theRelRow
+					<< ' ' << relRC.theRelCol
+					<< '\n';
+			}
+			*/
 
 		}
 
+		//! Nominal "radial" size of annulus
 		inline
 		std::size_t
 		halfSize
@@ -246,6 +256,7 @@ for (RelRC const & relRC : theRelRCs)
 			return static_cast<std::size_t>(theHalf);
 		}
 
+		//! Nominal "diagonal" size of annulus
 		inline
 		std::size_t
 		fullSize
@@ -254,6 +265,7 @@ for (RelRC const & relRC : theRelRCs)
 			return (2u*halfSize() + 1u);
 		}
 
+		//! \brief Evaluate the metric at source image (row,col) location
 		inline
 		float
 		operator()
@@ -265,10 +277,10 @@ for (RelRC const & relRC : theRelRCs)
 			ras::Grid<float> const & srcGrid = *thePtSrc;
 
 			// allocate space for filter ring values
-			static std::vector<float> ringVals{};
-			if (ringVals.size() != theRelRCs.size())
+			static std::vector<float> ringDeltas{};
+			if (ringDeltas.size() != theRelRCs.size())
 			{
-				ringVals.resize(theRelRCs.size());
+				ringDeltas.resize(theRelRCs.size());
 			}
 
 			// annulus indices in monotonic angular sequence
@@ -284,7 +296,7 @@ for (RelRC const & relRC : theRelRCs)
 				if (pix::isValid(srcVal))
 				{
 					float const delta{ srcVal - theSrcMidValue };
-					ringVals[nn] = delta;
+					ringDeltas[nn] = delta;
 				}
 				else
 				{
@@ -298,61 +310,78 @@ for (RelRC const & relRC : theRelRCs)
 				// Ring pattern should repeat for half-turn symmetry
 				// Note: logic could be put inside first loop above
 				float sumSqDif{ 0.f };
-				float min{ ringVals[0] };
-				float max{ ringVals[0] };
+				float min{ ringDeltas[0] };
+				float max{ ringDeltas[0] };
+				// values should be nominally symmetric about theMidValue
+				float numPos{ 0.f };
+				float numNeg{ 0.f };
 				for (std::size_t nn{0u} ; nn < halfRingSize ; ++nn)
 				{
 					std::size_t & ndx1 = nn;
 					std::size_t ndx2{ ndx1 + halfRingSize };
 
-					float const & v1 = ringVals[ndx1];
-					float const & v2 = ringVals[ndx2];
+					float const & delta1 = ringDeltas[ndx1];
+					float const & delta2 = ringDeltas[ndx2];
 
-					min = std::min(v1, min);
-					min = std::min(v2, min);
-					max = std::max(v1, max);
-					max = std::max(v2, max);
+					min = std::min(delta1, min);
+					min = std::min(delta2, min);
+					max = std::max(delta1, max);
+					max = std::max(delta2, max);
 
-					float const valDif{ v2 - v1 };
+					float const valDif{ delta2 - delta1 };
 
 					sumSqDif += sq(valDif);
+
+					float const valSum{ delta2 + delta1 };
+					if (valSum < 0.f)
+					{
+						++numNeg;
+					}
+					else
+					{
+						++numPos;
+					}
 				}
 
+				// Half-Turn Symmetry metric
 				float valDifVar{ sumSqDif / static_cast<float>(halfRingSize) };
 				float valDifSig{ std::sqrtf(valDifVar) };
-
-				// TODO - precompute
 				float const valSigma{ theSrcFullRange / 8.f };
 				float const valArg{ valDifSig / valSigma };
 
-				// TODO - precompute
-float const rngSigma{ theSrcFullRange };
+				// High Contrast metric
 				float const rngRing{ max - min };
-				float const rngDif{ theSrcFullRange - rngRing };
-				float const rngFrac{ rngDif / rngSigma };
 
-using engabra::g3::io::fixed;
-std::cout
-	<< "  rngFull: " << fixed(theSrcFullRange, 4u, 1u)
-	<< "  rngRing: " << fixed(rngRing, 4u, 1u)
-	<< "  rngSigma: " << fixed(rngSigma, 4u, 1u)
-	<< "  rngDif: " << fixed(rngDif, 4u, 1u)
-	<< "  rngFrac: " << fixed(rngFrac)
-//	<< "  valDifSig: " << fixed(valDifSig, 4u, 1u)
-//	<< "  valSigma: " << fixed(valSigma, 4u, 1u)
-//	<< "  valArg: " << fixed(valArg)
-	<< '\n';
-/*
-*/
+				// Balanced lo/hi count threshold qualification
+				bool const enoughPos{ (theMinPosNeg < numPos) };
+				bool const enoughNeg{ (theMinPosNeg < numNeg) };
+				if (enoughPos && enoughNeg)
+				{
+					// filter response value
+					outVal = rngRing * std::exp(-sq(valArg));
+				}
+				else
+				{
+					outVal = 0.f;
+				}
 
-				outVal = valArg;
-				outVal = 100.f*rngFrac;
-				outVal = rngDif;
-				outVal = rngFrac;
-				outVal = std::exp(-sq(rngFrac));
-				outVal = std::exp(-sq(valArg));
-				outVal = std::exp(-sq(rngFrac)) * std::exp(-sq(valArg));
-				outVal = rngRing * std::exp(-sq(valArg));
+				/*
+				using engabra::g3::io::fixed;
+				std::cout
+					<< "  rngFull: " << fixed(theSrcFullRange, 4u, 1u)
+					<< "  rngRing: " << fixed(rngRing, 4u, 1u)
+					<< "  exp(Val): " << fixed(exp(-sq(valArg)), 4u, 1u)
+					<< "  balClip: " << fixed(balClip, 4u, 1u)
+				//	<< "  numNeg: " << std::setw(4) << numNeg
+				//	<< "  numPos: " << std::setw(4) << numPos
+				//	<< "  rngSigma: " << fixed(rngSigma, 4u, 1u)
+				//	<< "  rngDif: " << fixed(rngDif, 4u, 1u)
+				//	<< "  rngFrac: " << fixed(rngFrac)
+				//	<< "  valDifSig: " << fixed(valDifSig, 4u, 1u)
+				//	<< "  valSigma: " << fixed(valSigma, 4u, 1u)
+				//	<< "  valArg: " << fixed(valArg)
+					<< '\n';
+				*/
 			}
 
 			return outVal;
