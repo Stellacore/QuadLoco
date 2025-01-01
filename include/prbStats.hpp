@@ -77,13 +77,19 @@ namespace prb
 			if (1u < samps.size()) // need at least one sample for average
 			{
 				Type sumSq{ 0 };
+				std::size_t count{ 0 };
 				for (std::size_t nn{0u} ; nn < samps.size() ; ++nn)
 				{
-					Type const dev{ samps[nn] - mean };
-					sumSq = sumSq + (dev * dev);
+					Type const & value = samps[nn];
+					if (engabra::g3::isValid(value))
+					{
+						Type const dev{ value - mean };
+						sumSq = sumSq + (dev * dev);
+						++count;
+					}
 				}
-				double const dof{ (double)(samps.size() - 1u ) };
-				var = (Type)((1./dof) * sumSq);
+				double const dof{ (double)(count - 1u ) };
+				var = static_cast<Type>(1./dof) * sumSq;
 			}
 			return var;
 		}
@@ -118,44 +124,53 @@ namespace prb
 			consider(beg, end);
 		}
 
-		//! Adjust the current min/max values to accomodate all samps
+		/*! Adjust the current min/max values to accomodate all samps
+		 *
+		 * NOTE: null values (NaN==value) are *NOT* considered
+		 */
 		inline
 		void
 		consider
 			( Type const & value
 			)
 		{
-			// update the count
-			++theCount;
+			if (engabra::g3::isValid(value))
+			{
+				// update the count
+				++theCount;
 
-			// update running stats
-			if (1u == theCount)
-			{
-				theMean = value;
-				theVar = 0.; // initialize for recurrsive use next time
-			}
-			else
-			{
-				Type const prevMean{ theMean };
-				Type const prevVar{ theVar };
+				// update running stats
+				if (1u == theCount)
+				{
+					theMean = value;
+					theVar = 0.; // initialize for recurrsive use next time
+				}
+				else
+				{
+					Type const prevMean{ theMean };
+					Type const prevVar{ theVar };
 
-				// Welford's method
-				theMean = prevMean + (value - prevMean)/theCount; 
-				theVar = prevVar + (value-prevMean)*(value - theMean);
-			}
+					// Welford's method
+					theMean = prevMean + (value - prevMean)/theCount; 
+					theVar = prevVar + (value-prevMean)*(value - theMean);
+				}
 
-			// update the tracking stats
-			if (value < theMin)
-			{
-				theMin = value;
-			}
-			if (theMax < value)
-			{
-				theMax = value;
+				// update the tracking stats
+				if (value < theMin)
+				{
+					theMin = value;
+				}
+				if (theMax < value)
+				{
+					theMax = value;
+				}
 			}
 		}
 
-		//! Adjust the current min/max values to accomodate all samps
+		/*! Adjust the current min/max values to accomodate all samps
+		 *
+		 * NOTE: null values (NaN==value) are *NOT* considered
+		 */
 		template <typename FwdIter>
 		inline
 		void

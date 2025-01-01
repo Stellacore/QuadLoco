@@ -63,8 +63,10 @@ namespace
 		using namespace quadloco;
 
 		// collection of values
+		// Note that null values are ignored by running stats below
+		double const nan{ std::numeric_limits<double>::quiet_NaN() };
 		std::vector<double> const vals
-			{  10., 11., 12., 13., 14., 15., 16., 17., 18., 19. }; // 145==sum
+			{  10., 11., 12., 13., 14., nan, 15., 16., 17., 18., 19. };
 		// expected mean/var using "two-pass" computations
 		double const expMean{ 145. / 10. };
 		double const expVar{ prb::Stats<double>::variance(vals, expMean) };
