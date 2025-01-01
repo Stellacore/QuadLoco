@@ -103,6 +103,7 @@ namespace quadloco
 
 		template <typename FwdIter>
 		inline
+		static
 		float
 		varianceOf
 			( FwdIter const & beg
@@ -314,7 +315,7 @@ main
 
 //	prb::Stats<float> const srcStats(useGrid.cbegin(), useGrid.cend());
 //	std::cout << "\nsrcStats: " << srcStats << '\n';
-	ras::Grid<img::Grad> const gradGrid{ ops::grid::gradientGridFor(useGrid) };
+	ras::Grid<img::Grad> const gradGrid{ ops::grid::gradientGridBy8x(useGrid) };
 	ras::Grid<float> const magGrid{ sig::util::magnitudeGridFor(gradGrid) };
 	foo(magGrid);
 
