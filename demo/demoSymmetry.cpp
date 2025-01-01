@@ -110,29 +110,69 @@ namespace quadloco
 	};
 
 
+	/*! \brief An annular ring symmetry filter
+	 *
+	 * The response at at given cell is based on the values of neighbor
+	 * pixels defined by a symmetric (quantized) annular ring centered 
+	 * on the evaluation cell. Ideally, the annulus would be a circle
+	 * but quantization produces an irregular shape (diamonds and square
+	 * for very small annulus radii).
+	 *
+	 * The response value is a pseudo-probability based on how well
+	 * the source data values in the annulus exhibit both "high contrast"
+	 * and "half-turn rotation symmetry".
+	 *
+	 * \arg High Contrast: The range betwee lo/hi values within the
+	 *      annulus should be more than rangeFrac times the overall
+	 *      srcStats.range()
+	 *
+	 * \arg Half-Turn Symmetry: Values in one half of the annulus, when
+	 *      considered in angular increasing order, should match the
+	 *      values in the second half in that same order.
+	 *
+	 * The high contrast metric is TODO
+	 *
+	 * The the symmetry metric is TODO
+	 */
 	struct SymRing
 	{
 		ras::Grid<float> const * const & thePtSrc{ nullptr };
-		float theMidValue{};
 
-		int const theHalf{ 3 };
+		float theSrcMidValue{};
+		float theSrcFullRange{};
+
+		int const theHalf{};
 		std::vector<RelRC> theRelRCs{};
 
 		inline
 		explicit
 		SymRing
 			( ras::Grid<float> const * const & ptSrc
+				//!< Access source data grid (e.g. raw or smoothed image, etc)
 			, prb::Stats<float> const & srcStats
+				//!< Statistics on source data grid
 			, std::size_t const & halfSize
+				/*!< Radius of annular filter to apply
+				 *
+				 * Values are associated with
+				 * \arg 0:  4-hood of adjacent cells in cardinal directions
+				 * \arg 1:  8-hood on a quarter turn rotated square through
+				 *          digaonal neighbors (e.g. diamond on +/-2 max
+				 *          indices)
+				 * \arg 2:  12-hood on diamond +/-3 max indices
+				 * \arg 3+: Irregular shape approaching *quantized* circle
+				 *          as ringHalfSize value gets larger
+				 */
 			)
 			: thePtSrc{ ptSrc }
-			, theMidValue{ .5f * (srcStats.max() + srcStats.min()) }
+			, theSrcMidValue{ .5f * (srcStats.max() + srcStats.min()) }
+			, theSrcFullRange{ srcStats.range() }
 			, theHalf{ static_cast<int>(halfSize + 1u) }
 			, theRelRCs{}
 		{
 			// perimeter shold be 2*pi*r < 7*r,
 			// but allow for duplicates during initial compuation
-			std::size_t const numPerim{ 2u * (7u * halfSize) };
+			std::size_t const numPerim{ 2u * (7u * theHalf) };
 			theRelRCs.reserve(numPerim);
 
 			// generate row/col offsets within anulus
@@ -184,6 +224,18 @@ namespace quadloco
 			std::vector<RelRC>::iterator const newEnd
 				{ std::unique(theRelRCs.begin(), theRelRCs.end()) };
 			theRelRCs.resize(std::distance(theRelRCs.begin(), newEnd));
+
+/*
+std::cout << "theRelRCs.size(): " << theRelRCs.size() << '\n';
+for (RelRC const & relRC : theRelRCs)
+{
+	std::cout << "relRC:"
+		<< ' ' << relRC.theRelRow
+		<< ' ' << relRC.theRelCol
+		<< '\n';
+}
+*/
+
 		}
 
 		inline
@@ -231,7 +283,7 @@ namespace quadloco
 				float const & srcVal = srcGrid(relRC.srcRowCol(row, col));
 				if (pix::isValid(srcVal))
 				{
-					float const delta{ srcVal - theMidValue };
+					float const delta{ srcVal - theSrcMidValue };
 					ringVals[nn] = delta;
 				}
 				else
@@ -261,29 +313,46 @@ namespace quadloco
 					max = std::max(v1, max);
 					max = std::max(v2, max);
 
-					float const dif{ v2 - v1 };
+					float const valDif{ v2 - v1 };
 
-					sumSqDif += dif * dif;
+					sumSqDif += sq(valDif);
 				}
 
-				float difVar{ sumSqDif / static_cast<float>(halfRingSize) };
-				float difSig{ std::sqrtf(difVar) };
+				float valDifVar{ sumSqDif / static_cast<float>(halfRingSize) };
+				float valDifSig{ std::sqrtf(valDifVar) };
 
-				constexpr float const sigma{ 256.f / 8.f };
-				float const arg{ difSig / sigma };
-				float const rng{ max - min };
+				// TODO - precompute
+				float const valSigma{ theSrcFullRange / 8.f };
+				float const valArg{ valDifSig / valSigma };
 
-/*
+				// TODO - precompute
+float const rngSigma{ theSrcFullRange };
+				float const rngRing{ max - min };
+				float const rngDif{ theSrcFullRange - rngRing };
+				float const rngFrac{ rngDif / rngSigma };
+
 using engabra::g3::io::fixed;
 std::cout
-	<< "  rng: " << fixed(rng, 4u, 1u)
-	<< "  difSig: " << fixed(difSig, 4u, 1u)
-	<< "  sigma: " << fixed(sigma, 4u, 1u)
-	<< "  arg: " << fixed(arg)
+	<< "  rngFull: " << fixed(theSrcFullRange, 4u, 1u)
+	<< "  rngRing: " << fixed(rngRing, 4u, 1u)
+	<< "  rngSigma: " << fixed(rngSigma, 4u, 1u)
+	<< "  rngDif: " << fixed(rngDif, 4u, 1u)
+	<< "  rngFrac: " << fixed(rngFrac)
+//	<< "  valDifSig: " << fixed(valDifSig, 4u, 1u)
+//	<< "  valSigma: " << fixed(valSigma, 4u, 1u)
+//	<< "  valArg: " << fixed(valArg)
 	<< '\n';
+/*
 */
 
-				outVal = rng * std::exp(-arg*arg);
+				outVal = valArg;
+				outVal = 100.f*rngFrac;
+				outVal = rngDif;
+				outVal = rngFrac;
+				outVal = std::exp(-sq(rngFrac));
+				outVal = std::exp(-sq(valArg));
+				outVal = std::exp(-sq(rngFrac)) * std::exp(-sq(valArg));
+				outVal = rngRing * std::exp(-sq(valArg));
 			}
 
 			return outVal;
@@ -292,16 +361,21 @@ std::cout
 	}; // SymRing
 
 
+	//! \brief Result of applying an annular ring rotation symmetry filter.
 	inline
 	ras::Grid<float>
 	ringSymmetryFilter
 		( ras::Grid<float> const & srcGrid
-		, prb::Stats<float> const & srcStats
-		, std::size_t const & ringHalfSize = 5u
+			//!< Input intensity grid
+		, std::size_t const & ringHalfSize
+			//!< Annular filter radius. \ref SymRing constructor
 		)
 	{
 		ras::Grid<float> symGrid(srcGrid.hwSize());
 		std::fill(symGrid.begin(), symGrid.end(), pix::fNull);
+
+		prb::Stats<float> const srcStats(srcGrid.cbegin(), srcGrid.cend());
+		std::cout << "\nsrcStats: " << srcStats << '\n';
 
 		SymRing const symRing(&srcGrid, srcStats, ringHalfSize);
 
@@ -356,18 +430,13 @@ main
 	ras::Grid<std::uint8_t> const loadGrid{ io::readPGM(loadPath) };
 	ras::Grid<float> const srcGrid{ sig::util::toFloat(loadGrid, 0u) };
 
+	/*
 	prb::Stats<float> const srcStats(srcGrid.cbegin(), srcGrid.cend());
 	std::cout << "\nsrcStats: " << srcStats << '\n';
+	*/
 
-/*
-	ras::Grid<img::Grad> const gradGrid{ ops::grid::gradientGridBy8x(srcGrid) };
-	ras::Grid<float> const magGrid{ sig::util::magnitudeGridFor(gradGrid) };
-	foo(magGrid);
-
-	constexpr std::size_t upFactor{ 1u };
-	ras::Grid<float> saveGrid{ sig::util::toLarger(srcGrid, upFactor) };
-*/
-	ras::Grid<float> saveGrid{ ringSymmetryFilter(srcGrid, srcStats) };
+	constexpr std::size_t ringHalfSize{ 5u };
+	ras::Grid<float> saveGrid{ ringSymmetryFilter(srcGrid, ringHalfSize) };
 	bool const okaySave{ io::writeStretchPGM(savePath, saveGrid) };
 
 	std::cout << '\n';
