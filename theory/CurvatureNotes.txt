@@ -1,0 +1,8 @@
+
+https://en.wikipedia.org/wiki/Gaussian_curvature#Alternative_formulas
+
+Ref: Expression for surface of form z=F(x,y) (screen shot Curvature.png).
+
+
+
+
