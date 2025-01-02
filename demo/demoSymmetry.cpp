@@ -65,9 +65,10 @@ namespace quadloco
 		int theRelRow{};
 		int theRelCol{};
 
+		//! Compute sum of indices with casting/test to avoid negative offsets
 		inline
 		std::size_t
-		srcIndexFor
+		unsignedIndexFor
 			( std::size_t const & srcCenterNdx
 			, int const & ndxDelta
 			) const
@@ -83,6 +84,7 @@ namespace quadloco
 			return static_cast<std::size_t>(iNdx);
 		}
 
+		//! Absolute source grid (row,col) given filter center (row0,col0)
 		inline
 		ras::RowCol
 		srcRowCol
@@ -91,11 +93,12 @@ namespace quadloco
 			) const
 		{
 			return ras::RowCol
-				{ srcIndexFor(srcRow0, theRelRow)
-				, srcIndexFor(srcCol0, theRelCol)
+				{ unsignedIndexFor(srcRow0, theRelRow)
+				, unsignedIndexFor(srcCol0, theRelCol)
 				};
 		}
 
+		//! True if this and other instances have identical relative indices.
 		inline
 		bool
 		operator==
@@ -287,7 +290,7 @@ namespace quadloco
 			std::size_t const fullRingSize{ theRelRCs.size() };
 			std::size_t const halfRingSize{ fullRingSize / 2u };
 
-			// Extract ring values from source grid
+			// extract ring values from source grid
 			bool hitNull{ false };
 			for (std::size_t nn{0u} ; nn < fullRingSize ; ++nn)
 			{
@@ -295,6 +298,7 @@ namespace quadloco
 				float const & srcVal = srcGrid(relRC.srcRowCol(row, col));
 				if (pix::isValid(srcVal))
 				{
+					// use deltas relative to source grid overall middle value
 					float const delta{ srcVal - theSrcMidValue };
 					ringDeltas[nn] = delta;
 				}
@@ -304,34 +308,41 @@ namespace quadloco
 				}
 			}
 
+			// perform filter analysis
 			if (! hitNull)
 			{
 				// compare first and second half of ring
 				// Ring pattern should repeat for half-turn symmetry
 				// Note: logic could be put inside first loop above
 				float sumSqDif{ 0.f };
+				// track contrast limits over annulus
 				float min{ ringDeltas[0] };
 				float max{ ringDeltas[0] };
-				// values should be nominally symmetric about theMidValue
+				// track balance of +/- values in the annulus
 				float numPos{ 0.f };
 				float numNeg{ 0.f };
 				for (std::size_t nn{0u} ; nn < halfRingSize ; ++nn)
 				{
+					// check values at radially opposite portion of annulus
 					std::size_t & ndx1 = nn;
 					std::size_t ndx2{ ndx1 + halfRingSize };
 
 					float const & delta1 = ringDeltas[ndx1];
 					float const & delta2 = ringDeltas[ndx2];
 
+					// track annulus min/max
 					min = std::min(delta1, min);
 					min = std::min(delta2, min);
 					max = std::max(delta1, max);
 					max = std::max(delta2, max);
 
+					// compute dissimilarity measure
 					float const valDif{ delta2 - delta1 };
 
+					// accumulate for variance of dissimilarity
 					sumSqDif += sq(valDif);
 
+					// track +/- balance for average of opposite cell pairs
 					float const valSum{ delta2 + delta1 };
 					if (valSum < 0.f)
 					{
@@ -343,45 +354,28 @@ namespace quadloco
 					}
 				}
 
-				// Half-Turn Symmetry metric
-				float valDifVar{ sumSqDif / static_cast<float>(halfRingSize) };
-				float valDifSig{ std::sqrtf(valDifVar) };
-				float const valSigma{ theSrcFullRange / 8.f };
-				float const valArg{ valDifSig / valSigma };
-
-				// High Contrast metric
-				float const rngRing{ max - min };
-
 				// Balanced lo/hi count threshold qualification
 				bool const enoughPos{ (theMinPosNeg < numPos) };
 				bool const enoughNeg{ (theMinPosNeg < numNeg) };
-				if (enoughPos && enoughNeg)
-				{
-					// filter response value
-					outVal = rngRing * std::exp(-sq(valArg));
-				}
-				else
+				if (! (enoughPos && enoughNeg))
 				{
 					outVal = 0.f;
 				}
+				else // if (enoughPos && enoughNeg)
+				{
+					// Half-Turn Symmetry metric
+					float valDifVar
+						{ sumSqDif / static_cast<float>(halfRingSize) };
+					float valDifSig{ std::sqrtf(valDifVar) };
+					float const valSigma{ theSrcFullRange / 8.f };
+					float const valArg{ valDifSig / valSigma };
 
-				/*
-				using engabra::g3::io::fixed;
-				std::cout
-					<< "  rngFull: " << fixed(theSrcFullRange, 4u, 1u)
-					<< "  rngRing: " << fixed(rngRing, 4u, 1u)
-					<< "  exp(Val): " << fixed(exp(-sq(valArg)), 4u, 1u)
-					<< "  balClip: " << fixed(balClip, 4u, 1u)
-				//	<< "  numNeg: " << std::setw(4) << numNeg
-				//	<< "  numPos: " << std::setw(4) << numPos
-				//	<< "  rngSigma: " << fixed(rngSigma, 4u, 1u)
-				//	<< "  rngDif: " << fixed(rngDif, 4u, 1u)
-				//	<< "  rngFrac: " << fixed(rngFrac)
-				//	<< "  valDifSig: " << fixed(valDifSig, 4u, 1u)
-				//	<< "  valSigma: " << fixed(valSigma, 4u, 1u)
-				//	<< "  valArg: " << fixed(valArg)
-					<< '\n';
-				*/
+					// High Contrast metric
+					float const rngRing{ max - min };
+
+					// filter response value
+					outVal = rngRing * std::exp(-sq(valArg));
+				}
 			}
 
 			return outVal;
@@ -467,6 +461,8 @@ main
 	constexpr std::size_t ringHalfSize{ 5u };
 	ras::Grid<float> saveGrid{ ringSymmetryFilter(srcGrid, ringHalfSize) };
 	bool const okaySave{ io::writeStretchPGM(savePath, saveGrid) };
+
+//(void)io::writeStretchPGM(std::filesystem::path("0src.pgm"), srcGrid);
 
 	std::cout << '\n';
 	std::cout << "load : " << loadPath << ' ' << loadGrid << '\n';
