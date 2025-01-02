@@ -29,6 +29,7 @@
 
 
 #include "imgChipSpec.hpp"
+#include "rasgrid.hpp"
 #include "rasGrid.hpp"
 
 #include <algorithm>
@@ -227,9 +228,9 @@ namespace
 		bool const isContained{ chipSpec.fitsInto(fullHW) };
 
 		// fill chip raster with data from the full size grid
-		quadloco::ras::Grid<NdxRC> chipData(chipHW);
-		bool const okayFill
-			{ chipSpec.fillChipFromFull(&chipData, fullData) };
+		quadloco::ras::Grid<NdxRC> const chipData
+			{ quadloco::ras::grid::subGridValuesFrom(fullData, chipSpec) };
+		bool const okayFill{ chipSpec.isValid() };
 
 		// [DoxyExample02]
 
@@ -324,7 +325,9 @@ namespace
 
 		// use chip spec to set associated cells in full data structure
 		bool const okayFill
-			{ chipSpec.fillFullFromChip(&fullData, chipData) };
+			{ quadloco::ras::grid::setSubGridInside
+				(&fullData, chipData, chipSpec.theOrigRC)
+			};
 
 		// [DoxyExample03]
 

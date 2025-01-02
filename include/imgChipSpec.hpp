@@ -181,60 +181,6 @@ namespace img
 			return rcFullForChipRC(rcInChip);
 		}
 
-		//! Populate ptChipData cells with values from fullData
-		template <typename Type>
-		inline
-		bool
-		fillChipFromFull
-			( ras::Grid<Type> * const ptChipData
-			, ras::Grid<Type> const & fullData
-			) const
-		{
-			bool okay{ ptChipData && fitsInto(fullData.hwSize()) };
-			if (okay)
-			{
-				std::size_t const highChip{ ptChipData->hwSize().high() };
-				std::size_t const wideChip{ ptChipData->hwSize().wide() };
-				for (std::size_t rChip{0u} ; rChip < highChip ; ++rChip)
-				{
-					for (std::size_t cChip{0u} ; cChip < wideChip ; ++cChip)
-					{
-						ras::RowCol const rcChip{ rChip, cChip };
-						ras::RowCol const rcFull{ rcFullForChipRC(rcChip) };
-						(*ptChipData)(rcChip) = fullData(rcFull);
-					}
-				}
-			}
-			return okay;
-		}
-
-		//! Populate ptFullData cells with values from chipData
-		template <typename Type>
-		inline
-		bool
-		fillFullFromChip
-			( ras::Grid<Type> * const ptFullData
-			, ras::Grid<Type> const & chipData
-			) const
-		{
-			bool okay {ptFullData && fitsInto(ptFullData->hwSize()) };
-			if (okay)
-			{
-				std::size_t const highChip{ chipData.hwSize().high() };
-				std::size_t const wideChip{ chipData.hwSize().wide() };
-				for (std::size_t rChip{0u} ; rChip < highChip ; ++rChip)
-				{
-					for (std::size_t cChip{0u} ; cChip < wideChip ; ++cChip)
-					{
-						ras::RowCol const rcChip{ rChip, cChip };
-						ras::RowCol const rcFull{ rcFullForChipRC(rcChip) };
-						(*ptFullData)(rcFull) = chipData(rcChip);
-					}
-				}
-			}
-			return okay;
-		}
-
 		//! \brief Descriptive information about this instance.
 		inline
 		std::string

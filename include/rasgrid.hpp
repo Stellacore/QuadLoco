@@ -180,6 +180,38 @@ namespace grid
 		}
 	}
 
+	//! Populate ptChipData cells with values from fullData (True if possible)
+	template <typename Type>
+	inline
+	bool
+	setSubGridInside
+		( ras::Grid<Type> * const ptFullData
+		, ras::Grid<Type> const & chipData
+		, ras::RowCol const & rc0
+		)
+	{
+		bool okay{ false };
+		ras::SizeHW const hwChip{ chipData.hwSize() };
+		img::ChipSpec const chipSpec{ rc0, hwChip };
+		okay = ptFullData && chipSpec.fitsInto(ptFullData->hwSize());
+		if (okay)
+		{
+			std::size_t const highChip{ hwChip.high() };
+			std::size_t const wideChip{ hwChip.wide() };
+			for (std::size_t rChip{0u} ; rChip < highChip ; ++rChip)
+			{
+				for (std::size_t cChip{0u} ; cChip < wideChip ; ++cChip)
+				{
+					ras::RowCol const rcChip{ rChip, cChip };
+					ras::RowCol const rcFull
+						{ chipSpec.rcFullForChipRC(rcChip) };
+					(*ptFullData)(rcFull) = chipData(rcChip);
+				}
+			}
+		}
+		return okay;
+	}
+
 	//! Copy of fullGrid pixels defined by chip spec region
 	template <typename Type>
 	inline
