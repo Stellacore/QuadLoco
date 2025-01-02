@@ -163,6 +163,55 @@ namespace ops
 			return peaks;
 		};
 
+		/*! \brief Measure of how much largest peak stands out from second
+		 *
+		 * For "first" and "second" largest peak values are extracted
+		 * from the *SORTED* collection, peakRCVs. Denote these as
+		 * F and S respectively with values:
+		 * \arg F = peakRCVs[ndxF]
+		 * \arg S = peakRCVs[ndxF+1u]
+		 *
+		 * The returned value is:
+		 *
+		 * General Case:
+		 * \arg (F-S)/F : A value of 1 indicates a strong peak
+		 *                  relative to S. A value of 0 implies F==S.
+		 *
+		 * Special Cases:
+		 * \arg 0.      : if F==S or 0==F
+		 * \arg NaN     : no peaks: (ndxF and ndxS=ndxF+1 both past end)
+		 * \arg 1.      : only one peak at ndxF (ndxS=ndxF+1 is past end)
+		 */
+		inline
+		static
+		double
+		distinction
+			( std::vector<ras::PeakRCV> const & sortedPeakRCVs
+			, std::size_t const & ndxF = 0u
+			)
+		{
+			double dist{ std::numeric_limits<double>::quiet_NaN() };
+			if (! sortedPeakRCVs.empty())
+			{
+				dist = 1.;
+				std::size_t const ndxS{ ndxF + 1u };
+				if (ndxS < sortedPeakRCVs.size())
+				{
+					double const & vF = sortedPeakRCVs[ndxF].theValue;
+					double const & vS = sortedPeakRCVs[ndxS].theValue;
+					if (std::numeric_limits<double>::epsilon() < vF)
+					{
+						dist = (vF - vS) / vF;
+					}
+					else
+					{
+						dist = 0.;
+					}
+				}
+			}
+			return dist;
+		}
+
 	public:
 
 		//! \brief Search for all 8-hood peaks using peakRCVs() function.

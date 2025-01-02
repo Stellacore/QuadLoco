@@ -126,6 +126,8 @@ main
 	{
 		std::cout << "==> peakRCV: ...\n";
 	}
+	std::cout << "First peak distrinction: "
+		<< allPeaks.distinction(peakRCVs) << '\n';
 
 	// save filtered result
 	bool const okaySave{ io::writeStretchPGM(savePath, saveGrid) };
