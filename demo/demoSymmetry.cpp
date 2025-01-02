@@ -47,31 +47,6 @@
 #include <vector>
 
 
-namespace quadloco
-{
-	//! Print the row/col location of the largest value in fGrid
-	inline
-	void
-	reportMax
-		( ras::Grid<float> const & fGrid
-		)
-	{
-		using Iter = ras::Grid<float>::const_iterator;
-
-		std::pair<Iter, Iter> const itMinMax
-			{ ops::grid::minmax_valid(fGrid.cbegin(), fGrid.cend()) };
-		Iter const & itMax = itMinMax.second;
-
-		ras::RowCol const rcMax{ fGrid.rasRowColFor(itMax) };
-		std::cout << "@@@@ rcMax:"
-			<< ' ' << rcMax
-			<< ' ' << fGrid(rcMax)
-			<< '\n';
-	}
-
-} // [quadloco]
-
-
 /*! \brief Experiment with point of symmetry metrics
 */
 int
@@ -107,9 +82,6 @@ main
 	constexpr std::size_t ringHalfSize{ 5u };
 	ras::Grid<float> saveGrid{ ops::symRingGridFor(srcGrid, ringHalfSize) };
 
-	// report largest peak
-	reportMax(saveGrid);
-
 	// get all peaks
 	ops::AllPeaks2D const allPeaks(saveGrid);
 	constexpr std::size_t numToShow{ 10u };
@@ -126,8 +98,15 @@ main
 	{
 		std::cout << "==> peakRCV: ...\n";
 	}
-	std::cout << "First peak distrinction: "
-		<< allPeaks.distinction(peakRCVs) << '\n';
+
+	// report largest peak
+	if (! peakRCVs.empty())
+	{
+		std::cout << "Largest Peak: " << peakRCVs.front() << '\n';
+		std::cout << "distrinction: "
+			<< allPeaks.distinction(peakRCVs) << '\n';
+	}
+
 
 	// save filtered result
 	bool const okaySave{ io::writeStretchPGM(savePath, saveGrid) };
@@ -135,8 +114,12 @@ main
 //(void)io::writeStretchPGM(std::filesystem::path("0src.pgm"), srcGrid);
 
 	std::cout << '\n';
-	std::cout << "load : " << loadPath << ' ' << loadGrid << '\n';
-	std::cout << "save : " << savePath << ' ' << saveGrid << '\n';
+	std::cout
+		<< "loadPath: " << loadPath << '\n'
+		<< "    grid: " << loadGrid << '\n';
+	std::cout
+		<< "savePath: " << savePath << '\n'
+		<< "    grid: " << saveGrid << '\n';
 	std::cout << "okaySave: " << okaySave << '\n';
 //std::cout << "\n*NOTE* - saving copy of input to 0src.pgm\n";
 	std::cout << '\n';
