@@ -92,7 +92,7 @@ namespace ras
 				oss << title << ' ';
 			}
 			oss
-				<< "row,col:"
+				<< "row,col,val:"
 				<< ' ' << theRowCol
 				<< ' ' << engabra::g3::io::fixed(theValue)
 				;
