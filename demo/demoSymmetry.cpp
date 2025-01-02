@@ -312,10 +312,18 @@ namespace quadloco
 				)
 			{
 				// track annulus min/max
-				theMin = std::min(delta1, theMin);
-				theMin = std::min(delta2, theMin);
-				theMax = std::max(delta1, theMax);
-				theMax = std::max(delta2, theMax);
+				if (! (0.f < theCount))
+				{
+					theMin = std::min(delta1, delta2);
+					theMax = std::max(delta1, delta2);
+				}
+				else
+				{
+					theMin = std::min(delta1, theMin);
+					theMin = std::min(delta2, theMin);
+					theMax = std::max(delta1, theMax);
+					theMax = std::max(delta2, theMax);
+				}
 
 				// compute dissimilarity measure
 				float const valDif{ delta2 - delta1 };
@@ -382,57 +390,44 @@ namespace quadloco
 			float outVal{ std::numeric_limits<float>::quiet_NaN() };
 			ras::Grid<float> const & srcGrid = *thePtSrc;
 
-			// allocate space for filter ring values
-			static std::vector<float> ringDeltas{};
-			if (ringDeltas.size() != theRelRCs.size())
-			{
-				ringDeltas.resize(theRelRCs.size());
-			}
-
 			// annulus indices in monotonic angular sequence
 			std::size_t const fullRingSize{ theRelRCs.size() };
 			std::size_t const halfRingSize{ fullRingSize / 2u };
 
-			// extract ring values from source grid
+			// compare first and second half of ring
+			// Ring pattern should repeat for half-turn symmetry
+			RingStats ringStats{};
+
 			bool hitNull{ false };
-			for (std::size_t nn{0u} ; nn < fullRingSize ; ++nn)
+			for (std::size_t nn{0u} ; nn < halfRingSize ; ++nn)
 			{
-				RelRC const & relRC = theRelRCs[nn];
-				float const & srcVal = srcGrid(relRC.srcRowCol(row, col));
-				if (pix::isValid(srcVal))
+				// check values at radially opposite portion of annulus
+				std::size_t & ndx1 = nn;
+				std::size_t ndx2{ ndx1 + halfRingSize };
+
+				RelRC const & relRC1 = theRelRCs[ndx1];
+				float const & srcVal1 = srcGrid(relRC1.srcRowCol(row, col));
+
+				RelRC const & relRC2 = theRelRCs[ndx2];
+				float const & srcVal2 = srcGrid(relRC2.srcRowCol(row, col));
+
+				if (pix::isValid(srcVal1) && pix::isValid(srcVal2))
 				{
-					// use deltas relative to source grid overall middle value
-					float const delta{ srcVal - theSrcMidValue };
-					ringDeltas[nn] = delta;
+					float const delta1{ srcVal1 - theSrcMidValue };
+					float const delta2{ srcVal2 - theSrcMidValue };
+					ringStats.consider(delta1, delta2);
 				}
 				else
 				{
 					hitNull = true;
 					break;
 				}
-			}
+
+			} // ring loop
 
 			// perform filter analysis
 			if (! hitNull)
 			{
-				// compare first and second half of ring
-				// Ring pattern should repeat for half-turn symmetry
-				// Note: logic could be put inside first loop above
-
-				RingStats ringStats{ ringDeltas[0], ringDeltas[0] };
-
-				for (std::size_t nn{0u} ; nn < halfRingSize ; ++nn)
-				{
-					// check values at radially opposite portion of annulus
-					std::size_t & ndx1 = nn;
-					std::size_t ndx2{ ndx1 + halfRingSize };
-
-					float const & delta1 = ringDeltas[ndx1];
-					float const & delta2 = ringDeltas[ndx2];
-
-					ringStats.consider(delta1, delta2);
-				}
-
 				// Balanced lo/hi count threshold qualification
 				if (! ringStats.hasPosNegBalance(theMinPosNeg))
 				{
