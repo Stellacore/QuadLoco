@@ -287,6 +287,90 @@ namespace quadloco
 			return (2u*halfSize() + 1u);
 		}
 
+		//! \brief Track statistics for values in annular filter ring
+		struct RingStats
+		{
+			// track contrast limits over annulus
+			float theMin{ std::numeric_limits<float>::quiet_NaN() };
+			float theMax{ std::numeric_limits<float>::quiet_NaN() };
+
+			float theCount{ 0.f };
+
+			// track differences in radially opposite values
+			float theSumSqDif{ 0.f };
+
+			// track balance of +/- values in the annulus
+			float theNumPos{ 0.f };
+			float theNumNeg{ 0.f };
+
+			//! Consider pair of values on radial opposite sides of filter
+			inline
+			void
+			consider
+				( float const & delta1
+				, float const & delta2
+				)
+			{
+				// track annulus min/max
+				theMin = std::min(delta1, theMin);
+				theMin = std::min(delta2, theMin);
+				theMax = std::max(delta1, theMax);
+				theMax = std::max(delta2, theMax);
+
+				// compute dissimilarity measure
+				float const valDif{ delta2 - delta1 };
+
+				// accumulate for variance of dissimilarity
+				theSumSqDif += sq(valDif);
+				theCount += 1.f;
+
+				// track +/- balance for average of opposite cell pairs
+				float const valSum{ delta2 + delta1 };
+				if (valSum < 0.f)
+				{
+					++theNumNeg;
+				}
+				else
+				{
+					++theNumPos;
+				}
+			}
+
+			//! Range of values considered (max - min)
+			inline
+			float
+			valueRange
+				() const
+			{
+				return (theMax - theMin);
+			}
+
+			//! True if numPos and numNeg considered values more than minPosNeg
+			inline
+			bool
+			hasPosNegBalance
+				( std::size_t const & minPosNeg
+				)
+			{
+				bool const enoughPos{ (minPosNeg < theNumPos) };
+				bool const enoughNeg{ (minPosNeg < theNumNeg) };
+				return (enoughPos && enoughNeg);
+			}
+
+			//! Standard deviation of values considered
+			inline
+			float
+			sigmaValueDifs
+				() const
+			{
+				float const valDifVar{ theSumSqDif / theCount };
+				float const valDifSig{ std::sqrtf(valDifVar) };
+				return valDifSig;
+			}
+
+		}; // RingStats
+
+
 		//! \brief Evaluate the metric at source image (row,col) location
 		inline
 		float
@@ -334,13 +418,9 @@ namespace quadloco
 				// compare first and second half of ring
 				// Ring pattern should repeat for half-turn symmetry
 				// Note: logic could be put inside first loop above
-				float sumSqDif{ 0.f };
-				// track contrast limits over annulus
-				float min{ ringDeltas[0] };
-				float max{ ringDeltas[0] };
-				// track balance of +/- values in the annulus
-				float numPos{ 0.f };
-				float numNeg{ 0.f };
+
+				RingStats ringStats{ ringDeltas[0], ringDeltas[0] };
+
 				for (std::size_t nn{0u} ; nn < halfRingSize ; ++nn)
 				{
 					// check values at radially opposite portion of annulus
@@ -350,48 +430,23 @@ namespace quadloco
 					float const & delta1 = ringDeltas[ndx1];
 					float const & delta2 = ringDeltas[ndx2];
 
-					// track annulus min/max
-					min = std::min(delta1, min);
-					min = std::min(delta2, min);
-					max = std::max(delta1, max);
-					max = std::max(delta2, max);
-
-					// compute dissimilarity measure
-					float const valDif{ delta2 - delta1 };
-
-					// accumulate for variance of dissimilarity
-					sumSqDif += sq(valDif);
-
-					// track +/- balance for average of opposite cell pairs
-					float const valSum{ delta2 + delta1 };
-					if (valSum < 0.f)
-					{
-						++numNeg;
-					}
-					else
-					{
-						++numPos;
-					}
+					ringStats.consider(delta1, delta2);
 				}
 
 				// Balanced lo/hi count threshold qualification
-				bool const enoughPos{ (theMinPosNeg < numPos) };
-				bool const enoughNeg{ (theMinPosNeg < numNeg) };
-				if (! (enoughPos && enoughNeg))
+				if (! ringStats.hasPosNegBalance(theMinPosNeg))
 				{
 					outVal = 0.f;
 				}
 				else // if (enoughPos && enoughNeg)
 				{
 					// Half-Turn Symmetry metric
-					float valDifVar
-						{ sumSqDif / static_cast<float>(halfRingSize) };
-					float valDifSig{ std::sqrtf(valDifVar) };
+					float const valDifSig{ ringStats.sigmaValueDifs() };
 					float const valSigma{ theSrcFullRange / 8.f };
 					float const valArg{ valDifSig / valSigma };
 
 					// High Contrast metric
-					float const rngRing{ max - min };
+					float const rngRing{ ringStats.valueRange() };
 
 					// filter response value
 					outVal = rngRing * std::exp(-sq(valArg));
@@ -443,6 +498,103 @@ namespace quadloco
 		return symGrid;
 	}
 
+	//! Print the row/col location of the largest value in fGrid
+	inline
+	void
+	peakSearch
+		( ras::Grid<float> const & fGrid
+		)
+	{
+		std::vector<ras::RowCol> peakRCs;
+		peakRCs.reserve(4u*1024u);
+
+		std::size_t const high{ fGrid.high() };
+		std::size_t const wide{ fGrid.wide() };
+		std::size_t const lastRow{ high - 1u };
+		std::size_t const lastCol{ wide - 1u };
+		for (std::size_t currRow{1u} ; currRow < lastRow ; ++currRow)
+		{
+			std::size_t const prevRow{ currRow - 1u };
+			std::size_t const nextRow{ currRow + 1u };
+			for (std::size_t currCol{1u} ; currCol < lastCol ; ++currCol)
+			{
+				std::size_t const prevCol{ currCol - 1u };
+				std::size_t const nextCol{ currCol + 1u };
+
+				float const & TL = fGrid(prevRow, prevCol);
+				float const & TM = fGrid(prevRow, currCol);
+				float const & TR = fGrid(prevRow, nextCol);
+
+				float const & ML = fGrid(currRow, prevCol);
+				float const & MM = fGrid(currRow, currCol);
+				float const & MR = fGrid(currRow, nextCol);
+
+				float const & BL = fGrid(nextRow, prevCol);
+				float const & BM = fGrid(nextRow, currCol);
+				float const & BR = fGrid(nextRow, nextCol);
+
+float const minValue{ std::numeric_limits<float>::epsilon() };
+				if (minValue < MM)
+				{
+
+					if (  pix::isValid(TL)
+					   && pix::isValid(TM)
+					   && pix::isValid(TR)
+					   && pix::isValid(ML)
+					   && pix::isValid(MM)
+					   && pix::isValid(MR)
+					   && pix::isValid(BL)
+					   && pix::isValid(BM)
+					   && pix::isValid(BR)
+					   )
+					{
+						bool const isPeak
+							{  (! (MM < TL)) && (! (MM < TM)) && (! (MM < TR))
+							&& (! (MM < ML))                  && (! (MM < MR))
+							&& (! (MM < BL)) && (! (MM < BM)) && (! (MM < BR))
+							};
+						if (isPeak)
+						{
+							peakRCs.emplace_back
+								(ras::RowCol{ currRow, currCol });
+
+						} // isPeak
+
+					} // all valid
+
+				} // minValue
+
+			}
+		}
+
+// TODO - add to a heap then can inspect and test in priority order
+		for (ras::RowCol const & peakRC : peakRCs)
+		{
+			using engabra::g3::io::fixed;
+			std::cout
+				<< "==> peakRC: " << peakRC
+				<< ' ' << fixed(fGrid(peakRC), 4u, 3u)
+				<< '\n';
+		}
+	}
+
+	//! Print the row/col location of the largest value in fGrid
+	inline
+	void
+	reportMax
+		( ras::Grid<float> const & fGrid
+		)
+	{
+		using Iter = ras::Grid<float>::const_iterator;
+
+		std::pair<Iter, Iter> const itMinMax
+			{ ops::grid::minmax_valid(fGrid.cbegin(), fGrid.cend()) };
+		Iter const & itMax = itMinMax.second;
+
+		ras::RowCol const rcMax{ fGrid.rasRowColFor(itMax) };
+		std::cout << "@@@@ rcMax: " << rcMax << '\n';
+	}
+
 } // [quadloco]
 
 
@@ -480,6 +632,10 @@ main
 
 	constexpr std::size_t ringHalfSize{ 5u };
 	ras::Grid<float> saveGrid{ ringSymmetryGrid(srcGrid, ringHalfSize) };
+
+reportMax(saveGrid);
+	peakSearch(saveGrid);
+
 	bool const okaySave{ io::writeStretchPGM(savePath, saveGrid) };
 
 //(void)io::writeStretchPGM(std::filesystem::path("0src.pgm"), srcGrid);
