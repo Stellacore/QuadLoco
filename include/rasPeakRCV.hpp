@@ -32,6 +32,8 @@
  */
 
 
+#include "rasRowCol.hpp"
+
 #include <Engabra>
 
 #include <iostream>
@@ -49,8 +51,7 @@ namespace ras
 	//! \brief Peak Row,Col,Value
 	struct PeakRCV
 	{
-		std::size_t theRow{};
-		std::size_t theCol{};
+		ras::RowCol theRowCol;
 		float theValue{ engabra::g3::null<float>() };
 
 		//! True if this instance has valid content
@@ -73,8 +74,7 @@ namespace ras
 		{
 			if ((! isValid()) || (theValue < value))
 			{
-				theRow = row;
-				theCol = col;
+				theRowCol = ras::RowCol{ row, col };
 				theValue = value;
 			}
 		}
@@ -93,8 +93,7 @@ namespace ras
 			}
 			oss
 				<< "row,col:"
-				<< ' ' << std::setw(4u) << theRow
-				<< ' ' << std::setw(4u) << theCol
+				<< ' ' << theRowCol
 				<< ' ' << engabra::g3::io::fixed(theValue)
 				;
 

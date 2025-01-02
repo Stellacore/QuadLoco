@@ -91,7 +91,7 @@ namespace
 
 		// [DoxyExample01]
 
-		ras::RowCol const gotPeakRC{ peakRCV.theRow, peakRCV.theCol };
+		ras::RowCol const & gotPeakRC = peakRCV.theRowCol;
 		if (! (gotPeakRC == expPeakRC))
 		{
 			oss << "Failiure of gotPeakRC test\n";
