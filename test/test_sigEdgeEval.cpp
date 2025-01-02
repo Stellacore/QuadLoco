@@ -35,7 +35,7 @@
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "opsgrid.hpp"
-#include "opsPeakFinder.hpp"
+#include "opsPeakFinder1D.hpp"
 #include "prbHisto.hpp"
 #include "sigEdgeEval.hpp"
 #include "sigedgel.hpp"
@@ -216,8 +216,8 @@ std::size_t lineCount{ 0u };
 		}
 
 		std::vector<double> const & binProbs = distHist.probabilities();
-		ops::PeakFinder const peakFinder
-			(binProbs.cbegin(), binProbs.cend(), ops::PeakFinder::Linear);
+		ops::PeakFinder1D const peakFinder
+			(binProbs.cbegin(), binProbs.cend(), ops::PeakFinder1D::Linear);
 		std::vector<std::size_t> const peakNdxs{ peakFinder.peakIndices() };
 
 		std::cout << '\n';

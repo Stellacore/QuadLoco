@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::ops::PeakFinder
+ * \brief Declarations for quadloco::ops::PeakFinder1D
  *
  */
 
@@ -49,7 +49,7 @@ namespace ops
 {
 
 	//! Utility for finding inflection peaks in array of data
-	struct PeakFinder
+	struct PeakFinder1D
 	{
 		std::vector<std::vector<std::size_t> > const thePeakNdxGrps{};
 
@@ -345,7 +345,7 @@ namespace ops
 		template <typename FwdIter>
 		inline
 		explicit
-		PeakFinder
+		PeakFinder1D
 			( FwdIter const & itBeg
 			, FwdIter const & itEnd
 			, DataDomain const & dataDomain = Circle
@@ -375,7 +375,7 @@ namespace ops
 		}
 
 
-	}; // PeakFinder
+	}; // PeakFinder1D
 
 
 } // [ops]
