@@ -47,6 +47,7 @@
 
 namespace quadloco
 {
+	//! Return the result of (val*val)
 	template <typename Type>
 	inline
 	Type
@@ -112,6 +113,100 @@ namespace quadloco
 		}
 	};
 
+	/*! \brief Collection or RelRC instances that line close to a circle
+	 *
+	 * The RelRC instances represent row-offsets and column-offsets
+	 * relative to a current filter center pixel. I.e., the returned
+	 * collection of RelRC defines a circle relative to the filter center.
+	 */
+	inline
+	std::vector<RelRC>
+	annularRelRCs
+		( std::size_t const & halfSize
+			/*!< Radius of annular filter to apply
+			 *
+			 * Values are associated with
+			 * \arg 0:  4-hood of adjacent cells in cardinal directions
+			 * \arg 1:  8-hood on a quarter turn rotated square through
+			 *          digaonal neighbors (e.g. diamond on +/-2 max
+			 *          indices)
+			 * \arg 2:  12-hood on diamond +/-3 max indices
+			 * \arg 3+: Irregular shape approaching *quantized* circle
+			 *          as ringHalfSize value gets larger
+			 */
+		)
+	{
+		std::vector<RelRC> relRCs{};
+
+		// perimeter should be 2*pi*r < 7*r,
+		// but allow for duplicates during initial compuation
+		std::size_t const numPerim{ 2u * (7u * halfSize) };
+		relRCs.reserve(numPerim);
+
+		// generate row/col offsets within anulus
+		constexpr double pi{ std::numbers::pi_v<double> };
+		constexpr double piHalf{ .5 * pi };
+		double const rad{ static_cast<double>(halfSize) + .5 };
+		double const da{ .25 * pi / rad };
+
+		// determine row/col values for first quadrant
+		for (double angle{0.} ; !(piHalf < angle) ; angle += da)
+		{
+			img::Spot const spot
+				{ rad*std::cos(angle), rad*std::sin(angle) };
+			RelRC const relRC
+				{ static_cast<int>(std::floor(.5 + spot[0]))
+				, static_cast<int>(std::floor(.5 + spot[1]))
+				};
+			if (relRCs.empty())
+			{
+				relRCs.emplace_back(relRC);
+			}
+			else
+			if (! (relRC == relRCs.front()))
+			{
+				relRCs.emplace_back(relRC);
+			}
+		}
+
+		// fill second quadrant with reverse symmetry
+		using Iter = std::vector<RelRC>::const_reverse_iterator;
+		Iter const endQtr{ relRCs.crend() };
+		for (Iter iter{relRCs.crbegin()} ; endQtr != iter ; ++iter)
+		{
+			RelRC const & relRC = *iter;
+			RelRC const negRC{ -relRC.theRelRow,  relRC.theRelCol };
+			relRCs.emplace_back(negRC);
+		}
+
+		// fill second half with half-turn symmetry
+		std::size_t const halfEnd{ relRCs.size() - 1u };
+		for (std::size_t nn{0u} ; nn < halfEnd ; ++nn)
+		{
+			RelRC const & relRC = relRCs[nn];
+			RelRC const negRC{ -relRC.theRelRow, -relRC.theRelCol };
+			relRCs.emplace_back(negRC);
+		}
+
+		// remove duplicate entries
+		std::vector<RelRC>::iterator const newEnd
+			{ std::unique(relRCs.begin(), relRCs.end()) };
+		relRCs.resize(std::distance(relRCs.begin(), newEnd));
+
+		/*
+		std::cout << "relRCs.size(): " << relRCs.size() << '\n';
+		for (RelRC const & relRC : relRCs)
+		{
+			std::cout << "relRC:"
+				<< ' ' << relRC.theRelRow
+				<< ' ' << relRC.theRelCol
+				<< '\n';
+		}
+		*/
+
+		return relRCs;
+	}
+
 
 	/*! \brief An annular ring symmetry filter
 	 *
@@ -156,6 +251,7 @@ namespace quadloco
 
 		static constexpr std::size_t theMinPosNeg{ 1u };
 
+		//! \brief Construct to operate on ptSrc image.
 		inline
 		explicit
 		SymRing
@@ -164,91 +260,14 @@ namespace quadloco
 			, prb::Stats<float> const & srcStats
 				//!< Statistics on source data grid
 			, std::size_t const & halfSize
-				/*!< Radius of annular filter to apply
-				 *
-				 * Values are associated with
-				 * \arg 0:  4-hood of adjacent cells in cardinal directions
-				 * \arg 1:  8-hood on a quarter turn rotated square through
-				 *          digaonal neighbors (e.g. diamond on +/-2 max
-				 *          indices)
-				 * \arg 2:  12-hood on diamond +/-3 max indices
-				 * \arg 3+: Irregular shape approaching *quantized* circle
-				 *          as ringHalfSize value gets larger
-				 */
+				//!< Controls filter size \ref annularRelRCs()
 			)
 			: thePtSrc{ ptSrc }
 			, theSrcMidValue{ .5f * (srcStats.max() + srcStats.min()) }
 			, theSrcFullRange{ srcStats.range() }
 			, theHalf{ static_cast<int>(halfSize + 1u) }
-			, theRelRCs{}
-		{
-			// perimeter shold be 2*pi*r < 7*r,
-			// but allow for duplicates during initial compuation
-			std::size_t const numPerim{ 2u * (7u * theHalf) };
-			theRelRCs.reserve(numPerim);
-
-			// generate row/col offsets within anulus
-			constexpr double pi{ std::numbers::pi_v<double> };
-			constexpr double piHalf{ .5 * pi };
-			double const rad{ static_cast<double>(halfSize) + .5 };
-			double const da{ .25 * pi / rad };
-
-			// determine row/col values for first quadrant
-			for (double angle{0.} ; !(piHalf < angle) ; angle += da)
-			{
-				img::Spot const spot
-					{ rad*std::cos(angle), rad*std::sin(angle) };
-				RelRC const relRC
-					{ static_cast<int>(std::floor(.5 + spot[0]))
-					, static_cast<int>(std::floor(.5 + spot[1]))
-					};
-				if (theRelRCs.empty())
-				{
-					theRelRCs.emplace_back(relRC);
-				}
-				else
-				if (! (relRC == theRelRCs.front()))
-				{
-					theRelRCs.emplace_back(relRC);
-				}
-			}
-
-			// fill second quadrant with reverse symmetry
-			using Iter = std::vector<RelRC>::const_reverse_iterator;
-			Iter const endQtr{ theRelRCs.crend() };
-			for (Iter iter{theRelRCs.crbegin()} ; endQtr != iter ; ++iter)
-			{
-				RelRC const & relRC = *iter;
-				RelRC const negRC{ -relRC.theRelRow,  relRC.theRelCol };
-				theRelRCs.emplace_back(negRC);
-			}
-
-			// fill second half with half-turn symmetry
-			std::size_t const halfEnd{ theRelRCs.size() - 1u };
-			for (std::size_t nn{0u} ; nn < halfEnd ; ++nn)
-			{
-				RelRC const & relRC = theRelRCs[nn];
-				RelRC const negRC{ -relRC.theRelRow, -relRC.theRelCol };
-				theRelRCs.emplace_back(negRC);
-			}
-
-			// remove duplicate entries
-			std::vector<RelRC>::iterator const newEnd
-				{ std::unique(theRelRCs.begin(), theRelRCs.end()) };
-			theRelRCs.resize(std::distance(theRelRCs.begin(), newEnd));
-
-			/*
-			std::cout << "theRelRCs.size(): " << theRelRCs.size() << '\n';
-			for (RelRC const & relRC : theRelRCs)
-			{
-				std::cout << "relRC:"
-					<< ' ' << relRC.theRelRow
-					<< ' ' << relRC.theRelCol
-					<< '\n';
-			}
-			*/
-
-		}
+			, theRelRCs{ annularRelRCs(halfSize) }
+		{ }
 
 		//! Nominal "radial" size of annulus
 		inline
@@ -305,6 +324,7 @@ namespace quadloco
 				else
 				{
 					hitNull = true;
+					break;
 				}
 			}
 
@@ -387,7 +407,7 @@ namespace quadloco
 	//! \brief Result of applying an annular ring rotation symmetry filter.
 	inline
 	ras::Grid<float>
-	ringSymmetryFilter
+	ringSymmetryGrid
 		( ras::Grid<float> const & srcGrid
 			//!< Input intensity grid
 		, std::size_t const & ringHalfSize
@@ -459,7 +479,7 @@ main
 	*/
 
 	constexpr std::size_t ringHalfSize{ 5u };
-	ras::Grid<float> saveGrid{ ringSymmetryFilter(srcGrid, ringHalfSize) };
+	ras::Grid<float> saveGrid{ ringSymmetryGrid(srcGrid, ringHalfSize) };
 	bool const okaySave{ io::writeStretchPGM(savePath, saveGrid) };
 
 //(void)io::writeStretchPGM(std::filesystem::path("0src.pgm"), srcGrid);
@@ -468,6 +488,7 @@ main
 	std::cout << "load : " << loadPath << ' ' << loadGrid << '\n';
 	std::cout << "save : " << savePath << ' ' << saveGrid << '\n';
 	std::cout << "okaySave: " << okaySave << '\n';
+//std::cout << "\n*NOTE* - saving copy of input to 0src.pgm\n";
 	std::cout << '\n';
 
 	return 0;
