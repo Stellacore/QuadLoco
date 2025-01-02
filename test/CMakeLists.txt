@@ -48,6 +48,7 @@ set(unitTests
 	test_opsFence  # bounding region determination
 	test_opsgrid  # Edgel extraction
 	test_opsPeakFinder  # peak finding in an array
+	test_opsSymRing  # point reflection symmetry filter
 	test_pix  # pixel image manipulations
 	test_prbGauss1D  # Gaussian probability density functions in 1D
 	test_prbHisto  # histogram data modeling
