@@ -246,8 +246,9 @@ namespace quadloco
 		float theSrcMidValue{};
 		float theSrcFullRange{};
 
-		int const theHalf{};
+		int const theHalfFilterSize{};
 		std::vector<RelRC> theRelRCs{};
+		std::size_t const theHalfRingSize{ 0u };
 
 		static constexpr std::size_t theMinPosNeg{ 1u };
 
@@ -265,8 +266,9 @@ namespace quadloco
 			: thePtSrc{ ptSrc }
 			, theSrcMidValue{ .5f * (srcStats.max() + srcStats.min()) }
 			, theSrcFullRange{ srcStats.range() }
-			, theHalf{ static_cast<int>(halfSize + 1u) }
+			, theHalfFilterSize{ static_cast<int>(halfSize + 1u) }
 			, theRelRCs{ annularRelRCs(halfSize) }
+			, theHalfRingSize{ theRelRCs.size() / 2u }
 		{ }
 
 		//! Nominal "radial" size of annulus
@@ -275,7 +277,7 @@ namespace quadloco
 		halfSize
 			() const
 		{
-			return static_cast<std::size_t>(theHalf);
+			return static_cast<std::size_t>(theHalfFilterSize);
 		}
 
 		//! Nominal "diagonal" size of annulus
@@ -291,28 +293,28 @@ namespace quadloco
 		struct RingStats
 		{
 			// track contrast limits over annulus
-			float theMin{ std::numeric_limits<float>::quiet_NaN() };
-			float theMax{ std::numeric_limits<float>::quiet_NaN() };
+			double theMin{ std::numeric_limits<double>::quiet_NaN() };
+			double theMax{ std::numeric_limits<double>::quiet_NaN() };
 
-			float theCount{ 0.f };
+			std::size_t theCount{ 0u };
 
 			// track differences in radially opposite values
-			float theSumSqDif{ 0.f };
+			double theSumSqDif{ 0.f };
 
 			// track balance of +/- values in the annulus
-			float theNumPos{ 0.f };
-			float theNumNeg{ 0.f };
+			std::size_t theNumPos{ 0u };
+			std::size_t theNumNeg{ 0u };
 
 			//! Consider pair of values on radial opposite sides of filter
 			inline
 			void
 			consider
-				( float const & delta1
-				, float const & delta2
+				( double const & delta1
+				, double const & delta2
 				)
 			{
 				// track annulus min/max
-				if (! (0.f < theCount))
+				if (! (0u < theCount))
 				{
 					theMin = std::min(delta1, delta2);
 					theMax = std::max(delta1, delta2);
@@ -326,14 +328,14 @@ namespace quadloco
 				}
 
 				// compute dissimilarity measure
-				float const valDif{ delta2 - delta1 };
+				double const valDif{ delta2 - delta1 };
 
 				// accumulate for variance of dissimilarity
 				theSumSqDif += sq(valDif);
-				theCount += 1.f;
+				++theCount;
 
 				// track +/- balance for average of opposite cell pairs
-				float const valSum{ delta2 + delta1 };
+				double const valSum{ delta2 + delta1 };
 				if (valSum < 0.f)
 				{
 					++theNumNeg;
@@ -346,7 +348,7 @@ namespace quadloco
 
 			//! Range of values considered (max - min)
 			inline
-			float
+			double
 			valueRange
 				() const
 			{
@@ -367,12 +369,12 @@ namespace quadloco
 
 			//! Standard deviation of values considered
 			inline
-			float
+			double
 			sigmaValueDifs
 				() const
 			{
-				float const valDifVar{ theSumSqDif / theCount };
-				float const valDifSig{ std::sqrtf(valDifVar) };
+				double const valDifVar{ theSumSqDif / (double)theCount };
+				double const valDifSig{ std::sqrt(valDifVar) };
 				return valDifSig;
 			}
 
@@ -390,21 +392,18 @@ namespace quadloco
 			float outVal{ std::numeric_limits<float>::quiet_NaN() };
 			ras::Grid<float> const & srcGrid = *thePtSrc;
 
-			// annulus indices in monotonic angular sequence
-			std::size_t const fullRingSize{ theRelRCs.size() };
-			std::size_t const halfRingSize{ fullRingSize / 2u };
-
 			// compare first and second half of ring
-			// Ring pattern should repeat for half-turn symmetry
+			// (ring pattern halves should repeat for half-turn symmetry)
 			RingStats ringStats{};
 
 			bool hitNull{ false };
-			for (std::size_t nn{0u} ; nn < halfRingSize ; ++nn)
+			for (std::size_t nn{0u} ; nn < theHalfRingSize ; ++nn)
 			{
 				// check values at radially opposite portion of annulus
 				std::size_t & ndx1 = nn;
-				std::size_t ndx2{ ndx1 + halfRingSize };
+				std::size_t ndx2{ ndx1 + theHalfRingSize };
 
+				// access radially opposite ring source values
 				RelRC const & relRC1 = theRelRCs[ndx1];
 				float const & srcVal1 = srcGrid(relRC1.srcRowCol(row, col));
 
@@ -413,8 +412,8 @@ namespace quadloco
 
 				if (pix::isValid(srcVal1) && pix::isValid(srcVal2))
 				{
-					float const delta1{ srcVal1 - theSrcMidValue };
-					float const delta2{ srcVal2 - theSrcMidValue };
+					double const delta1{ (double)(srcVal1 - theSrcMidValue) };
+					double const delta2{ (double)(srcVal2 - theSrcMidValue) };
 					ringStats.consider(delta1, delta2);
 				}
 				else
@@ -436,15 +435,15 @@ namespace quadloco
 				else // if (enoughPos && enoughNeg)
 				{
 					// Half-Turn Symmetry metric
-					float const valDifSig{ ringStats.sigmaValueDifs() };
-					float const valSigma{ theSrcFullRange / 8.f };
-					float const valArg{ valDifSig / valSigma };
+					double const valDifSig{ ringStats.sigmaValueDifs() };
+					double const valSigma{ theSrcFullRange / 8. };
+					double const valArg{ valDifSig / valSigma };
 
 					// High Contrast metric
-					float const rngRing{ ringStats.valueRange() };
+					double const rngRing{ ringStats.valueRange() };
 
 					// filter response value
-					outVal = rngRing * std::exp(-sq(valArg));
+					outVal = (float)(rngRing * std::exp(-sq(valArg)));
 				}
 			}
 
