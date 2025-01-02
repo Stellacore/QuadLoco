@@ -30,9 +30,9 @@
 
 #include "cast.hpp"
 #include "io.hpp"
+#include "opsAllPeaks2D.hpp"
 #include "opsFence.hpp"
 #include "opsgrid.hpp"
-#include "opsPeakFinder2D.hpp"
 #include "opsSymRing.hpp"
 #include "prbStats.hpp"
 #include "rasGrid.hpp"
@@ -111,16 +111,18 @@ main
 	reportMax(saveGrid);
 
 	// get all peaks
+	ops::AllPeaks2D const allPeaks(saveGrid);
+	constexpr std::size_t numToShow{ 10u };
 	std::vector<ras::PeakRCV> const peakRCVs
-		{ ops::PeakFinder2D::sortedPeakRCVs(saveGrid) };
+		{ allPeaks.largestPeakRCVs(numToShow) };
+
 	// display several of the largest magnitude ones
 	std::size_t const numShow{ std::min(10u, (unsigned)peakRCVs.size()) };
-	for (std::size_t nn{0u} ; nn < numShow ; ++nn)
+	for (ras::PeakRCV const & peakRCV : peakRCVs)
 	{
-		ras::PeakRCV const & peakRCV = peakRCVs[nn];
 		std::cout << "==> peakRCV: " << peakRCV << '\n';
 	}
-	if (numShow < peakRCVs.size())
+	if (numShow < allPeaks.size())
 	{
 		std::cout << "==> peakRCV: ...\n";
 	}

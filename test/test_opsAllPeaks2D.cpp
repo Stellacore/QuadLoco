@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::ops::PeakFinder
+\brief Unit tests (and example) code for quadloco::ops::AllPeaks2D
 */
 
 
-#include "opsPeakFinder2D.hpp"
+#include "opsAllPeaks2D.hpp"
 #include "rasGrid.hpp"
 #include "rasPeakRCV.hpp"
 
@@ -84,9 +84,11 @@ namespace
 		// [DoxyExample01]
 
 		// retrieve peaks from grid...
-		std::vector<ras::PeakRCV> gotPeakRCVs
-			{ ops::PeakFinder2D::peakRCVs(grid) };
+		ops::AllPeaks2D const allPeaks(grid);
+		std::vector<ras::PeakRCV> gotPeakRCVs{ allPeaks.peakRCVs() };
+
 		// ... and sort to put largest peak value first (note reverse iters)
+		// OR could have called allPeaks.largestPeakRCVs() directly.
 		std::sort(gotPeakRCVs.rbegin(), gotPeakRCVs.rend());
 
 		// [DoxyExample01]

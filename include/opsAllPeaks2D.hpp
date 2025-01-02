@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::ops::PeakFinder2D namespace
+ * \brief Declarations for quadloco::ops::AllPeaks2D namespace
  *
  */
 
@@ -48,10 +48,13 @@ namespace quadloco
 
 namespace ops
 {
-
 	//! \brief Group of functions for operating on 2D peaks
-	struct PeakFinder2D
+	class AllPeaks2D
 	{
+		std::vector<ras::PeakRCV> thePeakRCVs{};
+
+	public:
+
 		/*! \brief All local peaks (at least one cell inside grid border)
 		 *
 		 * Peaks are based on neighbor value checking. If the value
@@ -160,7 +163,68 @@ namespace ops
 			return peaks;
 		};
 
-	}; // PeakFinder2D
+	public:
+
+		//! \brief Search for all 8-hood peaks using peakRCVs() function.
+		template <typename Type>
+		inline
+		explicit
+		AllPeaks2D
+			( ras::Grid<Type> const & fGrid
+			, Type const & minValue = std::numeric_limits<Type>::epsilon()
+			)
+			: thePeakRCVs{ peakRCVs(fGrid, minValue) }
+		{ }
+
+		//! \brief Access to all found peak row/col/values.
+		inline
+		std::vector<ras::PeakRCV> const &
+		peakRCVs
+			() const
+		{
+			return thePeakRCVs;
+		}
+
+		//! Number of peaks found
+		inline
+		std::size_t
+		size
+			() const
+		{
+			return thePeakRCVs.size();
+		}
+
+		//! \brief A copy of peakRCVs() sorted with largest value peak first.
+		inline
+		std::vector<ras::PeakRCV>
+		largestPeakRCVs
+			( std::size_t const & numToGet
+				= std::numeric_limits<std::size_t>::max() 
+			) const
+		{
+			std::vector<ras::PeakRCV> allPeaks{ peakRCVs() };
+
+			if (! (numToGet < allPeaks.size()))
+			{
+				// sort and return all
+				std::sort(allPeaks.rbegin(), allPeaks.rend());
+			}
+			else
+			{
+				// sort only enough to return
+				std::partial_sort
+					( allPeaks.begin()
+					, allPeaks.begin() + numToGet
+					, allPeaks.end()
+					, [] (ras::PeakRCV const & v1, ras::PeakRCV const & v2)
+						{ return (v2 < v1); }
+					);
+				allPeaks.resize(numToGet);
+			}
+			return allPeaks;
+		}
+
+	}; // AllPeaks2D
 
 
 } // [ops]
