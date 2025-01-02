@@ -32,6 +32,7 @@
 #include "io.hpp"
 #include "opsFence.hpp"
 #include "opsgrid.hpp"
+#include "opsPeakFinder2D.hpp"
 #include "opsSymRing.hpp"
 #include "prbStats.hpp"
 #include "rasGrid.hpp"
@@ -51,86 +52,6 @@ namespace quadloco
 	//! Print the row/col location of the largest value in fGrid
 	inline
 	void
-	peakSearch
-		( ras::Grid<float> const & fGrid
-		)
-	{
-		std::vector<ras::RowCol> peakRCs;
-		peakRCs.reserve(4u*1024u);
-
-		std::size_t const high{ fGrid.high() };
-		std::size_t const wide{ fGrid.wide() };
-		std::size_t const lastRow{ high - 1u };
-		std::size_t const lastCol{ wide - 1u };
-		for (std::size_t currRow{1u} ; currRow < lastRow ; ++currRow)
-		{
-			std::size_t const prevRow{ currRow - 1u };
-			std::size_t const nextRow{ currRow + 1u };
-			for (std::size_t currCol{1u} ; currCol < lastCol ; ++currCol)
-			{
-				std::size_t const prevCol{ currCol - 1u };
-				std::size_t const nextCol{ currCol + 1u };
-
-				float const & TL = fGrid(prevRow, prevCol);
-				float const & TM = fGrid(prevRow, currCol);
-				float const & TR = fGrid(prevRow, nextCol);
-
-				float const & ML = fGrid(currRow, prevCol);
-				float const & MM = fGrid(currRow, currCol);
-				float const & MR = fGrid(currRow, nextCol);
-
-				float const & BL = fGrid(nextRow, prevCol);
-				float const & BM = fGrid(nextRow, currCol);
-				float const & BR = fGrid(nextRow, nextCol);
-
-float const minValue{ std::numeric_limits<float>::epsilon() };
-				if (minValue < MM)
-				{
-
-					if (  pix::isValid(TL)
-					   && pix::isValid(TM)
-					   && pix::isValid(TR)
-					   && pix::isValid(ML)
-					   && pix::isValid(MM)
-					   && pix::isValid(MR)
-					   && pix::isValid(BL)
-					   && pix::isValid(BM)
-					   && pix::isValid(BR)
-					   )
-					{
-						bool const isPeak
-							{  (! (MM < TL)) && (! (MM < TM)) && (! (MM < TR))
-							&& (! (MM < ML))                  && (! (MM < MR))
-							&& (! (MM < BL)) && (! (MM < BM)) && (! (MM < BR))
-							};
-						if (isPeak)
-						{
-							peakRCs.emplace_back
-								(ras::RowCol{ currRow, currCol });
-
-						} // isPeak
-
-					} // all valid
-
-				} // minValue
-
-			}
-		}
-
-// TODO - add to a heap then can inspect and test in priority order
-		for (ras::RowCol const & peakRC : peakRCs)
-		{
-			using engabra::g3::io::fixed;
-			std::cout
-				<< "==> peakRC: " << peakRC
-				<< ' ' << fixed(fGrid(peakRC), 4u, 3u)
-				<< '\n';
-		}
-	}
-
-	//! Print the row/col location of the largest value in fGrid
-	inline
-	void
 	reportMax
 		( ras::Grid<float> const & fGrid
 		)
@@ -142,7 +63,10 @@ float const minValue{ std::numeric_limits<float>::epsilon() };
 		Iter const & itMax = itMinMax.second;
 
 		ras::RowCol const rcMax{ fGrid.rasRowColFor(itMax) };
-		std::cout << "@@@@ rcMax: " << rcMax << '\n';
+		std::cout << "@@@@ rcMax:"
+			<< ' ' << rcMax
+			<< ' ' << fGrid(rcMax)
+			<< '\n';
 	}
 
 } // [quadloco]
@@ -183,9 +107,25 @@ main
 	constexpr std::size_t ringHalfSize{ 5u };
 	ras::Grid<float> saveGrid{ ops::symRingGridFor(srcGrid, ringHalfSize) };
 
-reportMax(saveGrid);
-	peakSearch(saveGrid);
+	// report largest peak
+	reportMax(saveGrid);
 
+	// get all peaks
+	std::vector<ras::PeakRCV> const peakRCVs
+		{ ops::PeakFinder2D::sortedPeakRCVs(saveGrid) };
+	// display several of the largest magnitude ones
+	std::size_t const numShow{ std::min(10u, (unsigned)peakRCVs.size()) };
+	for (std::size_t nn{0u} ; nn < numShow ; ++nn)
+	{
+		ras::PeakRCV const & peakRCV = peakRCVs[nn];
+		std::cout << "==> peakRCV: " << peakRCV << '\n';
+	}
+	if (numShow < peakRCVs.size())
+	{
+		std::cout << "==> peakRCV: ...\n";
+	}
+
+	// save filtered result
 	bool const okaySave{ io::writeStretchPGM(savePath, saveGrid) };
 
 //(void)io::writeStretchPGM(std::filesystem::path("0src.pgm"), srcGrid);
