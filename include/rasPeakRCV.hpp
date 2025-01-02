@@ -52,7 +52,7 @@ namespace ras
 	struct PeakRCV
 	{
 		ras::RowCol theRowCol;
-		float theValue{ engabra::g3::null<float>() };
+		double theValue{ engabra::g3::null<double>() };
 
 		//! True if this instance has valid content
 		inline
@@ -69,7 +69,7 @@ namespace ras
 		updateToMax
 			( std::size_t const & row
 			, std::size_t const & col
-			, float const & value
+			, double const & value
 			)
 		{
 			if ((! isValid()) || (theValue < value))
@@ -98,6 +98,16 @@ namespace ras
 				;
 
 			return oss.str();
+		}
+
+		//! True if this peak value is less than other.theValue
+		inline
+		bool
+		operator<
+			( PeakRCV const & other
+			) const
+		{
+			return (theValue < other.theValue);
 		}
 
 	}; // PeakRCV
