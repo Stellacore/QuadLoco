@@ -48,7 +48,7 @@ namespace
 	{
 		using namespace quadloco;
 
-		ras::Grid<double> grid(50u, 100u);
+		ras::Grid<double> dataGrid(50u, 100u);
 
 		// define a bunch of known peaks
 		// NOTE: edge of grid is not considered (e.g. only cells with
@@ -73,23 +73,20 @@ namespace
 			, { ras::RowCol{ 20, 19 }, 5. }
 			};
 
-		std::fill(grid.begin(), grid.end(), 0.);
-		for (ras::PeakRCV const & expPeakRCV : expPeakRCVs)
-		{
-			grid(expPeakRCV.theRowCol) = expPeakRCV.theValue;
-		}
-
 		// smooth grid with gaussian then run again
 
 		// [DoxyExample01]
 
-		// retrieve peaks from grid...
-		ops::AllPeaks2D const allPeaks(grid);
-		std::vector<ras::PeakRCV> gotPeakRCVs{ allPeaks.peakRCVs() };
+		std::fill(dataGrid.begin(), dataGrid.end(), 0.);
+		for (ras::PeakRCV const & expPeakRCV : expPeakRCVs)
+		{
+			dataGrid(expPeakRCV.theRowCol) = expPeakRCV.theValue;
+		}
 
-		// ... and sort to put largest peak value first (note reverse iters)
-		// OR could have called allPeaks.largestPeakRCVs() directly.
-		std::sort(gotPeakRCVs.rbegin(), gotPeakRCVs.rend());
+		// find filter response peaks sorted in order of peak value
+		ops::AllPeaks2D const allPeaks(dataGrid);
+		std::vector<ras::PeakRCV> const gotPeakRCVs
+			{ allPeaks.largestPeakRCVs() };
 
 		// [DoxyExample01]
 

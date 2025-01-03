@@ -91,8 +91,7 @@ namespace
 
 		// find maximum peak value in filter response
 		ops::AllPeaks2D const allPeaks(symGrid2);
-		std::vector<ras::PeakRCV> gotPeakRCVs{ allPeaks.peakRCVs() };
-		sort(gotPeakRCVs.rbegin(), gotPeakRCVs.rend());
+		std::vector<ras::PeakRCV> gotPeakRCVs{ allPeaks.largestPeakRCVs() };
 
 		// [DoxyExample01]
 

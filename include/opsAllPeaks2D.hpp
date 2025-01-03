@@ -64,12 +64,17 @@ namespace ops
 		 * This is a brute force niave algorithm. It visits every cell
 		 * (other than the first and last row or first and last column).
 		 * At each evaluation site, it checks all 8 neighbor values.
+		 *
+		 * \note The PeakRCV instances are returned in *ORDER ENCOUNTERED*.
+		 * The resulting array can be sorted to put largest peak at 
+		 * (one or other) end of collection.  Alternatively the method
+		 * sortedPeakRCVs() can be used to return top peaks in sorted order.
 		 */
 		template <typename Type>
 		inline
 		static
 		std::vector<ras::PeakRCV>
-		peakRCVs
+		unsortedPeakRCVs
 			( ras::Grid<Type> const & fGrid
 			, Type const & minValue = std::numeric_limits<Type>::epsilon()
 			)
@@ -148,7 +153,11 @@ namespace ops
 			return peakRCVs;
 		}
 
-		//! Same as peakRCVs followed by sort() to put largest value peak first
+		/*! Same as unsortedPeakRCVs followed by sort() and resize().
+		 *
+		 * The returned array contains PeakRCV values in sorted order
+		 * with the largest peak value first (e.g. in result.front()).
+		 */
 		template <typename Type>
 		inline
 		static
@@ -222,13 +231,13 @@ namespace ops
 			( ras::Grid<Type> const & fGrid
 			, Type const & minValue = std::numeric_limits<Type>::epsilon()
 			)
-			: thePeakRCVs{ peakRCVs(fGrid, minValue) }
+			: thePeakRCVs{ unsortedPeakRCVs(fGrid, minValue) }
 		{ }
 
 		//! \brief Access to all found peak row/col/values.
 		inline
 		std::vector<ras::PeakRCV> const &
-		peakRCVs
+		unsortedPeakRCVs
 			() const
 		{
 			return thePeakRCVs;
@@ -251,16 +260,17 @@ namespace ops
 				= std::numeric_limits<std::size_t>::max() 
 			) const
 		{
-			std::vector<ras::PeakRCV> allPeaks{ peakRCVs() };
+			// get unsorted order (e.g. order encountered)
+			std::vector<ras::PeakRCV> allPeaks{ unsortedPeakRCVs() };
 
 			if (! (numToGet < allPeaks.size()))
 			{
-				// sort and return all
+				// sort by peak value - and return all elements
 				std::sort(allPeaks.rbegin(), allPeaks.rend());
 			}
 			else
 			{
-				// sort only enough to return
+				// sort by peak value and only return number requested
 				std::partial_sort
 					( allPeaks.begin()
 					, allPeaks.begin() + numToGet
