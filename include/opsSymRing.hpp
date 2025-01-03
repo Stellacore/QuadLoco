@@ -35,7 +35,6 @@
 #include "imgSpot.hpp"
 #include "prbStats.hpp"
 #include "rasGrid.hpp"
-#include "rasPeakRCV.hpp"
 #include "rasRowCol.hpp"
 
 #include <algorithm>
@@ -466,8 +465,6 @@ namespace ops
 			//!< Input intensity grid
 		, SymRing const & symRing
 			//!< Annular symmetry filter
-		, ras::PeakRCV * const & ptPeakRCV = nullptr
-			//!< If not null, is set to the (first encountered) max response
 		)
 	{
 		ras::Grid<float> symGrid(srcGrid.hwSize());
@@ -475,7 +472,6 @@ namespace ops
 
 		std::size_t const halfSize{ symRing.halfSize() };
 		std::size_t const fullSize{ symRing.fullSize() };
-		ras::PeakRCV peakRCV;
 		if ((fullSize < srcGrid.high()) && (fullSize < srcGrid.high()))
 		{
 			std::size_t const & rowBeg = halfSize;
@@ -486,15 +482,9 @@ namespace ops
 			{
 				for (std::size_t col{colBeg} ; col < colEnd ; ++col)
 				{
-					float const value{ symRing(row, col) };
-					symGrid(row, col) = value;
-					peakRCV.updateToMax(row, col, value);
+					symGrid(row, col) = symRing(row, col);
 				}
 			}
-		}
-		if (ptPeakRCV)
-		{
-			*ptPeakRCV = peakRCV;
 		}
 
 		return symGrid;
@@ -508,13 +498,11 @@ namespace ops
 			//!< Input intensity grid
 		, std::size_t const & ringHalfSize
 			//!< Annular filter radius. \ref SymRing constructor
-		, ras::PeakRCV * const & ptPeakRCV = nullptr
-			//!< If not null, is set to the (first encountered) max response
 		)
 	{
 		prb::Stats<float> const srcStats(srcGrid.cbegin(), srcGrid.cend());
 		SymRing const symRing(&srcGrid, srcStats, ringHalfSize);
-		return symRingGridFor(srcGrid, symRing, ptPeakRCV);
+		return symRingGridFor(srcGrid, symRing);
 	}
 
 

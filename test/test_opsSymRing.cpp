@@ -30,10 +30,12 @@
 
 #include "imgChipSpec.hpp"
 #include "io.hpp"
+#include "opsAllPeaks2D.hpp"
 #include "opsSymRing.hpp"
 #include "prbStats.hpp"
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
+#include "rasPeakRCV.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -79,9 +81,7 @@ namespace
 		ops::SymRing const symRing(&fGrid, fStats, halfSize);
 
 		// apply symmetry filter
-		ras::PeakRCV peakRCV; // track (first occuring) maximum in response
-		ras::Grid<float> const symGrid1
-			{ ops::symRingGridFor(fGrid, symRing, &peakRCV) };
+		ras::Grid<float> const symGrid1{ ops::symRingGridFor(fGrid, symRing) };
 
 		// technique 2 - get filter result directly
 
@@ -89,14 +89,27 @@ namespace
 		// (also could have set peakRCV)
 		ras::Grid<float> const symGrid2{ ops::symRingGridFor(fGrid, halfSize) };
 
+		// find maximum peak value in filter response
+		ops::AllPeaks2D const allPeaks(symGrid2);
+		std::vector<ras::PeakRCV> gotPeakRCVs{ allPeaks.peakRCVs() };
+		sort(gotPeakRCVs.rbegin(), gotPeakRCVs.rend());
+
 		// [DoxyExample01]
 
-		ras::RowCol const & gotPeakRC = peakRCV.theRowCol;
-		if (! (gotPeakRC == expPeakRC))
+		if ( gotPeakRCVs.empty())
 		{
-			oss << "Failiure of gotPeakRC test\n";
-			oss << "exp: " << expPeakRC << '\n';
-			oss << "got: " << gotPeakRC << '\n';
+			oss << "Failure of gotPeakRCVs.empty() test\n";
+		}
+		else
+		{
+			ras::PeakRCV const & gotPeakRCV = gotPeakRCVs.front();
+			ras::RowCol const & gotPeakRC = gotPeakRCV.theRowCol;
+			if (! (gotPeakRC == expPeakRC))
+			{
+				oss << "Failiure of gotPeakRC test\n";
+				oss << "exp: " << expPeakRC << '\n';
+				oss << "got: " << gotPeakRC << '\n';
+			}
 		}
 
 	}
