@@ -28,12 +28,17 @@
 */
 
 
+#include "sigedgel.hpp"
+
 #include "imgEdgel.hpp"
 #include "io.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "opsgrid.hpp"
+#include "opsPeakFinder.hpp"
+#include "prbHisto.hpp"
 #include "sigEdgeEval.hpp"
+#include "sigedgel.hpp"
 #include "sigutil.hpp"
 #include "simConfig.hpp"
 #include "simRender.hpp"
@@ -48,6 +53,18 @@
 
 namespace
 {
+	inline
+	quadloco::obj::Camera
+	cameraFitTo
+		( std::size_t const & numPixOnEdge
+		)
+	{
+		return quadloco::obj::Camera
+			{ quadloco::ras::SizeHW{ numPixOnEdge, numPixOnEdge }
+			, static_cast<double>(numPixOnEdge) // pd
+			};
+	}
+
 	//! Simulate a strong signal quad image
 	inline
 	quadloco::ras::Grid<float>
@@ -65,18 +82,17 @@ namespace
 			//	, QuadTarget::WithTriangle
 				, QuadTarget::WithSurround | QuadTarget::WithTriangle
 				)
-			, obj::Camera
-//				{ ras::SizeHW{ 128u, 128u }
-//				, 128. // pd
-//{ ras::SizeHW{ 16u, 16u }
-//				,  16. // pd
-{ ras::SizeHW{   14u,   14u }
-				,   14. // pd
-//{ ras::SizeHW{    7u,    7u }
-//				,    7. // pd
-				}
+			//
+//			, cameraFitTo(128u)
+//			, cameraFitTo( 32u)
+//			, cameraFitTo( 31u)
+			, cameraFitTo( 16u)
+//			, cameraFitTo( 15u)
+//			, cameraFitTo(  8u)
+//			, cameraFitTo(  7u)
+			//
 			, rigibra::Transform
-				{ engabra::g3::Vector{ 0., 0., 1.+1./16. }
+				{ engabra::g3::Vector{ 0., 0., 1. }
 				, rigibra::Attitude
 					{ rigibra::PhysAngle
 						{ engabra::g3::BiVector{ 0., 0., 0. } }
@@ -90,7 +106,7 @@ namespace
 			, Sampler::AddSceneBias | Sampler::AddImageNoise
 		//	, Sampler::AddImageNoise
 			);
-		std::size_t const numOverSample{ 1024u };
+		std::size_t const numOverSample{ 64u };
 		if (ptSigQuad)
 		{
 			*ptSigQuad = render.sigQuadTarget();
@@ -110,12 +126,15 @@ namespace
 
 		// simulate quad target image and extract edgels
 		quadloco::sig::QuadTarget sigQuad{};  // set by simulation
-		ras::Grid<float> const pixGrid{ simulatedQuadGrid(&sigQuad) };
+		ras::Grid<float> const srcGrid{ simulatedQuadGrid(&sigQuad) };
+		ras::Grid<float> const & pixGrid = srcGrid;
+//		ras::Grid<float> const pixGrid
+//			{ ops::grid::smoothGridFor<float>(srcGrid, 1u, 0.75) };
 		img::Spot const expCenterSpot{ sigQuad.centerSpot() };
 
 		// compute gradient elements
 		ras::Grid<img::Grad> const gradGrid
-			{ ops::grid::gradientGridFor(pixGrid) };
+			{ ops::grid::gradientGridBy8x(pixGrid) };
 
 		// categorize edgels as candidates for (radial) quad target edge groups
 		sig::EdgeEval const edgeEval(gradGrid);
@@ -135,17 +154,162 @@ namespace
 			//       samples. Therefore, add {.5,.5} to match the simulation.
 			gotCenterSpot = img::Spot
 					{ sigQuadWgts.front().item().centerSpot()
-					+ img::Spot{ .5, .5 }
 					};
 			gotCenterSigma = sigQuadWgts.front().item().centerSigma();
 		}
 
 		// [DoxyExample01]
 
-// Save data to files
+//
+// === Diagnostics
+//
+
+	// Extract strongest gradient edges
+	std::vector<img::Edgel> const corrEdgels
+		{ sig::edgel::dominantEdgelsFrom(gradGrid, 2.5, 4u) };
+	std::ofstream ofsDEs("edgeDom.dat");
+	for (img::Edgel const & corrEdgel : corrEdgels)
+	{
+		ofsDEs << corrEdgel << '\n';
+	}
+
+	// Assign weights to these based on degree of radial corroberation
+	std::vector<sig::EdgeInfo> const edgeInfos
+		{ sig::edgel::edgeInfosLikelyRadial(corrEdgels) };
+	std::ofstream ofsEIs("edgeInfos.dat");
+	for (sig::EdgeInfo const & edgeInfo : edgeInfos)
+	{
+		using engabra::g3::io::fixed;
+		ofsEIs
+			<< "location: " << edgeInfo.edgeLocation()
+			<< " considerDir: " << edgeInfo.consideredDirection()
+			<< " wgt: " << fixed(edgeInfo.consideredWeight())
+			<< '\n';
+	}
+
+// TODO - angles peaks are duplicated (because of symmetry accumulation)
+//        can be optimized (ideally by peak accumulation in half size array)
+	// Estimate dominant edge direction angles
+	std::size_t const numAngBins{ gradGrid.hwSize().perimeter() };
+	std::vector<sig::AngleWgt> const angWgts
+		{ sig::EdgeGrouper::peakAngleWeights(edgeInfos, numAngBins) };
+
+	// loop over peaks in gradient direction angle
+	// for each one, determine peaks in edgel locations along that direction
+std::size_t lineCount{ 0u };
+	for (sig::AngleWgt const & angWgt : angWgts)
+	{
+		double const & angle = angWgt.item();
+		double const & wgt = angWgt.weight();
+		img::Vector<double> const angleDir{ cos(angle), sin(angle) };
+
+		double const diag{ gradGrid.hwSize().diagonal() };
+		std::size_t const numDistBins{ (std::size_t)diag };
+		img::Span const distSpan{ -diag, diag };
+		prb::Histo distHist(4u*numDistBins, distSpan);
+		for (sig::EdgeInfo const & edgeInfo : edgeInfos)
+		{
+			img::Vector<double> const & loc = edgeInfo.edgeLocation();
+			double const proj{ dot(loc, angleDir) };
+			constexpr double sigma{ 2. };
+			distHist.addValue(proj, sigma);
+		}
+
+		std::vector<double> const & binProbs = distHist.probabilities();
+		ops::PeakFinder const peakFinder
+			(binProbs.cbegin(), binProbs.cend(), ops::PeakFinder::Linear);
+		std::vector<std::size_t> const peakNdxs{ peakFinder.peakIndices() };
+
+		std::cout << '\n';
+		std::cout << "angWgt: " << angWgt << '\n';
+		// std::cout << '\n';
+		// std::cout << distHist.infoStringContents("distHist") << '\n';
+		for (std::size_t const & peakNdx : peakNdxs)
+		{
+			std::cout << "peak:"
+				<< " ndx: " << std::setw(3u) << peakNdx
+				<< " val: " << std::setw(9u) << std::fixed
+					<< distHist.valueAtIndex(peakNdx)
+				<< " prob: " << std::setw(9u) << std::fixed
+					<< distHist.probabilityAtIndex(peakNdx)
+				<< '\n';
+
+			double const distProb{ distHist.probabilityAtIndex(peakNdx) };
+
+			double const dist{ distHist.valueAtIndex(peakNdx) };
+			img::Spot const start{ dist * angleDir };
+			img::Spot const lineDir{ ccwPerp(angleDir) };
+			img::Ray const lineRay{ start, lineDir };
+
+			std::cout << "lineRay: " << lineRay << '\n';
+
+			std::ostringstream msg;
+			msg << "line" << (100u + lineCount++) << ".dat";
+			std::ofstream ofsLine(msg.str());
+			ofsLine << "# Row, Col, Wgt, Rejection\n";
+			for (sig::EdgeInfo const & edgeInfo : edgeInfos)
+			{
+				img::Vector<double> const & loc = edgeInfo.edgeLocation();
+				img::Vector<double> const lineDir
+					{ lineRay.direction() };
+				img::Vector<double> const edgeDir
+					{ edgeInfo.edgel().direction() };
+				double const align{ outer(lineDir, edgeDir) };
+
+				double const rej{ lineRay.distanceFrom(loc) };
+				double const sigma{ 1. };
+				double const arg{ rej / sigma };
+				double const wgt{ distProb * align * std::exp(-arg*arg) };
+
+				ofsLine
+					<< loc
+					<< ' '
+					<< std::setw(12u) << std::fixed << wgt
+					<< ' '
+					<< std::setw(12u) << std::fixed << rej
+					<< '\n';
+				/*
+					<< "loc: " << loc
+					<< ' '
+					<< "rej: " << std::setw(12u) << std::fixed << rej
+					<< ' '
+					<< "wgt: " << std::setw(12u) << std::fixed << wgt
+					<< '\n';
+				*/
+			}
+
+		}
+
+	}
+
+
+	std::ofstream ofsAWs("angWgts.dat");
+	for (sig::AngleWgt const & angWgt : angWgts)
+	{
+		ofsAWs << "angWgt: " << angWgt << '\n';
+	}
+
+
+//
+// === Save data to files
+//
 
 // pixels
 (void)io::writeStretchPGM("pixGrid.pgm", pixGrid);
+
+// gradient values
+ras::Grid<float> const gradRow
+	{ sig::util::rowCompGridFor(gradGrid) };
+ras::Grid<float> const gradCol
+	{ sig::util::colCompGridFor(gradGrid) };
+(void)io::writeStretchPGM("gradRow.pgm", gradRow);
+(void)io::writeStretchPGM("gradCol.pgm", gradCol);
+ras::Grid<float> const gradMag
+	{ sig::util::magnitudeGridFor(gradGrid) };
+ras::Grid<float> const gradAng
+	{ sig::util::angleGridFor(gradGrid) };
+(void)io::writeStretchPGM("gradMag.pgm", gradMag);
+(void)io::writeStretchPGM("gradAng.pgm", gradAng);
 
 // EdgeInfo-mag
 ras::Grid<float> const edgeInfoWeightGrid
@@ -206,8 +370,8 @@ ofsEdgeInfo << edgeInfoAngleGrid.infoStringContents
 		}
 		else
 		{
-			constexpr char pad[] = "   ";
-			std::cout << "\n\nSuccessful center test\n";
+			constexpr char pad[] = "    ";
+			std::cout << "\n\n:-) Successful center test\n";
 			std::cout << pad << "exp: " << expCenterSpot << '\n';
 			std::cout << pad << "got: " << gotCenterSpot
 				<< "   sigma: " << gotCenterSigma << '\n';

@@ -71,13 +71,13 @@ main
 	ras::Grid<float> const useGrid{ sig::util::toFloat(srcGrid, 0) };
 
 	// smooth source signal
-	ras::Grid<float> const smoGrid
+	ras::Grid<float> const softGrid
 		{ ops::grid::smoothGridFor<float>(useGrid, 5u, 2.5) };
 
 	// create filtered image
 	ras::SizeHW const hwBox{ 5u, 5u };
 	ras::Grid<float> const outGrid
-		{ ops::grid::sumSquareDiffGridFor<float>(smoGrid, hwBox) };
+		{ ops::grid::sumSquareDiffGridFor<float>(softGrid, hwBox) };
 
 	// save (enlarged) image with center drawn
 	bool const okaySave{ io::writeStretchPGM(outPath, outGrid) };

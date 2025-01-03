@@ -135,13 +135,12 @@ namespace
 		std::fill(tbPixels.begin(), tbPixels.end(), backVal);
 		std::fill(lrPixels.begin(), lrPixels.end(), backVal);
 
-		// Step sizes used to evaluate gradient for this test
-		constexpr std::size_t stepHalf{ 1u };
-		constexpr std::size_t stepFull{ 2u * stepHalf };
+		// step edges generate 2 cell wide response
+		constexpr double edgeSize{ 2. };
 
 		// set foreground for bottom half of the horizontal edge grid
 		std::fill(tbPixels.beginRow(ndxHalf), tbPixels.end(), foreVal);
-		quadloco::img::Grad const tbExpGrad{ 10./(double)stepFull, 0. };
+		quadloco::img::Grad const tbExpGrad{ 10./edgeSize, 0. };
 
 		// Use ChipSpec to set right half foreground for vertical edge grid
 		quadloco::img::ChipSpec const lrFillSpec
@@ -149,18 +148,17 @@ namespace
 			, quadloco::ras::SizeHW{ lrPixels.high(), lrPixels.wide()/2u }
 			};
 		quadloco::ras::grid::setSubGridValues(&lrPixels, lrFillSpec, foreVal);
-		quadloco::img::Grad const lrExpGrad{ 0., 10./(double)stepFull };
+		quadloco::img::Grad const lrExpGrad{ 0., 10./edgeSize };
 
-		// Compute edge gradient across stepFull pixels
+		// Compute edge gradient for each source cell
 
 		// gradient magnitude prop to:
-		// [gridVal(rc + stepHalf) - gridVal(rc - stepHalf)] / (2*stepHalf)
 		// Vertical grid gradients
 		quadloco::ras::Grid<quadloco::img::Grad> const lrGrads
-			{ quadloco::ops::grid::gradientGridFor(lrPixels, stepHalf) };
+			{ quadloco::ops::grid::gradientGridBy8x(lrPixels) };
 		// Horizontal grid gradients
 		quadloco::ras::Grid<quadloco::img::Grad> const tbGrads
-			{ quadloco::ops::grid::gradientGridFor(tbPixels, stepHalf) };
+			{ quadloco::ops::grid::gradientGridBy8x(tbPixels) };
 
 		// [DoxyExample01]
 

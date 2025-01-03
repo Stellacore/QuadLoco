@@ -82,7 +82,7 @@ namespace
 
 			// compute a full gradient grid - each cell has gradient of pixGrid
 			ras::Grid<img::Grad> const gradGrid
-				{ ops::grid::gradientGridFor(pixGrid) };
+				{ ops::grid::gradientGridBy8x(pixGrid) };
 
 			// expected configuration
 			img::Circle const boundingCircle

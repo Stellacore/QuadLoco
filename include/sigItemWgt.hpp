@@ -58,14 +58,27 @@ namespace sig
 		ItemType theItem{};
 		double theWeight{ std::numeric_limits<double>::quiet_NaN() };
 
-		//! True if this instance contains valid data
+		//! Value construction
 		inline
-		bool
-		isValid
-			() const
-		{
-			return engabra::g3::isValid(theWeight);
-		}
+		explicit
+		ItemWgt
+			( ItemType const & item
+			, double const & weight
+			)
+			: theItem{ item }
+			, theWeight{ weight }
+		{ }
+
+		//! Create a null instance
+		inline
+		explicit
+		ItemWgt
+			() = default;
+
+		//! Noop dtor
+		inline
+		~ItemWgt
+			() = default;
 
 		//! Item instance
 		inline
@@ -85,7 +98,18 @@ namespace sig
 			return theWeight;
 		}
 
+		//! True if this instance contains valid data
+		virtual
+		inline
+		bool
+		isValid
+			() const
+		{
+			return engabra::g3::isValid(theWeight);
+		}
+
 		//! Descriptive information about this instance.
+		virtual
 		inline
 		std::string
 		infoString
@@ -142,8 +166,29 @@ namespace sig
 	//! An angle item and associated weight
 	struct AngleWgt : public ItemWgt<double>
 	{
-		// overload ItemWgt formatting (brute force, non-virtual)
+		//! Value construction
+		inline
+		explicit
+		AngleWgt
+			( double const & angle
+			, double const & weight
+			)
+			: ItemWgt<double>(angle, weight)
+		{ }
+
+		//! Create a null instance
+		inline
+		explicit
+		AngleWgt
+			() = default;
+
+		//! Noop dtor
+		inline
+		~AngleWgt
+			() = default;
+
 		//! Descriptive information about this instance.
+		virtual
 		inline
 		std::string
 		infoString

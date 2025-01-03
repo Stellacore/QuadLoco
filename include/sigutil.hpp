@@ -247,7 +247,8 @@ namespace util
 		)
 	{
 		ras::Grid<float> eiGrid(hwSize);
-		std::fill(eiGrid.begin(), eiGrid.end(), 0.f);
+		constexpr float nan{ std::numeric_limits<float>::quiet_NaN() };
+		std::fill(eiGrid.begin(), eiGrid.end(), nan);
 		for (sig::EdgeInfo const & edgeInfo : edgeInfos)
 		{
 			ras::RowCol const rowcol

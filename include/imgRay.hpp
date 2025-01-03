@@ -115,7 +115,7 @@ namespace img
 			() const
 		{
 			// direction after a quarter turn rotation in 2D
-			return img::Vector<double>{ -theDir[1], theDir[0] };
+			return ccwPerp(theDir);
 		}
 
 		//! Distance along ray: from start point to projectionOf()

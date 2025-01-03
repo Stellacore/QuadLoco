@@ -168,10 +168,11 @@ namespace grid
 		, Type const & value
 		)
 	{
-		for (std::size_t rowChip{0u} ; rowChip < chipSpec.high() ; ++rowChip)
+		std::size_t const cHigh{ chipSpec.high() };
+		std::size_t const cWide{ chipSpec.wide() };
+		for (std::size_t rowChip{0u} ; rowChip < cHigh ; ++rowChip)
 		{
-			for (std::size_t colChip{0u} ; colChip < chipSpec.wide()
-				; ++colChip)
+			for (std::size_t colChip{0u} ; colChip < cWide ; ++colChip)
 			{
 				ras::RowCol const rcChip{ rowChip, colChip };
 				(*ptFull)(chipSpec.rcFullForChipRC(rcChip)) = value;

@@ -50,18 +50,16 @@ namespace quadloco
 		( ras::Grid<float> const & srcGrid
 		)
 	{
-		std::filesystem::path srcPgmPath("df_srcGrid.pgm");
-		std::filesystem::path srcDatPath("df_srcGrid.dat");
-		std::filesystem::path gmagPgmPath("df_gmagGrid.pgm");
-		std::filesystem::path gmagDatPath("df_gmagGrid.dat");
-		std::filesystem::path gangPgmPath("df_gangGrid.pgm");
-		std::filesystem::path gangDatPath("df_gangGrid.dat");
-		std::filesystem::path domPgmPath("df_domGrid.pgm");
-		std::filesystem::path domDatPath("df_domGrid.dat");
-		std::filesystem::path radPgmPath("df_radGrid.pgm");
-		std::filesystem::path radDatPath("df_radGrid.dat");
-		std::filesystem::path wgtPgmPath("df_wgtGrid.pgm");
-		std::filesystem::path wgtDatPath("df_wgtGrid.dat");
+		std::filesystem::path srcPgmPath("df1_srcGrid.pgm");
+		std::filesystem::path srcDatPath("df1_srcGrid.dat");
+		std::filesystem::path gmagPgmPath("df2_gmagGrid.pgm");
+		std::filesystem::path gmagDatPath("df2_gmagGrid.dat");
+		std::filesystem::path gangPgmPath("df3_gangGrid.pgm");
+		std::filesystem::path gangDatPath("df3_gangGrid.dat");
+		std::filesystem::path corrPgmPath("df4_corrGrid.pgm");
+		std::filesystem::path corrDatPath("df4_corrGrid.dat");
+		std::filesystem::path radPgmPath("df5_radGrid.pgm");
+		std::filesystem::path radDatPath("df5_radGrid.dat");
 
 
 		constexpr bool saveDiagnostics{ true };
@@ -84,7 +82,7 @@ namespace quadloco
 		// Gradient grid (in place gradients)
 		//
 		ras::Grid<img::Grad> const gradGrid
-			{ ops::grid::gradientGridFor(srcGrid) };
+			{ ops::grid::gradientGridBy8x(srcGrid) };
 		if (saveDiagnostics)
 		{
 			{
@@ -129,14 +127,14 @@ for (sig::QuadWgt const & sigQuadWgt : sigQuadWgts)
 		if (saveDiagnostics)
 		{
 			{
-			ras::Grid<float> const domGrid
+			ras::Grid<float> const corrGrid
 				{ edgeEval.infoGridDominantEdgelMag(gradGrid) };
 			bool const okPgm
-				{ io::writeStretchPGM(domPgmPath, domGrid) };
+				{ io::writeStretchPGM(corrPgmPath, corrGrid) };
 			bool const okDat
-				{ io::writeAsciiFile(domDatPath, domGrid, "%9.3f", -1.f) };
-			std::cout << "@@@ writing: " << domPgmPath << okPgm << '\n';
-			std::cout << "@@@ writing: " << domDatPath << okDat << '\n';
+				{ io::writeAsciiFile(corrDatPath, corrGrid, "%9.3f", -1.f) };
+			std::cout << "@@@ writing: " << corrPgmPath << okPgm << '\n';
+			std::cout << "@@@ writing: " << corrDatPath << okDat << '\n';
 			}
 
 			{
@@ -148,19 +146,6 @@ for (sig::QuadWgt const & sigQuadWgt : sigQuadWgts)
 				{ io::writeAsciiFile(radDatPath, radGrid, "%9.3f", -1.f) };
 			std::cout << "@@@ writing: " << radPgmPath << okPgm << '\n';
 			std::cout << "@@@ writing: " << radDatPath << okDat << '\n';
-			}
-
-			{
-			ras::Grid<float> const wgtGrid
-				{ sig::util::edgeInfoWeightGrid
-					(gradGrid.hwSize(), edgeEval.edgeInfos())
-				};
-			bool const okPgm
-				{ io::writeStretchPGM(wgtPgmPath, wgtGrid) };
-			bool const okDat
-				{ io::writeAsciiFile(wgtDatPath, wgtGrid, "%9.3f", -1.f) };
-			std::cout << "@@@ writing: " << wgtPgmPath << okPgm << '\n';
-			std::cout << "@@@ writing: " << wgtDatPath << okDat << '\n';
 			}
 
 		}
@@ -199,11 +184,11 @@ main
 	ras::Grid<float> const useGrid{ sig::util::toFloat(srcGrid, 0) };
 
 	// smooth source signal
-	ras::Grid<float> const smoGrid
+	ras::Grid<float> const softGrid
 		{ ops::grid::smoothGridFor<float>(useGrid, 5u, 2.5) };
 
 	// find center
-	sig::QuadTarget const sigQuad{ bestQuadTargetFor(smoGrid) };
+	sig::QuadTarget const sigQuad{ bestQuadTargetFor(softGrid) };
 	img::Spot const useCenter{ sigQuad.centerSpot() };
 
 	// upsample image and draw center in enlarged grid

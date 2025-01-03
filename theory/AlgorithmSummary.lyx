@@ -1,0 +1,728 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass IEEEtran
+\begin_preamble
+%\usepackage{url}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine biblatex
+\cite_engine_type authoryear
+\biblatex_bibstyle authoryear
+\biblatex_citestyle ieee
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+QuadLoco: Algorithm Summary
+\end_layout
+
+\begin_layout Author
+Dave Knopp
+\begin_inset Newline newline
+\end_inset
+
+Stellacore Corporation
+\end_layout
+
+\begin_layout Abstract
+This technical note describes the overall algorithms used in the quadrant
+ target detection software package, QuadLoco (
+\begin_inset CommandInset citation
+LatexCommand citet
+key "Knopp_QuadLoco_-_A_2024"
+literal "false"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset nomencl_print
+LatexCommand printnomenclature
+set_width "auto"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Section
+Algorithms
+\end_layout
+
+\begin_layout Subsection
+Terminology
+\end_layout
+
+\begin_layout Standard
+TODO/ Detection
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "Detection"
+symbol "Detection"
+description "Determining that a quadrant target exists along with nominal location and bounds (enough information to define an image chip)."
+literal "false"
+
+\end_inset
+
+ vs Localization
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "Localization"
+symbol "Localization"
+description "Very precise determination of quad target image geometry (i.e., center location and radial edge directions)."
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+The point is to determine the quad center
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "QuadCenter"
+symbol "Quad Center (img)"
+description "Location in image/chip associated with the image of the quadrant taget center point (where 4 radial edges come closest to intersection)."
+literal "false"
+
+\end_inset
+
+ location
+\end_layout
+
+\begin_layout Standard
+The QuadLoco software package assumes it is working with an image
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "Image.img"
+symbol "Image (img)"
+description "A digital image. Stored as collection of values in a raster grid format."
+literal "false"
+
+\end_inset
+
+ 
+\begin_inset Quotes eld
+\end_inset
+
+chip
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "Chip.img"
+symbol "Chip (img)"
+description "A generally small image that is associated with a single quadrant target signal. Typically extracted from a larger image (e.g. based on a prior quadrand target detection results)."
+literal "false"
+
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+ that contains an image space signal
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "QuadTarget.img"
+symbol "Quad Target (img)"
+description "A 2D mathematical description of the image of an object space quadrant target."
+literal "false"
+
+\end_inset
+
+ associated with a object space quadrant target
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "QuadTarget.obj"
+symbol "Quad Target (obj)"
+description "A 3D (albeit it flat) physical target with a high contrast pattern on it."
+literal "false"
+
+\end_inset
+
+.
+ I.e., the image chip contains a complete quad signal
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "quad.sig"
+symbol "Quad (sig)"
+description "The mathematical description of a quadrant target image."
+literal "false"
+
+\end_inset
+
+.
+ It is assumed that this image signal is related to the quadrant taget object
+ geometry via ideal central perspective projection.
+\end_layout
+
+\begin_layout Standard
+The source data represent a 2D, scalar valued image that is loaded into
+ a floating point Grid
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "Grid.type"
+symbol "Grid (type)"
+description "A 2D data structure storing data in \"raster scan\" ordering (e.g. top row from start col to end column then next row, and so on)."
+literal "false"
+
+\end_inset
+
+ structure.
+ Each pixel
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "pixel.type"
+symbol "Pixel (type)"
+description "One cell of a Grid. Associated with a grid location (row, col) and a data value (e.g. intensity of either intergral or floating point type)."
+literal "false"
+
+\end_inset
+
+ in the image is associated with a scalar value.
+ Comparing the value of adjacent pixels within a local neighborhood
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "Neighborhood"
+symbol "Neighborhood"
+description "Consideration of pixels adjacent to a given pixel. In most cases this is interpreted to mean the 8 pixels in a 3x3 group of Grid cells centered on the pixel of interest."
+literal "false"
+
+\end_inset
+
+, allows computing a vector valued pixel gradient
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "Gradient"
+symbol "Gradient"
+description "The mathematical concept represented by a vector expressing the direction of maximal change of (scalar) pixel intensity values within a Neighborhood."
+literal "false"
+
+\end_inset
+
+.
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+(Edge Neighborhood, Filter Neighborhood)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+An 
+\begin_inset Quotes eld
+\end_inset
+
+edgel
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "Edgel.type"
+symbol "Edgel (type)"
+description "Representation of an \"edge\" inferred from an image signal. An edgel comprises its 2D coordiante grid location (row,col) and a 2D vector gradient value."
+literal "false"
+
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+ is a concept and software data type comprising a pixel location
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "Location.img"
+symbol "Location (img)"
+description "The precise (e.g. \"sub-pixel\") Grid coordinates associated with a point of interest."
+literal "false"
+
+\end_inset
+
+ along with a pixel gradient member.
+ A key computation task is to identify edgels that are associated with radial
+ edges
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "RadialEdge"
+symbol "Radial Edge"
+description "Any of the four lines emanating from the center of a quad target that delineate the foreground/background quad target pattern."
+literal "false"
+
+\end_inset
+
+ in the quadrant target signal.
+\end_layout
+
+\begin_layout Standard
+Software data items of particular interest, identified by names commonly
+ used in the software, include:
+\end_layout
+
+\begin_layout Itemize
+inGrid - input data to algorithm (i.e.
+ an integer valued image chip)
+\end_layout
+
+\begin_layout Itemize
+loadGrid
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "LoadGrid.item"
+symbol "loadGrid (item)"
+description "A 2D grid of scalar data (often uint8_t data type) that are generally interpreted to form an digital image."
+literal "false"
+
+\end_inset
+
+ - input data loaded into memory as floating point values
+\end_layout
+
+\begin_layout Itemize
+softGrid
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "softGrid.item"
+symbol "softGrid (item)"
+description "Image of pixel values from loadGrid after a smoothing operatoin."
+literal "false"
+
+\end_inset
+
+ - result of applying a smoothing filter to loadGrid
+\end_layout
+
+\begin_layout Itemize
+gradGrid
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "gradGrid.item"
+symbol "gradGrid (item)"
+description "Grid of gradient vector values corresponding with loadGrid input pixel values."
+literal "false"
+
+\end_inset
+
+ - result of applying a gradient filter to softGrid
+\end_layout
+
+\begin_layout Itemize
+corrEdgels
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+prefix "corrGrid.item"
+symbol "corrEdgels (item)"
+description "Collection of Edgel instances that have been corroborated by sufficient number of edgel directions in neighborhood grid locations."
+literal "false"
+
+\end_inset
+
+ - pixel location and gradient information extracted from gradGrid
+\end_layout
+
+\begin_layout Itemize
+TODO/ radEdgels#radEdgels - subset of corrEdgels that satisfy the condition
+ 
+\begin_inset Quotes eld
+\end_inset
+
+are likely radially opposite to others
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+Basic Steps
+\end_layout
+
+\begin_layout Standard
+The primary steps in the center localization algorithm include:
+\end_layout
+
+\begin_layout Itemize
+Load an input image comprising integral values representing intensity (e.g.
+ inGrid) and convert these values to floating point data structure in memory
+ (e.g.
+ loadGrid).
+\end_layout
+
+\begin_layout Itemize
+Produce softGrid by running a smoothing filter with loadGrid as input.
+\end_layout
+
+\begin_layout Itemize
+Produce gradGrid by running a gradient filter with softGrid as input.
+\end_layout
+
+\begin_layout Itemize
+Create corrEdgels collection by finding gradGrid elements that have corroboratio
+n within local neighborhood.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+This also results in associating a weight with each corrEdgel (TODO/TBD
+ address EdgelInfo collection?)
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+TODO
+\end_layout
+
+\end_inset
+
+/TBD Modify this algorithm to use (or additionally use?) scatter matrix
+ information determined base on distribution of strong edges in neighborhood.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+The first three steps are similar (but not identical) to a Canny edge detection
+ paradigm (cf.
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand citet
+key "enwiki:CannyEdgeDetect"
+literal "false"
+
+\end_inset
+
+).
+ The fourth step is different.
+ Whereas Canny edge detector involves non-maximum suppression, the step
+ here involves corroboration of each pixel in the edge.
+ Fundamentally, the corroboration step employed here is a 
+\begin_inset Quotes eld
+\end_inset
+
+grouping
+\begin_inset Quotes erd
+\end_inset
+
+ operation and not a 
+\begin_inset Quotes eld
+\end_inset
+
+thinning
+\begin_inset Quotes erd
+\end_inset
+
+ one.
+\end_layout
+
+\begin_layout Itemize
+Here, perhaps 
+\begin_inset Quotes eld
+\end_inset
+
+blob detect
+\begin_inset Quotes erd
+\end_inset
+
+ images into groups based on both adjacency and support by edge direction?
+ and by probability of grad+grad+offset?
+\end_layout
+
+\begin_layout Itemize
+===
+\end_layout
+
+\begin_layout Itemize
+Create radEdgeInfo collection (EdgeInfo is structure containing Edgel along
+ with a weight value and also additional context info).
+ In effect, this is a process of assigning weight values to each corrEdgel.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+The corrEdgels are compared with each other and each is assigned a weight
+ based on how many of the other corrEdgels are 
+\begin_inset Quotes eld
+\end_inset
+
+likely
+\begin_inset Quotes erd
+\end_inset
+
+ to be "radially opposite".
+ I.e., a pseudo probability is assigned to each corrEdgel combinatorially
+ (i.e.
+ this is an 
+\begin_inset Formula $N^{2}$
+\end_inset
+
+ process for a number, 
+\begin_inset Formula $N$
+\end_inset
+
+, of corrEdgels).
+ The probability value is highest when two corrEdgels have a gradient direction
+ that is almost opposite each other, and the difference in their locations
+ is most orthogonal to the two gradients.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+This 
+\begin_inset Quotes eld
+\end_inset
+
+likely radial
+\begin_inset Quotes erd
+\end_inset
+
+ qualification step is highly specific to the known properties of a quad
+ target image signal.
+ It exploits the fact that perspective projection preserves straight lines,
+ and that the radiometric intensity gradients of opposing radial target
+ edges are therefore oppositely directed in the quad target image.
+\end_layout
+
+\begin_layout Itemize
+Grouping of radEdgels into collections distinguished by gradient angle.
+\end_layout
+
+\begin_layout Itemize
+Classify radEdgels into groups defined by a common gradient angle direction.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+An best fit (average) edgel is computed for each group.
+ Assuming this results in at least 4 (generally a few more) "group edgels",
+ then these best estimate group edges are used to compute candidate center
+ points (and each candidate center point is assigned a score based on how
+ "quadlike" is its environment.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Examples
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename AlgoExSteps.png
+	lyxscale 50
+	width 100col%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Intermediate-step-visualization."
+
+\end_inset
+
+Intermediate step visualization.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+With Reference to Figure
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Intermediate-step-visualization."
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Itemize
+Top left is the input chip extracted from an digital camera image of a quadrant
+ target printed on paper.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+This is used to produce the loadGrid (by casting from integer pixel values
+ to floating point pixel values).
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Top Right is softGrid produced by smoothing loadGrid (e.g.
+ with a Gaussian filter).
+\end_layout
+
+\begin_layout Itemize
+2nd Row displays components of gradGrid computed by taking the gradient
+ of softGrid:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+2nd Row Left: magnitude of gradient at each pixel (for all pixels)
+\end_layout
+
+\begin_layout Itemize
+2nd Row Right: angle of gradient direction (for all pixels)
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+3rd Row Left: shows the corrEdgels extracted from the gradGrid.
+\end_layout
+
+\begin_layout Itemize
+3rd Row Right: shows the weights assigned to corrEdgels, wherein the weight
+ value corresponds to a pseudo-probability that the location is on a radial
+ edge (related to number of 
+\begin_inset Quotes eld
+\end_inset
+
+radially opposite
+\begin_inset Quotes erd
+\end_inset
+
+ counterpart pixels)
+\end_layout
+
+\begin_layout Itemize
+Bottom Left: is a magnified view showing the estimated resulting center
+ location superposed on an enlarged original image.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+btprint "btPrintCited"
+bibfiles "References"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

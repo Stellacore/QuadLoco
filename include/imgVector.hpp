@@ -256,6 +256,18 @@ namespace img
 		return Vector<Type>{ vecA[0] - vecB[0], vecA[1] - vecB[1] };
 	}
 
+	//! Vector that is perpendicular to vec (a quarter turn counter clockwise)
+	template <typename Type>
+	inline
+	Vector<Type>
+	ccwPerp
+		( Vector<Type> const & vec
+		)
+	{
+		return Vector<Type>{ -vec[1], vec[0] };
+	}
+
+
 	//! Scalar dot product
 	template <typename Type>
 	inline
