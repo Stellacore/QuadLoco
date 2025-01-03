@@ -28,7 +28,7 @@
 */
 
 
-#include "opsPeakFinder.hpp"
+#include "opsPeakFinder1D.hpp"
 #include "prbHisto.hpp"
 
 #include <iostream>
@@ -75,8 +75,8 @@ namespace
 		// Extract peaks (local modes in histogram distribution)
 		std::vector<double> gotPeakVals;
 		std::vector<double> const & binProbs = hist.probabilities();
-		ops::PeakFinder const peakFinder
-			(binProbs.cbegin(), binProbs.cend(), ops::PeakFinder::Linear);
+		ops::PeakFinder1D const peakFinder
+			(binProbs.cbegin(), binProbs.cend(), ops::PeakFinder1D::Linear);
 		std::vector<std::size_t> const peakNdxs{ peakFinder.peakIndices() };
 
 		// Retrieve data values associated with bins containing peaks

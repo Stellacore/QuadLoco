@@ -47,11 +47,14 @@ set(unitTests
 	test_opsEigen2D  # Eigen value decompositions
 	test_opsFence  # bounding region determination
 	test_opsgrid  # Edgel extraction
-	test_opsPeakFinder  # peak finding in an array
+	test_opsPeakFinder1D  # peak finding over a 1D collection
+	test_opsAllPeaks2D  # peak finding over a 2D grid
+	test_opsSymRing  # point reflection symmetry filter
 	test_pix  # pixel image manipulations
 	test_prbGauss1D  # Gaussian probability density functions in 1D
 	test_prbHisto  # histogram data modeling
 	test_prbquad  # probabilitic assessor of quad target pixel patterns
+	test_prbStats  # statistics from running data stream
 	test_rasGrid  # general raster grid storage and access
 	test_rasgrid  # pixel/grid functions (e.g. image processing)
 	test_rasRowCol  # discete raster cell locations

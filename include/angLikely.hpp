@@ -35,7 +35,7 @@
 #include "ang.hpp"
 #include "angRing.hpp"
 #include "imgSpot.hpp"
-#include "opsPeakFinder.hpp"
+#include "opsPeakFinder1D.hpp"
 #include "prbGauss1D.hpp"
 
 #include <Engabra>
@@ -146,7 +146,7 @@ namespace ang
 		indicesOfPeaks
 			() const
 		{
-			ops::PeakFinder const peakFinder
+			ops::PeakFinder1D const peakFinder
 				(theBinSums.cbegin(), theBinSums.cend());
 			return peakFinder.peakIndices();
 		}
