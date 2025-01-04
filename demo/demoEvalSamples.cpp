@@ -28,14 +28,24 @@
 */
 
 
+#include "imgSpot.hpp"
+#include "io.hpp"
+#include "opsAllPeaks2D.hpp"
+#include "opsSymRing.hpp"
+#include "rasGrid.hpp"
+#include "rasPeakRCV.hpp"
+#include "sigutil.hpp"
+
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 
 
-namespace
+namespace eval
 {
 	//! Utility structure for tracking associated files
 	struct FileInfo
@@ -65,23 +75,27 @@ namespace
 			return path;
 		}
 
-	}; // FileInfo
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< theParentPath.native()
+				<< "  pgm: " << theHasPGM
+				<< "  mea: " << theHasMea
+				;
+			return oss.str();
+		}
 
-	//! Put item to stream
-	inline
-	std::ostream &
-	operator<<
-		( std::ostream & ostrm
-		, FileInfo const & fileInfo
-		)
-	{
-		ostrm
-			<< fileInfo.theParentPath.native()
-			<< "  pgm: " << fileInfo.theHasPGM
-			<< "  mea: " << fileInfo.theHasMea
-			;
-		return ostrm;
-	}
+	}; // FileInfo
 
 	//! Combination of files needed for processing
 	struct FileSet
@@ -181,16 +195,32 @@ namespace
 
 
 	//! Processing results
-	struct DoneInfo
+	class Outcome
 	{
-		FileSet const theFileSet;
-		std::filesystem::path const theSaveDir;
+		FileSet const theFileSet{};
+		std::filesystem::path const theSaveDir{};
+		quadloco::img::Spot const theExpPeakSpot{};
+		quadloco::img::Spot const theGotPeakSpot{};
 
-//		return DoneInfo{ pathPGM, pathMea, saveDir };
-//		std::filesystem::path const & pathPGM = fileSet.thePathPGM;
-//		std::filesystem::path const & pathMea = fileSet.thePathMea;
-//std::filesystem::path const thePathPGM;
-//std::filesystem::path const thePathMea;
+		quadloco::img::Spot const theDifPeakSpot{};
+		double const theDifMag{};
+
+	public:
+
+		inline
+		Outcome
+			( FileSet const & fileSet
+			, std::filesystem::path const & saveDir
+			, quadloco::img::Spot const & expPeakSpot
+			, quadloco::img::Spot const & gotPeakSpot
+			)
+			: theFileSet{ fileSet }
+			, theSaveDir{ saveDir }
+			, theExpPeakSpot{ expPeakSpot }
+			, theGotPeakSpot{ gotPeakSpot }
+			, theDifPeakSpot{ theGotPeakSpot - theExpPeakSpot }
+			, theDifMag{ magnitude(theDifPeakSpot) }
+		{ }
 
 		//! Common basename of input FileSet
 		inline
@@ -201,63 +231,206 @@ namespace
 			return theFileSet.thePathPGM.stem();
 		}
 
-	}; // DoneInfo
+		//! Magnitude of difference between got and expected locations
+		inline
+		double
+		difMag
+			() const
+		{
+			return theDifMag;
+		}
 
+		//! True if difMag() is strictly less than threshold
+		inline
+		bool
+		goodWithin
+			( double const & threshold = 1.
+			) const
+		{
+			return (difMag() < threshold);
+		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << '\n';
+			}
+			using namespace quadloco;
+			using engabra::g3::io::fixed;
+			oss
+				<< "  pgm: " << theFileSet.thePathPGM
+				<< '\n'
+				<< "  mea: " << theFileSet.thePathMea
+				<< '\n'
+				<< "  exp: " << theExpPeakSpot
+				<< '\n'
+				<< "  got: " << theGotPeakSpot
+				<< '\n'
+				<< "  dif: " << theDifPeakSpot
+					<< ' ' << fixed(difMag(), 3u, 3u)
+				;
+			if (! goodWithin(1.))
+			{
+				oss << "   << Large Diff";
+			}
+			if (! theSaveDir.empty())
+			{
+				oss
+					<< '\n'
+					<< " save: " << theSaveDir << '\n'
+					;
+			}
+
+			return oss.str();
+		}
+
+
+	}; // Outcome
+
+} // [eval]
+
+
+namespace
+{
 
 	//! Put item to stream
 	inline
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, DoneInfo const & doneInfo
+		, eval::FileInfo const & item
 		)
 	{
-		ostrm
-			<< "  pgm: " << doneInfo.theFileSet.thePathPGM << '\n'
-			<< "  mea: " << doneInfo.theFileSet.thePathMea << '\n'
-			;
-		if (! doneInfo.theSaveDir.empty())
-		{
-			ostrm
-				<< " save: " << doneInfo.theSaveDir << '\n'
-				;
-		}
+		ostrm << item.infoString();
 		return ostrm;
 	}
 
-
-	//! Result from load/process input files (optn'ly save intermediate data)
+	//! Put item to stream
 	inline
-	DoneInfo
-	processFileSet
-		( FileSet const & fileSet
-		, std::filesystem::path const & saveDir
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, eval::Outcome const & item
 		)
 	{
-		return DoneInfo{ fileSet, saveDir };
+		ostrm << item.infoString();
+		return ostrm;
 	}
+
+} // [anon]
+
+
+namespace eval
+{
+	using namespace quadloco;
 
 	//! Generate a complete report string from collection of results
 	inline
 	std::string
 	reportString
-		( std::vector<DoneInfo> const & doneInfos
+		( std::vector<Outcome> const & outcomes
 		)
 	{
 		std::ostringstream rpt;
-		for (DoneInfo const & doneInfo : doneInfos)
+		for (Outcome const & outcome : outcomes)
 		{
 			rpt
 				<< "\n======= "
-				<< doneInfo.sampleName()
+				<< outcome.sampleName()
 				<< '\n'
-				<< doneInfo
-				;
+				<< outcome
+				<< '\n';
 		}
 		return rpt.str();
 	}
 
-} // [anon]
+
+	//! Load first measurement from a ".meapoint" file assuming it is center
+	inline
+	img::Spot
+	peakSpotFrom
+		( std::filesystem::path const & meaPath
+		)
+	{
+		img::Spot peakSpot{};
+		std::ifstream ifs(meaPath);
+		if (ifs.good())
+		{
+			std::string name;
+			double row, col;
+			ifs >> name >> row >> col;
+			if (! ifs.bad())
+			{
+				peakSpot = img::Spot{ row, col };
+			}
+		}
+		return peakSpot;
+	}
+
+	//! TODO move somewhere sane (ops?), (app?)
+	inline
+	quadloco::img::Spot
+	bestCenterFrom
+		( ras::Grid<float> const & srcGrid
+		)
+	{
+		using namespace quadloco;
+		img::Spot bestSpot{};
+
+		// run symmetry filter
+		constexpr std::size_t ringHalfSize{ 5u };
+		ras::Grid<float> symGrid
+			{ ops::symRingGridFor(srcGrid, ringHalfSize) };
+
+		// get all peaks
+		ops::AllPeaks2D const allPeaks(symGrid);
+		constexpr std::size_t numToGet{ 10u };
+		std::vector<ras::PeakRCV> const peakRCVs
+			{ allPeaks.largestPeakRCVs(numToGet) };
+
+		if (! peakRCVs.empty())
+		{
+			ras::PeakRCV const & peak = peakRCVs.front();
+			bestSpot = img::Spot
+				{ static_cast<double>(peak.theRowCol.row())
+				, static_cast<double>(peak.theRowCol.col())
+				};
+		}
+
+		return bestSpot;
+	}
+
+	//! Result from load/process input files (optn'ly save intermediate data)
+	inline
+	Outcome
+	processFileSet
+		( FileSet const & fileSet
+		, std::filesystem::path const & saveDir
+		)
+	{
+		// load image chip
+		std::filesystem::path const loadPath{ fileSet.thePathPGM };
+		ras::Grid<std::uint8_t> const loadGrid{ io::readPGM(loadPath) };
+		ras::Grid<float> const srcGrid{ sig::util::toFloat(loadGrid, 0u) };
+
+		// load expected measurements
+		img::Spot const expPeakSpot{ peakSpotFrom(fileSet.thePathMea) };
+
+		// run center finder
+		img::Spot const gotPeakSpot{ bestCenterFrom(srcGrid) };
+
+		return Outcome{ fileSet, saveDir, expPeakSpot, gotPeakSpot };
+	}
+
+} // [eval]
+
 
 
 /*! \brief Process all chip images from sample directory and report results.
@@ -288,6 +461,9 @@ main
 		std::cerr << '\n';
 		return 1;
 	}
+
+	// Setup paths
+
 	std::filesystem::path const appPath(argv[0]);
 	std::filesystem::path const loadDir(argv[1]);
 	std::filesystem::path saveDir{};
@@ -296,18 +472,21 @@ main
 		saveDir = std::filesystem::path(argv[2]);
 	}
 
-	// perform detection and generate report records
-	std::vector<DoneInfo> doneInfos;
-	std::vector<FileSet> const fileSets{ fileSetsFrom(loadDir) };
-	doneInfos.reserve(fileSets.size());
-	for (FileSet const & fileSet : fileSets)
+	// Perform detection and generate report records
+
+	std::vector<eval::Outcome> outcomes;
+	std::vector<eval::FileSet> const fileSets{ eval::fileSetsFrom(loadDir) };
+	outcomes.reserve(fileSets.size());
+	for (eval::FileSet const & fileSet : fileSets)
 	{
-		DoneInfo const doneInfo{ processFileSet(fileSet, saveDir) };
-		doneInfos.emplace_back(doneInfo);
+		eval::Outcome const outcome
+			{ eval::processFileSet(fileSet, saveDir) };
+		outcomes.emplace_back(outcome);
 	}
 
-	// report results
-	std::string const report{ reportString(doneInfos) };
+	// Report results
+
+	std::string const report{ reportString(outcomes) };
 
 	std::string const pad("  ");
 	std::cout << '\n';
