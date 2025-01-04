@@ -309,6 +309,15 @@ namespace ops
 			std::size_t theNumPos{ 0u };
 			std::size_t theNumNeg{ 0u };
 
+			//! True if there is at least one sample
+			inline
+			bool
+			isValid
+				() const
+			{
+				return (0u < theCount);
+			}
+
 			//! Consider pair of values on radial opposite sides of filter
 			inline
 			void
@@ -350,6 +359,15 @@ namespace ops
 				}
 			}
 
+			//! Value halfway between theMin and theMax
+			inline
+			double
+			middleValue
+				() const
+			{
+				return (.5 * (theMax + theMin));
+			}
+
 			//! Range of values considered (max - min)
 			inline
 			double
@@ -380,6 +398,24 @@ namespace ops
 				double const valDifVar{ theSumSqDif / (double)theCount };
 				double const valDifSig{ std::sqrt(valDifVar) };
 				return valDifSig;
+			}
+
+			//! Pseudo-Probability that center value is between min/max
+			inline
+			double
+			centerValueProb
+				( double const & centerValue
+				) const
+			{
+				double prob{ std::numeric_limits<double>::quiet_NaN() };
+				if (isValid() && (theMin < theMax))
+				{
+					double const delta{ centerValue - middleValue() };
+					double const sigma{ (1./4.) * valueRange() };
+					double const arg{ delta / sigma };
+					prob = std::exp(-sq(arg));
+				}
+				return prob;
 			}
 
 		}; // RingStats
@@ -441,13 +477,19 @@ namespace ops
 					// Half-Turn Symmetry metric
 					double const valDifSig{ ringStats.sigmaValueDifs() };
 					double const valSigma{ theSrcFullRange / 8. };
-					double const valArg{ valDifSig / valSigma };
+					double const valDifRatio{ valDifSig / valSigma };
+					double const valDifProb{ std::exp(-sq(valDifRatio)) };
 
 					// High Contrast metric
 					double const rngRing{ ringStats.valueRange() };
 
+					// Center element has value near middle of range
+				//	float const & midVal = srcGrid(row, col);
+				//	double const midProb{ ringStats.centerValueProb(midVal) };
+
 					// filter response value
-					outVal = (float)(rngRing * std::exp(-sq(valArg)));
+					outVal = (float)(rngRing * valDifProb);
+				//	outVal = (float)(rngRing * valDifProb * midProb);
 				}
 			}
 
