@@ -331,6 +331,28 @@ namespace eval
 {
 	using namespace quadloco;
 
+	inline
+	std::string
+	summaryString
+		( std::vector<Outcome> const & outcomes
+		)
+	{
+		std::ostringstream oss;
+		oss << "No.evaluations: " << outcomes.size();
+		for (Outcome const & outcome : outcomes)
+		{
+			using engabra::g3::io::fixed;
+			oss << '\n';
+			oss
+			 	<< fixed(outcome.difMag(), 3u, 3u)
+				<< "  "
+				<< outcome.sampleName()
+				;
+		}
+
+		return oss.str();
+	}
+
 	//! Generate a complete report string from collection of results
 	inline
 	std::string
@@ -339,15 +361,19 @@ namespace eval
 		)
 	{
 		std::ostringstream rpt;
+		rpt << "\n===== Samples\n";
 		for (Outcome const & outcome : outcomes)
 		{
 			rpt
-				<< "\n======= "
+				<< "\n----- "
 				<< outcome.sampleName()
 				<< '\n'
 				<< outcome
 				<< '\n';
 		}
+		rpt
+			<< "\n===== Summary\n"
+			<< summaryString(outcomes) << '\n';
 		return rpt.str();
 	}
 
