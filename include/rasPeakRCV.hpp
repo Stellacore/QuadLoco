@@ -91,11 +91,18 @@ namespace ras
 			{
 				oss << title << ' ';
 			}
-			oss
-				<< "row,col,val:"
-				<< ' ' << theRowCol
-				<< ' ' << engabra::g3::io::fixed(theValue)
-				;
+			if (isValid())
+			{
+				oss
+					<< "row,col,val:"
+					<< ' ' << theRowCol
+					<< ' ' << engabra::g3::io::fixed(theValue)
+					;
+			}
+			else
+			{
+				oss << " <null>";
+			}
 
 			return oss.str();
 		}
