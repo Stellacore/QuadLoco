@@ -100,8 +100,18 @@ namespace eval
 	//! Combination of files needed for processing
 	struct FileSet
 	{
+		std::string theSampleName{};
 		std::filesystem::path thePathPGM;
 		std::filesystem::path thePathMea;
+
+		//! Common basename of input files
+		inline
+		std::string
+		sampleName
+			() const
+		{
+			return theSampleName;
+		}
 
 	}; // FileSet
 
@@ -143,10 +153,10 @@ namespace eval
 					// if not present already, insert a new FileInfo
 					if (baseInfos.cend() == itFind)
 					{
-						FileInfo const baseInfo{ parent };
+						FileInfo const fileInfo{ parent };
 						itFind = baseInfos.emplace_hint
 							( baseInfos.end()
-							, std::make_pair(baseName, baseInfo)
+							, std::make_pair(baseName, fileInfo)
 							);
 					}
 
@@ -183,7 +193,8 @@ namespace eval
 			if (fileInfo.hasAll())
 			{
 				FileSet const fileSet
-					{ fileInfo.pathFor(baseName, extPGM)
+					{ baseName
+					, fileInfo.pathFor(baseName, extPGM)
 					, fileInfo.pathFor(baseName, extMea)
 					};
 				fileSets.emplace_back(fileSet);
@@ -228,7 +239,7 @@ namespace eval
 		sampleName
 			() const
 		{
-			return theFileSet.thePathPGM.stem();
+			return theFileSet.sampleName();
 		}
 
 		//! Magnitude of difference between got and expected locations
@@ -381,10 +392,12 @@ namespace eval
 	//! Load first measurement from a ".meapoint" file assuming it is center
 	inline
 	img::Spot
-	peakSpotFrom
-		( std::filesystem::path const & meaPath
+	peakSpotLoadFrom
+		( FileSet const & fileSet
 		)
 	{
+		std::filesystem::path const & meaPath = fileSet.thePathMea;
+
 		img::Spot peakSpot{};
 		std::ifstream ifs(meaPath);
 		if (ifs.good())
@@ -405,6 +418,8 @@ namespace eval
 	quadloco::img::Spot
 	bestCenterFrom
 		( ras::Grid<float> const & srcGrid
+		, std::filesystem::path const & saveDir
+		, FileSet const & fileSet
 		)
 	{
 		using namespace quadloco;
@@ -412,14 +427,32 @@ namespace eval
 
 		// run symmetry filter
 		constexpr std::size_t ringHalfSize{ 5u };
-		ras::Grid<float> symGrid
+		ras::Grid<float> peakGrid
 			{ ops::symRingGridFor(srcGrid, ringHalfSize) };
 
 		// get all peaks
-		ops::AllPeaks2D const allPeaks(symGrid);
+		ops::AllPeaks2D const allPeaks(peakGrid);
 		constexpr std::size_t numToGet{ 10u };
 		std::vector<ras::PeakRCV> const peakRCVs
 			{ allPeaks.largestPeakRCVs(numToGet) };
+
+		if ( std::filesystem::exists(saveDir)
+		  && std::filesystem::is_directory(saveDir)
+		   )
+		{
+			std::string const baseName{ fileSet.sampleName() };
+			std::filesystem::path peakPath{ saveDir };
+			peakPath /= baseName;
+			peakPath += ".pgm";
+			bool const okaySave{ io::writeStretchPGM(peakPath, peakGrid) };
+			if (! okaySave)
+			{
+				std::cerr
+					<< "\n\n"
+					<< "***** Error saving file: " << peakPath
+					<< "\n\n";
+			}
+		}
 
 		if (! peakRCVs.empty())
 		{
@@ -447,10 +480,11 @@ namespace eval
 		ras::Grid<float> const srcGrid{ sig::util::toFloat(loadGrid, 0u) };
 
 		// load expected measurements
-		img::Spot const expPeakSpot{ peakSpotFrom(fileSet.thePathMea) };
+		img::Spot const expPeakSpot{ peakSpotLoadFrom(fileSet) };
 
 		// run center finder
-		img::Spot const gotPeakSpot{ bestCenterFrom(srcGrid) };
+		img::Spot const gotPeakSpot
+			{ bestCenterFrom(srcGrid, saveDir, fileSet) };
 
 		return Outcome{ fileSet, saveDir, expPeakSpot, gotPeakSpot };
 	}
