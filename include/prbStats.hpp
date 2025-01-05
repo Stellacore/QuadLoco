@@ -185,6 +185,15 @@ namespace prb
 			}
 		}
 
+		//! True if this instance contains at least one data item
+		inline
+		bool
+		isValid
+			() const
+		{
+			return (0u < theCount);
+		}
+
 		//! Smallest element considered thus far
 		inline
 		Type
