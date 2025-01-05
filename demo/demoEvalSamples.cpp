@@ -494,9 +494,9 @@ namespace eval
 		using namespace quadloco;
 		img::Spot bestSpot{};
 
-std::cout << "\n\n********* Restore sequentail filter sizes ******\n\n";
-//		std::vector<std::size_t> const halfSizes{ 5u, 3u };
-		std::vector<std::size_t> const halfSizes{ 5u };
+//std::cout << "\n\n********* Restore sequentail filter sizes ******\n\n";
+		std::vector<std::size_t> const halfSizes{ 5u, 3u };
+//		std::vector<std::size_t> const halfSizes{ 5u };
 		std::vector<ras::PeakRCV> const peakCombos
 			{ app::multiSymRingPeaks(srcGrid, halfSizes) };
 
