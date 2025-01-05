@@ -80,10 +80,10 @@ main
 	*/
 
 	constexpr std::size_t ringHalfSize{ 5u };
-	ras::Grid<float> saveGrid{ ops::symRingGridFor(srcGrid, ringHalfSize) };
+	ras::Grid<float> peakGrid{ ops::symRingGridFor(srcGrid, ringHalfSize) };
 
 	// get all peaks
-	ops::AllPeaks2D const allPeaks(saveGrid);
+	ops::AllPeaks2D const allPeaks(peakGrid);
 	constexpr std::size_t numToShow{ 10u };
 	std::vector<ras::PeakRCV> const peakRCVs
 		{ allPeaks.largestPeakRCVs(numToShow) };
@@ -109,6 +109,7 @@ main
 
 
 	// save filtered result
+	ras::Grid<float> const & saveGrid = peakGrid;
 	bool const okaySave{ io::writeStretchPGM(savePath, saveGrid) };
 
 //(void)io::writeStretchPGM(std::filesystem::path("0src.pgm"), srcGrid);

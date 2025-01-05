@@ -55,6 +55,18 @@ namespace ras
 			, std::numeric_limits<std::size_t>::max()
 			};
 
+		//! True if this instance contains non-default data
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  (std::numeric_limits<std::size_t>::max() != theRowCol[0])
+				&& (std::numeric_limits<std::size_t>::max() != theRowCol[1])
+				);
+		}
+
 		//! Convenience access to to theRowCol[0]
 		inline
 		std::size_t const &
@@ -98,10 +110,17 @@ namespace ras
 			{
 				oss << title << ' ';
 			}
-			oss
-				<< std::setw(5u) << row()
-				<< ' ' << std::setw(5u) << col()
-				;
+			if (isValid())
+			{
+				oss
+					<< std::setw(5u) << row()
+					<< ' ' << std::setw(5u) << col()
+					;
+			}
+			else
+			{
+				oss << " <null>";
+			}
 			return oss.str();
 		}
 
@@ -115,17 +134,28 @@ namespace ras
 
 namespace
 {
-	//! Put obj.infoString() to stream
+	//! Put item to stream
 	inline
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::ras::RowCol const & obj
+		, quadloco::ras::RowCol const & item
 		)
 	{
-		ostrm << obj.infoString();
+		ostrm << item.infoString();
 		return ostrm;
 	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::ras::RowCol const & item
+		)
+	{
+		return item.isValid();
+	}
+
 
 	//! True if the two items are identical (mostly for template compatibility)
 	inline
