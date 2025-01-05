@@ -28,6 +28,7 @@
 */
 
 
+#include "cast.hpp"
 #include "imgSpot.hpp"
 #include "io.hpp"
 #include "opsAllPeaks2D.hpp"
@@ -285,7 +286,7 @@ namespace eval
 				<< "  got: " << theGotPeakSpot
 				<< '\n'
 				<< "  dif: " << theDifPeakSpot
-					<< ' ' << fixed(difMag(), 3u, 3u)
+					<< ' ' << fixed(difMag(), 3u, 2u)
 				;
 			if (! goodWithin(1.))
 			{
@@ -355,7 +356,7 @@ namespace eval
 			using engabra::g3::io::fixed;
 			oss << '\n';
 			oss
-			 	<< fixed(outcome.difMag(), 3u, 3u)
+				<< fixed(outcome.difMag(), 3u, 2u)
 				<< "  "
 				<< outcome.sampleName()
 				;
@@ -369,22 +370,30 @@ namespace eval
 	std::string
 	reportString
 		( std::vector<Outcome> const & outcomes
+		, bool const & showDetail = true
+		, bool const & showSummary = true
 		)
 	{
 		std::ostringstream rpt;
-		rpt << "\n===== Samples\n";
-		for (Outcome const & outcome : outcomes)
+		if (showDetail)
+		{
+			rpt << "\n===== Samples\n";
+			for (Outcome const & outcome : outcomes)
+			{
+				rpt
+					<< "\n----- "
+					<< outcome.sampleName()
+					<< '\n'
+					<< outcome
+					<< '\n';
+			}
+		}
+		if (showSummary)
 		{
 			rpt
-				<< "\n----- "
-				<< outcome.sampleName()
-				<< '\n'
-				<< outcome
-				<< '\n';
+				<< "\n===== Summary\n"
+				<< summaryString(outcomes) << '\n';
 		}
-		rpt
-			<< "\n===== Summary\n"
-			<< summaryString(outcomes) << '\n';
 		return rpt.str();
 	}
 
@@ -413,7 +422,53 @@ namespace eval
 		return peakSpot;
 	}
 
-	//! TODO move somewhere sane (ops?), (app?)
+	//! Grid with sum of corresponding input cells.
+	inline
+	ras::Grid<float>
+	operator+
+		( ras::Grid<float> const & gridA
+		, ras::Grid<float> const & gridB
+		)
+	{
+		ras::Grid<float> sum;
+		ras::SizeHW const hwSize{ gridA.hwSize() };
+		if (hwSize == gridB.hwSize())
+		{
+			sum = ras::Grid<float>(hwSize);
+			std::transform
+				( gridA.cbegin(), gridA.cend()
+				, gridB.cbegin()
+				, sum.begin()
+				, std::plus<>{}
+				);
+		}
+		return sum;
+	}
+
+	//! Grid with product of corresponding input cells.
+	inline
+	ras::Grid<float>
+	operator*
+		( ras::Grid<float> const & gridA
+		, ras::Grid<float> const & gridB
+		)
+	{
+		ras::Grid<float> sum;
+		ras::SizeHW const hwSize{ gridA.hwSize() };
+		if (hwSize == gridB.hwSize())
+		{
+			sum = ras::Grid<float>(hwSize);
+			std::transform
+				( gridA.cbegin(), gridA.cend()
+				, gridB.cbegin()
+				, sum.begin()
+				, std::multiplies<>{}
+				);
+		}
+		return sum;
+	}
+
+	//! TODO extract core algorithm, redo and put in sane place (ops?), (app?)
 	inline
 	quadloco::img::Spot
 	bestCenterFrom
@@ -426,15 +481,30 @@ namespace eval
 		img::Spot bestSpot{};
 
 		// run symmetry filter
-		constexpr std::size_t ringHalfSize{ 5u };
-		ras::Grid<float> peakGrid
-			{ ops::symRingGridFor(srcGrid, ringHalfSize) };
+		// TODO for experiment run different size filters on entire image
+		//      In practice, can run one, then run the other only around
+		//      the detected peaks.
+		constexpr std::size_t ringHalfSize3{ 3u };
+		constexpr std::size_t ringHalfSize5{ 5u };
+		constexpr std::size_t ringHalfSize7{ 7u };
+		ras::Grid<float> const peakGrid3
+			{ ops::symRingGridFor(srcGrid, ringHalfSize3) };
+		ras::Grid<float> const peakGrid5
+			{ ops::symRingGridFor(srcGrid, ringHalfSize5) };
+		ras::Grid<float> const peakGrid7
+			{ ops::symRingGridFor(srcGrid, ringHalfSize7) };
+	//	ras::Grid<float> const peakGrid{ peakGrid3 + peakGrid5 };
+	//	ras::Grid<float> const peakGrid{ peakGrid3 * peakGrid5 };
+		ras::Grid<float> const peakGrid{ peakGrid3 * peakGrid5 * peakGrid7 };
 
 		// get all peaks
 		ops::AllPeaks2D const allPeaks(peakGrid);
 		constexpr std::size_t numToGet{ 10u };
-		std::vector<ras::PeakRCV> const peakRCVs
+		std::vector<ras::PeakRCV> const findPeakRCVs
 			{ allPeaks.largestPeakRCVs(numToGet) };
+
+		// qualify peaks as most consistent with edges
+		std::vector<ras::PeakRCV> const & qualPeakRCVs = findPeakRCVs;
 
 		if ( std::filesystem::exists(saveDir)
 		  && std::filesystem::is_directory(saveDir)
@@ -454,9 +524,9 @@ namespace eval
 			}
 		}
 
-		if (! peakRCVs.empty())
+		if (! qualPeakRCVs.empty())
 		{
-			ras::PeakRCV const & peak = peakRCVs.front();
+			ras::PeakRCV const & peak = qualPeakRCVs.front();
 			bestSpot = img::Spot
 				{ static_cast<double>(peak.theRowCol.row())
 				, static_cast<double>(peak.theRowCol.col())
@@ -546,7 +616,9 @@ main
 
 	// Report results
 
-	std::string const report{ reportString(outcomes) };
+	constexpr bool showDetail{ false };
+	constexpr bool showSummary{ true };
+	std::string const report{ reportString(outcomes, showDetail, showSummary) };
 
 	std::string const pad("  ");
 	std::cout << '\n';
