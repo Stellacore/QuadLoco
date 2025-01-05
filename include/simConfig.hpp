@@ -32,6 +32,7 @@
  */
 
 
+#include "cast.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "opsFence.hpp"
@@ -93,7 +94,19 @@ namespace sim
 			return theStaWrtQuad;
 		}
 
-		//! Ciewing obj::QuadTarget face-on exactly filling camera format
+		//! Detector spot on image (in format, else null) for spot on target
+		inline
+		img::Spot
+		imgSpotForTgtSpot
+			( img::Spot const & spotOnTgt
+			)
+		{
+			engabra::g3::Vector const pntInTgt{ cast::engVector(spotOnTgt) };
+			engabra::g3::Vector const pntInCam{ theStaWrtQuad(pntInTgt) };
+			return theCamera.detectorSpotFor(pntInCam);
+		}
+
+		//! Viewing obj::QuadTarget face-on exactly filling camera format
 		inline
 		static
 		Config
