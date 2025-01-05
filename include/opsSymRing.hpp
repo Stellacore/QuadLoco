@@ -499,7 +499,7 @@ namespace ops
 	}; // SymRing
 
 
-	//! \brief Function for applying a SymRing rotation symmetry filter.
+	//! \brief Result applying SymRing rotation symmetry filter to full grid
 	inline
 	ras::Grid<float>
 	symRingGridFor
@@ -532,7 +532,7 @@ namespace ops
 		return symGrid;
 	}
 
-	//! \brief Function for applying a SymRing rotation symmetry filter.
+	//! \brief Result applying SymRing rotation symmetry filter to full grid
 	inline
 	ras::Grid<float>
 	symRingGridFor
@@ -546,7 +546,6 @@ namespace ops
 		SymRing const symRing(&srcGrid, srcStats, ringHalfSize);
 		return symRingGridFor(srcGrid, symRing);
 	}
-
 
 } // [ops]
 
