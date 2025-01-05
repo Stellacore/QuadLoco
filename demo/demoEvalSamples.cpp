@@ -468,7 +468,9 @@ namespace eval
 		return sum;
 	}
 
-	//! TODO extract core algorithm, redo and put in sane place (ops?), (app?)
+// TODO extract core algorithm, redo and put in sane place (ops?), (app?)
+
+	//! Run multiple ops::SymRings, combine results, return best response
 	inline
 	quadloco::img::Spot
 	bestCenterFrom
@@ -480,36 +482,59 @@ namespace eval
 		using namespace quadloco;
 		img::Spot bestSpot{};
 
-		// run symmetry filter
-		// TODO for experiment run different size filters on entire image
-		//      In practice, can run one, then run the other only around
-		//      the detected peaks.
-		constexpr std::size_t ringHalfSize3{ 3u };
-		constexpr std::size_t ringHalfSize5{ 5u };
-		constexpr std::size_t ringHalfSize7{ 7u };
-		ras::Grid<float> const peakGrid3
-			{ ops::symRingGridFor(srcGrid, ringHalfSize3) };
-		ras::Grid<float> const peakGrid5
-			{ ops::symRingGridFor(srcGrid, ringHalfSize5) };
-		ras::Grid<float> const peakGrid7
-			{ ops::symRingGridFor(srcGrid, ringHalfSize7) };
-	//	ras::Grid<float> const peakGrid{ peakGrid3 + peakGrid5 };
-	//	ras::Grid<float> const peakGrid{ peakGrid3 * peakGrid5 };
-		ras::Grid<float> const peakGrid{ peakGrid3 * peakGrid5 * peakGrid7 };
+		// get input grid statistics
+		prb::Stats<float> const srcStats(srcGrid.cbegin(), srcGrid.cend());
+
+		// create symmetry ring filters
+		constexpr std::size_t ringHalfSizeB{ 3u };
+		constexpr std::size_t ringHalfSizeA{ 5u };
+		ops::SymRing const symRingB(&srcGrid, srcStats, ringHalfSizeB);
+		ops::SymRing const symRingA(&srcGrid, srcStats, ringHalfSizeA);
+
+		// run initial symmetry filter
+		ras::Grid<float> const peakGridA
+			{ ops::symRingGridFor(srcGrid, symRingA) };
 
 		// get all peaks
-		ops::AllPeaks2D const allPeaks(peakGrid);
-		constexpr std::size_t numToGet{ 10u };
-		std::vector<ras::PeakRCV> const findPeakRCVs
-			{ allPeaks.largestPeakRCVs(numToGet) };
+		ops::AllPeaks2D const allPeaksA(peakGridA);
+		std::size_t const numToGet{ srcGrid.size() }; // { 100u };
+		std::vector<ras::PeakRCV> const peakAs
+			{ allPeaksA.largestPeakRCVs(numToGet) };
 
 		// qualify peaks as most consistent with edges
-		std::vector<ras::PeakRCV> const & qualPeakRCVs = findPeakRCVs;
+		std::vector<ras::PeakRCV> peakCombos;
+		peakCombos.reserve(peakAs.size());
+		for (ras::PeakRCV const & peakA : peakAs)
+		{
+			std::size_t const & row = peakA.theRowCol.row();
+			std::size_t const & col = peakA.theRowCol.col();
+			float const & valueA = peakA.theValue;
+			float const valueB{ symRingB(row, col) };
+			float const valueAB{ valueA * valueB };
+			peakCombos.emplace_back(ras::PeakRCV{ row, col, valueAB });
+		}
+		std::sort(peakCombos.rbegin(), peakCombos.rend());
 
+		// get largest peak
+		if (! peakCombos.empty())
+		{
+			ras::PeakRCV const & peak = peakCombos.front();
+			bestSpot = img::Spot
+				{ static_cast<double>(peak.theRowCol.row())
+				, static_cast<double>(peak.theRowCol.col())
+				};
+		}
+
+
+		// optionally save intermediate data
 		if ( std::filesystem::exists(saveDir)
 		  && std::filesystem::is_directory(saveDir)
 		   )
 		{
+			ras::Grid<float> const peakGridB
+				{ ops::symRingGridFor(srcGrid, symRingB) };
+			ras::Grid<float> const peakGrid{ peakGridA * peakGridB };
+
 			std::string const baseName{ fileSet.sampleName() };
 			std::filesystem::path peakPath{ saveDir };
 			peakPath /= baseName;
@@ -522,15 +547,6 @@ namespace eval
 					<< "***** Error saving file: " << peakPath
 					<< "\n\n";
 			}
-		}
-
-		if (! qualPeakRCVs.empty())
-		{
-			ras::PeakRCV const & peak = qualPeakRCVs.front();
-			bestSpot = img::Spot
-				{ static_cast<double>(peak.theRowCol.row())
-				, static_cast<double>(peak.theRowCol.col())
-				};
 		}
 
 		return bestSpot;
