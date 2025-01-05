@@ -28,6 +28,8 @@
 */
 
 
+#include "appCenters.hpp"
+
 #include "cast.hpp"
 #include "imgSpot.hpp"
 #include "io.hpp"
@@ -482,38 +484,10 @@ namespace eval
 		using namespace quadloco;
 		img::Spot bestSpot{};
 
-		// get input grid statistics
-		prb::Stats<float> const srcStats(srcGrid.cbegin(), srcGrid.cend());
-
-		// create symmetry ring filters
-		constexpr std::size_t ringHalfSizeB{ 3u };
-		constexpr std::size_t ringHalfSizeA{ 5u };
-		ops::SymRing const symRingB(&srcGrid, srcStats, ringHalfSizeB);
-		ops::SymRing const symRingA(&srcGrid, srcStats, ringHalfSizeA);
-
-		// run initial symmetry filter
-		ras::Grid<float> const peakGridA
-			{ ops::symRingGridFor(srcGrid, symRingA) };
-
-		// get all peaks
-		ops::AllPeaks2D const allPeaksA(peakGridA);
-		std::size_t const numToGet{ srcGrid.size() }; // { 100u };
-		std::vector<ras::PeakRCV> const peakAs
-			{ allPeaksA.largestPeakRCVs(numToGet) };
-
-		// qualify peaks as most consistent with edges
-		std::vector<ras::PeakRCV> peakCombos;
-		peakCombos.reserve(peakAs.size());
-		for (ras::PeakRCV const & peakA : peakAs)
-		{
-			std::size_t const & row = peakA.theRowCol.row();
-			std::size_t const & col = peakA.theRowCol.col();
-			float const & valueA = peakA.theValue;
-			float const valueB{ symRingB(row, col) };
-			float const valueAB{ valueA * valueB };
-			peakCombos.emplace_back(ras::PeakRCV{ row, col, valueAB });
-		}
-		std::sort(peakCombos.rbegin(), peakCombos.rend());
+//		std::vector<std::size_t> const halfSizes{ 5u, 3u };
+		std::vector<std::size_t> const halfSizes{ 5u };
+		std::vector<ras::PeakRCV> const peakCombos
+			{ app::multiSymRingPeaks(srcGrid, halfSizes) };
 
 		// get largest peak
 		if (! peakCombos.empty())
@@ -531,9 +505,13 @@ namespace eval
 		  && std::filesystem::is_directory(saveDir)
 		   )
 		{
-			ras::Grid<float> const peakGridB
-				{ ops::symRingGridFor(srcGrid, symRingB) };
-			ras::Grid<float> const peakGrid{ peakGridA * peakGridB };
+			ras::Grid<float> peakGrid(srcGrid.hwSize());
+			std::fill(peakGrid.begin(), peakGrid.end(), 0.f);
+			for (ras::PeakRCV const & peakCombo : peakCombos)
+			{
+				peakGrid(peakCombo.theRowCol) = peakCombo.theValue;
+			}
+std::cout << "peakCombos.size: " << peakCombos.size() << '\n';
 
 			std::string const baseName{ fileSet.sampleName() };
 			std::filesystem::path peakPath{ saveDir };
