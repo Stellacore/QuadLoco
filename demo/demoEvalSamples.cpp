@@ -43,6 +43,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -124,6 +125,7 @@ namespace eval
 	std::vector<FileSet>
 	fileSetsFrom
 		( std::filesystem::path const & dirPath
+		, std::set<std::string> const & sampNames
 		)
 	{
 		std::vector<FileSet> fileSets;
@@ -195,12 +197,20 @@ namespace eval
 			FileInfo const & fileInfo = baseInfo.second;
 			if (fileInfo.hasAll())
 			{
-				FileSet const fileSet
-					{ baseName
-					, fileInfo.pathFor(baseName, extPGM)
-					, fileInfo.pathFor(baseName, extMea)
-					};
-				fileSets.emplace_back(fileSet);
+				bool useThisOne{ true };
+				if (! sampNames.empty())
+				{
+					useThisOne = sampNames.contains(baseName);
+				}
+				if (useThisOne)
+				{
+					FileSet const fileSet
+						{ baseName
+						, fileInfo.pathFor(baseName, extPGM)
+						, fileInfo.pathFor(baseName, extMea)
+						};
+					fileSets.emplace_back(fileSet);
+				}
 			}
 		}
 
@@ -484,6 +494,7 @@ namespace eval
 		using namespace quadloco;
 		img::Spot bestSpot{};
 
+std::cout << "\n\n********* Restore sequentail filter sizes ******\n\n";
 //		std::vector<std::size_t> const halfSizes{ 5u, 3u };
 		std::vector<std::size_t> const halfSizes{ 5u };
 		std::vector<ras::PeakRCV> const peakCombos
@@ -511,7 +522,6 @@ namespace eval
 			{
 				peakGrid(peakCombo.theRowCol) = peakCombo.theValue;
 			}
-std::cout << "peakCombos.size: " << peakCombos.size() << '\n';
 
 			std::string const baseName{ fileSet.sampleName() };
 			std::filesystem::path peakPath{ saveDir };
@@ -581,8 +591,23 @@ main
 		std::cerr << '\n';
 		std::cerr << "Process all chip samples in a directory\n";
 		std::cerr << '\n';
-		std::cerr << "Usage: <progname> <loadDir> [saveDir]\n";
+		std::cerr << "Usage: <progname> <loadDir> [saveDir] [sampNames...]\n";
 		std::cerr << '\n';
+		std::cerr << 
+			"  Program looks for corresponding file sets (.pgm and .meapoint)"
+			"\nthat are in the loadDir. If all files are available, a"
+			"\n'sample' is created and associated with the basename common"
+			"\nto all files in the set. For each 'sample' (file set) center"
+			"\nfinding is run and results are reported for the found center"
+			"\ncompared with the one loaded from the .meapoint file."
+			"\n"
+			"\n  If saveDir is provided, intermediate results (e.g. peak grid)"
+			"\nare saved to files in that directory (with same sampName)."
+			"\n"
+			"\n  If sampName(s) are provided, then only found samples matching"
+			"\nthe sampName list are run"
+			"\n\n"
+			;
 		return 1;
 	}
 
@@ -591,15 +616,24 @@ main
 	std::filesystem::path const appPath(argv[0]);
 	std::filesystem::path const loadDir(argv[1]);
 	std::filesystem::path saveDir{};
+	std::set<std::string> sampNames{};
 	if (2 < argc)
 	{
 		saveDir = std::filesystem::path(argv[2]);
+	}
+	if (3 < argc)
+	{
+		for (int ndx{3} ; ndx < argc ; ++ndx)
+		{
+			sampNames.insert(argv[ndx]);
+		}
 	}
 
 	// Perform detection and generate report records
 
 	std::vector<eval::Outcome> outcomes;
-	std::vector<eval::FileSet> const fileSets{ eval::fileSetsFrom(loadDir) };
+	std::vector<eval::FileSet> const fileSets
+		{ eval::fileSetsFrom(loadDir, sampNames) };
 	outcomes.reserve(fileSets.size());
 	for (eval::FileSet const & fileSet : fileSets)
 	{
