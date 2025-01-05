@@ -32,6 +32,7 @@
  */
 
 
+#include "imgChipSpec.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "rasGrid.hpp"
@@ -112,6 +113,26 @@ namespace sim
 			return theSampler.sigQuadTarget();
 		}
 
+		//! Simulate chip of an image through ctor's camera and orientation
+		inline
+		ras::Grid<float>
+		quadChip
+			( std::size_t const & numOverSamp = 64u
+				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
+			, img::ChipSpec const & chipSpec = {}
+				//!< Define chip patch area to render (default is full grid)
+			) const
+		{
+			ras::Grid<float> chip;
+			if (chipSpec.isValid())
+			{
+				chip = ras::Grid<float>(chipSpec.hwSize());
+				std::fill(chip.begin(), chip.end(), engabra::g3::null<float>());
+				injectTargetInto(&chip, numOverSamp, chipSpec);
+			}
+			return chip;
+		}
+
 		//! Simulate image through ctor's camera and orientation
 		inline
 		ras::Grid<float>
@@ -134,31 +155,46 @@ namespace sim
 				//!< Destination into which to render image
 			, std::size_t const & numOverSamp
 				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
+			, img::ChipSpec const & chipSpec = {}
+				//!< Define chip patch area to render (default is full grid)
 			) const
 		{
 			ras::Grid<float> & grid = *ptGrid;
 
-/*
-double const & beg0 = theObjQuad.span0().theBeg;
-double const & end0 = theObjQuad.span0().theEnd;
-double const & beg1 = theObjQuad.span1().theBeg;
-double const & end1 = theObjQuad.span1().theEnd;
-*/
-
-			using namespace rigibra;
-			for (std::size_t row{0u} ; row < grid.high() ; ++row)
+			if (ptGrid && ptGrid->isValid())
 			{
-				for (std::size_t col{0u} ; col < grid.wide() ; ++col)
+				// define rendering area
+				ras::RowCol rc0{ 0u, 0u };
+				ras::SizeHW hwSize{ ptGrid->hwSize() };
+				if (chipSpec.isValid())
 				{
-					double const subRow{ (double)row };
-					double const subCol{ (double)col };
-					img::Spot const detSpot{ subRow, subCol };
+					rc0 = chipSpec.theOrigRC;
+					hwSize = chipSpec.hwSize();
+				}
+				img::ChipSpec chip{ rc0, hwSize };
 
-					float const inten
-						{ (float)theSampler.intensityAt(detSpot, numOverSamp) };
-					if (engabra::g3::isValid(inten))
+				for (std::size_t rowChip{0u} ; rowChip < chip.high()
+					; ++rowChip)
+				{
+					for (std::size_t colChip{0u} ; colChip < chip.wide()
+						; ++colChip)
 					{
-						grid(row, col) = inten;
+						ras::RowCol const rcChip{ rowChip, colChip };
+						ras::RowCol const rcGrid
+							{ chip.rcFullForChipRC(rcChip) };
+
+						// location in full camera format
+						img::Spot const detSpot{ cast::imgSpot(rcGrid) };
+
+						// intensity at grid location
+						float const inten
+							{ (float)theSampler.intensityAt
+								(detSpot, numOverSamp)
+							};
+						if (engabra::g3::isValid(inten))
+						{
+							grid(rcChip) = inten;
+						}
 					}
 				}
 			}
