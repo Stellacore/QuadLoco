@@ -266,10 +266,64 @@ namespace sim
 			return theSrcGrid;
 		}
 
+		inline
+		std::string
+		infoStringConfig // Trial::
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			if (thePtConfig)
+			{
+				rigibra::Transform const & xCamWrtRef
+					= thePtConfig->theStaWrtQuad;
+
+				struct PolarDecomp
+				{
+					double const theAngleAzim{};
+					double const theAngleVert{};
+					double const theRangeDist{};
+
+					inline
+					static
+					PolarDecomp
+					from
+						( engabra::g3::Vector const vec
+						)
+					{
+						using namespace engabra::g3;
+						double const magXY{ std::hypot(vec[0], vec[1]) };
+						double const angleVert{ std::atan2(magXY, vec[2]) };
+						double const angleAzim{ std::atan2(vec[1], vec[0]) };
+						double const rangeDist{ magnitude(vec) };
+						return { angleAzim, angleVert, rangeDist };
+					}
+
+				}; // PolarDecomp
+
+				engabra::g3::Vector const staLoc{ xCamWrtRef.theLoc };
+				PolarDecomp const polarAVR{ PolarDecomp::from(staLoc) };
+
+				using engabra::g3::io::fixed;
+				oss
+				//	<< "thePtConfig: " << thePtConfig->infoString()
+					<< "station: " << staLoc
+					<< " azm: " << fixed(polarAVR.theAngleAzim)
+					<< " vrt: " << fixed(polarAVR.theAngleVert)
+					<< " rng: " << fixed(polarAVR.theRangeDist)
+					;
+			}
+			return oss.str();
+		}
+
 		//! Descriptive information about this instance.
 		inline
 		std::string
-		infoString
+		infoString // Trial::
 			( std::string const & title = {}
 			) const
 		{
@@ -279,11 +333,19 @@ namespace sim
 				oss << title << ' ';
 			}
 			oss
-				<< "theStaId: " << theStaId
+				<< "sta: " << std::setw(3u) << theStaId
 				<< ' '
-				<< "theRollId: " << theRollId
+				<< "roll: " << std::setw(1u) << theRollId
+				<< ' '
+				<< "baseName: " << baseName()
 				<< '\n'
-				<< "theSrcGrid: " << theSrcGrid
+				;
+			if (thePtConfig)
+			{
+				oss << infoStringConfig() << '\n';
+			}
+			oss
+				<< "srcGrid: " << theSrcGrid
 				;
 			return oss.str();
 		}
@@ -424,7 +486,7 @@ std::string const fileName{ (ptTrial->baseName() + ".pgm") };
 		//! Descriptive information about this instance.
 		inline
 		std::string
-		infoString
+		infoString // Outcome::
 			( std::string const & title = {}
 			) const
 		{
@@ -437,6 +499,7 @@ std::string const fileName{ (ptTrial->baseName() + ".pgm") };
 			{
 				oss << thePtTrial->infoString("thePtTrial");
 			}
+			using engabra::g3::io::fixed;
 			oss
 				<< '\n'
 				<< "exp: " << centerExp()
@@ -444,6 +507,7 @@ std::string const fileName{ (ptTrial->baseName() + ".pgm") };
 				<< "got: " << centerGot()
 				<< '\n'
 				<< "dif: " << centerDif()
+					<< "  mag: " << fixed(magnitude(centerDif()), 3u, 2u)
 				<< '\n'
 				;
 
@@ -553,7 +617,9 @@ std::cout << "num ptOutcomeErrs: " <<  ptOutcomeErrs.size() << '\n';
 
 		if (hitErr)
 		{
-			oss << rptErr.str() << '\n';
+			oss << "\n*** ALL *** trials" << '\n';
+			oss << rptAll.str() << '\n';
+		//	oss << rptErr.str() << '\n';
 		}
 
 	}
