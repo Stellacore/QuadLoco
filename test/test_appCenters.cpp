@@ -42,6 +42,7 @@
 #include <Engabra>
 #include <Rigibra>
 
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <numbers>
@@ -73,11 +74,13 @@ namespace sim
 		//	{ obj::QuadTarget::WithSurround };
 			{ obj::QuadTarget::None };
 
+	// Ref: Function stationLocsPolar() to define station locations
 
 	constexpr std::size_t const sStaNumRollSteps // within half turn
 			{ 4u };
 		//	{ 1u };
 
+	/*
 	// nominal height above target (to avoid plane of target and behind it)
 	constexpr double const sStaLocMinZ // [m]
 			{ .250 };
@@ -92,21 +95,103 @@ namespace sim
 
 	// increment for each coordinate component
 	constexpr double const sStaLocDelX // [m]
-			{ .250 };
+			{ .100 };
 	constexpr double const sStaLocDelY // [m]
-			{ .250 };
+			{ .100 };
 	constexpr double const sStaLocDelZ // [m]
-			{ .250 };
+			{ .100 };
 
 	// maximum (included) value for each coordinate component
 	constexpr double const sStaLocMaxX // [m]
-			{  .750 };
+			{  1.000 };
 	constexpr double const sStaLocMaxY // [m]
-			{  .250 };
+			{   .500 };
 	constexpr double const sStaLocMaxZ // [m]
-			{  .000 };
+			{   .500 };
+	*/
 
 	static std::vector<std::size_t> const sAppRingHalfSizes{ 5u, 3u };
+
+	//
+	// Utilities
+	//
+
+	//! Polar coordinate decomposition of 3D location
+	struct PolarDecomp
+	{
+		double const theAngleAzim{};
+		double const theAngleVert{};
+		double const theRangeDist{};
+
+		inline
+		static
+		PolarDecomp
+		from
+			( engabra::g3::Vector const vec
+			)
+		{
+			using namespace engabra::g3;
+			double const magXY{ std::hypot(vec[0], vec[1]) };
+			double const angleVert{ std::atan2(magXY, vec[2]) };
+			double const angleAzim{ std::atan2(vec[1], vec[0]) };
+			double const rangeDist{ magnitude(vec) };
+			return { angleAzim, angleVert, rangeDist };
+		}
+
+		inline
+		static
+		PolarDecomp
+		fromAVR
+			( double const & azm
+			, double const & vrt
+			, double const & rng
+			)
+		{
+			return { azm, vrt, rng };
+		}
+
+
+		inline
+		engabra::g3::Vector
+		vector
+			() const
+		{
+			double const cosVrt{ std::sin(theAngleVert) };
+			double const xDir{ cosVrt * std::cos(theAngleAzim) };
+			double const yDir{ cosVrt * std::sin(theAngleAzim) };
+			double const zDir{ std::cos(theAngleVert) };
+			return
+				{ theRangeDist * xDir
+				, theRangeDist * yDir
+				, theRangeDist * zDir
+				};
+		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString  // PolarDecomp::
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			using engabra::g3::io::fixed;
+			oss
+				<< "Azm,Vrt,Rng:"
+				<< ' ' << fixed(theAngleAzim, 2u, 4u)
+				<< ' ' << fixed(theAngleVert, 2u, 4u)
+				<< ' ' << fixed(theRangeDist, 3u, 3u)
+				;
+
+			return oss.str();
+		}
+
+	}; // PolarDecomp
+
 
 	//
 	// General configuration
@@ -135,10 +220,11 @@ namespace sim
 		return cam;
 	}
 
+	/*
 	//! Locations for camera to view target
 	inline
 	std::vector<engabra::g3::Vector>
-	stationLocations
+	stationLocsOnGrid
 		()
 	{
 		std::vector<engabra::g3::Vector> locs;
@@ -163,6 +249,55 @@ namespace sim
 				}
 			}
 		}
+		return locs;
+	}
+	*/
+
+	//! Locations for camera to view target
+	inline
+	std::vector<engabra::g3::Vector>
+	stationLocsPolar
+		()
+	{
+		std::vector<engabra::g3::Vector> locs;
+
+		constexpr double azmMin{  .000 };
+		constexpr double vrtMin{  .000 };
+		constexpr double rngMin{  .250 };
+
+		constexpr double pi{ std::numbers::pi_v<double> };
+		constexpr double azmDel{ pi * ( 9. / 180.) };
+		constexpr double vrtDel{ pi * ( 9. / 180.) };
+		constexpr double rngDel{  .125 };
+
+		constexpr double azmMax{ pi * (90. / 180.) };
+		constexpr double vrtMax{ pi * (70. / 180.) };
+		constexpr double rngMax{ 2.000 };
+
+		constexpr double const azmCount{ (azmMax - azmMin) / azmDel };
+		constexpr double const vrtCount{ (vrtMax - vrtMin) / vrtDel };
+		constexpr double const rngCount{ (rngMax - rngMin) / rngDel };
+		constexpr std::size_t const azmNum{ (std::size_t)azmCount + 1u };
+		constexpr std::size_t const vrtNum{ (std::size_t)vrtCount + 1u };
+		constexpr std::size_t const rngNum{ (std::size_t)rngCount + 1u };
+		locs.reserve(azmNum * vrtNum * rngNum);
+
+
+		for (double rng{rngMin} ; ! (rngMax < rng) ; rng += rngDel)
+		{
+			for (double azm{azmMin} ; ! (azmMax < azm) ; azm += azmDel)
+			{
+				for (double vrt{vrtMin} ; ! (vrtMax < vrt) ; vrt += vrtDel)
+				{
+					PolarDecomp const polarDecomp
+						{ PolarDecomp::fromAVR(azm, vrt, rng) };
+					locs.emplace_back(polarDecomp.vector());
+std::cout << polarDecomp.infoString() << '\n';
+				}
+			}
+		}
+//exit(8);
+
 		return locs;
 	}
 
@@ -197,53 +332,6 @@ namespace sim
 		}
 		return grid;
 	}
-
-	//! Polar coordinate decomposition of 3D location
-	struct PolarDecomp
-	{
-		double const theAngleAzim{};
-		double const theAngleVert{};
-		double const theRangeDist{};
-
-		inline
-		static
-		PolarDecomp
-		from
-			( engabra::g3::Vector const vec
-			)
-		{
-			using namespace engabra::g3;
-			double const magXY{ std::hypot(vec[0], vec[1]) };
-			double const angleVert{ std::atan2(magXY, vec[2]) };
-			double const angleAzim{ std::atan2(vec[1], vec[0]) };
-			double const rangeDist{ magnitude(vec) };
-			return { angleAzim, angleVert, rangeDist };
-		}
-
-		//! Descriptive information about this instance.
-		inline
-		std::string
-		infoString  // PolarDecomp::
-			( std::string const & title = {}
-			) const
-		{
-			std::ostringstream oss;
-			if (! title.empty())
-			{
-				oss << title << ' ';
-			}
-			using engabra::g3::io::fixed;
-			oss
-				<< "Azm,Vrt,Rng:"
-				<< ' ' << fixed(theAngleAzim, 2u, 4u)
-				<< ' ' << fixed(theAngleVert, 2u, 4u)
-				<< ' ' << fixed(theRangeDist, 3u, 3u)
-				;
-
-			return oss.str();
-		}
-
-	}; // PolarDecomp
 
 
 	struct Trial
@@ -410,7 +498,8 @@ namespace sim
 		std::vector<std::shared_ptr<Trial> > ptTrials;
 		// start with an array of station locations
 		std::vector<engabra::g3::Vector> const staLocs
-			{ stationLocations() };
+		//	{ stationLocsOnGrid() };
+			{ stationLocsPolar() };
 
 		constexpr double pi{ std::numbers::pi_v<double> };
 		double const rollDelta{ pi / (double)numRollSteps };
@@ -425,7 +514,6 @@ namespace sim
 			// get station locations from array
 			Vector const & staLoc = staLocs[nSta];
 
-std::cout << '\n';
 std::cout << "staLoc: " << staLoc << '\n';
 			for (std::size_t nRoll{0u} ; nRoll < numRollSteps; ++nRoll)
 			{
@@ -463,8 +551,8 @@ std::cout << "staLoc: " << staLoc << '\n';
 					{ std::make_shared<Trial>(nSta, nRoll, ptConfig) };
 				ptTrials.emplace_back(ptTrial);
 
-std::string const fileName{ (ptTrial->baseName() + ".pgm") };
-(void)io::writeStretchPGM(fileName, ptTrial->srcGrid());
+//std::string const fileName{ (ptTrial->baseName() + ".pgm") };
+//(void)io::writeStretchPGM(fileName, ptTrial->srcGrid());
 
 			}
 		}
@@ -576,8 +664,11 @@ std::string const fileName{ (ptTrial->baseName() + ".pgm") };
 				oss << title << ' ';
 			}
 			using engabra::g3::io::fixed;
+			img::Spot const cDif{ centerDif() };
 			oss
-				<< "centerDif: " << centerDif()
+				<< "centerDif:"
+				<< ' ' << fixed(cDif.row(), 3u, 2u)
+				<< ' ' << fixed(cDif.col(), 3u, 2u)
 				<< "  mag: " << fixed(magnitude(centerDif()), 3u, 2u)
 				;
 
@@ -600,9 +691,11 @@ std::string const fileName{ (ptTrial->baseName() + ".pgm") };
 			oss
 				<< thePtTrial->baseName()
 				<< ' '
-				<< polarAVR.infoString()
+				<< thePtTrial->stationLoc()
 				<< ' '
 				<< infoStringDif()
+				<< ' '
+				<< polarAVR.infoString()
 				;
 			return oss.str();
 		}
@@ -713,10 +806,12 @@ std::cout << "num ptOutcomeErrs: " <<  ptOutcomeErrs.size() << '\n';
 
 		if (hitErr)
 		{
-			oss << "\n*** ALL *** trials" << '\n';
-			oss << rptAll.str() << '\n';
-		//	oss << rptErr.str() << '\n';
+			oss << "\n*** Error trials\n" << '\n';
+			oss << rptErr.str() << '\n';
 		}
+
+		std::ofstream ofs("test_appCenters.dat");
+		ofs << rptAll.str() << '\n';
 
 	}
 
