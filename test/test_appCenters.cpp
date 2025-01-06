@@ -198,6 +198,53 @@ namespace sim
 		return grid;
 	}
 
+	//! Polar coordinate decomposition of 3D location
+	struct PolarDecomp
+	{
+		double const theAngleAzim{};
+		double const theAngleVert{};
+		double const theRangeDist{};
+
+		inline
+		static
+		PolarDecomp
+		from
+			( engabra::g3::Vector const vec
+			)
+		{
+			using namespace engabra::g3;
+			double const magXY{ std::hypot(vec[0], vec[1]) };
+			double const angleVert{ std::atan2(magXY, vec[2]) };
+			double const angleAzim{ std::atan2(vec[1], vec[0]) };
+			double const rangeDist{ magnitude(vec) };
+			return { angleAzim, angleVert, rangeDist };
+		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString  // PolarDecomp::
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			using engabra::g3::io::fixed;
+			oss
+				<< "Azm,Vrt,Rng:"
+				<< ' ' << fixed(theAngleAzim, 2u, 4u)
+				<< ' ' << fixed(theAngleVert, 2u, 4u)
+				<< ' ' << fixed(theRangeDist, 3u, 3u)
+				;
+
+			return oss.str();
+		}
+
+	}; // PolarDecomp
+
 
 	struct Trial
 	{
@@ -267,6 +314,39 @@ namespace sim
 		}
 
 		inline
+		rigibra::Transform
+		xformCamWrtRef
+			() const
+		{
+			rigibra::Transform xform;
+			if (thePtConfig)
+			{
+				xform = thePtConfig->theStaWrtQuad;
+			}
+			return xform;
+		}
+
+		inline
+		engabra::g3::Vector
+		stationLoc
+			() const
+		{
+			engabra::g3::Vector staLoc;
+			staLoc = xformCamWrtRef().theLoc;
+			return staLoc;
+		}
+
+		inline
+		PolarDecomp
+		polarDecomp
+			() const
+		{
+			engabra::g3::Vector const staLoc{ xformCamWrtRef().theLoc };
+			PolarDecomp const polarAVR{ PolarDecomp::from(staLoc) };
+			return polarAVR;
+		}
+
+		inline
 		std::string
 		infoStringConfig // Trial::
 			( std::string const & title = {}
@@ -279,42 +359,13 @@ namespace sim
 			}
 			if (thePtConfig)
 			{
-				rigibra::Transform const & xCamWrtRef
-					= thePtConfig->theStaWrtQuad;
-
-				struct PolarDecomp
-				{
-					double const theAngleAzim{};
-					double const theAngleVert{};
-					double const theRangeDist{};
-
-					inline
-					static
-					PolarDecomp
-					from
-						( engabra::g3::Vector const vec
-						)
-					{
-						using namespace engabra::g3;
-						double const magXY{ std::hypot(vec[0], vec[1]) };
-						double const angleVert{ std::atan2(magXY, vec[2]) };
-						double const angleAzim{ std::atan2(vec[1], vec[0]) };
-						double const rangeDist{ magnitude(vec) };
-						return { angleAzim, angleVert, rangeDist };
-					}
-
-				}; // PolarDecomp
-
-				engabra::g3::Vector const staLoc{ xCamWrtRef.theLoc };
-				PolarDecomp const polarAVR{ PolarDecomp::from(staLoc) };
-
-				using engabra::g3::io::fixed;
+				engabra::g3::Vector const staLoc{ xformCamWrtRef().theLoc };
+				PolarDecomp const polarAVR{ polarDecomp() };
 				oss
 				//	<< "thePtConfig: " << thePtConfig->infoString()
 					<< "station: " << staLoc
-					<< " azm: " << fixed(polarAVR.theAngleAzim)
-					<< " vrt: " << fixed(polarAVR.theAngleVert)
-					<< " rng: " << fixed(polarAVR.theRangeDist)
+					<< ' '
+					<< polarAVR.infoString()
 					;
 			}
 			return oss.str();
@@ -344,9 +395,7 @@ namespace sim
 			{
 				oss << infoStringConfig() << '\n';
 			}
-			oss
-				<< "srcGrid: " << theSrcGrid
-				;
+		//	oss << "srcGrid: " << theSrcGrid ;
 			return oss.str();
 		}
 
@@ -514,6 +563,50 @@ std::string const fileName{ (ptTrial->baseName() + ".pgm") };
 			return oss.str();
 		}
 
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoStringDif // Outcome::
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			using engabra::g3::io::fixed;
+			oss
+				<< "centerDif: " << centerDif()
+				<< "  mag: " << fixed(magnitude(centerDif()), 3u, 2u)
+				;
+
+			return oss.str();
+		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoStringReport // Outcome::
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			PolarDecomp const polarAVR{ thePtTrial->polarDecomp() };
+			oss
+				<< thePtTrial->baseName()
+				<< ' '
+				<< polarAVR.infoString()
+				<< ' '
+				<< infoStringDif()
+				;
+			return oss.str();
+		}
+
 	}; // Outcome
 
 
@@ -580,7 +673,10 @@ std::cout << "num ptOutcomeAlls: " <<  ptOutcomeAlls.size() << '\n';
 		ptOutcomeErrs.reserve(ptOutcomeAlls.size());
 		for (std::shared_ptr<sim::Outcome> const & ptOutcomeAll : ptOutcomeAlls)
 		{
-			rptAll << ptOutcomeAll->infoString() << '\n';
+			rptAll
+				<< ptOutcomeAll->infoStringReport()
+				<< '\n';
+//			rptAll << ptOutcomeAll->infoString() << '\n';
 			if (! ptOutcomeAll->success())
 			{
 				ptOutcomeErrs.emplace_back(ptOutcomeAll);
