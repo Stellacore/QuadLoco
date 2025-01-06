@@ -185,13 +185,13 @@ namespace sim
 	ras::Grid<float>
 	sourceGrid
 		( std::shared_ptr<quadloco::sim::Config> const & ptConfig
+		, std::size_t const & pad
 		)
 	{
 		ras::Grid<float> grid{};
 		if (ptConfig)
 		{
 			sim::Render const render{ *ptConfig, sSamplerOptions };
-			constexpr std::size_t pad{ 5u };
 			img::ChipSpec const chipSpec{ ptConfig->chipSpecForQuad(pad) };
 			grid = render.quadChip(sSamplerOverNum, chipSpec);
 		}
@@ -201,25 +201,48 @@ namespace sim
 
 	struct Trial
 	{
-		std::size_t const theId{};
+		std::size_t const theStaId{};
+		std::size_t const theRollId{};
 
 		std::shared_ptr<quadloco::sim::Config> thePtConfig{ nullptr };
 
-		img::Spot const theExpCenter{};
+		std::size_t const theChipPad{};
 		ras::Grid<float> const theSrcGrid{};
 
 
 		inline
 		explicit
 		Trial
-			( std::size_t const & id
+			( std::size_t const & staId
+			, std::size_t const & rollId
 			, std::shared_ptr<quadloco::sim::Config> const & ptConfig
+			, std::size_t const & chipPad = 10u
 			)
-			: theId{ id }
+			: theStaId{ staId }
+			, theRollId{ rollId }
 			, thePtConfig{ ptConfig }
-			, theExpCenter{ centerSpotFor(target(), thePtConfig) }
-			, theSrcGrid{ sourceGrid(thePtConfig) }
+			, theChipPad{ chipPad }
+			, theSrcGrid{ sourceGrid(thePtConfig, theChipPad) }
 		{ }
+
+
+		inline
+		img::Spot
+		centerExp
+			() const
+		{
+			img::Spot const centerInObj
+				{ thePtConfig->theObjQuad.centerSpot() };
+			img::Spot const centerInImg
+				{ thePtConfig->imgSpotForTgtSpot(centerInObj) };
+
+			img::ChipSpec const chipSpec
+				{ thePtConfig->chipSpecForQuad(theChipPad) };
+			img::Spot const chip0{ cast::imgSpot(chipSpec.theOrigRC) };
+
+			img::Spot const centerInChp{ centerInImg - chip0 };
+			return centerInChp;
+		}
 
 		inline
 		std::string
@@ -227,7 +250,11 @@ namespace sim
 			() const
 		{
 			std::ostringstream oss;
-			oss << "sim" << std::setw(5u) << std::setfill('0') << theId;
+			oss << "sim"
+				<< std::setw(5u) << std::setfill('0') << theStaId
+				<< '_'
+				<< std::setw(1u) << theRollId
+				;
 			return oss.str();
 		}
 
@@ -252,7 +279,9 @@ namespace sim
 				oss << title << ' ';
 			}
 			oss
-				<< "theId: " << theId
+				<< "theStaId: " << theStaId
+				<< ' '
+				<< "theRollId: " << theRollId
 				<< '\n'
 				<< "theSrcGrid: " << theSrcGrid
 				;
@@ -277,13 +306,13 @@ namespace sim
 
 		// size allowing for roll steps
 		ptTrials.reserve(numRollSteps * staLocs.size());
-		for (std::size_t nn{0u} ; nn < staLocs.size() ; ++nn)
+		for (std::size_t nSta{0u} ; nSta < staLocs.size() ; ++nSta)
 		{
 			using namespace engabra::g3;
 			using namespace rigibra;
 
 			// get station locations from array
-			Vector const & staLoc = staLocs[nn];
+			Vector const & staLoc = staLocs[nSta];
 
 std::cout << '\n';
 std::cout << "staLoc: " << staLoc << '\n';
@@ -320,12 +349,10 @@ std::cout << "staLoc: " << staLoc << '\n';
 
 				// assemble data into Trial structure for overall admin
 				std::shared_ptr<Trial> const ptTrial
-					{ std::make_shared<Trial>(nn, ptConfig) };
+					{ std::make_shared<Trial>(nSta, nRoll, ptConfig) };
 				ptTrials.emplace_back(ptTrial);
 
-std::ostringstream oss;
-oss << ptTrial->baseName() << "_" << nRoll << ".pgm";
-std::string const fileName{ oss.str() };
+std::string const fileName{ (ptTrial->baseName() + ".pgm") };
 (void)io::writeStretchPGM(fileName, ptTrial->srcGrid());
 
 			}
@@ -350,19 +377,6 @@ std::string const fileName{ oss.str() };
 		}
 
 		inline
-		std::size_t
-		id
-			() const
-		{
-			std::size_t id{ std::numeric_limits<std::size_t>::max() };
-			if (isValid())
-			{
-				id = thePtTrial->theId;
-			}
-			return id;
-		}
-
-		inline
 		img::Spot
 		centerExp
 			() const
@@ -370,7 +384,7 @@ std::string const fileName{ oss.str() };
 			img::Spot spot{};
 			if (isValid())
 			{
-				spot = thePtTrial->theExpCenter;
+				spot = thePtTrial->centerExp();
 			}
 			return spot;
 		}
@@ -497,10 +511,12 @@ std::cout << "numTrials: " << ptTrials.size() << '\n';
 std::cout << "num ptOutcomeAlls: " <<  ptOutcomeAlls.size() << '\n';
 
 		// assess results overall and note any unsuccessful cases
+		std::ostringstream rptAll;
 		std::vector<std::shared_ptr<sim::Outcome> > ptOutcomeErrs;
 		ptOutcomeErrs.reserve(ptOutcomeAlls.size());
 		for (std::shared_ptr<sim::Outcome> const & ptOutcomeAll : ptOutcomeAlls)
 		{
+			rptAll << ptOutcomeAll->infoString() << '\n';
 			if (! ptOutcomeAll->success())
 			{
 				ptOutcomeErrs.emplace_back(ptOutcomeAll);
@@ -509,10 +525,10 @@ std::cout << "num ptOutcomeAlls: " <<  ptOutcomeAlls.size() << '\n';
 std::cout << "num ptOutcomeErrs: " <<  ptOutcomeErrs.size() << '\n';
 
 		// report on unsuccessful trials
-		std::ostringstream rpt;
+		std::ostringstream rptErr;
 		for (std::shared_ptr<sim::Outcome> const & ptOutcomeErr : ptOutcomeErrs)
 		{
-			rpt << ptOutcomeErr->infoString() << '\n';
+			rptErr << ptOutcomeErr->infoString() << '\n';
 		}
 
 		// [DoxyExample01]
@@ -529,7 +545,7 @@ std::cout << "num ptOutcomeErrs: " <<  ptOutcomeErrs.size() << '\n';
 			oss << "Failure of ptOutcomes non-empty test\n";
 			hitErr = true;
 		}
-		if (! rpt.str().empty())
+		if (! rptErr.str().empty())
 		{
 			oss << "Failure of all good ptOutcome test\n";
 			hitErr = true;
@@ -537,7 +553,7 @@ std::cout << "num ptOutcomeErrs: " <<  ptOutcomeErrs.size() << '\n';
 
 		if (hitErr)
 		{
-			oss << rpt.str() << '\n';
+			oss << rptErr.str() << '\n';
 		}
 
 	}
