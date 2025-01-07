@@ -90,11 +90,12 @@ message("### EXPORT_ALIAS_NAME: " ${EXPORT_ALIAS_NAME})
 message("### EXPORT_TARGETS_NAME: " ${EXPORT_TARGETS_NAME})
 message("### EXPORT_FILENAME: " ${EXPORT_FILENAME})
 
-add_subdirectory(cmake)
-add_subdirectory(doc)
-add_subdirectory(src) # project source code
-add_subdirectory(test)
-add_subdirectory(demo)
+add_subdirectory(cmake)  # shared cmake source files
+add_subdirectory(doc)  # project documentation (mostly Doxygen) files
+add_subdirectory(src)  # project source code (albeit most is inline in /include)
+add_subdirectory(test)  # project tests
+add_subdirectory(demo)  # demonstration programs / experiment with concepts
+add_subdirectory(eval)  # evaluation programs for assessing performance
 
 # ===
 # === Packaging

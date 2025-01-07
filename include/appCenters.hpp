@@ -73,7 +73,9 @@ namespace app
 	{
 		std::vector<ras::PeakRCV> peakCombos;
 
-		if (! ringHalfSizes.empty())
+		bool const srcOkay{ srcGrid.isValid() && srcStats.isValid() };
+
+		if (srcOkay && (! ringHalfSizes.empty()))
 		{
 			std::vector<ops::SymRing> symRings;
 			symRings.reserve(ringHalfSizes.size());

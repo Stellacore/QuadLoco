@@ -107,42 +107,29 @@ namespace ops
 					Type const & BM = fGrid(nextRow, currCol);
 					Type const & BR = fGrid(nextRow, nextCol);
 
-					if (minValue < MM)
+					if (pix::isValid(MM) && (minValue < MM))
 					{
-						// all (9) pixels in hood are valid
-						if (  pix::isValid(TL)
-						   && pix::isValid(TM)
-						   && pix::isValid(TR)
-						   && pix::isValid(ML)
-						   && pix::isValid(MM)
-						   && pix::isValid(MR)
-						   && pix::isValid(BL)
-						   && pix::isValid(BM)
-						   && pix::isValid(BR)
-						   )
+						// treat null surrounding peaks as less than valid MM
+						bool const isPeak
+							{  ( (! pix::isValid(TL)) || (! (MM < TL)) )
+							&& ( (! pix::isValid(TM)) || (! (MM < TM)) )
+							&& ( (! pix::isValid(TR)) || (! (MM < TR)) )
+							//
+							&& ( (! pix::isValid(ML)) || (! (MM < ML)) )
+							&& ( (! pix::isValid(MR)) || (! (MM < MR)) )
+							//
+							&& ( (! pix::isValid(BL)) || (! (MM < BL)) )
+							&& ( (! pix::isValid(BM)) || (! (MM < BM)) )
+							&& ( (! pix::isValid(BR)) || (! (MM < BR)) )
+							};
+						if (isPeak)
 						{
-							// middle pixel is not less than (8) neighbors
-							bool const isPeak
-								{  (! (MM < TL))
-								&& (! (MM < TM))
-								&& (! (MM < TR))
-								&& (! (MM < ML))
-								&& (! (MM < MR))
-								&& (! (MM < BL))
-								&& (! (MM < BM))
-								&& (! (MM < BR))
+							ras::PeakRCV const peakRCV
+								{ ras::RowCol{ currRow, currCol }
+								, static_cast<double>(MM)
 								};
-							if (isPeak)
-							{
-								ras::PeakRCV const peakRCV
-									{ ras::RowCol{ currRow, currCol }
-									, static_cast<double>(MM)
-									};
-								peakRCVs.emplace_back(peakRCV);
-
-							} // isPeak
-
-						} // all valid
+							peakRCVs.emplace_back(peakRCV);
+						}
 
 					} // over minValue
 

@@ -32,6 +32,8 @@
  */
 
 
+#include "cast.hpp"
+#include "imgChipSpec.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "opsFence.hpp"
@@ -39,6 +41,7 @@
 
 #include <Rigibra>
 
+#include <array>
 #include <cmath>
 #include <sstream>
 #include <string>
@@ -93,7 +96,75 @@ namespace sim
 			return theStaWrtQuad;
 		}
 
-		//! Ciewing obj::QuadTarget face-on exactly filling camera format
+		//! Detector spot on image (in format, else null) for spot on target
+		inline
+		img::Spot
+		imgSpotForTgtSpot
+			( img::Spot const & spotOnTgt
+			) const
+		{
+			engabra::g3::Vector const pntInTgt{ cast::engVector(spotOnTgt) };
+			engabra::g3::Vector const pntInCam{ theStaWrtQuad(pntInTgt) };
+			return theCamera.detectorSpotFor(pntInCam);
+		}
+
+		//! \brief Sub region of grid that containing entire quad image
+		inline
+		img::ChipSpec
+		chipSpecForQuad
+			( std::size_t const & pad
+				//!< Expand chip from quad corners by this much extra
+			) const
+		{
+			// corners in obj::QuadTarget frame
+			std::array<img::Spot, 4u> const objSpots{ theObjQuad.cornerLocs() };
+
+			// corners in image (camera format) space
+			std::array<img::Spot, 4u> const imgSpots
+				{ imgSpotForTgtSpot(objSpots[0])
+				, imgSpotForTgtSpot(objSpots[1])
+				, imgSpotForTgtSpot(objSpots[2])
+				, imgSpotForTgtSpot(objSpots[3])
+				};
+
+			// get boxed limits of image projections
+			double dRowMin{ imgSpots[0].row() };
+			double dColMin{ imgSpots[0].col() };
+			double dRowMax{ imgSpots[0].row() };
+			double dColMax{ imgSpots[0].col() };
+			for (std::size_t nn{1u} ; nn < imgSpots.size() ; ++nn)
+			{
+				dRowMin = std::min(dRowMin, imgSpots[nn].row());
+				dColMin = std::min(dColMin, imgSpots[nn].col());
+				dRowMax = std::max(dRowMax, imgSpots[nn].row());
+				dColMax = std::max(dColMax, imgSpots[nn].col());
+			}
+
+			// adjust by requested pad amount
+			dRowMin -= pad;
+			dColMin -= pad;
+			dRowMax += pad;
+			dColMax += pad;
+
+			// adjust to ensure inside of overall grid
+			dRowMin = std::max(dRowMin, 0.);
+			dColMin = std::max(dColMin, 0.);
+			dRowMax = std::min(dRowMax, (double)theCamera.theFormat.high());
+			dColMax = std::min(dColMax, (double)theCamera.theFormat.wide());
+
+			// update return
+			ras::RowCol const rc0
+				{ static_cast<std::size_t>(dRowMin)
+				, static_cast<std::size_t>(dColMin)
+				};
+			ras::SizeHW const hwSize
+				{ static_cast<std::size_t>(std::floor(dRowMax - dRowMin))
+				, static_cast<std::size_t>(std::floor(dColMax - dColMin))
+				};
+			return img::ChipSpec{ rc0, hwSize };
+		}
+
+		//! Viewing obj::QuadTarget face-on exactly filling camera format
 		inline
 		static
 		Config

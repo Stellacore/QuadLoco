@@ -171,7 +171,7 @@ namespace cast
 		return img::Spot{ vec[0], vec[1] };
 	}
 
-	//! The first two components, vec[0,1]
+	//! Cast row,col values to double and package for return
 	inline
 	img::Spot
 	imgSpot
@@ -182,6 +182,16 @@ namespace cast
 			{ static_cast<double>(rowcol.row())
 			, static_cast<double>(rowcol.col())
 			};
+	}
+
+	//! Cast to img::Spot from img::Vector
+	inline
+	img::Spot
+	imgSpot
+		( img::Vector<double> const & vec
+		)
+	{
+		return img::Spot{ vec[0], vec[1] };
 	}
 
 	//
