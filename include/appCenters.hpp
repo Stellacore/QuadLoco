@@ -90,13 +90,13 @@ namespace app
 			ras::Grid<float> const peakGridA
 				{ ops::symRingGridFor(srcGrid, symRingA) };
 
-			// get all peaks
+			// get all peaks from gridA
 			ops::AllPeaks2D const allPeaksA(peakGridA);
 			std::size_t const numToGet{ srcGrid.size() }; // { 100u };
 			std::vector<ras::PeakRCV> const peakAs
 				{ allPeaksA.largestPeakRCVs(numToGet) };
 
-			// qualify peaks as most consistent with edges
+			// qualify 'A' peaks using symmetry response of 'B'
 			peakCombos.reserve(peakAs.size());
 			for (ras::PeakRCV const & peakA : peakAs)
 			{
