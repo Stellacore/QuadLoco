@@ -551,7 +551,7 @@ std::cout << polarDecomp.infoString() << '\n';
 			// get station locations from array
 			Vector const & staLoc = staLocs[nSta];
 
-std::cout << "staLoc: " << staLoc << '\n';
+std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 			for (std::size_t nRoll{0u} ; nRoll < numRollSteps; ++nRoll)
 			{
 				double const roll{ (double)nRoll * rollDelta };
@@ -561,7 +561,6 @@ std::cout << "staLoc: " << staLoc << '\n';
 				// station geometry
 				static Vector const tgtLoc{ zero<Vector>() }; // by assumption
 				Vector const staDelta{ tgtLoc - staLoc };
-				double const staRange{ magnitude(staDelta) };
 				Vector const lookDir{ direction(staDelta) };
 
 				// determine attitude to look at the target
@@ -848,7 +847,7 @@ std::cout << "num ptOutcomeErrs: " <<  ptOutcomeErrs.size() << '\n';
 			oss << rptErr.str() << '\n';
 		}
 
-		std::ofstream ofs("test_appCenters.dat");
+		std::ofstream ofs("evalCenterFinding.dat");
 		ofs << rptAll.str() << '\n';
 
 	}

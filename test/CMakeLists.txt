@@ -30,7 +30,6 @@ set(unitTests
 
 	test_angLikely  # angular value likelihood estimation
 	test_angRing  # wrap around data structures e.g. for angles
-	test_appCenters  # application domain - center finding utilities
 	test_cast  # data type conversion operations
 	test_imgArea  # a 2D range of values
 	test_imgChipSpec  # a 2D sub region of a larger area
