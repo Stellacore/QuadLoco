@@ -35,6 +35,9 @@
 #include "rasRowCol.hpp"
 
 #include <iostream>
+#include <limits>
+#include <sstream>
+#include <string>
 
 
 namespace quadloco
@@ -47,8 +50,21 @@ namespace ras
 	struct RelRC
 	{
 		// offsets relative to filter center
-		int theRelRow{};
-		int theRelCol{};
+		int theRelRow{ std::numeric_limits<int>::max() };
+		int theRelCol{ std::numeric_limits<int>::max() };
+
+
+		//! True if this instance has valid data
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  (theRelRow < std::numeric_limits<int>::max())
+				&& (theRelCol < std::numeric_limits<int>::max())
+				);
+		}
 
 		//! Compute sum of indices with casting/test to avoid negative offsets
 		inline
@@ -83,6 +99,16 @@ namespace ras
 				};
 		}
 
+		//! Absolute source grid (row,col) given filter center (row0,col0)
+		inline
+		ras::RowCol
+		srcRowCol
+			( ras::RowCol const & srcRowCol0
+			) const
+		{
+			return srcRowCol(srcRowCol0.row(), srcRowCol0.col());
+		}
+
 		//! True if this and other instances have identical relative indices.
 		inline
 		bool
@@ -96,6 +122,29 @@ namespace ras
 				);
 		}
 
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			oss
+				<< "relRC:"
+				<< ' ' << std::setw(4u) << theRelRow
+				<< ' ' << std::setw(4u) << theRelCol
+				;
+
+			return oss.str();
+		}
+
+
+
 	}; // RelRC
 
 
@@ -103,4 +152,31 @@ namespace ras
 } // [ras]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::ras::RelRC const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::ras::RelRC const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
 
