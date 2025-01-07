@@ -50,6 +50,50 @@
 #include <sstream>
 
 
+namespace
+{
+
+	struct MinDelMax
+	{
+		double const theMin;
+		double const theDel;
+		double const theMax;
+
+	}; // MinDelMax
+
+	struct TrialSpec
+	{
+		MinDelMax theAzmMDM{};
+		MinDelMax theVrtMDM{};
+		MinDelMax theRngMDM{};
+
+		inline
+		static
+		std::size_t
+		estSizeFor
+			( MinDelMax const & mdm
+			)
+		{
+			double const mdmCount{ (mdm.theMax - mdm.theMin) / mdm.theDel };
+			return (static_cast<std::size_t>(mdmCount) + 1u);
+		}
+
+		inline
+		std::size_t
+		estSizeAll
+			() const
+		{
+			std::size_t const azmNum{ estSizeFor(theAzmMDM) };
+			std::size_t const vrtNum{ estSizeFor(theVrtMDM) };
+			std::size_t const rngNum{ estSizeFor(theRngMDM) };
+			return (azmNum * vrtNum * rngNum);
+		}
+
+	};
+
+} // [anon]
+
+
 namespace quadloco
 {
 
@@ -80,37 +124,48 @@ namespace sim
 			{ 4u };
 		//	{ 1u };
 
-	/*
-	// nominal height above target (to avoid plane of target and behind it)
-	constexpr double const sStaLocMinZ // [m]
-			{ .250 };
-
-	// start for each coordinate component
-	constexpr double const sStaLocBegX // [m]
-			{ .000 };
-	constexpr double const sStaLocBegY // [m]
-			{ .000 };
-	constexpr double const sStaLocBegZ // [m]
-			{ .000 };
-
-	// increment for each coordinate component
-	constexpr double const sStaLocDelX // [m]
-			{ .100 };
-	constexpr double const sStaLocDelY // [m]
-			{ .100 };
-	constexpr double const sStaLocDelZ // [m]
-			{ .100 };
-
-	// maximum (included) value for each coordinate component
-	constexpr double const sStaLocMaxX // [m]
-			{  1.000 };
-	constexpr double const sStaLocMaxY // [m]
-			{   .500 };
-	constexpr double const sStaLocMaxZ // [m]
-			{   .500 };
-	*/
-
 	static std::vector<std::size_t> const sAppRingHalfSizes{ 5u, 3u };
+
+
+	constexpr double sPi{ std::numbers::pi_v<double> };
+
+	constexpr TrialSpec sTrialSmall
+		{ MinDelMax // azmMinDelMax
+			{ sPi * ( 0. / 180.)
+			, sPi * (90. / 180.)
+			, sPi * (45. / 180.)
+			}
+		, MinDelMax // vrtMinDelMax
+			{ sPi * ( 0. / 180.)
+			, sPi * (90. / 180.)
+			, sPi * (45. / 180.)
+			}
+		, MinDelMax // rngMinDelMax
+			{  .250 
+			,  .500
+			, 2.000
+			}
+		};
+	constexpr TrialSpec sTrial5k
+		{ MinDelMax // azmMinDelMax
+			{ sPi * ( 0. / 180.)
+			, sPi * ( 9. / 180.)
+			, sPi * (90. / 180.)
+			}
+		, MinDelMax // vrtMinDelMax
+			{ sPi * ( 0. / 180.)
+			, sPi * ( 9. / 180.)
+			, sPi * (72. / 180.)
+			}
+		, MinDelMax // rngMinDelMax
+			{  .250 
+			,  .125
+			, 2.000
+			}
+		};
+
+	static TrialSpec const sUseTrialSpec{ sTrialSmall };
+
 
 	//
 	// Utilities
@@ -220,39 +275,6 @@ namespace sim
 		return cam;
 	}
 
-	/*
-	//! Locations for camera to view target
-	inline
-	std::vector<engabra::g3::Vector>
-	stationLocsOnGrid
-		()
-	{
-		std::vector<engabra::g3::Vector> locs;
-		std::size_t const numPerX
-			{ static_cast<std::size_t>(sStaLocMaxX / sStaLocDelX) };
-		std::size_t const numPerY
-			{ static_cast<std::size_t>(sStaLocMaxY / sStaLocDelY) };
-		std::size_t const numPerZ
-			{ static_cast<std::size_t>(sStaLocMaxZ / sStaLocDelZ) };
-		locs.reserve(numPerX * numPerY * numPerZ); // overkill by about 2x
-		for (double zRel{sStaLocBegZ}
-			; ! (sStaLocMaxZ < zRel) ; zRel += sStaLocDelZ)
-		{
-			double const zz{ sStaLocMinZ + zRel };
-			for (double yy{sStaLocBegY}
-				; ! (sStaLocMaxY < yy) ; yy += sStaLocDelY)
-			{
-				for (double xx{sStaLocBegX}
-					; ! (sStaLocMaxX < xx) ; xx += sStaLocDelX)
-				{
-					locs.emplace_back(engabra::g3::Vector{ xx, yy, zz });
-				}
-			}
-		}
-		return locs;
-	}
-	*/
-
 	//! Locations for camera to view target
 	inline
 	std::vector<engabra::g3::Vector>
@@ -261,27 +283,40 @@ namespace sim
 	{
 		std::vector<engabra::g3::Vector> locs;
 
-		constexpr double azmMin{  .000 };
-		constexpr double vrtMin{  .000 };
-		constexpr double rngMin{  .250 };
+		TrialSpec const & trialSpec = sUseTrialSpec;
 
-		constexpr double pi{ std::numbers::pi_v<double> };
-		constexpr double azmDel{ pi * ( 9. / 180.) };
-		constexpr double vrtDel{ pi * ( 9. / 180.) };
-		constexpr double rngDel{  .125 };
+		double const & azmMin = trialSpec.theAzmMDM.theMin;
+		double const & azmDel = trialSpec.theAzmMDM.theDel;
+		double const & azmMax = trialSpec.theAzmMDM.theMax;
 
-		constexpr double azmMax{ pi * (90. / 180.) };
-		constexpr double vrtMax{ pi * (70. / 180.) };
-		constexpr double rngMax{ 2.000 };
+		double const & vrtMin = trialSpec.theVrtMDM.theMin;
+		double const & vrtDel = trialSpec.theVrtMDM.theDel;
+		double const & vrtMax = trialSpec.theVrtMDM.theMax;
 
-		constexpr double const azmCount{ (azmMax - azmMin) / azmDel };
-		constexpr double const vrtCount{ (vrtMax - vrtMin) / vrtDel };
-		constexpr double const rngCount{ (rngMax - rngMin) / rngDel };
-		constexpr std::size_t const azmNum{ (std::size_t)azmCount + 1u };
-		constexpr std::size_t const vrtNum{ (std::size_t)vrtCount + 1u };
-		constexpr std::size_t const rngNum{ (std::size_t)rngCount + 1u };
-		locs.reserve(azmNum * vrtNum * rngNum);
+		double const & rngMin = trialSpec.theRngMDM.theMin;
+		double const & rngDel = trialSpec.theRngMDM.theDel;
+		double const & rngMax = trialSpec.theRngMDM.theMax;
 
+		std::cout << '\n';
+		std::cout << "stationLocsPolar\n";
+		std::cout << '\n';
+		std::cout << "azmMin: " << azmMin << '\n';
+		std::cout << "azmDel: " << azmDel << '\n';
+		std::cout << "azmMax: " << azmMax << '\n';
+
+		std::cout << '\n';
+		std::cout << "vrtMin: " << vrtMin << '\n';
+		std::cout << "vrtDel: " << vrtDel << '\n';
+		std::cout << "vrtMax: " << vrtMax << '\n';
+
+		std::cout << '\n';
+		std::cout << "rngMin: " << rngMin << '\n';
+		std::cout << "rngDel: " << rngDel << '\n';
+		std::cout << "rngMax: " << rngMax << '\n';
+		std::cout << '\n';
+		std::cout << "estSizeAll(): " << trialSpec.estSizeAll() << '\n';
+
+		locs.reserve(trialSpec.estSizeAll());
 
 		for (double rng{rngMin} ; ! (rngMax < rng) ; rng += rngDel)
 		{
@@ -296,7 +331,6 @@ std::cout << polarDecomp.infoString() << '\n';
 				}
 			}
 		}
-//exit(8);
 
 		return locs;
 	}
@@ -477,11 +511,13 @@ std::cout << polarDecomp.infoString() << '\n';
 				<< "roll: " << std::setw(1u) << theRollId
 				<< ' '
 				<< "baseName: " << baseName()
-				<< '\n'
 				;
 			if (thePtConfig)
 			{
-				oss << infoStringConfig() << '\n';
+				oss
+					<< '\n'
+					<< infoStringConfig()
+					;
 			}
 		//	oss << "srcGrid: " << theSrcGrid ;
 			return oss.str();
