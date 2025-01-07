@@ -132,12 +132,12 @@ namespace sim
 	constexpr TrialSpec sTrialSmall
 		{ MinDelMax // azmMinDelMax
 			{ sPi * ( 0. / 180.)
-			, sPi * (90. / 180.)
+			, sPi * (45. / 180.)
 			, sPi * (45. / 180.)
 			}
 		, MinDelMax // vrtMinDelMax
 			{ sPi * ( 0. / 180.)
-			, sPi * (90. / 180.)
+			, sPi * (45. / 180.)
 			, sPi * (45. / 180.)
 			}
 		, MinDelMax // rngMinDelMax
@@ -165,6 +165,7 @@ namespace sim
 		};
 
 	static TrialSpec const sUseTrialSpec{ sTrialSmall };
+//	static TrialSpec const sUseTrialSpec{ sTrial5k };
 
 
 	//
@@ -587,6 +588,7 @@ std::cout << "staLoc: " << staLoc << '\n';
 					{ std::make_shared<Trial>(nSta, nRoll, ptConfig) };
 				ptTrials.emplace_back(ptTrial);
 
+//std::string const baseName{ ptTrial->baseName() };
 //std::string const fileName{ (ptTrial->baseName() + ".pgm") };
 //(void)io::writeStretchPGM(fileName, ptTrial->srcGrid());
 

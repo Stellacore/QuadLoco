@@ -14,6 +14,7 @@ set ylabel "Y location [m]"
 set zlabel "Z location [m]" rotate parallel
 set cblabel "Center Diff [pix]"
 
+set view 84,40
 set xyplane 0
 set cbrange [0:5]
 
