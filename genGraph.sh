@@ -1,6 +1,6 @@
 
 
-namespaces="ang cast img io obj ops pix prb ras sig sim xfm"
+namespaces="ang app cast img io obj ops pix prb ras sig sim xfm"
 
 
 echo "digraph {"
