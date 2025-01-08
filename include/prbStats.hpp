@@ -32,7 +32,6 @@
  */
 
 
-#include "opsgrid.hpp"
 #include "pix.hpp"
 
 #include <Engabra>
@@ -43,6 +42,7 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 
 namespace quadloco
