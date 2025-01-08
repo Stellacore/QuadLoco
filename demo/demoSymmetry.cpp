@@ -79,10 +79,11 @@ main
 	std::cout << "\nsrcStats: " << srcStats << '\n';
 	*/
 
+	// run symmetry ring filter
 	constexpr std::size_t ringHalfSize{ 5u };
 	ras::Grid<float> peakGrid{ ops::symRingGridFor(srcGrid, ringHalfSize) };
 
-	// get all peaks
+	// get all of the peak responses
 	ops::AllPeaks2D const allPeaks(peakGrid);
 	constexpr std::size_t numToShow{ 10u };
 	std::vector<ras::PeakRCV> const peakRCVs
@@ -103,7 +104,7 @@ main
 	if (! peakRCVs.empty())
 	{
 		std::cout << "Largest Peak: " << peakRCVs.front() << '\n';
-		std::cout << "distrinction: "
+		std::cout << "distinction: "
 			<< allPeaks.distinction(peakRCVs) << '\n';
 	}
 
@@ -112,8 +113,7 @@ main
 	ras::Grid<float> const & saveGrid = peakGrid;
 	bool const okaySave{ io::writeStretchPGM(savePath, saveGrid) };
 
-//(void)io::writeStretchPGM(std::filesystem::path("0src.pgm"), srcGrid);
-
+	// report files involved
 	std::cout << '\n';
 	std::cout
 		<< "loadPath: " << loadPath << '\n'
@@ -122,8 +122,11 @@ main
 		<< "savePath: " << savePath << '\n'
 		<< "    grid: " << saveGrid << '\n';
 	std::cout << "okaySave: " << okaySave << '\n';
-//std::cout << "\n*NOTE* - saving copy of input to 0src.pgm\n";
 	std::cout << '\n';
+
+	//(void)io::writeStretchPGM(std::filesystem::path("0src.pgm"), srcGrid);
+	//std::cout << "\n*NOTE* - saving copy of input to 0src.pgm\n";
+
 
 	return 0;
 }

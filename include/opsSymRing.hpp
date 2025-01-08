@@ -32,6 +32,7 @@
  */
 
 
+#include "rasRelRC.hpp"
 #include "imgSpot.hpp"
 #include "prbStats.hpp"
 #include "rasGrid.hpp"
@@ -62,61 +63,6 @@ namespace ops
 	}
 
 
-	// Relative row/col position (wrt 'active' filter center pixel)
-	struct RelRC
-	{
-		// offsets relative to filter center
-		int theRelRow{};
-		int theRelCol{};
-
-		//! Compute sum of indices with casting/test to avoid negative offsets
-		inline
-		std::size_t
-		unsignedIndexFor
-			( std::size_t const & srcCenterNdx
-			, int const & ndxDelta
-			) const
-		{
-			int const iNdx{ static_cast<int>(srcCenterNdx) + ndxDelta };
-			if (iNdx < 0)
-			{
-				std::cerr << "Failure of iNdx positive check\n";
-				std::cerr << "  srcCenterNdx: " << srcCenterNdx << '\n';
-				std::cerr << "      ndxDelta: " << ndxDelta << '\n';
-				exit(1);
-			}
-			return static_cast<std::size_t>(iNdx);
-		}
-
-		//! Absolute source grid (row,col) given filter center (row0,col0)
-		inline
-		ras::RowCol
-		srcRowCol
-			( std::size_t const & srcRow0
-			, std::size_t const & srcCol0
-			) const
-		{
-			return ras::RowCol
-				{ unsignedIndexFor(srcRow0, theRelRow)
-				, unsignedIndexFor(srcCol0, theRelCol)
-				};
-		}
-
-		//! True if this and other instances have identical relative indices.
-		inline
-		bool
-		operator==
-			( RelRC const & other
-			) const
-		{
-			return
-				(  (theRelRow == other.theRelRow)
-				&& (theRelCol == other.theRelCol)
-				);
-		}
-
-	}; // RelRC
-
 	/*! \brief Collection or RelRC instances that line close to a circle
 	 *
 	 * The RelRC instances represent row-offsets and column-offsets
@@ -124,7 +70,7 @@ namespace ops
 	 * collection of RelRC defines a circle relative to the filter center.
 	 */
 	inline
-	std::vector<RelRC>
+	std::vector<ras::RelRC>
 	annularRelRCs
 		( std::size_t const & halfSize
 			/*!< Radius of annular filter to apply
@@ -140,7 +86,7 @@ namespace ops
 			 */
 		)
 	{
-		std::vector<RelRC> relRCs{};
+		std::vector<ras::RelRC> relRCs{};
 
 		// perimeter should be 2*pi*r < 7*r,
 		// but allow for duplicates during initial compuation
@@ -158,7 +104,7 @@ namespace ops
 		{
 			img::Spot const spot
 				{ rad*std::cos(angle), rad*std::sin(angle) };
-			RelRC const relRC
+			ras::RelRC const relRC
 				{ static_cast<int>(std::floor(.5 + spot[0]))
 				, static_cast<int>(std::floor(.5 + spot[1]))
 				};
@@ -174,12 +120,12 @@ namespace ops
 		}
 
 		// fill second quadrant with reverse symmetry
-		using Iter = std::vector<RelRC>::const_reverse_iterator;
+		using Iter = std::vector<ras::RelRC>::const_reverse_iterator;
 		Iter const endQtr{ relRCs.crend() };
 		for (Iter iter{relRCs.crbegin()} ; endQtr != iter ; ++iter)
 		{
-			RelRC const & relRC = *iter;
-			RelRC const negRC{ -relRC.theRelRow,  relRC.theRelCol };
+			ras::RelRC const & relRC = *iter;
+			ras::RelRC const negRC{ -relRC.theRelRow,  relRC.theRelCol };
 			relRCs.emplace_back(negRC);
 		}
 
@@ -187,19 +133,19 @@ namespace ops
 		std::size_t const halfEnd{ relRCs.size() - 1u };
 		for (std::size_t nn{0u} ; nn < halfEnd ; ++nn)
 		{
-			RelRC const & relRC = relRCs[nn];
-			RelRC const negRC{ -relRC.theRelRow, -relRC.theRelCol };
+			ras::RelRC const & relRC = relRCs[nn];
+			ras::RelRC const negRC{ -relRC.theRelRow, -relRC.theRelCol };
 			relRCs.emplace_back(negRC);
 		}
 
 		// remove duplicate entries
-		std::vector<RelRC>::iterator const newEnd
+		std::vector<ras::RelRC>::iterator const newEnd
 			{ std::unique(relRCs.begin(), relRCs.end()) };
 		relRCs.resize(std::distance(relRCs.begin(), newEnd));
 
 		/*
 		std::cout << "relRCs.size(): " << relRCs.size() << '\n';
-		for (RelRC const & relRC : relRCs)
+		for (ras::RelRC const & relRC : relRCs)
 		{
 			std::cout << "relRC:"
 				<< ' ' << relRC.theRelRow
@@ -251,7 +197,7 @@ namespace ops
 		float theSrcFullRange{};
 
 		int const theHalfFilterSize{};
-		std::vector<RelRC> theRelRCs{};
+		std::vector<ras::RelRC> theRelRCs{};
 		std::size_t const theHalfRingSize{ 0u };
 
 		static constexpr std::size_t theMinPosNeg{ 1u };
@@ -444,10 +390,10 @@ namespace ops
 				std::size_t ndx2{ ndx1 + theHalfRingSize };
 
 				// access radially opposite ring source values
-				RelRC const & relRC1 = theRelRCs[ndx1];
+				ras::RelRC const & relRC1 = theRelRCs[ndx1];
 				float const & srcVal1 = srcGrid(relRC1.srcRowCol(row, col));
 
-				RelRC const & relRC2 = theRelRCs[ndx2];
+				ras::RelRC const & relRC2 = theRelRCs[ndx2];
 				float const & srcVal2 = srcGrid(relRC2.srcRowCol(row, col));
 
 				if (pix::isValid(srcVal1) && pix::isValid(srcVal2))

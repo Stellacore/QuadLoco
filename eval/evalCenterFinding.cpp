@@ -34,6 +34,7 @@
 #include "io.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
+#include "opsCenterRefiner.hpp"
 #include "rasGrid.hpp"
 #include "rasPeakRCV.hpp"
 #include "simConfig.hpp"
@@ -164,8 +165,8 @@ namespace sim
 			}
 		};
 
-	static TrialSpec const sUseTrialSpec{ sTrialSmall };
-//	static TrialSpec const sUseTrialSpec{ sTrial5k };
+//	static TrialSpec const sUseTrialSpec{ sTrialSmall };
+	static TrialSpec const sUseTrialSpec{ sTrial5k };
 
 
 	//
@@ -749,15 +750,16 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 		std::shared_ptr<Outcome> ptOutcome;
 		if (ptTrial)
 		{
+			ras::Grid<float> const & srcGrid = ptTrial->srcGrid();
 			std::vector<ras::PeakRCV> const peaks
-				{ app::multiSymRingPeaks
-					(ptTrial->srcGrid(), sAppRingHalfSizes)
-				};
+				{ app::multiSymRingPeaks(srcGrid, sAppRingHalfSizes) };
 
 			img::Spot gotCenter{};
 			if (! peaks.empty())
 			{
-				gotCenter = cast::imgSpot(peaks.front().theRowCol);
+				ras::RowCol const & nomCenterRC = peaks.front().theRowCol;
+				ops::CenterRefiner const refiner(&srcGrid);
+				gotCenter = refiner.fitSpotNear(nomCenterRC);
 			}
 			ptOutcome = std::make_shared<Outcome>(ptTrial, gotCenter);
 		}
