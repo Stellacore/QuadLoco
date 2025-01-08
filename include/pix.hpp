@@ -42,7 +42,7 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced functions and utilities for individual pixel elements.
+/*! \brief Raster picture element related code in namespace quadloco::pix
  */
 namespace pix
 {

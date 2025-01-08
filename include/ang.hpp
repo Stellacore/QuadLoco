@@ -43,7 +43,7 @@
 namespace quadloco
 {
 
-/*! \brief Angle related function namespace quadloco::ang
+/*! \brief Angle related code in namespace quadloco::ang
  */
 namespace ang
 {

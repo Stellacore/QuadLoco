@@ -38,7 +38,7 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced functions and utilities for object space items
+/*! \brief 3D (e.g. "object space") related code in namespace quadloco::obj
  */
 namespace obj
 {

@@ -38,7 +38,7 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced functions for working with (perspective) image geometries
+/*! \brief 2D (e.g. "image space") geometry support in namespace quadloco::img
  */
 namespace img
 {

@@ -48,7 +48,7 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced functions and utilities for supporting Input/Output.
+/*! \brief Data Input/Output related code in namespace quadloco::io
  */
 namespace io
 {

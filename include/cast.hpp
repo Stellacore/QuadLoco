@@ -43,7 +43,8 @@
 namespace quadloco
 {
 
-//! \brief Namespace for casting operations between data types
+/*! \brief Casting operations code in namespace quadloco::cast
+ */
 namespace cast
 {
 	//

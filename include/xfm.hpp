@@ -38,7 +38,7 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced functions and utilities for transformation of data
+/*! \brief Transformation (geometric) related code in namespace quadloco::xfm
  */
 namespace xfm
 {

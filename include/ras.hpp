@@ -38,7 +38,7 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced data for raster grid representations
+/*! \brief Raster grid (aka image) related code in namespace quadloco::ras
  */
 namespace ras
 {
