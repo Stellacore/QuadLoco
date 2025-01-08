@@ -159,7 +159,8 @@ namespace
 		quadloco::sig::QuadTarget const imgQuad{ render.sigQuadTarget() };
 
 		// note min/max pixel values (e.g. useful for normalizing radiometry)
-		quadloco::img::Span const fSpan{ quadloco::pix::fullSpanFor(fGrid) };
+		quadloco::img::Span const fSpan
+			{ quadloco::ras::grid::fullSpanFor(fGrid) };
 
 		// [DoxyExample01]
 

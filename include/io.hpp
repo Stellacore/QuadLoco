@@ -33,6 +33,7 @@
 
 
 #include "pix.hpp"
+#include "rasgrid.hpp"
 #include "rasGrid.hpp"
 
 #include <Engabra>
@@ -256,10 +257,10 @@ namespace io
 		)
 	{
 		// compute spanning range of radiometry values
-		img::Span const fSpan{ pix::fullSpanFor(fGrid) };
+		img::Span const fSpan{ ras::grid::fullSpanFor(fGrid) };
 
 		// stretch/compress fGrid values to fit into uGrid
-		ras::Grid<uint8_t> const uGrid{ pix::uGrid8(fGrid, fSpan) };
+		ras::Grid<uint8_t> const uGrid{ ras::grid::uGrid8(fGrid, fSpan) };
 
 		// write resulting uGrid
 		return io::writePGM(pgmPath, uGrid);

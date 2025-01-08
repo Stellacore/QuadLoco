@@ -33,7 +33,6 @@
 
 
 #include "imgSpan.hpp"
-#include "rasGrid.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -43,7 +42,7 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced functions and utilities for pixel (ras::Grid) elements.
+/*! \brief Namespaced functions and utilities for individual pixel elements.
  */
 namespace pix
 {
@@ -123,62 +122,6 @@ namespace pix
 		return (std::isnormal(fpix) || (0. == fpix));
 	}
 
-	//! Min/Max values from a collection with only isValid() inputs considered
-	template <typename FwdIter, typename PixType = float>
-	inline
-	std::pair<PixType, PixType>
-	validMinMax
-		( FwdIter const & beg
-		, FwdIter const & end
-		)
-	{
-		using namespace quadloco;
-		std::pair<PixType, PixType> minmax
-			{ std::numeric_limits<PixType>::quiet_NaN()
-			, std::numeric_limits<PixType>::quiet_NaN()
-			};
-		if (beg != end)
-		{
-			PixType & min = minmax.first;
-			PixType & max = minmax.second;
-			for (FwdIter iter{beg} ; end != iter ; ++iter)
-			{
-				PixType const & pixVal = *iter;
-				if (isValid(pixVal))
-				{
-					if ((! isValid(min)) || (pixVal < min))
-					{
-						min = pixVal;
-					}
-					if ((! isValid(max)) || (max < pixVal))
-					{
-						max = pixVal;
-					}
-				}
-			}
-		}
-		return minmax;
-	}
-
-	//! Span with begin/end at smallest/largest (valid) values in fGrid
-	template <typename PixType>
-	inline
-	img::Span
-	fullSpanFor
-		( ras::Grid<PixType> const & fGrid
-		)
-	{
-		std::pair<PixType, PixType> const fMinMax
-			{ validMinMax(fGrid.cbegin(), fGrid.cend()) };
-		PixType const & fMin = fMinMax.first;
-		// bump max by a tiny amount so that largest value *is* included
-		PixType const & fMax = fMinMax.second;
-		PixType const delta{ fMax - fMin };
-		constexpr PixType eps{ std::numeric_limits<PixType>::epsilon() };
-		PixType const useMax{ fMax * (1.f + delta * eps) };
-		return quadloco::img::Span{ (double)fMin, (double)useMax };
-	}
-
 	/*! uint8_t value corresponding to fpix value within fSpan range
 	 *
 	 * Returned upix values are mapped as
@@ -223,28 +166,6 @@ namespace pix
 			}
 		}
 		return upix;
-	}
-
-	/*! \brief A uint8_t grid that maps fgrid values via fSpan range.
-	 *
-	 * ref uPix8() for details on value mapping.
-	 */
-	inline
-	ras::Grid<uint8_t>
-	uGrid8
-		( ras::Grid<fpix_t> const & fgrid
-		, img::Span const & fSpan
-		)
-	{
-		ras::Grid<uint8_t> ugrid{ fgrid.hwSize() };
-
-		ras::Grid<fpix_t>::const_iterator itIn{ fgrid.cbegin() };
-		ras::Grid<uint8_t>::iterator itOut{ ugrid.begin() };
-		while (ugrid.end() != itOut)
-		{
-			*itOut++ = uPix8(*itIn++, fSpan);
-		}
-		return ugrid;
 	}
 
 
