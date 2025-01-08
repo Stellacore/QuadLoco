@@ -34,7 +34,6 @@
 
 #include "imgSpot.hpp"
 #include "imgVector.hpp"
-#include "rasSizeHW.hpp"
 
 #include <Engabra>
 
@@ -65,11 +64,16 @@ namespace img
 		static
 		Circle
 		circumScribing
-			( ras::SizeHW const & hwSize
+			( std::size_t const & high
+			, std::size_t const & wide
 			)
 		{
-			img::Spot const center{ hwSize.centerSpot() };
-			double const radius{ .5*hwSize.diagonal() };
+			img::Spot const corner
+				{ static_cast<double>(high)
+				, static_cast<double>(wide)
+				};
+			img::Spot const center{ .5 * corner };
+			double const radius{ .5 * magnitude(corner) };
 			return Circle{ center, radius };
 		}
 

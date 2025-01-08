@@ -86,7 +86,9 @@ namespace
 
 			// expected configuration
 			img::Circle const boundingCircle
-				{ img::Circle::circumScribing(gradGrid.hwSize()) };
+				{ img::Circle::circumScribing
+					(gradGrid.high(), gradGrid.wide())
+				};
 			sig::ParmAD const expMaxAD
 				{ sig::ParmAD::from(expEdgel, boundingCircle) };
 
