@@ -47,7 +47,7 @@
 #include <vector>
 
 
-/*! \brief Experiment with point of symmetry metrics
+/*! \brief Load PGM file, run ops::SymRing filter, and save results.
 */
 int
 main

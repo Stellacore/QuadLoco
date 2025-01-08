@@ -31,7 +31,6 @@
 #include "io.hpp"
 #include "opsgrid.hpp"
 #include "rasGrid.hpp"
-#include "sigutil.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -43,7 +42,7 @@ namespace quadloco
 } // [quadloco]
 
 
-/*! \brief Application: load PGM, find quad center, and save with center spot.
+/*! \brief Demonstrate application of filter using ras:: ops:: capabilities.
 */
 int
 main
@@ -74,7 +73,7 @@ main
 	ras::Grid<float> const softGrid
 		{ ops::grid::smoothGridFor<float>(useGrid, 5u, 2.5) };
 
-	// create filtered image
+	// create filtered image (here SSD)
 	ras::SizeHW const hwBox{ 5u, 5u };
 	ras::Grid<float> const outGrid
 		{ ops::grid::sumSquareDiffGridFor<float>(softGrid, hwBox) };
