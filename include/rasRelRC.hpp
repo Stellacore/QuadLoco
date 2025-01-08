@@ -46,7 +46,7 @@ namespace quadloco
 namespace ras
 {
 
-	// Relative row/col position (wrt 'active' filter center pixel)
+	//! \brief Relative row/col position (wrt an 'active' filter center pixel)
 	struct RelRC
 	{
 		// offsets relative to filter center
