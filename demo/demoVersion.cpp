@@ -36,7 +36,7 @@
 /*! \brief Demonstrate access to project and source identifying information.
  *
  * Example:
- * \snippet demo_version.cpp DoxyExample01
+ * \snippet demoVersion.cpp DoxyExample01
  */
 int
 main

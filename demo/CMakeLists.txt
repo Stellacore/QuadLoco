@@ -26,14 +26,10 @@ set(ProgNames
 
 	# _  # template for demo programs
 
-	demo_version
+	demoVersion
 
 	demoEdgeDirAD
-	demoEvalSamples
-	demoFilter
-	demoFinder
-	demoPGM
-	demoSymmetry
+	demoEdgeEval
 
 	)
 

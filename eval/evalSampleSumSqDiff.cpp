@@ -53,7 +53,7 @@ main
 	if (! (2 < argc))
 	{
 		std::cerr << '\n';
-		std::cerr << "Run quad center detection on input PGM file\n";
+		std::cerr << "Run sum-sq-diff filter on input PGM file\n";
 		std::cerr << '\n';
 		std::cerr << "Usage: <progname> <InputPGM> <OutputPGM>\n";
 		std::cerr << '\n';

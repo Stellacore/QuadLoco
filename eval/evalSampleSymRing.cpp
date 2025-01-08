@@ -58,7 +58,7 @@ main
 	if (! (2 < argc))
 	{
 		std::cerr << '\n';
-		std::cerr << "Run signal symmetry filter on input PGM file\n";
+		std::cerr << "Run symmetry ring (SymRing) filter on input PGM file\n";
 		std::cerr << '\n';
 		std::cerr << "Usage: <progname> <InputPGM> <OutputPGM>\n";
 		std::cerr << '\n';
@@ -118,6 +118,8 @@ main
 	std::cout
 		<< "loadPath: " << loadPath << '\n'
 		<< "    grid: " << loadGrid << '\n';
+	std::cout
+		<< "ringSize: " << ringHalfSize << '\n';
 	std::cout
 		<< "savePath: " << savePath << '\n'
 		<< "    grid: " << saveGrid << '\n';
