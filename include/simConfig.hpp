@@ -32,11 +32,10 @@
  */
 
 
-#include "cast.hpp"
-#include "imgChipSpec.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "opsFence.hpp"
+#include "rasChipSpec.hpp"
 #include "rasSizeHW.hpp"
 
 #include <Rigibra>
@@ -103,14 +102,14 @@ namespace sim
 			( img::Spot const & spotOnTgt
 			) const
 		{
-			engabra::g3::Vector const pntInTgt{ cast::engVector(spotOnTgt) };
+			engabra::g3::Vector const pntInTgt{ spotOnTgt[0], spotOnTgt[1] };
 			engabra::g3::Vector const pntInCam{ theStaWrtQuad(pntInTgt) };
 			return theCamera.detectorSpotFor(pntInCam);
 		}
 
 		//! \brief Sub region of grid that containing entire quad image
 		inline
-		img::ChipSpec
+		ras::ChipSpec
 		chipSpecForQuad
 			( std::size_t const & pad
 				//!< Expand chip from quad corners by this much extra
@@ -161,7 +160,7 @@ namespace sim
 				{ static_cast<std::size_t>(std::floor(dRowMax - dRowMin))
 				, static_cast<std::size_t>(std::floor(dColMax - dColMin))
 				};
-			return img::ChipSpec{ rc0, hwSize };
+			return ras::ChipSpec{ rc0, hwSize };
 		}
 
 		//! Viewing obj::QuadTarget face-on exactly filling camera format

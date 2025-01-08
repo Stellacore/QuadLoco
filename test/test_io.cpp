@@ -30,7 +30,9 @@
 
 #include "io.hpp"
 #include "pix.hpp"
+#include "rasgrid.hpp"
 #include "rasGrid.hpp"
+#include "valSpan.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -58,10 +60,10 @@ namespace
 		fGrid(1, 0) =  1.25;
 		fGrid(1, 1) =  1.50;
 		fGrid(1, 2) =  1.75;
-		img::Span const fSpan{ -2., 2. };
+		val::Span const fSpan{ -2., 2. };
 
 		// convert to classic uint8_t image
-		ras::Grid<uint8_t> const uGridExp{ pix::uGrid8(fGrid, fSpan) };
+		ras::Grid<uint8_t> const uGridExp{ ras::grid::uGrid8(fGrid, fSpan) };
 
 		// write to PGM file
 //		std::filesystem::path tmpFnamePgm("/tmp/quadloco_test_io.pgm");

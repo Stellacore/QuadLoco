@@ -39,7 +39,7 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced functions and utilities for probabilty computations
+/*! \brief Probability and statistics related code in namespace quadloco::prb
  */
 namespace prb
 {

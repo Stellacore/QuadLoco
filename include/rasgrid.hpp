@@ -32,11 +32,18 @@
  */
 
 
-#include "imgChipSpec.hpp"
+#include "pix.hpp"
+
+#include "imgArea.hpp"
 #include "imgGrad.hpp"
 #include "imgSpot.hpp"
 #include "pix.hpp"
+#include "rasChipSpec.hpp"
 #include "rasGrid.hpp"
+#include "rasRowCol.hpp"
+#include "valSpan.hpp"
+
+#include <Engabra> // TODO - temp
 
 #include <algorithm>
 #include <cmath>
@@ -158,13 +165,216 @@ namespace grid
 		fillLastRows(beg, hwSize, nPad, value);
 	}
 
+	//! Iterators to (not null) min/max *valid* elements in collection
+	template <typename Iter>
+	inline
+	std::pair<Iter, Iter>
+	minmax_valid
+		( Iter const & beg
+		, Iter const & end
+		)
+	{
+		std::pair<Iter, Iter> itPair{ end, end };
+		Iter & itMin = itPair.first;
+		Iter & itMax = itPair.second;
+		using ValType = typename std::iterator_traits<Iter>::value_type;
+		ValType min{ pix::null<ValType>() };
+		ValType max{ pix::null<ValType>() };
+		for (Iter iter{beg} ; end != iter ; ++iter)
+		{
+			ValType const & value = *iter;
+			if (pix::isValid(value))
+			{
+				bool setMin{ false };
+				// track min
+				if (pix::isValid(min))
+				{
+					setMin = (value < min);
+				}
+				else
+				{
+					setMin = true;
+				}
+				if (setMin)
+				{
+					min = value;
+					itMin = iter;
+				}
+
+				// track max
+				bool setMax{ false };
+				if (pix::isValid(max))
+				{
+					setMax = (max < value);
+				}
+				else
+				{
+					setMax = true;
+				}
+				if (setMax)
+				{
+					max = value;
+					itMax = iter;
+				}
+			}
+		}
+		return itPair;
+	}
+
+	//! Min/Max values from a collection with only isValid() inputs considered
+	template <typename FwdIter, typename PixType = float>
+	inline
+	std::pair<PixType, PixType>
+	validMinMaxValues
+		( FwdIter const & beg
+		, FwdIter const & end
+		)
+	{
+		std::pair<PixType, PixType> minmax
+			{ pix::null<PixType>(), pix::null<PixType>() };
+		std::pair<FwdIter, FwdIter> const itPair{ minmax_valid(beg, end) };
+		FwdIter const & itMin = itPair.first;
+		FwdIter const & itMax = itPair.second;
+		if ((end != itMin) && (end != itMax))
+		{
+			minmax.first = *itMin;
+			minmax.second = *itMax;
+		}
+		return minmax;
+	}
+
+	//! Span with begin/end at smallest/largest (valid) values in fGrid
+	template <typename PixType>
+	inline
+	val::Span
+	fullSpanFor
+		( ras::Grid<PixType> const & fGrid
+		)
+	{
+		std::pair<PixType, PixType> const fMinMax
+			{ validMinMaxValues(fGrid.cbegin(), fGrid.cend()) };
+		PixType const & fMin = fMinMax.first;
+		// bump max by a tiny amount so that largest value *is* included
+		PixType const & fMax = fMinMax.second;
+		PixType const delta{ fMax - fMin };
+		constexpr PixType eps{ std::numeric_limits<PixType>::epsilon() };
+		PixType const useMax{ fMax * (1.f + delta * eps) };
+		return quadloco::val::Span{ (double)fMin, (double)useMax };
+	}
+
+	//! \brief Convert grid elements to float
+	template <typename PixType>
+	inline
+	ras::Grid<PixType>
+	realGridOf
+		( ras::Grid<uint8_t> const & uGrid
+			//!< Input source grid
+		, int const & treatAsNull = -1
+			//!< If value in range [0,255], then corresponding output is null
+		)
+	{
+		typename ras::Grid<PixType> fGrid(uGrid.hwSize());
+		ras::Grid<uint8_t>::const_iterator inIter{ uGrid.cbegin() };
+		typename ras::Grid<PixType>::iterator outIter{ fGrid.begin() };
+		while (uGrid.cend() != inIter)
+		{
+			uint8_t const & inVal = *inIter;
+			PixType rtVal{ static_cast<PixType>(inVal) };
+			bool const checkForNull{ ! (treatAsNull < 0) };
+			if (checkForNull)
+			{
+				if (treatAsNull == inVal)
+				{
+					rtVal = std::numeric_limits<PixType>::quiet_NaN();
+				}
+			}
+			*outIter = rtVal;
+			inIter++;
+			outIter++;
+		}
+		return fGrid;
+	}
+
+	//! \brief A Larger grid produced with (nearest neighbor) up sampling.
+	template <typename PixType>
+	inline
+	ras::Grid<PixType>
+	largerGrid
+		( ras::Grid<PixType> const & inGrid
+		, std::size_t const & upFactor
+		)
+	{
+		ras::Grid<PixType> upGrid
+			( upFactor * inGrid.high()
+			, upFactor * inGrid.wide()
+			);
+		for (std::size_t inRow{0u} ; inRow < inGrid.high() ; ++inRow)
+		{
+			std::size_t const outRow0{ upFactor * inRow };
+			for (std::size_t inCol{0u} ; inCol < inGrid.wide() ; ++inCol)
+			{
+				std::size_t const outCol0{ upFactor * inCol };
+				for (std::size_t wRow{0u} ; wRow < upFactor ; ++wRow)
+				{
+					std::size_t const outRow{ outRow0 + wRow };
+					for (std::size_t wCol{0u} ; wCol < upFactor ; ++wCol)
+					{
+						std::size_t const outCol{ outCol0 + wCol };
+						upGrid(outRow, outCol) = inGrid(inRow, inCol);
+					}
+				}
+			}
+		}
+		return upGrid;
+	}
+
+	//! \brief Grid result of applying function to each input cell
+	template <typename Func>
+	inline
+	ras::Grid<float>
+	resultGridFor
+		( ras::Grid<img::Grad> const & gradGrid
+		, Func const & funcOfGrad
+		)
+	{
+		ras::Grid<float> outGrid(gradGrid.hwSize());
+		std::transform
+			( gradGrid.cbegin(), gradGrid.cend()
+			, outGrid.begin()
+			, funcOfGrad
+			);
+		return outGrid;
+	}
+
+	/*! \brief A uint8_t grid that maps fgrid values via fSpan range.
+	 *
+	 * ref uPix8() for details on value mapping.
+	 */
+	inline
+	ras::Grid<uint8_t>
+	uGrid8
+		( ras::Grid<float> const & fgrid
+		, val::Span const & fSpan
+		)
+	{
+		ras::Grid<uint8_t> ugrid{ fgrid.hwSize() };
+
+		ras::Grid<float>::const_iterator itIn{ fgrid.cbegin() };
+		ras::Grid<uint8_t>::iterator itOut{ ugrid.begin() };
+		while (ugrid.end() != itOut)
+		{
+			*itOut++ = pix::uPix8(*itIn++, fSpan);
+		}
+		return ugrid;
+	}
+
 	//! Set pixels in full image that correspond with chip spec region
 	template <typename Type>
 	inline
 	void
 	setSubGridValues
 		( ras::Grid<Type> * const & ptFull
-		, img::ChipSpec const & chipSpec
+		, ras::ChipSpec const & chipSpec
 		, Type const & value
 		)
 	{
@@ -192,7 +402,7 @@ namespace grid
 	{
 		bool okay{ false };
 		ras::SizeHW const hwChip{ chipData.hwSize() };
-		img::ChipSpec const chipSpec{ rc0, hwChip };
+		ras::ChipSpec const chipSpec{ rc0, hwChip };
 		okay = ptFullData && chipSpec.fitsInto(ptFullData->hwSize());
 		if (okay)
 		{
@@ -218,7 +428,7 @@ namespace grid
 	ras::Grid<Type>
 	subGridValuesFrom
 		( ras::Grid<Type> const & fullGrid
-		, img::ChipSpec const & chipSpec
+		, ras::ChipSpec const & chipSpec
 		)
 	{
 		ras::Grid<Type> values;
@@ -239,6 +449,54 @@ namespace grid
 			}
 		}
 		return values;
+	}
+
+	//! Draw a (bright on black) radiometric mark at spot
+	template <typename PixType>
+	inline
+	void
+	drawSpot
+		( ras::Grid<PixType> * const & ptGrid
+		, img::Spot const & spot
+		)
+	{
+		if (ptGrid && (2u < ptGrid->high()) && (2u < ptGrid->wide()))
+		{
+			ras::Grid<PixType> & grid = *ptGrid;
+
+			// find min max
+			using InIt = ras::Grid<PixType>::const_iterator;
+			std::pair<InIt, InIt> const iterMM
+				{ minmax_valid(grid.cbegin(), grid.cend()) };
+			PixType const min{ *(iterMM.first) };
+			PixType const max{ *(iterMM.second) };
+
+			// boundary clipping
+			img::Area const clipArea
+				{ val::Span{ 1., (double)(ptGrid->high() - 1u) }
+				, val::Span{ 1., (double)(ptGrid->wide() - 1u) }
+				};
+
+			PixType const & back = min;
+			PixType const & fore = max;
+			if (clipArea.contains(spot))
+			{
+				ras::RowCol const rc0
+					{ static_cast<std::size_t>(std::floor(spot[0]))
+					, static_cast<std::size_t>(std::floor(spot[1]))
+					};
+				grid(rc0.row() - 1u, rc0.col() - 1u) = back;
+				grid(rc0.row() - 1u, rc0.col()     ) = back;
+				grid(rc0.row() - 1u, rc0.col() + 1u) = back;
+				grid(rc0.row()     , rc0.col() - 1u) = back;
+				grid(rc0.row()     , rc0.col()     ) = fore;
+				grid(rc0.row()     , rc0.col() + 1u) = back;
+				grid(rc0.row() + 1u, rc0.col() - 1u) = back;
+				grid(rc0.row() + 1u, rc0.col()     ) = back;
+				grid(rc0.row() + 1u, rc0.col() + 1u) = back;
+			}
+		}
+
 	}
 
 	/*! Value interpolated at location within grid using bilinear model.

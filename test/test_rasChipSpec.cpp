@@ -28,7 +28,7 @@
 */
 
 
-#include "imgChipSpec.hpp"
+#include "rasChipSpec.hpp"
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
 
@@ -113,9 +113,9 @@ namespace
 		ras::RowCol const origOut1{ 4u, 7u }; // most right/bottom that fits
 		ras::RowCol const origOut2{ 3u, 8u }; // most right/bottom that fits
 
-		img::ChipSpec const specIsIn{ origIsIn, chipSizeHW };
-		img::ChipSpec const specOut1{ origOut1, chipSizeHW };
-		img::ChipSpec const specOut2{ origOut2, chipSizeHW };
+		ras::ChipSpec const specIsIn{ origIsIn, chipSizeHW };
+		ras::ChipSpec const specOut1{ origOut1, chipSizeHW };
+		ras::ChipSpec const specOut2{ origOut2, chipSizeHW };
 
 		bool const okayIsIn{ specIsIn.fitsInto(fullSizeHW) };
 		if (! okayIsIn)
@@ -163,7 +163,7 @@ namespace
 		// define a chip with which to access a sub area
 		quadloco::ras::RowCol const chipRC{ 1000u, 2000u };
 		quadloco::ras::SizeHW const chipHW{ 40u, 60u };
-		quadloco::img::ChipSpec const chipSpec{ chipRC, chipHW };
+		quadloco::ras::ChipSpec const chipSpec{ chipRC, chipHW };
 
 		// full pixel access via chipSpec index lookup
 		// use chip for read cell access from the underlying full image
@@ -222,7 +222,7 @@ namespace
 		// specify a chip raster relative to the full size grid
 		quadloco::ras::RowCol const chipRC{ 3u, 8u }; // starting here
 		quadloco::ras::SizeHW const chipHW{ 4u, 6u }; // of this size
-		quadloco::img::ChipSpec const chipSpec{ chipRC, chipHW };
+		quadloco::ras::ChipSpec const chipSpec{ chipRC, chipHW };
 
 		// true if chip fits inside full size
 		bool const isContained{ chipSpec.fitsInto(fullHW) };
@@ -302,7 +302,7 @@ namespace
 		// specify a chip raster relative to the full size grid
 		quadloco::ras::RowCol const chipRC{ 3u, 8u }; // starting here
 		quadloco::ras::SizeHW const chipHW{ 4u, 6u }; // of this size
-		quadloco::img::ChipSpec const chipSpec{ chipRC, chipHW };
+		quadloco::ras::ChipSpec const chipSpec{ chipRC, chipHW };
 
 		// true if chip fits inside full size
 		bool const isContained{ chipSpec.fitsInto(fullHW) };

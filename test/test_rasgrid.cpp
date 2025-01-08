@@ -31,9 +31,9 @@
 #include "rasgrid.hpp"
 #include "opsgrid.hpp" // /TODO remove
 
-#include "imgChipSpec.hpp"
 #include "imgGrad.hpp"
 #include "pix.hpp"
+#include "rasChipSpec.hpp"
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
 
@@ -143,7 +143,7 @@ namespace
 		quadloco::img::Grad const tbExpGrad{ 10./edgeSize, 0. };
 
 		// Use ChipSpec to set right half foreground for vertical edge grid
-		quadloco::img::ChipSpec const lrFillSpec
+		quadloco::ras::ChipSpec const lrFillSpec
 			{ quadloco::ras::RowCol{ 0u, lrPixels.wide()/2u }
 			, quadloco::ras::SizeHW{ lrPixels.high(), lrPixels.wide()/2u }
 			};
@@ -336,6 +336,59 @@ namespace
 		}
 	}
 
+	//! check min,max finding
+	void
+	test3
+		( std::ostream & oss
+		)
+	{
+		using namespace quadloco;
+
+		ras::Grid<double> const aNull{};
+		using ItInt = ras::Grid<double>::const_iterator;
+		std::pair<ItInt, ItInt> const itMM
+			{ ras::grid::minmax_valid(aNull.cbegin(), aNull.cend()) };
+		if (! ((aNull.cend() == itMM.first) && (aNull.cend() == itMM.second)))
+		{
+			oss << "Failure of aNull minmax_valid test\n";
+		}
+
+		// [DoxyExample06]
+
+		constexpr float fNan{ std::numeric_limits<float>::quiet_NaN() };
+
+		ras::Grid<float> fGrid(3u, 3u);
+		std::fill(fGrid.begin(), fGrid.end(), fNan);
+		float const expMin{ -3.f };
+		float const expMax{  5.f };
+		fGrid(1u, 2u) = expMin;
+		fGrid(1u, 1u) = .5f*(expMin + expMax);
+		fGrid(2u, 2u) = expMax;
+
+		using ItFlt = ras::Grid<float>::const_iterator;
+		std::pair<ItFlt, ItFlt> const itPair
+			{ ras::grid::minmax_valid(fGrid.cbegin(), fGrid.cend()) };
+		float gotMin{ fNan };
+		float gotMax{ fNan };
+		if ((fGrid.cend() != itPair.first) && (fGrid.cend() != itPair.second))
+		{
+			gotMin = *(itPair.first);
+			gotMax = *(itPair.second);
+		}
+
+		// [DoxyExample06]
+
+		// compare should be exact (no computations, just copies)
+		if (! ((gotMin == expMin) && (gotMax == expMax)))
+		{
+			oss << "Failure of fGrid minmax_valid test\n";
+			oss << "expMin: " << expMin << '\n';
+			oss << "expMax: " << expMax << '\n';
+			oss << "gotMin: " << gotMin << '\n';
+			oss << "gotMax: " << gotMax << '\n';
+		}
+
+	}
 }
 
 //! Standard test case main wrapper
@@ -349,6 +402,7 @@ main
 	test0(oss);
 	test1(oss);
 	test2(oss);
+	test3(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

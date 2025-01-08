@@ -24,53 +24,30 @@
 
 
 /*! \file
-\brief Program to inspect PGM file
+\brief Demonstration program to display version information
 */
 
 
-#include "io.hpp"
-#include "rasGrid.hpp"
-#include "sigutil.hpp"
+#include "QuadLoco"
 
-#include <filesystem>
 #include <iostream>
 
 
-namespace quadloco
-{
-} // [quadloco]
-
-
-/*! \brief Read PGM file header and data size
-*/
+/*! \brief Demonstrate access to project and source identifying information.
+ *
+ * Example:
+ * \snippet demoVersion.cpp DoxyExample01
+ */
 int
 main
-	( int argc
-	, char * argv[]
-	)
+	()
 {
-	if (! (1 < argc))
-	{
-		std::cerr << '\n';
-		std::cerr << "Report information about a PGM file\n";
-		std::cerr << '\n';
-		std::cerr << "Usage: <progname> <InputPGM>\n";
-		std::cerr << '\n';
-		return 1;
-	}
-	std::size_t ndx{ 1u };
-	std::filesystem::path const srcPath(argv[ndx++]);
-
-	using namespace quadloco;
-
-	// load image
-	ras::Grid<std::uint8_t> const srcGrid{ io::readPGM(srcPath) };
-
-	// report size info
-	std::cout << "srcGrid: " << srcGrid << '\n';
-//	std::cout << srcGrid.infoStringContents("srcGrid:", "%4d") << '\n';
-
-	return 0;
+	// [DoxyExample01]
+	std::cout
+		<< "From " << __FILE__ << '\n'
+		<< "Project Version is: " << quadloco::projectVersion() << '\n'
+		<< "Source Identity is: " << quadloco::sourceIdentity() << '\n'
+		;
+	// [DoxyExample01]
 }
-
 

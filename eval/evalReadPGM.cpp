@@ -24,14 +24,12 @@
 
 
 /*! \file
-\brief Contains example application demoFilter
+\brief Program to inspect PGM file
 */
 
 
 #include "io.hpp"
-#include "opsgrid.hpp"
 #include "rasGrid.hpp"
-#include "sigutil.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -39,11 +37,10 @@
 
 namespace quadloco
 {
-
 } // [quadloco]
 
 
-/*! \brief Application: load PGM, find quad center, and save with center spot.
+/*! \brief Read PGM file header and data size
 */
 int
 main
@@ -51,49 +48,28 @@ main
 	, char * argv[]
 	)
 {
-	if (! (2 < argc))
+	if (! (1 < argc))
 	{
 		std::cerr << '\n';
-		std::cerr << "Run quad center detection on input PGM file\n";
+		std::cerr << "Report information about a PGM file\n";
 		std::cerr << '\n';
-		std::cerr << "Usage: <progname> <InputPGM> <OutputPGM>\n";
+		std::cerr << "Usage: <progname> <InputPGM>\n";
 		std::cerr << '\n';
 		return 1;
 	}
 	std::size_t ndx{ 1u };
 	std::filesystem::path const srcPath(argv[ndx++]);
-	std::filesystem::path const outPath(argv[ndx++]);
 
 	using namespace quadloco;
 
 	// load image
 	ras::Grid<std::uint8_t> const srcGrid{ io::readPGM(srcPath) };
-	ras::Grid<float> const useGrid{ sig::util::toFloat(srcGrid, 0) };
 
-	// smooth source signal
-	ras::Grid<float> const softGrid
-		{ ops::grid::smoothGridFor<float>(useGrid, 5u, 2.5) };
-
-	// create filtered image
-	ras::SizeHW const hwBox{ 5u, 5u };
-	ras::Grid<float> const outGrid
-		{ ops::grid::sumSquareDiffGridFor<float>(softGrid, hwBox) };
-
-	// save (enlarged) image with center drawn
-	bool const okaySave{ io::writeStretchPGM(outPath, outGrid) };
-
-	std::cout << '\n';
-	std::cout << "load : " << srcPath << ' ' << srcGrid << '\n';
-	std::cout << "save : " << outPath << ' ' << outGrid << '\n';
-	std::cout << "okaySave: " << okaySave << '\n';
-	std::cout << '\n';
+	// report size info
+	std::cout << "srcGrid: " << srcGrid << '\n';
+//	std::cout << srcGrid.infoStringContents("srcGrid:", "%4d") << '\n';
 
 	return 0;
 }
-
-
-
-
-
 
 

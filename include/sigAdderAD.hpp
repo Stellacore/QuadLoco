@@ -27,18 +27,19 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::ops::AdderAD
+ * \brief Declarations for quadloco::sig::AdderAD
  *
  */
 
 
-#include "imgSpan.hpp"
+#include "cast.hpp"
 #include "imgSpot.hpp"
 #include "pix.hpp"
 #include "rasGrid.hpp"
 #include "rasRowCol.hpp"
 #include "rasSizeHW.hpp"
 #include "sigParmAD.hpp"
+#include "valSpan.hpp"
 #include "xfmMapSizeArea.hpp"
 
 #include <algorithm>
@@ -49,7 +50,7 @@
 namespace quadloco
 {
 
-namespace ops
+namespace sig
 {
 
 	//! Accumulation buffer for hough alpha,delta parameters
@@ -134,8 +135,8 @@ namespace ops
 			, theMapSizeArea
 				( theGridAD.hwSize() 
 				, img::Area
-					{ img::Span{ -pi, pi }
-					, img::Span{ 0., piTwo }
+					{ val::Span{ -pi, pi }
+					, val::Span{ 0., piTwo }
 					}
 				)
 		{
@@ -455,7 +456,7 @@ std::cout << "weightPP: " << weightPP << '\n';
 	}; // AdderAD
 
 
-} // [ops]
+} // [sig]
 
 } // [quadloco]
 
@@ -467,7 +468,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::ops::AdderAD const & item
+		, quadloco::sig::AdderAD const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -478,7 +479,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::ops::AdderAD const & item
+		( quadloco::sig::AdderAD const & item
 		)
 	{
 		return item.isValid();

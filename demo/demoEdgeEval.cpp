@@ -32,6 +32,7 @@
 #include "imgArea.hpp"
 #include "io.hpp"
 #include "opsgrid.hpp"
+#include "rasgrid.hpp"
 #include "rasGrid.hpp"
 #include "sigEdgeEval.hpp"
 #include "sigutil.hpp"
@@ -45,7 +46,7 @@ namespace quadloco
 {
 	//! Return "best" quad (one with highest detection weight)
 	inline
-	sig::QuadTarget
+	img::QuadTarget
 	bestQuadTargetFor
 		( ras::Grid<float> const & srcGrid
 		)
@@ -67,7 +68,7 @@ namespace quadloco
 		//
 		// Start with source image
 		//
-		sig::QuadTarget sigQuad;
+		img::QuadTarget imgQuad;
 		if (saveDiagnostics)
 		{
 			bool const okPgm
@@ -113,15 +114,15 @@ namespace quadloco
 		// Edgel Collections
 		//
 		sig::EdgeEval const edgeEval(gradGrid);
-		std::vector<sig::QuadWgt> const sigQuadWgts
-			{ edgeEval.sigQuadWeights(gradGrid.hwSize()) };
-for (sig::QuadWgt const & sigQuadWgt : sigQuadWgts)
+		std::vector<sig::QuadWgt> const imgQuadWgts
+			{ edgeEval.imgQuadWeights(gradGrid.hwSize()) };
+for (sig::QuadWgt const & imgQuadWgt : imgQuadWgts)
 {
-	std::cout << "sigQuadWgt:\n" << sigQuadWgt << '\n';
+	std::cout << "imgQuadWgt:\n" << imgQuadWgt << '\n';
 }
-		if (! sigQuadWgts.empty())
+		if (! imgQuadWgts.empty())
 		{
-			sigQuad = sigQuadWgts.front().item();
+			imgQuad = imgQuadWgts.front().item();
 		}
 
 		if (saveDiagnostics)
@@ -150,7 +151,7 @@ for (sig::QuadWgt const & sigQuadWgt : sigQuadWgts)
 
 		}
 
-		return sigQuad;
+		return imgQuad;
 	}
 
 } // [quadloco]
@@ -181,27 +182,27 @@ main
 
 	// load image
 	ras::Grid<std::uint8_t> const srcGrid{ io::readPGM(srcPath) };
-	ras::Grid<float> const useGrid{ sig::util::toFloat(srcGrid, 0) };
+	ras::Grid<float> const useGrid{ ras::grid::realGridOf<float>(srcGrid, 0) };
 
 	// smooth source signal
 	ras::Grid<float> const softGrid
 		{ ops::grid::smoothGridFor<float>(useGrid, 5u, 2.5) };
 
 	// find center
-	sig::QuadTarget const sigQuad{ bestQuadTargetFor(softGrid) };
-	img::Spot const useCenter{ sigQuad.centerSpot() };
+	img::QuadTarget const imgQuad{ bestQuadTargetFor(softGrid) };
+	img::Spot const useCenter{ imgQuad.centerSpot() };
 
 	// upsample image and draw center in enlarged grid
 	constexpr std::size_t upFactor{ 8u };
-	ras::Grid<float> outGrid{ sig::util::toLarger(useGrid, upFactor) };
+	ras::Grid<float> outGrid{ ras::grid::largerGrid(useGrid, upFactor) };
 	img::Spot const outCenter{ (double)upFactor * useCenter };
-	sig::util::drawSpot(&outGrid, outCenter);
+	ras::grid::drawSpot(&outGrid, outCenter);
 
 	// save (enlarged) image with center drawn
 	bool const okaySave{ io::writeStretchPGM(outPath, outGrid) };
 
 	std::cout << '\n';
-	std::cout << "sigQuad: " << sigQuad << '\n';
+	std::cout << "imgQuad: " << imgQuad << '\n';
 	std::cout << '\n';
 	std::cout << "load : " << srcPath << ' ' << srcGrid << '\n';
 	std::cout << "save : " << outPath << ' ' << outGrid << '\n';

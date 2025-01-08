@@ -29,6 +29,7 @@
 
 
 #include "appCenters.hpp"
+#include "imgQuadTarget.hpp"
 #include "imgSpot.hpp"
 #include "io.hpp"
 #include "objCamera.hpp"
@@ -38,7 +39,6 @@
 #include "rasGrid.hpp"
 #include "rasPeakRCV.hpp"
 #include "rasSizeHW.hpp"
-#include "sigQuadTarget.hpp"
 #include "simConfig.hpp"
 #include "simRender.hpp"
 
@@ -66,7 +66,7 @@ namespace
 	inline
 	quadloco::ras::Grid<float>
 	simulatedQuadGrid
-		( quadloco::sig::QuadTarget * const & ptSigQuad = nullptr
+		( quadloco::img::QuadTarget * const & ptSigQuad = nullptr
 		)
 	{
 		using namespace quadloco;
@@ -106,7 +106,7 @@ namespace
 		std::size_t const numOverSample{ 64u };
 		if (ptSigQuad)
 		{
-			*ptSigQuad = render.sigQuadTarget();
+			*ptSigQuad = render.imgQuadTarget();
 		}
 		return render.quadImage(numOverSample);
 	}
@@ -120,9 +120,9 @@ namespace
 		using namespace quadloco;
 
 		// simulate quad target image and extract edgels
-		quadloco::sig::QuadTarget sigQuad{};  // set by simulation
-		ras::Grid<float> const srcGrid{ simulatedQuadGrid(&sigQuad) };
-		img::Spot const expCenterSpot{ sigQuad.centerSpot() };
+		quadloco::img::QuadTarget imgQuad{};  // set by simulation
+		ras::Grid<float> const srcGrid{ simulatedQuadGrid(&imgQuad) };
+		img::Spot const expCenterSpot{ imgQuad.centerSpot() };
 
 		//(void)io::writeStretchPGM("srcGrid.pgm", srcGrid);
 

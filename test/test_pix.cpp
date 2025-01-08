@@ -29,7 +29,9 @@
 
 
 #include "pix.hpp"
+#include "rasgrid.hpp"
 #include "rasGrid.hpp"
+#include "valSpan.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -55,15 +57,15 @@ namespace
 		fGrid(4, 0) = 500.;
 
 		// expected working span of input imagery (for test case)
-		quadloco::img::Span const testSpan{ 101., 500. };
+		quadloco::val::Span const testSpan{ 101., 500. };
 
 		// full span (that ensures all pixels are valid)
-		quadloco::img::Span const fullSpan
-			{ quadloco::pix::fullSpanFor(fGrid) };
+		quadloco::val::Span const fullSpan
+			{ quadloco::ras::grid::fullSpanFor(fGrid) };
 
 		// convert to classic uint8_t image
 		quadloco::ras::Grid<uint8_t> const uGrid
-			{ quadloco::pix::uGrid8(fGrid, testSpan) };
+			{ quadloco::ras::grid::uGrid8(fGrid, testSpan) };
 
 		//
 		// Expected mapping of values given testSpan

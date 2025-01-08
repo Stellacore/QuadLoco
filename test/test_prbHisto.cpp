@@ -30,6 +30,7 @@
 
 #include "opsPeakFinder1D.hpp"
 #include "prbHisto.hpp"
+#include "valSpan.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -50,7 +51,7 @@ namespace
 		// Construct histogram
 		prb::Histo hist
 			( 100u  // Number of bins in accumulation array
-			, img::Span(100., 200.) // Span of values to cover
+			, val::Span(100., 200.) // Span of values to cover
 			);
 
 		// ... and populate with data

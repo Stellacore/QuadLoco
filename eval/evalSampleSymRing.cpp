@@ -36,7 +36,6 @@
 #include "opsSymRing.hpp"
 #include "prbStats.hpp"
 #include "rasGrid.hpp"
-#include "sigutil.hpp"
 
 #include <Engabra>
 
@@ -47,7 +46,7 @@
 #include <vector>
 
 
-/*! \brief Experiment with point of symmetry metrics
+/*! \brief Load PGM file, run ops::SymRing filter, and save results.
 */
 int
 main
@@ -58,7 +57,7 @@ main
 	if (! (2 < argc))
 	{
 		std::cerr << '\n';
-		std::cerr << "Run signal symmetry filter on input PGM file\n";
+		std::cerr << "Run symmetry ring (SymRing) filter on input PGM file\n";
 		std::cerr << '\n';
 		std::cerr << "Usage: <progname> <InputPGM> <OutputPGM>\n";
 		std::cerr << '\n';
@@ -72,7 +71,7 @@ main
 
 	// load image
 	ras::Grid<std::uint8_t> const loadGrid{ io::readPGM(loadPath) };
-	ras::Grid<float> const srcGrid{ sig::util::toFloat(loadGrid, 0u) };
+	ras::Grid<float> const srcGrid{ ras::grid::realGridOf<float>(loadGrid, 0u) };
 
 	/*
 	prb::Stats<float> const srcStats(srcGrid.cbegin(), srcGrid.cend());
@@ -118,6 +117,8 @@ main
 	std::cout
 		<< "loadPath: " << loadPath << '\n'
 		<< "    grid: " << loadGrid << '\n';
+	std::cout
+		<< "ringSize: " << ringHalfSize << '\n';
 	std::cout
 		<< "savePath: " << savePath << '\n'
 		<< "    grid: " << saveGrid << '\n';

@@ -32,11 +32,11 @@
  */
 
 
+#include "imgQuadTarget.hpp"
 #include "imgSpot.hpp"
 #include "prbStats.hpp"
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
-#include "sigQuadTarget.hpp"
 
 #include <limits>
 #include <vector>
@@ -45,7 +45,7 @@
 namespace quadloco
 {
 
-namespace prb
+namespace app
 {
 	//! Samples drawn from symmetry radii of quad squares
 	template <typename Type>
@@ -80,7 +80,7 @@ namespace prb
 		SquareRadiiSamples
 		from
 			( ras::Grid<Type> const & pixGrid
-			, sig::QuadTarget const & imgQuad
+			, img::QuadTarget const & imgQuad
 			)
 		{
 			std::vector<Type> ppVals{};
@@ -221,11 +221,11 @@ namespace prb
 	template <typename Type>
 	struct QuadSampleStats
 	{
-		Stats<Type> thePP{};
-		Stats<Type> theNP{};
-		Stats<Type> theNN{};
-		Stats<Type> thePN{};
-		Stats<Type> theAll{};
+		prb::Stats<Type> thePP{};
+		prb::Stats<Type> theNP{};
+		prb::Stats<Type> theNN{};
+		prb::Stats<Type> thePN{};
+		prb::Stats<Type> theAll{};
 
 		inline
 		static
@@ -236,19 +236,19 @@ namespace prb
 		{
 			// TODO Could be optimized (consider everything in one place
 
-			Stats<Type> ppStats{};
+			prb::Stats<Type> ppStats{};
 			ppStats.consider(samps.thePPs.cbegin(), samps.thePPs.cend());
 
-			Stats<Type> npStats{};
+			prb::Stats<Type> npStats{};
 			npStats.consider(samps.theNPs.cbegin(), samps.theNPs.cend());
 
-			Stats<Type> nnStats{};
+			prb::Stats<Type> nnStats{};
 			nnStats.consider(samps.theNNs.cbegin(), samps.theNNs.cend());
 
-			Stats<Type> pnStats{};
+			prb::Stats<Type> pnStats{};
 			pnStats.consider(samps.thePNs.cbegin(), samps.thePNs.cend());
 
-			Stats<Type> allStats{};
+			prb::Stats<Type> allStats{};
 			allStats.consider(samps.thePPs.cbegin(), samps.thePPs.cend());
 			allStats.consider(samps.theNPs.cbegin(), samps.theNPs.cend());
 			allStats.consider(samps.theNNs.cbegin(), samps.theNNs.cend());
@@ -267,7 +267,7 @@ namespace prb
 	double
 	isQuadlike
 		( ras::Grid<Type> const & pixGrid
-		, sig::QuadTarget const & imgQuad
+		, img::QuadTarget const & imgQuad
 		, std::ostream * const & ptMessages = nullptr
 		)
 	{
@@ -383,7 +383,7 @@ namespace prb
 	}
 
 
-} // [prb]
+} // [app]
 
 } // [quadloco]
 

@@ -38,7 +38,7 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced functions and utilities for application domain use.
+/*! \brief Application (quad finding) related code in namespace quadloco::app
  */
 namespace app
 {

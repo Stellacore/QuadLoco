@@ -30,20 +30,18 @@ set(unitTests
 
 	test_angLikely  # angular value likelihood estimation
 	test_angRing  # wrap around data structures e.g. for angles
+	test_appQuadLike  # probabilitic assessor of quad target pixel patterns
 	test_cast  # data type conversion operations
 	test_imgArea  # a 2D range of values
-	test_imgChipSpec  # a 2D sub region of a larger area
-	test_imgCircle  # geometric circle (and line intersection)
 	test_imgEdgel  # individual pixel edge information (Spot and Grad)
 	test_imgGrad  # pixel Gradent element type and functions
+	test_imgQuadTarget  # represent perspective image of obj::QuadTarget
 	test_imgRay  # a 2D geometric ray (start Spot and unit direction)
-	test_imgSpan  # half open interval (include start, excludes end)
 	test_imgSpot  # 'continuous' raster cell locations
 	test_imgVector  # support for 2D vector operations
 	test_io  # basic i/o support (e.g. pgm images)
 	test_objCamera  # simplified ideal perspective camera
 	test_objQuadTarget  # represent physical target object
-	test_opsAdderAD  # accumulatio buffer for hough alpha,delta parms
 	test_opsAllPeaks2D  # peak finding over a 2D grid
 	test_opsCenterRefiner  # sub-cell refinement of nominal center location
 	test_opsEigen2D  # Eigen value decompositions
@@ -54,13 +52,15 @@ set(unitTests
 	test_pix  # pixel image manipulations
 	test_prbGauss1D  # Gaussian probability density functions in 1D
 	test_prbHisto  # histogram data modeling
-	test_prbquad  # probabilitic assessor of quad target pixel patterns
 	test_prbStats  # statistics from running data stream
+	test_rasChipSpec  # a 2D sub region of a larger area
 	test_rasGrid  # general raster grid storage and access
 	test_rasgrid  # pixel/grid functions (e.g. image processing)
 	test_rasRowCol  # discete raster cell locations
 	test_rasSizeHW  # basic "high/wide" area boundary (half open)
+	test_sigAdderAD  # accumulatio buffer for hough alpha,delta parms
 	test_sigCenterFitter  # least square solution for center of edge rays
+	test_sigCircle  # geometric circle (and line intersection)
 	test_sigEdgeEval  # edgel evaluator checking likelihood on quad radii
 	test_sigEdgeGrouper  # generate candidate edges as groups of EdgeInfos
 	test_sigEdgeInfo  # edgel characteristics tracking 
@@ -68,10 +68,10 @@ set(unitTests
 	test_sigFindAD  # find maxima in sig::ParmAD space
 	test_sigItemWgt  # pairing of template item type and associated weight
 	test_sigParmAD  # Hough "alpha,delta" parameter representation
-	test_sigQuadTarget  # represent perspective image of obj::QuadTarget
 	test_sigSpotSigma  # a 2D location with associated uncertainty
 	test_simRender  # simulation of perspective images of quad target
 	test_simSampler  # simulation of image intensity sampling
+	test_valSpan  # half open interval (include start, excludes end)
 	test_xfmMapSizeArea  # raster cell to continous area mapping
 
 	)

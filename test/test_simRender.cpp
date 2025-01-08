@@ -34,6 +34,7 @@
 #include "rasGrid.hpp"
 #include "simConfig.hpp"
 #include "simRender.hpp"
+#include "valSpan.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -156,10 +157,11 @@ namespace
 
 		quadloco::ras::Grid<float> const fGrid{ render.quadImage() };
 		// ... retrieve geometry of the simulated image
-		quadloco::sig::QuadTarget const imgQuad{ render.sigQuadTarget() };
+		quadloco::img::QuadTarget const imgQuad{ render.imgQuadTarget() };
 
 		// note min/max pixel values (e.g. useful for normalizing radiometry)
-		quadloco::img::Span const fSpan{ quadloco::pix::fullSpanFor(fGrid) };
+		quadloco::val::Span const fSpan
+			{ quadloco::ras::grid::fullSpanFor(fGrid) };
 
 		// [DoxyExample01]
 

@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::img::ChipSpec
+ * \brief Declarations for quadloco::ras::ChipSpec
  *
  */
 
@@ -40,7 +40,7 @@
 namespace quadloco
 {
 
-namespace img
+namespace ras
 {
 
 	/*! \brief Maps locations between full size raster and a working sub area.
@@ -204,7 +204,7 @@ namespace img
 	}; // ChipSpec
 
 
-} // [img]
+} // [ras]
 
 } // [quadloco]
 
@@ -216,7 +216,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::img::ChipSpec const & item
+		, quadloco::ras::ChipSpec const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -227,7 +227,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::img::ChipSpec const & item
+		( quadloco::ras::ChipSpec const & item
 		)
 	{
 		return item.isValid();

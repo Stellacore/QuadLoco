@@ -33,9 +33,9 @@
 
 
 #include "imgArea.hpp"
-#include "imgSpan.hpp"
 #include "imgSpot.hpp"
 #include "rasSizeHW.hpp"
+#include "valSpan.hpp"
 
 #include <array>
 
@@ -82,8 +82,8 @@ namespace xfm
 			)
 			: MapSizeArea
 				( img::Area
-					{ img::Span{ 0., (double)hwGridSize.high() }
-					, img::Span{ 0., (double)hwGridSize.wide() }
+					{ val::Span{ 0., (double)hwGridSize.high() }
+					, val::Span{ 0., (double)hwGridSize.wide() }
 					}
 				, fromArea
 				, edgeMode

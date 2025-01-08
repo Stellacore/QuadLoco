@@ -32,6 +32,7 @@
  */
 
 
+#include "cast.hpp"
 #include "imgEdgel.hpp"
 #include "imgGrad.hpp"
 #include "opsfilter.hpp"
@@ -59,62 +60,6 @@ namespace ops
 
 namespace grid
 {
-
-	//! Iterators to min/max *valid* (not null) elements in collection
-	template <typename Iter>
-	inline
-	std::pair<Iter, Iter>
-	minmax_valid
-		( Iter const & beg
-		, Iter const & end
-		)
-	{
-		std::pair<Iter, Iter> itPair{ end, end };
-		Iter & itMin = itPair.first;
-		Iter & itMax = itPair.second;
-		using ValType = typename std::iterator_traits<Iter>::value_type;
-		ValType min{ engabra::g3::null<ValType>() };
-		ValType max{ engabra::g3::null<ValType>() };
-		for (Iter iter{beg} ; end != iter ; ++iter)
-		{
-			ValType const & value = *iter;
-			if (engabra::g3::isValid(value))
-			{
-				bool setMin{ false };
-				// track min
-				if (engabra::g3::isValid(min))
-				{
-					setMin = (value < min);
-				}
-				else
-				{
-					setMin = true;
-				}
-				if (setMin)
-				{
-					min = value;
-					itMin = iter;
-				}
-
-				// track max
-				bool setMax{ false };
-				if (engabra::g3::isValid(max))
-				{
-					setMax = (max < value);
-				}
-				else
-				{
-					setMax = true;
-				}
-				if (setMax)
-				{
-					max = value;
-					itMax = iter;
-				}
-			}
-		}
-		return itPair;
-	}
 
 
 	/*! \brief Compute img::Grad for each pixel location (except at edges).
@@ -314,7 +259,7 @@ namespace grid
 					if (tol < magnitude(grad))
 					{
 						// should be valid since grad is significant
-						img::Edgel const edgel(ras::RowCol{ row, col }, grad);
+						img::Edgel const edgel(img::Spot{ row, col }, grad);
 						pixEdgels.push_back(edgel);
 					}
 				}
@@ -444,7 +389,7 @@ namespace grid
 									// only processing non-trivial gradients
 									// i.e., tol < magnitude(gradCenter) above
 									img::Edgel const edgel
-										(ras::RowCol{ row, col }, gradCenter);
+										(img::Spot{ row, col }, gradCenter);
 									pixEdgels.push_back(edgel);
 								}
 							}

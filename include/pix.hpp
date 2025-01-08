@@ -32,8 +32,7 @@
  */
 
 
-#include "imgSpan.hpp"
-#include "rasGrid.hpp"
+#include "valSpan.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -43,16 +42,18 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced functions and utilities for pixel (ras::Grid) elements.
+/*! \brief Raster picture element related code in namespace quadloco::pix
  */
 namespace pix
 {
 
 	//
-	// Floating pixel type values
+	// Floating point type pixel values
 	//
 
-	//! Floating point image pixel type
+	// (float)
+
+	//! A float point image pixel type
 	using fpix_t = float;
 
 	//! Null value for missing or not available pixel data (NaN)
@@ -69,6 +70,27 @@ namespace pix
 
 	//! Overexposed pixel (positive infinity)
 	constexpr fpix_t fOver{  std::numeric_limits<fpix_t>::infinity() };
+
+
+	// (double)
+
+	//! A double point image pixel type
+	using dpix_t = double;
+
+	//! Null value for missing or not available pixel data (NaN)
+	constexpr dpix_t dNull{ std::numeric_limits<dpix_t>::quiet_NaN() };
+
+	//! Underexposed pixel (negative infinity)
+	constexpr dpix_t dUndr{ -std::numeric_limits<dpix_t>::infinity() };
+
+	//! darkest informative pixel (lowest)
+	constexpr dpix_t dDark{  std::numeric_limits<dpix_t>::lowest() };
+
+	//! brightest informative pixel (max)
+	constexpr dpix_t dLite{  std::numeric_limits<dpix_t>::max() };
+
+	//! Overexposed pixel (positive infinity)
+	constexpr dpix_t dOver{  std::numeric_limits<dpix_t>::infinity() };
 
 
 	//
@@ -112,71 +134,15 @@ namespace pix
 	// Functions
 	//
 
-
 	//! True if pixel is not null
+	template <typename RealPix>
 	inline
 	bool
 	isValid
-		( fpix_t const & fpix
+		( RealPix const & realPix
 		)
 	{
-		return (std::isnormal(fpix) || (0. == fpix));
-	}
-
-	//! Min/Max values from a collection with only isValid() inputs considered
-	template <typename FwdIter, typename PixType = float>
-	inline
-	std::pair<PixType, PixType>
-	validMinMax
-		( FwdIter const & beg
-		, FwdIter const & end
-		)
-	{
-		using namespace quadloco;
-		std::pair<PixType, PixType> minmax
-			{ std::numeric_limits<PixType>::quiet_NaN()
-			, std::numeric_limits<PixType>::quiet_NaN()
-			};
-		if (beg != end)
-		{
-			PixType & min = minmax.first;
-			PixType & max = minmax.second;
-			for (FwdIter iter{beg} ; end != iter ; ++iter)
-			{
-				PixType const & pixVal = *iter;
-				if (isValid(pixVal))
-				{
-					if ((! isValid(min)) || (pixVal < min))
-					{
-						min = pixVal;
-					}
-					if ((! isValid(max)) || (max < pixVal))
-					{
-						max = pixVal;
-					}
-				}
-			}
-		}
-		return minmax;
-	}
-
-	//! Span with begin/end at smallest/largest (valid) values in fGrid
-	template <typename PixType>
-	inline
-	img::Span
-	fullSpanFor
-		( ras::Grid<PixType> const & fGrid
-		)
-	{
-		std::pair<PixType, PixType> const fMinMax
-			{ validMinMax(fGrid.cbegin(), fGrid.cend()) };
-		PixType const & fMin = fMinMax.first;
-		// bump max by a tiny amount so that largest value *is* included
-		PixType const & fMax = fMinMax.second;
-		PixType const delta{ fMax - fMin };
-		constexpr PixType eps{ std::numeric_limits<PixType>::epsilon() };
-		PixType const useMax{ fMax * (1.f + delta * eps) };
-		return quadloco::img::Span{ (double)fMin, (double)useMax };
+		return (std::isnormal(realPix) || (0. == realPix));
 	}
 
 	/*! uint8_t value corresponding to fpix value within fSpan range
@@ -190,30 +156,31 @@ namespace pix
 	 *
 	 * An fgrid value at fSpan.begin() maps to u8Dark
 	 */
+	template <typename RealPix>
 	inline
 	uint8_t
 	uPix8
-		( fpix_t const & fpix
-		, img::Span const & fSpan
+		( RealPix const & realPix
+		, val::Span const & realSpan
 		)
 	{
 		uint8_t upix{ u8Null };
-		if (isValid(fpix))
+		if (isValid(realPix))
 		{
-			fpix_t const & fBeg = fSpan.min();
-			fpix_t const & fEnd = fSpan.max();
-			if (fpix < fBeg)
+			RealPix const & realBeg = realSpan.min();
+			RealPix const & realEnd = realSpan.max();
+			if (realPix < realBeg)
 			{
 				upix = u8Undr;
 			}
 			else
-			if (fpix < fEnd)
+			if (realPix < realEnd)
 			{
 				// "Normal" range between Dark and Lite
 				// NOTE: uSpan.max() is *out* of valid span so that
 				//       fraction interp goes only to (u8Over-1)==u8Lite
-				constexpr img::Span uSpan{ (double)u8Dark, (double)u8Over };
-				double const frac{ fSpan.fractionAtValue((double)fpix) };
+				constexpr val::Span uSpan{ (double)u8Dark, (double)u8Over };
+				double const frac{ realSpan.fractionAtValue((double)realPix) };
 				double const value{ uSpan.valueAtFraction(frac) };
 				upix = static_cast<uint8_t>(std::floor(value));
 			}
@@ -223,28 +190,6 @@ namespace pix
 			}
 		}
 		return upix;
-	}
-
-	/*! \brief A uint8_t grid that maps fgrid values via fSpan range.
-	 *
-	 * ref uPix8() for details on value mapping.
-	 */
-	inline
-	ras::Grid<uint8_t>
-	uGrid8
-		( ras::Grid<fpix_t> const & fgrid
-		, img::Span const & fSpan
-		)
-	{
-		ras::Grid<uint8_t> ugrid{ fgrid.hwSize() };
-
-		ras::Grid<fpix_t>::const_iterator itIn{ fgrid.cbegin() };
-		ras::Grid<uint8_t>::iterator itOut{ ugrid.begin() };
-		while (ugrid.end() != itOut)
-		{
-			*itOut++ = uPix8(*itIn++, fSpan);
-		}
-		return ugrid;
 	}
 
 

@@ -28,6 +28,8 @@
 */
 
 
+#include "cast.hpp"
+#include "rasRowCol.hpp"
 #include "rasSizeHW.hpp"
 #include "imgEdgel.hpp"
 
@@ -81,12 +83,12 @@ namespace
 		// expect hwSize(high(),wide()) to be "in front of" the gradient
 		// expect location of gradient edge itself to be "in-front"
 		quadloco::img::Spot const spotBack{ 0., 0. };
-		quadloco::ras::RowCol const rcFront
+		quadloco::img::Spot const spotFront
 			{ hwSize.high()-1u, hwSize.wide()-1u };
 		bool const expBack{ false };
 		bool const gotBack{ edgel.isAhead(spotBack) };
 		bool const expFront{ true };
-		bool const gotFront{ edgel.rcInFront(rcFront) };
+		bool const gotFront{ edgel.spotInFront(spotFront) };
 		quadloco::img::Spot const spotOnEdge{ edgel.location() }; // not behind
 		bool const expOnEdge{ true };
 		bool const gotOnEdge{ edgel.isAhead(spotOnEdge) };

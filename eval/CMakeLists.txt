@@ -25,6 +25,10 @@
 set(ProgNames
 
 	evalCenterFinding
+	evalReadPGM
+	evalSampleDiffManual
+	evalSampleSumSqDiff
+	evalSampleSymRing
 
 	)
 

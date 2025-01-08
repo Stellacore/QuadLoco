@@ -38,7 +38,7 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced functions and utilities for operations and processing.
+/*! \brief Operations (algorithm) related code in namespace quadloco::ops
  */
 namespace ops
 {

@@ -33,7 +33,9 @@
 
 
 #include "pix.hpp"
+#include "rasgrid.hpp"
 #include "rasGrid.hpp"
+#include "valSpan.hpp"
 
 #include <Engabra>
 
@@ -47,7 +49,7 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced functions and utilities for supporting Input/Output.
+/*! \brief Data Input/Output related code in namespace quadloco::io
  */
 namespace io
 {
@@ -247,19 +249,20 @@ namespace io
 		return ugrid;
 	}
 
-	//! Write 8-bit gray image based on maximal radiometric stretch of fGrid
+	//! Write 8-bit gray image based on maximal radiometric stretch of realGrid
+	template <typename RealPix>
 	inline
 	bool
 	writeStretchPGM
 		( std::filesystem::path const & pgmPath
-		, ras::Grid<float> const & fGrid
+		, ras::Grid<RealPix> const & realGrid
 		)
 	{
 		// compute spanning range of radiometry values
-		img::Span const fSpan{ pix::fullSpanFor(fGrid) };
+		val::Span const fSpan{ ras::grid::fullSpanFor(realGrid) };
 
-		// stretch/compress fGrid values to fit into uGrid
-		ras::Grid<uint8_t> const uGrid{ pix::uGrid8(fGrid, fSpan) };
+		// stretch/compress realGrid values to fit into uGrid
+		ras::Grid<uint8_t> const uGrid{ ras::grid::uGrid8(realGrid, fSpan) };
 
 		// write resulting uGrid
 		return io::writePGM(pgmPath, uGrid);
@@ -267,18 +270,19 @@ namespace io
 
 
 	//! \brief Put grid coordinates to data file
+	template <typename RealPix>
 	inline
 	bool
 	writeAsciiFile
 		( std::filesystem::path const & outPath
-		, ras::Grid<float> const & grid
+		, ras::Grid<RealPix> const & realGrid
 		, std::string const & cfmtPerField
-		, float const & valueForNull
+		, RealPix const & valueForNull
 		)
 	{
 		std::ofstream ofs(outPath);
-		std::size_t const high{ grid.hwSize().high() };
-		std::size_t const wide{ grid.hwSize().wide() };
+		std::size_t const high{ realGrid.hwSize().high() };
+		std::size_t const wide{ realGrid.hwSize().wide() };
 		ofs << "# High: " << high << '\n';
 		ofs << "# Wide: " << wide << '\n';
 		ofs << "# valueForNull: " << valueForNull << '\n';
@@ -286,8 +290,8 @@ namespace io
 		{
 			for (std::size_t col{0u} ; col < wide ; ++col)
 			{
-				float const & gVal = grid(row,col);
-				float useVal{ valueForNull };
+				RealPix const & gVal = realGrid(row,col);
+				RealPix useVal{ valueForNull };
 				if (engabra::g3::isValid(gVal))
 				{
 					useVal = gVal;

@@ -32,13 +32,12 @@
  */
 
 
-#include "cast.hpp"
+#include "imgQuadTarget.hpp"
 #include "imgSpot.hpp"
 #include "imgVector.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "pixNoise.hpp"
-#include "sigQuadTarget.hpp"
 
 #include <Engabra>
 #include <Rigibra>
@@ -55,6 +54,16 @@ namespace quadloco
 
 namespace sim
 {
+	//! Engabra Vector: [0,1] from spot[0,1], [2] set to zero.
+	inline
+	engabra::g3::Vector
+	engVector
+		( img::Spot const & spot
+		)
+	{
+		return engabra::g3::Vector{ spot[0], spot[1], 0. };
+	}
+
 
 	//! Functor for sampling quad target given camera detector location
 	class Sampler
@@ -184,7 +193,7 @@ namespace sim
 
 			// intersect quad frame ray with quad plane
 			Vector const pntInQuad{ intersectOnE12(staInQuad, dirInQuad) };
-			img::Spot const spot{ cast::imgSpot(pntInQuad) };
+			img::Spot const spot{ pntInQuad[0], pntInQuad[1] };
 
 			return spot;
 		}
@@ -276,18 +285,18 @@ namespace sim
 
 		//! Geometry of perspective image created by quadImage()
 		inline
-		sig::QuadTarget
-		sigQuadTarget
+		img::QuadTarget
+		imgQuadTarget
 			() const
 		{
 			using namespace engabra::g3;
 
 			engabra::g3::Vector const centerInExt
-				{ theCamWrtQuad(cast::engVector(theObjQuad.centerSpot())) };
+				{ theCamWrtQuad(engVector(theObjQuad.centerSpot())) };
 			engabra::g3::Vector const xMidInExt
-				{ theCamWrtQuad(cast::engVector(theObjQuad.midSidePosX())) };
+				{ theCamWrtQuad(engVector(theObjQuad.midSidePosX())) };
 			engabra::g3::Vector const yMidInExt
-				{ theCamWrtQuad(cast::engVector(theObjQuad.midSidePosY())) };
+				{ theCamWrtQuad(engVector(theObjQuad.midSidePosY())) };
 
 			using namespace quadloco::img;
 
@@ -303,7 +312,7 @@ namespace sim
 			Vector<double> const yDir{ direction(yMidInDet - centerInDet) };
 
 			constexpr double centerSigma{ 1./1024. };
-			sig::QuadTarget const simQuad{ center, xDir, yDir, centerSigma };
+			img::QuadTarget const simQuad{ center, xDir, yDir, centerSigma };
 			return simQuad;
 		}
 

@@ -32,11 +32,12 @@
  */
 
 
-#include "imgChipSpec.hpp"
+#include "cast.hpp"
+#include "imgQuadTarget.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
+#include "rasChipSpec.hpp"
 #include "rasGrid.hpp"
-#include "sigQuadTarget.hpp"
 #include "simConfig.hpp"
 #include "simSampler.hpp"
 
@@ -106,11 +107,11 @@ namespace sim
 
 		//! Geometry of perspective image created by quadImage()
 		inline
-		sig::QuadTarget
-		sigQuadTarget
+		img::QuadTarget
+		imgQuadTarget
 			() const
 		{
-			return theSampler.sigQuadTarget();
+			return theSampler.imgQuadTarget();
 		}
 
 		//! Simulate chip of an image through ctor's camera and orientation
@@ -119,7 +120,7 @@ namespace sim
 		quadChip
 			( std::size_t const & numOverSamp = 64u
 				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
-			, img::ChipSpec const & chipSpec = {}
+			, ras::ChipSpec const & chipSpec = {}
 				//!< Define chip patch area to render (default is full grid)
 			) const
 		{
@@ -155,7 +156,7 @@ namespace sim
 				//!< Destination into which to render image
 			, std::size_t const & numOverSamp
 				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
-			, img::ChipSpec const & chipSpec = {}
+			, ras::ChipSpec const & chipSpec = {}
 				//!< Define chip patch area to render (default is full grid)
 			) const
 		{
@@ -171,7 +172,7 @@ namespace sim
 					rc0 = chipSpec.theOrigRC;
 					hwSize = chipSpec.hwSize();
 				}
-				img::ChipSpec chip{ rc0, hwSize };
+				ras::ChipSpec chip{ rc0, hwSize };
 
 				for (std::size_t rowChip{0u} ; rowChip < chip.high()
 					; ++rowChip)

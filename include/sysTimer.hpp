@@ -39,7 +39,7 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced functions and utilities providing system extensions
+/*! \brief System/environment supplemental code in namespace quadloco::sys
  */
 namespace sys
 {

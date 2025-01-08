@@ -28,8 +28,8 @@
 */
 
 
+#include "appQuadLike.hpp"
 #include "io.hpp"
-#include "prbquad.hpp"
 #include "rasGrid.hpp"
 #include "simConfig.hpp"
 #include "sim.hpp"
@@ -108,11 +108,11 @@ namespace
 			//quadloco::io::writeStretchPGM("sample.pgm", pixGrid);
 
 			// retrieve geometry of the simulated image
-			quadloco::sig::QuadTarget const expImgQuad
-				{ render.sigQuadTarget() };
+			quadloco::img::QuadTarget const expImgQuad
+				{ render.imgQuadTarget() };
 			std::ostringstream msg;
 			double const quadProb
-				{ quadloco::prb::isQuadlike(pixGrid, expImgQuad, &msg) };
+				{ quadloco::app::isQuadlike(pixGrid, expImgQuad, &msg) };
 
 			// note test case result
 			testcase.theQuadProb = quadProb;

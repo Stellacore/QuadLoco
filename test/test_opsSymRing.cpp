@@ -28,11 +28,11 @@
 */
 
 
-#include "imgChipSpec.hpp"
 #include "io.hpp"
 #include "opsAllPeaks2D.hpp"
 #include "opsSymRing.hpp"
 #include "prbStats.hpp"
+#include "rasChipSpec.hpp"
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
 #include "rasPeakRCV.hpp"
@@ -59,11 +59,11 @@ namespace
 		// (and less than half diagonal).
 		ras::SizeHW const fullSize{ 30u, 50u };
 		ras::Grid<float> fGrid(fullSize);
-		img::ChipSpec const smlChip
+		ras::ChipSpec const smlChip
 			{ ras::RowCol{ 12u, 22u }
 			, ras::SizeHW{  7u,  9u }
 			};
-		img::ChipSpec const bigChip
+		ras::ChipSpec const bigChip
 			{ ras::RowCol{ 10u, 20u }
 			, ras::SizeHW{ 11u, 13u }
 			};

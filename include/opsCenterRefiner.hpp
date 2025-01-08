@@ -33,12 +33,12 @@
 
 
 #include "cast.hpp"
-#include "imgSpan.hpp"
 #include "imgSpot.hpp"
 #include "prbStats.hpp"
 #include "rasGrid.hpp"
 #include "rasRelRC.hpp"
 #include "rasRowCol.hpp"
+#include "valSpan.hpp"
 
 #include <Engabra>
 
@@ -173,7 +173,7 @@ namespace ops
 		{
 			img::Spot minSpot{};
 			prb::Stats<double> const ssdStats(ssdGrid.cbegin(), ssdGrid.cend());
-			img::Span const ssdSpan{ ssdStats.min(), ssdStats.max() };
+			val::Span const ssdSpan{ ssdStats.min(), ssdStats.max() };
 			if (ssdSpan.isValid())
 			{
 				img::Vector<double> sumVec{ 0., 0. };

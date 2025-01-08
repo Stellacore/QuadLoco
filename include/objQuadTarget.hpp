@@ -34,6 +34,7 @@
 
 #include "imgArea.hpp"
 #include "imgSpot.hpp"
+#include "valSpan.hpp"
 
 #include <Engabra>
 
@@ -79,8 +80,8 @@ namespace obj
 		{
 			double const halfEdgeMag{ .5 * fullEdgeMag };
 			return img::Area
-				{ img::Span{ -halfEdgeMag,  halfEdgeMag }
-				, img::Span{ -halfEdgeMag,  halfEdgeMag }
+				{ val::Span{ -halfEdgeMag,  halfEdgeMag }
+				, val::Span{ -halfEdgeMag,  halfEdgeMag }
 				};
 		}
 
@@ -146,7 +147,7 @@ namespace obj
 
 		//! Span of coordinates in first dimension (e.g. left to right)
 		inline
-		img::Span const &
+		val::Span const &
 		span0
 			() const
 		{
@@ -155,7 +156,7 @@ namespace obj
 
 		//! Span of coordinates in second dimension (e.g. bottom to top)
 		inline
-		img::Span const &
+		val::Span const &
 		span1
 			() const
 		{

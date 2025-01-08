@@ -38,7 +38,7 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced structure and utilities for signal processing
+/*! \brief Signal processing related code in namespace quadloco::sig
  */
 namespace sig
 {

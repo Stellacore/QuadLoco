@@ -38,7 +38,7 @@
 namespace quadloco
 {
 
-/*! \brief Namespaced functions and utilities for data simulation
+/*! \brief Simulation related code in namespace quadloco::sim
  */
 namespace sim
 {
