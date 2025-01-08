@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::ops::AdderAD
+\brief Unit tests (and example) code for quadloco::sig::AdderAD
 */
 
 
-#include "opsAdderAD.hpp"
+#include "sigAdderAD.hpp"
 
 #include "cast.hpp"
 
@@ -56,7 +56,7 @@ namespace
 		// NOTE: Test code below assumes size AT LEAST (1x1) or larger
 		quadloco::ras::SizeHW const hwSize{ 13u, 17u };
 //quadloco::ras::SizeHW const hwSize{  5u,  5u };
-		quadloco::ops::AdderAD adder(hwSize);
+		quadloco::sig::AdderAD adder(hwSize);
 
 		// define a parameter near the center of the last cell in adder grid
 		quadloco::ras::RowCol const expRowCol

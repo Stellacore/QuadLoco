@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::ops::AdderAD
+ * \brief Declarations for quadloco::sig::AdderAD
  *
  */
 
@@ -50,7 +50,7 @@
 namespace quadloco
 {
 
-namespace ops
+namespace sig
 {
 
 	//! Accumulation buffer for hough alpha,delta parameters
@@ -456,7 +456,7 @@ std::cout << "weightPP: " << weightPP << '\n';
 	}; // AdderAD
 
 
-} // [ops]
+} // [sig]
 
 } // [quadloco]
 
@@ -468,7 +468,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::ops::AdderAD const & item
+		, quadloco::sig::AdderAD const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -479,7 +479,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::ops::AdderAD const & item
+		( quadloco::sig::AdderAD const & item
 		)
 	{
 		return item.isValid();

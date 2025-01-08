@@ -43,7 +43,6 @@ set(unitTests
 	test_io  # basic i/o support (e.g. pgm images)
 	test_objCamera  # simplified ideal perspective camera
 	test_objQuadTarget  # represent physical target object
-	test_opsAdderAD  # accumulatio buffer for hough alpha,delta parms
 	test_opsAllPeaks2D  # peak finding over a 2D grid
 	test_opsCenterRefiner  # sub-cell refinement of nominal center location
 	test_opsEigen2D  # Eigen value decompositions
@@ -60,6 +59,7 @@ set(unitTests
 	test_rasgrid  # pixel/grid functions (e.g. image processing)
 	test_rasRowCol  # discete raster cell locations
 	test_rasSizeHW  # basic "high/wide" area boundary (half open)
+	test_sigAdderAD  # accumulatio buffer for hough alpha,delta parms
 	test_sigCenterFitter  # least square solution for center of edge rays
 	test_sigEdgeEval  # edgel evaluator checking likelihood on quad radii
 	test_sigEdgeGrouper  # generate candidate edges as groups of EdgeInfos

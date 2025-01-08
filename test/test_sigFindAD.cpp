@@ -33,10 +33,10 @@
 #include "imgEdgel.hpp"
 #include "imgGrad.hpp"
 #include "imgSpot.hpp"
-#include "opsAdderAD.hpp"
 #include "opsgrid.hpp"
 #include "rasGrid.hpp"
 #include "rasRowCol.hpp"
+#include "sigAdderAD.hpp"
 #include "sigParmAD.hpp"
 #include "simgrid.hpp"
 
@@ -97,7 +97,7 @@ namespace
 			ras::SizeHW const adSize{ sizeAD, sizeAD };
 
 			// Setup accumulator
-			ops::AdderAD adder(adSize);
+			sig::AdderAD adder(adSize);
 
 			// accumulate Grad values into Hough A(lpha)-D(elta) buffer
 			for (ras::Grid<img::Grad>::const_iterator
