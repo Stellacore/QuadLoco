@@ -37,7 +37,6 @@
 #include "opsSymRing.hpp"
 #include "rasGrid.hpp"
 #include "rasPeakRCV.hpp"
-#include "sigutil.hpp"
 
 #include <filesystem>
 #include <fstream>

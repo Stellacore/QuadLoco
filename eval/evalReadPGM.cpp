@@ -30,7 +30,6 @@
 
 #include "io.hpp"
 #include "rasGrid.hpp"
-#include "sigutil.hpp"
 
 #include <filesystem>
 #include <iostream>

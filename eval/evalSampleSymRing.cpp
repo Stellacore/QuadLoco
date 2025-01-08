@@ -36,7 +36,6 @@
 #include "opsSymRing.hpp"
 #include "prbStats.hpp"
 #include "rasGrid.hpp"
-#include "sigutil.hpp"
 
 #include <Engabra>
 
