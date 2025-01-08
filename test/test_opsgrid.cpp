@@ -35,7 +35,6 @@
 #include "rasGrid.hpp"
 #include "raskernel.hpp"
 #include "rasRowCol.hpp"
-#include "sigutil.hpp"
 #include "simgrid.hpp"
 
 #include <algorithm>
@@ -237,15 +236,6 @@ namespace
 		// compute gradient grid
 		ras::Grid<img::Grad> const gradGrid
 			{ ops::grid::gradientGridBy8x(fullGrid) };
-
-		/*
-		std::cout << fullGrid
-			.infoStringContents("fullGrid", "%5.2f") << '\n';
-		std::cout << sig::util::magnitudeGridFor(gradGrid)
-			.infoStringContents("edgeMag", "%5.2f") << '\n';
-		std::cout << sig::util::angleGridFor(gradGrid)
-			.infoStringContents("edgeAng", "%5.2f") << '\n';
-		*/
 
 		// extract edgels from this grid
 		std::vector<img::Edgel> const edgels
