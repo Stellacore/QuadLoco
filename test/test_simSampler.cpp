@@ -109,7 +109,7 @@ namespace
 
 			// retrieve geometry of the simulated image
 			quadloco::img::QuadTarget const expImgQuad
-				{ render.sigQuadTarget() };
+				{ render.imgQuadTarget() };
 			std::ostringstream msg;
 			double const quadProb
 				{ quadloco::app::isQuadlike(pixGrid, expImgQuad, &msg) };

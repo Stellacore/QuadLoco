@@ -106,7 +106,7 @@ namespace
 		std::size_t const numOverSample{ 64u };
 		if (ptSigQuad)
 		{
-			*ptSigQuad = render.sigQuadTarget();
+			*ptSigQuad = render.imgQuadTarget();
 		}
 		return render.quadImage(numOverSample);
 	}
@@ -120,9 +120,9 @@ namespace
 		using namespace quadloco;
 
 		// simulate quad target image and extract edgels
-		quadloco::img::QuadTarget sigQuad{};  // set by simulation
-		ras::Grid<float> const srcGrid{ simulatedQuadGrid(&sigQuad) };
-		img::Spot const expCenterSpot{ sigQuad.centerSpot() };
+		quadloco::img::QuadTarget imgQuad{};  // set by simulation
+		ras::Grid<float> const srcGrid{ simulatedQuadGrid(&imgQuad) };
+		img::Spot const expCenterSpot{ imgQuad.centerSpot() };
 
 		//(void)io::writeStretchPGM("srcGrid.pgm", srcGrid);
 

@@ -108,10 +108,10 @@ namespace sim
 		//! Geometry of perspective image created by quadImage()
 		inline
 		img::QuadTarget
-		sigQuadTarget
+		imgQuadTarget
 			() const
 		{
-			return theSampler.sigQuadTarget();
+			return theSampler.imgQuadTarget();
 		}
 
 		//! Simulate chip of an image through ctor's camera and orientation

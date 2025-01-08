@@ -164,7 +164,7 @@ namespace sim
 
 			// simulate pixel image
 			cases.emplace_back
-				(TestCase{ render.quadImage(), render.sigQuadTarget() });
+				(TestCase{ render.quadImage(), render.imgQuadTarget() });
 		}
 
 		return cases;
@@ -203,18 +203,18 @@ main
 		// evaluate gradients...
 		sig::EdgeEval const edgeEval(gradGrid);
 		// ... and determine candidate quad images
-		std::vector<sig::QuadWgt> const sigQuadWgts
-			{ edgeEval.sigQuadWeights(gradGrid.hwSize()) };
+		std::vector<sig::QuadWgt> const imgQuadWgts
+			{ edgeEval.imgQuadWeights(gradGrid.hwSize()) };
 
 		// add to test result
 		img::QuadTarget const & expQuad = testCase.theSigQuad;;
 		sig::SpotWgt const expSW{ expQuad.centerSpot(), 1. };
-		for (sig::QuadWgt const & sigQuadWgt : sigQuadWgts)
+		for (sig::QuadWgt const & imgQuadWgt : imgQuadWgts)
 		{
-			if (isValid(sigQuadWgt))
+			if (isValid(imgQuadWgt))
 			{
-				img::QuadTarget const & gotQuad = sigQuadWgt.item();
-				double const & wgt = sigQuadWgt.weight();
+				img::QuadTarget const & gotQuad = imgQuadWgt.item();
+				double const & wgt = imgQuadWgt.weight();
 
 				sim::TestResult const testResult{ nn, expQuad, gotQuad, wgt };
 				testResults.emplace_back(testResult);

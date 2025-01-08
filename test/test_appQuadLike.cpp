@@ -80,7 +80,7 @@ namespace
 			);
 		quadloco::ras::Grid<float> const pixGrid{ render.quadImage(numOver) };
 		// retrieve geometry of the simulated image
-		quadloco::img::QuadTarget const expImgQuad{ render.sigQuadTarget() };
+		quadloco::img::QuadTarget const expImgQuad{ render.imgQuadTarget() };
 
 		// for this test, assume the found geometry is perfect
 		quadloco::img::QuadTarget const & gotImgQuad = expImgQuad;

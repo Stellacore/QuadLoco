@@ -286,7 +286,7 @@ namespace sim
 		//! Geometry of perspective image created by quadImage()
 		inline
 		img::QuadTarget
-		sigQuadTarget
+		imgQuadTarget
 			() const
 		{
 			using namespace engabra::g3;

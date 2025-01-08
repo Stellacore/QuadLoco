@@ -156,7 +156,7 @@ namespace
 
 		quadloco::ras::Grid<float> const fGrid{ render.quadImage() };
 		// ... retrieve geometry of the simulated image
-		quadloco::img::QuadTarget const imgQuad{ render.sigQuadTarget() };
+		quadloco::img::QuadTarget const imgQuad{ render.imgQuadTarget() };
 
 		// note min/max pixel values (e.g. useful for normalizing radiometry)
 		quadloco::img::Span const fSpan

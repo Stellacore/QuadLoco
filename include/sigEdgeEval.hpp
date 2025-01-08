@@ -653,7 +653,7 @@ std::cout
 		//! Collection of center point candidates
 		inline
 		std::vector<QuadWgt>
-		sigQuadWeights
+		imgQuadWeights
 			( ras::SizeHW const & hwSize = ras::SizeHW{}
 				//!< If size isValid(), use it to filter candidate spots
 			) const
