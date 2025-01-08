@@ -30,6 +30,7 @@
 
 #include "opsgrid.hpp"
 
+#include "rasChipSpec.hpp"
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
 #include "raskernel.hpp"
@@ -195,7 +196,7 @@ namespace
 		quadloco::img::Grad const tbExpGrad{ 10., 0. };
 
 		// Use ChipSpec to set right half foreground for vertical edge grid
-		quadloco::img::ChipSpec const lrFillSpec
+		quadloco::ras::ChipSpec const lrFillSpec
 			{ quadloco::ras::RowCol{ 0u, lrPixels.wide()/2u }
 			, quadloco::ras::SizeHW{ lrPixels.high(), lrPixels.wide()/2u }
 			};
@@ -227,7 +228,7 @@ namespace
 		// create grid with "raised" square in middle
 		ras::Grid<float> fullGrid{ ras::SizeHW{ 16u, 16u } };
 		std::fill(fullGrid.begin(), fullGrid.end(), 0.f);
-		img::ChipSpec const chip
+		ras::ChipSpec const chip
 			{ ras::RowCol{ 4u, 4u }
 			, ras::SizeHW{ 8u, 8u }
 			};
@@ -354,7 +355,7 @@ namespace
 
 		// filtered impulse function produces point reflected filter values
 		// values in the output grid.
-		img::ChipSpec const responseChip
+		ras::ChipSpec const responseChip
 			{ ras::RowCol
 				{ (rcImpulse.row() - (expFilter.high()/2u))
 				, (rcImpulse.col() - (expFilter.wide()/2u))

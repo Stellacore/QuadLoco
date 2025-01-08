@@ -31,9 +31,9 @@
 #include "rasgrid.hpp"
 #include "opsgrid.hpp" // /TODO remove
 
-#include "imgChipSpec.hpp"
 #include "imgGrad.hpp"
 #include "pix.hpp"
+#include "rasChipSpec.hpp"
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
 
@@ -143,7 +143,7 @@ namespace
 		quadloco::img::Grad const tbExpGrad{ 10./edgeSize, 0. };
 
 		// Use ChipSpec to set right half foreground for vertical edge grid
-		quadloco::img::ChipSpec const lrFillSpec
+		quadloco::ras::ChipSpec const lrFillSpec
 			{ quadloco::ras::RowCol{ 0u, lrPixels.wide()/2u }
 			, quadloco::ras::SizeHW{ lrPixels.high(), lrPixels.wide()/2u }
 			};

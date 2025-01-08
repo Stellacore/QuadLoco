@@ -35,6 +35,7 @@
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "opsCenterRefiner.hpp"
+#include "rasChipSpec.hpp"
 #include "rasGrid.hpp"
 #include "rasPeakRCV.hpp"
 #include "simConfig.hpp"
@@ -363,7 +364,7 @@ namespace sim
 		if (ptConfig)
 		{
 			sim::Render const render{ *ptConfig, sSamplerOptions };
-			img::ChipSpec const chipSpec{ ptConfig->chipSpecForQuad(pad) };
+			ras::ChipSpec const chipSpec{ ptConfig->chipSpecForQuad(pad) };
 			grid = render.quadChip(sSamplerOverNum, chipSpec);
 		}
 		return grid;
@@ -407,7 +408,7 @@ namespace sim
 			img::Spot const centerInImg
 				{ thePtConfig->imgSpotForTgtSpot(centerInObj) };
 
-			img::ChipSpec const chipSpec
+			ras::ChipSpec const chipSpec
 				{ thePtConfig->chipSpecForQuad(theChipPad) };
 			img::Spot const chip0{ cast::imgSpot(chipSpec.theOrigRC) };
 

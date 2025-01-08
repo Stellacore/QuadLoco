@@ -32,7 +32,6 @@ set(unitTests
 	test_angRing  # wrap around data structures e.g. for angles
 	test_cast  # data type conversion operations
 	test_imgArea  # a 2D range of values
-	test_imgChipSpec  # a 2D sub region of a larger area
 	test_imgCircle  # geometric circle (and line intersection)
 	test_imgEdgel  # individual pixel edge information (Spot and Grad)
 	test_imgGrad  # pixel Gradent element type and functions
@@ -56,6 +55,7 @@ set(unitTests
 	test_prbHisto  # histogram data modeling
 	test_prbquad  # probabilitic assessor of quad target pixel patterns
 	test_prbStats  # statistics from running data stream
+	test_rasChipSpec  # a 2D sub region of a larger area
 	test_rasGrid  # general raster grid storage and access
 	test_rasgrid  # pixel/grid functions (e.g. image processing)
 	test_rasRowCol  # discete raster cell locations

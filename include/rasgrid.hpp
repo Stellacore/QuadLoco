@@ -34,10 +34,10 @@
 
 #include "pix.hpp"
 
-#include "imgChipSpec.hpp"
 #include "imgGrad.hpp"
 #include "imgSpot.hpp"
 #include "pix.hpp"
+#include "rasChipSpec.hpp"
 #include "rasGrid.hpp"
 
 #include <algorithm>
@@ -244,7 +244,7 @@ namespace grid
 	void
 	setSubGridValues
 		( ras::Grid<Type> * const & ptFull
-		, img::ChipSpec const & chipSpec
+		, ras::ChipSpec const & chipSpec
 		, Type const & value
 		)
 	{
@@ -272,7 +272,7 @@ namespace grid
 	{
 		bool okay{ false };
 		ras::SizeHW const hwChip{ chipData.hwSize() };
-		img::ChipSpec const chipSpec{ rc0, hwChip };
+		ras::ChipSpec const chipSpec{ rc0, hwChip };
 		okay = ptFullData && chipSpec.fitsInto(ptFullData->hwSize());
 		if (okay)
 		{
@@ -298,7 +298,7 @@ namespace grid
 	ras::Grid<Type>
 	subGridValuesFrom
 		( ras::Grid<Type> const & fullGrid
-		, img::ChipSpec const & chipSpec
+		, ras::ChipSpec const & chipSpec
 		)
 	{
 		ras::Grid<Type> values;
