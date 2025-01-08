@@ -34,7 +34,6 @@
 
 #include "ang.hpp"
 #include "angRing.hpp"
-#include "imgSpot.hpp"
 #include "opsPeakFinder1D.hpp"
 #include "prbGauss1D.hpp"
 
@@ -150,59 +149,6 @@ namespace ang
 				(theBinSums.cbegin(), theBinSums.cend());
 			return peakFinder.peakIndices();
 		}
-
-		/*
-		//! Angle at ndxCurr adjusted to reflect theBinSum of neighbors
-		inline
-		double
-		weightedAngleAt
-			( std::size_t const & ndxCurr
-			) const
-		{
-			// compute weighted peak - self and two adjacent ones
-			std::size_t const ndxPrev
-				{ theRing.indexRelativeTo(ndxCurr, -1) };
-			std::size_t const ndxNext
-				{ theRing.indexRelativeTo(ndxCurr,  1) };
-
-			// get angle and neighbor angle values
-			double const anglePrev{ theRing.angleAt(ndxPrev) };
-			double const angleCurr{ theRing.angleAt(ndxCurr) };
-			double const angleNext{ theRing.angleAt(ndxNext) };
-
-			// do math with vectors to avoid phase wrap problems
-			img::Spot const spotPrev
-				{ std::cos(anglePrev), std::sin(anglePrev) };
-			img::Spot const spotCurr
-				{ std::cos(angleCurr), std::sin(angleCurr) };
-			img::Spot const spotNext
-				{ std::cos(angleNext), std::sin(angleNext) };
-
-			// use accumulation buffer as weights
-			double const wgtPrev{ theBinSums[ndxPrev] };
-			double const wgtCurr{ theBinSums[ndxCurr] };
-			double const wgtNext{ theBinSums[ndxNext] };
-
-			// compute weighted average location
-			img::Spot const wSpotSum
-				{ wgtPrev * spotPrev
-				+ wgtCurr * spotCurr
-				+ wgtNext * spotNext
-				};
-			double const wSum
-				{ wgtPrev
-				+ wgtCurr
-				+ wgtNext
-				};
-			// if there's a peak here, at least one of the weights
-			// must be greater than zero - so okay to divide
-			img::Spot const wSpot{ (1./wSum) * wSpotSum };
-
-			// convert weighted spot location to angle
-			double const wgtAngle{ ang::atan2(wSpot[1], wSpot[0]) };
-			return wgtAngle;
-		}
-		*/
 
 		//! Angles for local peaks (near middle for plateaus)
 		inline
