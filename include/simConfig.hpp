@@ -32,7 +32,6 @@
  */
 
 
-#include "cast.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "opsFence.hpp"
@@ -103,7 +102,7 @@ namespace sim
 			( img::Spot const & spotOnTgt
 			) const
 		{
-			engabra::g3::Vector const pntInTgt{ cast::engVector(spotOnTgt) };
+			engabra::g3::Vector const pntInTgt{ spotOnTgt[0], spotOnTgt[1] };
 			engabra::g3::Vector const pntInCam{ theStaWrtQuad(pntInTgt) };
 			return theCamera.detectorSpotFor(pntInCam);
 		}

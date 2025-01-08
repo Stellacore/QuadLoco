@@ -32,12 +32,9 @@
  */
 
 
-#include "imgGrad.hpp"
 #include "imgSpot.hpp"
 #include "imgVector.hpp"
 #include "rasRowCol.hpp"
-
-#include <Engabra>
 
 #include <cmath>
 
@@ -50,67 +47,8 @@ namespace quadloco
 namespace cast
 {
 	//
-	// To engabra::g3::Vector
-	//
-
-	//! Engabra Vector: [0,1] from (row(),col()) , [2] set to zero.
-	inline
-	engabra::g3::Vector
-	engVector
-		( ras::RowCol const & rowcol
-		)
-	{
-		return engabra::g3::Vector
-			{ (double)rowcol.row(), (double)rowcol.col(), 0. };
-	}
-
-	//! Engabra Vector: [0,1] from spot[0,1], [2] set to zero.
-	inline
-	engabra::g3::Vector
-	engVector
-		( img::Spot const & spot
-		)
-	{
-		return engabra::g3::Vector{ spot[0], spot[1], 0. };
-	}
-
-	//! Engabra Vector: [0,1] from vec[0,1], with output [2] set to zero.
-	inline
-	engabra::g3::Vector
-	engVector
-		( img::Vector<double> const & vec
-		)
-	{
-		return engabra::g3::Vector{ vec[0], vec[1], 0. };
-	}
-
-	//! Engabra Vector: [0,1] from gradient element, [2] set to zero.
-	inline
-	engabra::g3::Vector
-	engVector
-		( img::Grad const & grad
-		)
-	{
-		return engabra::g3::Vector{ grad[0], grad[1], 0. };
-	}
-
-
-	//
 	// To ras::RowCol
 	//
-
-	//! Integral values that are the std::floor values of vec[0,1]
-	inline
-	ras::RowCol
-	rasRowCol
-		( engabra::g3::Vector const & vec
-		)
-	{
-		return ras::RowCol
-			{ static_cast<std::size_t>(std::floor(vec[0]))
-			, static_cast<std::size_t>(std::floor(vec[1]))
-			};
-	}
 
 	//! Integral values that are the std::floor values of datSpot[0,1]
 	template <typename Type>
@@ -143,33 +81,9 @@ namespace cast
 	// To img::Vector<Type>
 	//
 
-	//! The first two components, vec[0,1]
-	template <typename Type>
-	inline
-	img::Vector<Type>
-	imgVector
-		( engabra::g3::Vector const & imgVec
-		)
-	{
-		return img::Vector<Type>
-			{ imgVec[0]
-			, imgVec[1]
-			};
-	}
-
 	//
 	// To img::Spot
 	//
-
-	//! The first two components, vec[0,1]
-	inline
-	img::Spot
-	imgSpot
-		( engabra::g3::Vector const & vec
-		)
-	{
-		return img::Spot{ vec[0], vec[1] };
-	}
 
 	//! Cast row,col values to double and package for return
 	inline
@@ -192,20 +106,6 @@ namespace cast
 		)
 	{
 		return img::Spot{ vec[0], vec[1] };
-	}
-
-	//
-	// To img::Grad
-	//
-
-	//! The first two components, vec[0,1]
-	inline
-	img::Grad
-	imgGrad
-		( engabra::g3::Vector const & vec
-		)
-	{
-		return img::Grad{ vec[0], vec[1] };
 	}
 
 } // [cast]

@@ -32,6 +32,7 @@
  */
 
 
+#include "cast.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "rasChipSpec.hpp"
