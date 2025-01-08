@@ -30,6 +30,7 @@
 
 #include "appCenters.hpp"
 #include "imgSpot.hpp"
+#include "io.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "opsAllPeaks2D.hpp"
@@ -123,6 +124,8 @@ namespace
 		ras::Grid<float> const srcGrid{ simulatedQuadGrid(&sigQuad) };
 		img::Spot const expCenterSpot{ sigQuad.centerSpot() };
 
+		//(void)io::writeStretchPGM("srcGrid.pgm", srcGrid);
+
 		// [DoxyExample01a]
 
 		// find nominal center with symmetry filter response peak
@@ -145,7 +148,7 @@ std::cout << "  distinction: " << engabra::g3::io::fixed(distinction) << '\n';
 			// [DoxyExample01b]
 
 			ras::RowCol const & nominalCenterRC = peakRCVs.front().theRowCol;
-			ops::CenterRefiner const refiner(& srcGrid);
+			ops::CenterRefiner const refiner(&srcGrid, 2u, 6u);
 			img::Spot const gotCenterSpot
 				{ refiner.fitSpotNear(nominalCenterRC) };
 

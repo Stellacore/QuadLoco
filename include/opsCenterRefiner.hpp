@@ -33,10 +33,14 @@
 
 
 #include "cast.hpp"
+#include "imgSpan.hpp"
 #include "imgSpot.hpp"
+#include "prbStats.hpp"
 #include "rasGrid.hpp"
 #include "rasRelRC.hpp"
 #include "rasRowCol.hpp"
+
+#include <Engabra>
 
 
 namespace quadloco
@@ -159,6 +163,51 @@ namespace ops
 			return ssdGrid;
 		}
 
+		//! A sub-cell estimate of location for minimum
+		inline
+		static
+		img::Spot
+		spotAtMinSSD
+			( ras::Grid<double> const & ssdGrid
+			)
+		{
+			img::Spot minSpot{};
+			prb::Stats<double> const ssdStats(ssdGrid.cbegin(), ssdGrid.cend());
+			img::Span const ssdSpan{ ssdStats.min(), ssdStats.max() };
+			if (ssdSpan.isValid())
+			{
+				img::Vector<double> sumVec{ 0., 0. };
+				double sumProb{ 0. };
+				for (ras::Grid<double>::const_iterator
+					iter{ssdGrid.cbegin()} ; ssdGrid.cend() != iter ; ++iter)
+				{
+					double const & ssdValue = *iter;
+					if (engabra::g3::isValid(ssdValue))
+					{
+						double const frac{ ssdSpan.fractionAtValue(ssdValue) };
+						double const arg{ 4. * frac };
+						double const prob{ std::exp(-arg*arg) };
+						img::Spot const locSpot
+							{ cast::imgSpot(ssdGrid.rasRowColFor(iter)) };
+						sumVec = sumVec + prob * locSpot;
+						sumProb += prob;
+					}
+				}
+				if (0. < sumProb)
+				{
+					// The SSD computations are based on matching areas
+					// of grid cells and the weighted average computed
+					// here is related to the cnter of the cells.
+					// Therefore, add a half cell to recognize this
+					img::Vector<double> const halfCell{ .5, .5 };
+					img::Vector<double> const aveVec
+						{ (1./sumProb) * sumVec  + halfCell };
+					minSpot = cast::imgSpot(aveVec);
+				}
+			}
+			return minSpot;
+		}
+
 
 		/*! \brief Refine nominal center location using box neighborhood.
 		 *
@@ -196,18 +245,26 @@ namespace ops
 					isInterior = true;
 				}
 			}
+
 			if (isInterior)
 			{
-				ras::Grid<double> const ssdGridA
+				// compute SSD in neighborhood
+				ras::Grid<double> const ssdGrid
 					{ ssdHoodGrid(rcHoodCenterInSrc) };
 
-// TODO - 
-std::cerr << "\n\n\n INCOMPLETE CODE in opsCenterRefiner \n\n\n";
-// TODO - 
-//std::cout << ssdGridA.infoStringContents("ssdGridA\n", "%5.2f") << '\n';
-fitSpot = cast::imgSpot(rcHoodCenterInSrc);
+				// estimate sub-cell location of minimum
+				img::Spot const minSpotInGrid{ spotAtMinSSD(ssdGrid) };
 
-			} // interior point
+				// adjust ssdGrid location into full source image
+				fitSpot = img::Spot
+					{ minSpotInGrid.row()
+						+ (double)(rcHoodCenterInSrc.row())
+						- (double)(theHalfHood)
+					, minSpotInGrid.col()
+						+ (double)(rcHoodCenterInSrc.col())
+						- (double)(theHalfHood)
+					};
+			}
 
 			return fitSpot;
 		}
