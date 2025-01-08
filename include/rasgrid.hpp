@@ -41,6 +41,7 @@
 #include "rasChipSpec.hpp"
 #include "rasGrid.hpp"
 #include "rasRowCol.hpp"
+#include "valSpan.hpp"
 
 #include <Engabra> // TODO - temp
 
@@ -245,7 +246,7 @@ namespace grid
 	//! Span with begin/end at smallest/largest (valid) values in fGrid
 	template <typename PixType>
 	inline
-	img::Span
+	val::Span
 	fullSpanFor
 		( ras::Grid<PixType> const & fGrid
 		)
@@ -258,7 +259,7 @@ namespace grid
 		PixType const delta{ fMax - fMin };
 		constexpr PixType eps{ std::numeric_limits<PixType>::epsilon() };
 		PixType const useMax{ fMax * (1.f + delta * eps) };
-		return quadloco::img::Span{ (double)fMin, (double)useMax };
+		return quadloco::val::Span{ (double)fMin, (double)useMax };
 	}
 
 	//! \brief Convert grid elements to float
@@ -353,7 +354,7 @@ namespace grid
 	ras::Grid<uint8_t>
 	uGrid8
 		( ras::Grid<float> const & fgrid
-		, img::Span const & fSpan
+		, val::Span const & fSpan
 		)
 	{
 		ras::Grid<uint8_t> ugrid{ fgrid.hwSize() };
@@ -472,8 +473,8 @@ namespace grid
 
 			// boundary clipping
 			img::Area const clipArea
-				{ img::Span{ 1., (double)(ptGrid->high() - 1u) }
-				, img::Span{ 1., (double)(ptGrid->wide() - 1u) }
+				{ val::Span{ 1., (double)(ptGrid->high() - 1u) }
+				, val::Span{ 1., (double)(ptGrid->wide() - 1u) }
 				};
 
 			PixType const & back = min;

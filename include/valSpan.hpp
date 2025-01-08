@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for img::Span
+ * \brief Declarations for val::Span
  *
  */
 
@@ -38,7 +38,9 @@
 namespace quadloco
 {
 
-namespace img
+/*! \brief Scalar value types and functions in namespace quadloco::val
+ */
+namespace val
 {
 
 	//! A half open interval
@@ -153,7 +155,7 @@ namespace img
 	};
 
 
-} // [img]
+} // [val]
 
 } // [quadloco]
 
@@ -165,7 +167,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::img::Span const & item
+		, quadloco::val::Span const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -176,7 +178,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::img::Span const & item
+		( quadloco::val::Span const & item
 		)
 	{
 		return item.isValid();

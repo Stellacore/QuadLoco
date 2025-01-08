@@ -32,7 +32,7 @@
  */
 
 
-#include "imgSpan.hpp"
+#include "valSpan.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -55,10 +55,10 @@ namespace prb
 	class Histo
 	{
 		std::vector<double> theWeights;
-		img::Span const theValueSpan;
+		val::Span const theValueSpan;
 
 		// local/cached values
-		img::Span const theIndexSpan;
+		val::Span const theIndexSpan;
 		double const theBinSize;
 		double const theNdxPerVal;
 		double theWgtSum{ 0. };
@@ -112,7 +112,7 @@ namespace prb
 		Histo
 			( std::size_t const & numBins
 				//!< Specify resolution of histogram bin array
-			, img::Span const & valueSpan
+			, val::Span const & valueSpan
 				//!< Half-open range of values [min, max) to fill array
 			)
 			: theWeights(numBins, 0.) // allocate and zero

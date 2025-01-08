@@ -32,7 +32,7 @@
  */
 
 
-#include "imgSpan.hpp"
+#include "valSpan.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -161,7 +161,7 @@ namespace pix
 	uint8_t
 	uPix8
 		( RealPix const & realPix
-		, img::Span const & realSpan
+		, val::Span const & realSpan
 		)
 	{
 		uint8_t upix{ u8Null };
@@ -179,7 +179,7 @@ namespace pix
 				// "Normal" range between Dark and Lite
 				// NOTE: uSpan.max() is *out* of valid span so that
 				//       fraction interp goes only to (u8Over-1)==u8Lite
-				constexpr img::Span uSpan{ (double)u8Dark, (double)u8Over };
+				constexpr val::Span uSpan{ (double)u8Dark, (double)u8Over };
 				double const frac{ realSpan.fractionAtValue((double)realPix) };
 				double const value{ uSpan.valueAtFraction(frac) };
 				upix = static_cast<uint8_t>(std::floor(value));

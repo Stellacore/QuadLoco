@@ -28,6 +28,7 @@
 */
 
 
+#include "valSpan.hpp"
 #include "xfmMapSizeArea.hpp"
 
 #include <iostream>
@@ -46,8 +47,8 @@ namespace
 		// [DoxyExample01]
 
 		quadloco::ras::SizeHW const hwSize{ 17u, 23u };
-		quadloco::img::Span const xSpan{ 17., 34. };
-		quadloco::img::Span const ySpan{ 23., 69. };
+		quadloco::val::Span const xSpan{ 17., 34. };
+		quadloco::val::Span const ySpan{ 23., 69. };
 		quadloco::img::Area const xyArea{ xSpan, ySpan };
 
 		quadloco::xfm::MapSizeArea const cellMap(hwSize, xyArea);
@@ -106,12 +107,12 @@ namespace
 		using namespace quadloco;
 
 		img::Area const areaFrom
-			{ img::Span{ -10.,  -9.}
-			, img::Span{   9.,  10.}
+			{ val::Span{ -10.,  -9.}
+			, val::Span{   9.,  10.}
 			};
 		img::Area const areaInto
-			{ img::Span{ 10., 11.}
-			, img::Span{ 10., 11.}
+			{ val::Span{ 10., 11.}
+			, val::Span{ 10., 11.}
 			};
 
 		xfm::MapSizeArea const map

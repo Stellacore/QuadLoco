@@ -42,6 +42,7 @@
 #include "sigutil.hpp"
 #include "simConfig.hpp"
 #include "simRender.hpp"
+#include "valSpan.hpp"
 
 #include <Engabra>
 #include <Rigibra>
@@ -205,7 +206,7 @@ std::size_t lineCount{ 0u };
 
 		double const diag{ gradGrid.hwSize().diagonal() };
 		std::size_t const numDistBins{ (std::size_t)diag };
-		img::Span const distSpan{ -diag, diag };
+		val::Span const distSpan{ -diag, diag };
 		prb::Histo distHist(4u*numDistBins, distSpan);
 		for (sig::EdgeInfo const & edgeInfo : edgeInfos)
 		{

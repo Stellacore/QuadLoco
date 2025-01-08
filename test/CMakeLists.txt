@@ -37,7 +37,6 @@ set(unitTests
 	test_imgGrad  # pixel Gradent element type and functions
 	test_imgQuadTarget  # represent perspective image of obj::QuadTarget
 	test_imgRay  # a 2D geometric ray (start Spot and unit direction)
-	test_imgSpan  # half open interval (include start, excludes end)
 	test_imgSpot  # 'continuous' raster cell locations
 	test_imgVector  # support for 2D vector operations
 	test_io  # basic i/o support (e.g. pgm images)
@@ -72,6 +71,7 @@ set(unitTests
 	test_sigSpotSigma  # a 2D location with associated uncertainty
 	test_simRender  # simulation of perspective images of quad target
 	test_simSampler  # simulation of image intensity sampling
+	test_valSpan  # half open interval (include start, excludes end)
 	test_xfmMapSizeArea  # raster cell to continous area mapping
 
 	)

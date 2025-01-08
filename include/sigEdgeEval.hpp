@@ -38,6 +38,7 @@
 #include "sigEdgeLine.hpp"
 #include "sigItemWgt.hpp"
 #include "sigutil.hpp"
+#include "valSpan.hpp"
 
 #include "imgArea.hpp"
 #include "opsgrid.hpp"
@@ -250,8 +251,8 @@ namespace sig
 		{
 			std::vector<SpotWgt> spotWgts;
 			img::Area const hwArea
-				{ img::Span{ 0., static_cast<double>(hwSize.high())}
-				, img::Span{ 0., static_cast<double>(hwSize.wide())}
+				{ val::Span{ 0., static_cast<double>(hwSize.high())}
+				, val::Span{ 0., static_cast<double>(hwSize.wide())}
 				};
 
 			// get edge rays likely associated with radial quad edges
