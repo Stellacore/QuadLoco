@@ -72,7 +72,7 @@ main
 
 	// load image
 	ras::Grid<std::uint8_t> const loadGrid{ io::readPGM(loadPath) };
-	ras::Grid<float> const srcGrid{ sig::util::toFloat(loadGrid, 0u) };
+	ras::Grid<float> const srcGrid{ ras::grid::realGridOf<float>(loadGrid, 0u) };
 
 	/*
 	prb::Stats<float> const srcStats(srcGrid.cbegin(), srcGrid.cend());

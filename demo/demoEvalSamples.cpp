@@ -551,7 +551,8 @@ namespace eval
 		// load image chip
 		std::filesystem::path const loadPath{ fileSet.thePathPGM };
 		ras::Grid<std::uint8_t> const loadGrid{ io::readPGM(loadPath) };
-		ras::Grid<float> const srcGrid{ sig::util::toFloat(loadGrid, 0u) };
+		ras::Grid<float> const srcGrid
+			{ ras::grid::realGridOf<float>(loadGrid, 0u) };
 
 		// load expected measurements
 		img::Spot const expPeakSpot{ peakSpotLoadFrom(fileSet) };

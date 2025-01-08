@@ -216,6 +216,90 @@ namespace grid
 		return quadloco::img::Span{ (double)fMin, (double)useMax };
 	}
 
+	//! \brief Convert grid elements to float
+	template <typename PixType>
+	inline
+	ras::Grid<PixType>
+	realGridOf
+		( ras::Grid<uint8_t> const & uGrid
+			//!< Input source grid
+		, int const & treatAsNull = -1
+			//!< If value in range [0,255], then corresponding output is null
+		)
+	{
+		typename ras::Grid<PixType> fGrid(uGrid.hwSize());
+		ras::Grid<uint8_t>::const_iterator inIter{ uGrid.cbegin() };
+		typename ras::Grid<PixType>::iterator outIter{ fGrid.begin() };
+		while (uGrid.cend() != inIter)
+		{
+			uint8_t const & inVal = *inIter;
+			PixType rtVal{ static_cast<PixType>(inVal) };
+			bool const checkForNull{ ! (treatAsNull < 0) };
+			if (checkForNull)
+			{
+				if (treatAsNull == inVal)
+				{
+					rtVal = std::numeric_limits<PixType>::quiet_NaN();
+				}
+			}
+			*outIter = rtVal;
+			inIter++;
+			outIter++;
+		}
+		return fGrid;
+	}
+
+	//! \brief A Larger grid produced with (nearest neighbor) up sampling.
+	template <typename PixType>
+	inline
+	ras::Grid<PixType>
+	largerGrid
+		( ras::Grid<PixType> const & inGrid
+		, std::size_t const & upFactor
+		)
+	{
+		ras::Grid<PixType> upGrid
+			( upFactor * inGrid.high()
+			, upFactor * inGrid.wide()
+			);
+		for (std::size_t inRow{0u} ; inRow < inGrid.high() ; ++inRow)
+		{
+			std::size_t const outRow0{ upFactor * inRow };
+			for (std::size_t inCol{0u} ; inCol < inGrid.wide() ; ++inCol)
+			{
+				std::size_t const outCol0{ upFactor * inCol };
+				for (std::size_t wRow{0u} ; wRow < upFactor ; ++wRow)
+				{
+					std::size_t const outRow{ outRow0 + wRow };
+					for (std::size_t wCol{0u} ; wCol < upFactor ; ++wCol)
+					{
+						std::size_t const outCol{ outCol0 + wCol };
+						upGrid(outRow, outCol) = inGrid(inRow, inCol);
+					}
+				}
+			}
+		}
+		return upGrid;
+	}
+
+	//! \brief Grid result of applying function to each input cell
+	template <typename Func>
+	inline
+	ras::Grid<float>
+	resultGridFor
+		( ras::Grid<img::Grad> const & gradGrid
+		, Func const & funcOfGrad
+		)
+	{
+		ras::Grid<float> outGrid(gradGrid.hwSize());
+		std::transform
+			( gradGrid.cbegin(), gradGrid.cend()
+			, outGrid.begin()
+			, funcOfGrad
+			);
+		return outGrid;
+	}
+
 	/*! \brief A uint8_t grid that maps fgrid values via fSpan range.
 	 *
 	 * ref uPix8() for details on value mapping.

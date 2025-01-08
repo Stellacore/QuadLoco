@@ -68,7 +68,7 @@ main
 
 	// load image
 	ras::Grid<std::uint8_t> const srcGrid{ io::readPGM(srcPath) };
-	ras::Grid<float> const useGrid{ sig::util::toFloat(srcGrid, 0) };
+	ras::Grid<float> const useGrid{ ras::grid::realGridOf<float>(srcGrid, 0) };
 
 	// smooth source signal
 	ras::Grid<float> const softGrid

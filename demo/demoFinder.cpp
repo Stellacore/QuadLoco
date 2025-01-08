@@ -181,7 +181,7 @@ main
 
 	// load image
 	ras::Grid<std::uint8_t> const srcGrid{ io::readPGM(srcPath) };
-	ras::Grid<float> const useGrid{ sig::util::toFloat(srcGrid, 0) };
+	ras::Grid<float> const useGrid{ ras::grid::realGridOf<float>(srcGrid, 0) };
 
 	// smooth source signal
 	ras::Grid<float> const softGrid
@@ -193,7 +193,7 @@ main
 
 	// upsample image and draw center in enlarged grid
 	constexpr std::size_t upFactor{ 8u };
-	ras::Grid<float> outGrid{ sig::util::toLarger(useGrid, upFactor) };
+	ras::Grid<float> outGrid{ ras::grid::largerGrid(useGrid, upFactor) };
 	img::Spot const outCenter{ (double)upFactor * useCenter };
 	sig::util::drawSpot(&outGrid, outCenter);
 
