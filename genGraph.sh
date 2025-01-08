@@ -1,6 +1,13 @@
 
 
-namespaces="ang app cast img io obj ops pix prb ras sig sim xfm"
+# list alphabetically - more crossing lines
+# namespaces="ang app cast img io obj ops pix prb ras sig sim xfm"
+
+# list in order from lowest level to highest - fewer crossing lines
+#namespaces="ang img pix ras prb io cast xfm obj ops sig app sim"
+
+# list in order from highest level to lowest - fewer crossing lines
+namespaces="sim app  sig  ops  obj xfm cast io prb  ras  pix  img  ang"
 
 
 echo "digraph {"
