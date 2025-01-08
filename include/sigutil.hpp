@@ -109,51 +109,6 @@ namespace util
 	}
 
 
-	//! Draw a (bright on black) radiometric mark at spot
-	template <typename PixType>
-	inline
-	void
-	drawSpot
-		( ras::Grid<PixType> * const & ptGrid
-		, img::Spot const & spot
-		)
-	{
-		if (ptGrid && (2u < ptGrid->high()) && (2u < ptGrid->wide()))
-		{
-			ras::Grid<PixType> & grid = *ptGrid;
-
-			// find min max
-			using InIt = ras::Grid<PixType>::const_iterator;
-			std::pair<InIt, InIt> const iterMM
-				{ ops::grid::minmax_valid(grid.cbegin(), grid.cend()) };
-			PixType const min{ *(iterMM.first) };
-			PixType const max{ *(iterMM.second) };
-
-			// boundary clipping
-			img::Area const clipArea
-				{ img::Span{ 1., (double)(ptGrid->high() - 1u) }
-				, img::Span{ 1., (double)(ptGrid->wide() - 1u) }
-				};
-
-			PixType const & back = min;
-			PixType const & fore = max;
-			ras::RowCol const rc0{ cast::rasRowCol(spot) };
-			if (clipArea.contains(cast::imgSpot(rc0)))
-			{
-				grid(rc0.row() - 1u, rc0.col() - 1u) = back;
-				grid(rc0.row() - 1u, rc0.col()     ) = back;
-				grid(rc0.row() - 1u, rc0.col() + 1u) = back;
-				grid(rc0.row()     , rc0.col() - 1u) = back;
-				grid(rc0.row()     , rc0.col()     ) = fore;
-				grid(rc0.row()     , rc0.col() + 1u) = back;
-				grid(rc0.row() + 1u, rc0.col() - 1u) = back;
-				grid(rc0.row() + 1u, rc0.col()     ) = back;
-				grid(rc0.row() + 1u, rc0.col() + 1u) = back;
-			}
-		}
-
-	}
-
 
 	//! \brief Grid of values with cells set to func(edgeInfo).
 	inline

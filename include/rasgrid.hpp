@@ -34,11 +34,15 @@
 
 #include "pix.hpp"
 
+#include "imgArea.hpp"
 #include "imgGrad.hpp"
 #include "imgSpot.hpp"
 #include "pix.hpp"
 #include "rasChipSpec.hpp"
 #include "rasGrid.hpp"
+#include "rasRowCol.hpp"
+
+#include <Engabra> // TODO - temp
 
 #include <algorithm>
 #include <cmath>
@@ -160,39 +164,80 @@ namespace grid
 		fillLastRows(beg, hwSize, nPad, value);
 	}
 
+	//! Iterators to (not null) min/max *valid* elements in collection
+	template <typename Iter>
+	inline
+	std::pair<Iter, Iter>
+	minmax_valid
+		( Iter const & beg
+		, Iter const & end
+		)
+	{
+		std::pair<Iter, Iter> itPair{ end, end };
+		Iter & itMin = itPair.first;
+		Iter & itMax = itPair.second;
+		using ValType = typename std::iterator_traits<Iter>::value_type;
+		ValType min{ pix::null<ValType>() };
+		ValType max{ pix::null<ValType>() };
+		for (Iter iter{beg} ; end != iter ; ++iter)
+		{
+			ValType const & value = *iter;
+			if (pix::isValid(value))
+			{
+				bool setMin{ false };
+				// track min
+				if (pix::isValid(min))
+				{
+					setMin = (value < min);
+				}
+				else
+				{
+					setMin = true;
+				}
+				if (setMin)
+				{
+					min = value;
+					itMin = iter;
+				}
+
+				// track max
+				bool setMax{ false };
+				if (pix::isValid(max))
+				{
+					setMax = (max < value);
+				}
+				else
+				{
+					setMax = true;
+				}
+				if (setMax)
+				{
+					max = value;
+					itMax = iter;
+				}
+			}
+		}
+		return itPair;
+	}
+
 	//! Min/Max values from a collection with only isValid() inputs considered
 	template <typename FwdIter, typename PixType = float>
 	inline
 	std::pair<PixType, PixType>
-	validMinMax
+	validMinMaxValues
 		( FwdIter const & beg
 		, FwdIter const & end
 		)
 	{
-		using namespace quadloco;
 		std::pair<PixType, PixType> minmax
-			{ std::numeric_limits<PixType>::quiet_NaN()
-			, std::numeric_limits<PixType>::quiet_NaN()
-			};
-		if (beg != end)
+			{ pix::null<PixType>(), pix::null<PixType>() };
+		std::pair<FwdIter, FwdIter> const itPair{ minmax_valid(beg, end) };
+		FwdIter const & itMin = itPair.first;
+		FwdIter const & itMax = itPair.second;
+		if ((end != itMin) && (end != itMax))
 		{
-			PixType & min = minmax.first;
-			PixType & max = minmax.second;
-			for (FwdIter iter{beg} ; end != iter ; ++iter)
-			{
-				PixType const & pixVal = *iter;
-				if (pix::isValid(pixVal))
-				{
-					if ((! pix::isValid(min)) || (pixVal < min))
-					{
-						min = pixVal;
-					}
-					if ((! pix::isValid(max)) || (max < pixVal))
-					{
-						max = pixVal;
-					}
-				}
-			}
+			minmax.first = *itMin;
+			minmax.second = *itMax;
 		}
 		return minmax;
 	}
@@ -206,7 +251,7 @@ namespace grid
 		)
 	{
 		std::pair<PixType, PixType> const fMinMax
-			{ validMinMax(fGrid.cbegin(), fGrid.cend()) };
+			{ validMinMaxValues(fGrid.cbegin(), fGrid.cend()) };
 		PixType const & fMin = fMinMax.first;
 		// bump max by a tiny amount so that largest value *is* included
 		PixType const & fMax = fMinMax.second;
@@ -403,6 +448,54 @@ namespace grid
 			}
 		}
 		return values;
+	}
+
+	//! Draw a (bright on black) radiometric mark at spot
+	template <typename PixType>
+	inline
+	void
+	drawSpot
+		( ras::Grid<PixType> * const & ptGrid
+		, img::Spot const & spot
+		)
+	{
+		if (ptGrid && (2u < ptGrid->high()) && (2u < ptGrid->wide()))
+		{
+			ras::Grid<PixType> & grid = *ptGrid;
+
+			// find min max
+			using InIt = ras::Grid<PixType>::const_iterator;
+			std::pair<InIt, InIt> const iterMM
+				{ minmax_valid(grid.cbegin(), grid.cend()) };
+			PixType const min{ *(iterMM.first) };
+			PixType const max{ *(iterMM.second) };
+
+			// boundary clipping
+			img::Area const clipArea
+				{ img::Span{ 1., (double)(ptGrid->high() - 1u) }
+				, img::Span{ 1., (double)(ptGrid->wide() - 1u) }
+				};
+
+			PixType const & back = min;
+			PixType const & fore = max;
+			if (clipArea.contains(spot))
+			{
+				ras::RowCol const rc0
+					{ static_cast<std::size_t>(std::floor(spot[0]))
+					, static_cast<std::size_t>(std::floor(spot[1]))
+					};
+				grid(rc0.row() - 1u, rc0.col() - 1u) = back;
+				grid(rc0.row() - 1u, rc0.col()     ) = back;
+				grid(rc0.row() - 1u, rc0.col() + 1u) = back;
+				grid(rc0.row()     , rc0.col() - 1u) = back;
+				grid(rc0.row()     , rc0.col()     ) = fore;
+				grid(rc0.row()     , rc0.col() + 1u) = back;
+				grid(rc0.row() + 1u, rc0.col() - 1u) = back;
+				grid(rc0.row() + 1u, rc0.col()     ) = back;
+				grid(rc0.row() + 1u, rc0.col() + 1u) = back;
+			}
+		}
+
 	}
 
 	/*! Value interpolated at location within grid using bilinear model.

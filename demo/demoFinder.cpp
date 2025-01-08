@@ -32,6 +32,7 @@
 #include "imgArea.hpp"
 #include "io.hpp"
 #include "opsgrid.hpp"
+#include "rasgrid.hpp"
 #include "rasGrid.hpp"
 #include "sigEdgeEval.hpp"
 #include "sigutil.hpp"
@@ -195,7 +196,7 @@ main
 	constexpr std::size_t upFactor{ 8u };
 	ras::Grid<float> outGrid{ ras::grid::largerGrid(useGrid, upFactor) };
 	img::Spot const outCenter{ (double)upFactor * useCenter };
-	sig::util::drawSpot(&outGrid, outCenter);
+	ras::grid::drawSpot(&outGrid, outCenter);
 
 	// save (enlarged) image with center drawn
 	bool const okaySave{ io::writeStretchPGM(outPath, outGrid) };
