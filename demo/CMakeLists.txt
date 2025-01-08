@@ -33,7 +33,6 @@ set(ProgNames
 	demoFilter
 	demoFinder
 	demoPGM
-	demoSimFind
 	demoSymmetry
 
 	)
