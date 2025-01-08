@@ -33,7 +33,6 @@ set(unitTests
 	test_appQuadLike  # probabilitic assessor of quad target pixel patterns
 	test_cast  # data type conversion operations
 	test_imgArea  # a 2D range of values
-	test_imgCircle  # geometric circle (and line intersection)
 	test_imgEdgel  # individual pixel edge information (Spot and Grad)
 	test_imgGrad  # pixel Gradent element type and functions
 	test_imgQuadTarget  # represent perspective image of obj::QuadTarget
@@ -62,6 +61,7 @@ set(unitTests
 	test_rasSizeHW  # basic "high/wide" area boundary (half open)
 	test_sigAdderAD  # accumulatio buffer for hough alpha,delta parms
 	test_sigCenterFitter  # least square solution for center of edge rays
+	test_sigCircle  # geometric circle (and line intersection)
 	test_sigEdgeEval  # edgel evaluator checking likelihood on quad radii
 	test_sigEdgeGrouper  # generate candidate edges as groups of EdgeInfos
 	test_sigEdgeInfo  # edgel characteristics tracking 
