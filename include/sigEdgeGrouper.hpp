@@ -33,10 +33,10 @@
 
 
 #include "ang.hpp"
-#include "angLikely.hpp"
 #include "imgEdgel.hpp"
 #include "imgRay.hpp"
 #include "imgVector.hpp"
+#include "opsPeakAngles.hpp"
 #include "rasGrid.hpp"
 #include "sigEdgeInfo.hpp"
 #include "sigItemWgt.hpp"
@@ -106,7 +106,7 @@ namespace sig
 			std::vector<AngleWgt> peakAWs;
 
 			// create angle value accumulation (circular-wrapping) buffer
-			ang::Likely angleProbs(numAngBins);
+			ops::PeakAngles angleProbs(numAngBins);
 			for (sig::EdgeInfo const & edgeInfo : edgeInfos)
 			{
 				double const fwdAngle{ edgeInfo.consideredAngle() };

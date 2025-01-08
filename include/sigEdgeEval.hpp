@@ -38,9 +38,9 @@
 #include "sigItemWgt.hpp"
 #include "sigutil.hpp"
 
-#include "angLikely.hpp"
 #include "imgArea.hpp"
 #include "opsgrid.hpp"
+#include "opsPeakAngles.hpp"
 #include "rasGrid.hpp"
 #include "sigEdgeInfo.hpp"
 #include "sigQuadTarget.hpp"

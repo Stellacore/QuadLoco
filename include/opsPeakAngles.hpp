@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::ang::Likely
+ * \brief Declarations for quadloco::ops::PeakAngles
  *
  */
 
@@ -48,10 +48,10 @@
 namespace quadloco
 {
 
-namespace ang
+namespace ops
 {
 	//! \brief Angle likelihood estimation
-	struct Likely
+	struct PeakAngles
 	{
 		ang::Ring const theRing{};
 		std::vector<double> theBinSums{};
@@ -59,13 +59,13 @@ namespace ang
 		//! Construct a default (null) instance
 		inline
 		explicit
-		Likely
+		PeakAngles
 			() = default;
 
 		//! Construct accumulation buffer with requested number of bins
 		inline
 		explicit
-		Likely
+		PeakAngles
 			( std::size_t const & numAngBins
 			)
 			: theRing(numAngBins)
@@ -222,10 +222,10 @@ namespace ang
 			return oss.str();
 		}
 
-	}; // Likely
+	}; // PeakAngles
 
 
-} // [ang]
+} // [ops]
 
 } // [quadloco]
 
@@ -237,7 +237,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::ang::Likely const & item
+		, quadloco::ops::PeakAngles const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -248,7 +248,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::ang::Likely const & item
+		( quadloco::ops::PeakAngles const & item
 		)
 	{
 		return item.isValid();

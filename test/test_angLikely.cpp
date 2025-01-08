@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::ang::Likely
+\brief Unit tests (and example) code for quadloco::ang::PeakAngles
 */
 
 
-#include "angLikely.hpp"
+#include "opsPeakAngles.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -44,7 +44,7 @@ namespace
 	{
 		// [DoxyExample00]
 
-		quadloco::ang::Likely const aNull{};
+		quadloco::ops::PeakAngles const aNull{};
 		bool const expIsValid{ false };
 		bool const gotIsValid{ isValid(aNull) };
 
@@ -67,7 +67,7 @@ namespace
 
 		// construct an accumulation buffer - here with just few bins
 		std::size_t const numBins{ 8u };
-		quadloco::ang::Likely angleProb(numBins);
+		quadloco::ops::PeakAngles angleProb(numBins);
 
 		// add a value near start of bin (near phase wrap location)
 		double const expAngle{ .125 };
