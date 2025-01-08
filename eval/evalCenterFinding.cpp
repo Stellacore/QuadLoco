@@ -39,6 +39,7 @@
 #include "rasPeakRCV.hpp"
 #include "simConfig.hpp"
 #include "simRender.hpp"
+#include "sysTimer.hpp"
 
 #include <Engabra>
 #include <Rigibra>
@@ -165,8 +166,8 @@ namespace sim
 			}
 		};
 
-//	static TrialSpec const sUseTrialSpec{ sTrialSmall };
-	static TrialSpec const sUseTrialSpec{ sTrial5k };
+	static TrialSpec const sUseTrialSpec{ sTrialSmall };
+//	static TrialSpec const sUseTrialSpec{ sTrial5k };
 
 
 	//
@@ -329,7 +330,6 @@ namespace sim
 					PolarDecomp const polarDecomp
 						{ PolarDecomp::fromAVR(azm, vrt, rng) };
 					locs.emplace_back(polarDecomp.vector());
-std::cout << polarDecomp.infoString() << '\n';
 				}
 			}
 		}
@@ -780,11 +780,16 @@ namespace
 	{
 		using namespace quadloco;
 
+std::cout << "starting simulation\n";
+		sys::Timer timerSim{ "simulation" };
 		// generate many simulation cases
 		std::vector<std::shared_ptr<sim::Trial> > const ptTrials
 			{ sim::manyTrials() };
+		timerSim.stop();
 std::cout << "numTrials: " << ptTrials.size() << '\n';
 
+std::cout << "starting processing\n";
+		sys::Timer timerProc{ "processing" };
 		// process each simulated case and record result
 		std::vector<std::shared_ptr<sim::Outcome> > ptOutcomeAlls;
 		ptOutcomeAlls.reserve(ptTrials.size());
@@ -797,9 +802,12 @@ std::cout << "numTrials: " << ptTrials.size() << '\n';
 				ptOutcomeAlls.emplace_back(ptOutcome);
 			}
 		}
+		timerProc.stop();
 std::cout << "num ptOutcomeAlls: " <<  ptOutcomeAlls.size() << '\n';
 
+std::cout << "starting evaluation\n";
 		// assess results overall and note any unsuccessful cases
+		sys::Timer timerReport{ "report" };
 		std::ostringstream rptAll;
 		std::vector<std::shared_ptr<sim::Outcome> > ptOutcomeErrs;
 		ptOutcomeErrs.reserve(ptOutcomeAlls.size());
@@ -814,6 +822,7 @@ std::cout << "num ptOutcomeAlls: " <<  ptOutcomeAlls.size() << '\n';
 				ptOutcomeErrs.emplace_back(ptOutcomeAll);
 			}
 		}
+		timerReport.stop();
 std::cout << "num ptOutcomeErrs: " <<  ptOutcomeErrs.size() << '\n';
 
 		// report on unsuccessful trials
@@ -846,11 +855,21 @@ std::cout << "num ptOutcomeErrs: " <<  ptOutcomeErrs.size() << '\n';
 		if (hitErr)
 		{
 			oss << "\n*** Error trials\n" << '\n';
-			oss << rptErr.str() << '\n';
+		//	oss << rptErr.str() << '\n';
 		}
 
 		std::ofstream ofs("evalCenterFinding.dat");
 		ofs << rptAll.str() << '\n';
+
+		std::cout << "===============\n";
+		std::cout << "   timer::Sim: " << timerSim << '\n';
+		std::cout << "  timer::Proc: " << timerProc << '\n';
+		std::cout << "timer::Report: " << timerReport << '\n';
+		std::cout << "===============\n";
+
+std::chrono::steady_clock::period const foo;
+std::cout << "foo: " << foo.num << ' ' << foo.den << '\n';
+//std::cout << "period: " << std::chrono::steady_clock::period << '\n';
 
 	}
 
