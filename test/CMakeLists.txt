@@ -30,6 +30,7 @@ set(unitTests
 
 	test_angLikely  # angular value likelihood estimation
 	test_angRing  # wrap around data structures e.g. for angles
+	test_appQuadLike  # probabilitic assessor of quad target pixel patterns
 	test_cast  # data type conversion operations
 	test_imgArea  # a 2D range of values
 	test_imgCircle  # geometric circle (and line intersection)
@@ -53,7 +54,6 @@ set(unitTests
 	test_pix  # pixel image manipulations
 	test_prbGauss1D  # Gaussian probability density functions in 1D
 	test_prbHisto  # histogram data modeling
-	test_prbquad  # probabilitic assessor of quad target pixel patterns
 	test_prbStats  # statistics from running data stream
 	test_rasChipSpec  # a 2D sub region of a larger area
 	test_rasGrid  # general raster grid storage and access

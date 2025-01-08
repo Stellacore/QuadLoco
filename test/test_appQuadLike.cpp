@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::TODO
+\brief Unit tests (and example) code for quadloco::app::QuadLike
 */
 
 
-#include "prbquad.hpp"
+#include "appQuadLike.hpp"
 
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
@@ -88,7 +88,7 @@ namespace
 		// assess the quadness of pixels w.r.t. the estimated "found" geometry
 		std::ostringstream msg; // diagnostic info
 		double const probQuad
-			{ quadloco::prb::isQuadlike(pixGrid, gotImgQuad, &msg) };
+			{ quadloco::app::isQuadlike(pixGrid, gotImgQuad, &msg) };
 
 		// [DoxyExample01]
 
