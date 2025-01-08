@@ -111,8 +111,8 @@ namespace sim
 					if (Step == edgeDetail)
 					{
 						// immediate step up at edge
-						ras::RowCol const rcLoc{ row, col };
-						if (edgel.rcInFront(rcLoc))
+						img::Spot const spotLoc{ row, col };
+						if (edgel.spotInFront(spotLoc))
 						{
 							pixValue = valueForeground;
 						}

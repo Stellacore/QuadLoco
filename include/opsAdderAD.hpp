@@ -32,6 +32,7 @@
  */
 
 
+#include "cast.hpp"
 #include "imgSpan.hpp"
 #include "imgSpot.hpp"
 #include "pix.hpp"

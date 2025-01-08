@@ -72,6 +72,18 @@ namespace img
 		inline
 		explicit
 		Spot
+			( std::size_t const val0
+			, std::size_t const val1
+			)
+			: img::Vector<double>
+				{ static_cast<double>(val0)
+				, static_cast<double>(val1)
+				}
+		{ }
+
+		inline
+		explicit
+		Spot
 			( img::Vector<double> const vec2D
 			)
 			: img::Vector<double>{ vec2D.theData }

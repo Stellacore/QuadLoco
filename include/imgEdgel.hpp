@@ -33,8 +33,9 @@
 
 
 #include "ang.hpp"
-#include "cast.hpp"
+#include "imgGrad.hpp"
 #include "imgRay.hpp"
+#include "imgSpot.hpp"
 
 #include <Engabra>
 
@@ -49,7 +50,7 @@ namespace quadloco
 namespace img
 {
 
-	//! Edge element in raster space (location and gradient)
+	//! Edge element in 2D space (location and gradient)
 	class Edgel : public img::Ray
 	{
 		//! Magnitude of the gradient
@@ -71,17 +72,6 @@ namespace img
 			, img::Grad const & grad
 			)
 			: Ray{ spot, grad }
-			, theMag{ img::magnitude(grad) }
-		{ }
-
-		//! Conversion from RowCol
-		inline
-		explicit
-		Edgel
-			( ras::RowCol const & rowcol
-			, img::Grad const & grad
-			)
-			: Ray{ cast::imgSpot(rowcol), grad }
 			, theMag{ img::magnitude(grad) }
 		{ }
 
@@ -137,21 +127,21 @@ namespace img
 		//! True if location is in front of edge (relative to gradient)
 		inline
 		bool
-		rcInFront
-			( ras::RowCol const & rowcol
+		spotInFront
+			( img::Spot const & imgSpot
 			) const
 		{
-			return isAhead(cast::imgSpot(rowcol));
+			return isAhead(imgSpot);
 		}
 
 		//! True if location is behind the edge (relative to gradient)
 		inline
 		bool
-		rcInBack
-			( ras::RowCol const & rowcol
+		spotInBack
+			( img::Spot const & imgSpot
 			) const
 		{
-			return isBehind(cast::imgSpot(rowcol));
+			return isBehind(imgSpot);
 		}
 
 		//! True if components are same as those of other within tol

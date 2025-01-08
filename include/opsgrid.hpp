@@ -32,6 +32,7 @@
  */
 
 
+#include "cast.hpp"
 #include "imgEdgel.hpp"
 #include "imgGrad.hpp"
 #include "opsfilter.hpp"
@@ -314,7 +315,7 @@ namespace grid
 					if (tol < magnitude(grad))
 					{
 						// should be valid since grad is significant
-						img::Edgel const edgel(ras::RowCol{ row, col }, grad);
+						img::Edgel const edgel(img::Spot{ row, col }, grad);
 						pixEdgels.push_back(edgel);
 					}
 				}
@@ -444,7 +445,7 @@ namespace grid
 									// only processing non-trivial gradients
 									// i.e., tol < magnitude(gradCenter) above
 									img::Edgel const edgel
-										(ras::RowCol{ row, col }, gradCenter);
+										(img::Spot{ row, col }, gradCenter);
 									pixEdgels.push_back(edgel);
 								}
 							}
