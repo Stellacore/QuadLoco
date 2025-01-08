@@ -24,11 +24,11 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::sig::QuadTarget
+\brief Unit tests (and example) code for quadloco::img::QuadTarget
 */
 
 
-#include "sigQuadTarget.hpp"
+#include "imgQuadTarget.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -44,7 +44,7 @@ namespace
 	{
 		// [DoxyExample00]
 
-		quadloco::sig::QuadTarget const aNull{};
+		quadloco::img::QuadTarget const aNull{};
 
 		// [DoxyExample00]
 
@@ -77,7 +77,7 @@ namespace
 
 		// construct a quad
 		constexpr double centerSigma{ 1./16. };
-		quadloco::sig::QuadTarget const imgQuad
+		quadloco::img::QuadTarget const imgQuad
 			{ center,  dirX,  dirY, centerSigma };
 
 		// get (image space) angle from X to Y
@@ -85,8 +85,8 @@ namespace
 		double const gotAngleYwX{ imgQuad.angleSizeYwX() };
 
 		// the (ideal) images are symmetric under half turn rotation
-		quadloco::sig::QuadTarget const imgQuadA{ imgQuad }; // copy ctor
-		quadloco::sig::QuadTarget const imgQuadB
+		quadloco::img::QuadTarget const imgQuadA{ imgQuad }; // copy ctor
+		quadloco::img::QuadTarget const imgQuadB
 			{ center, -dirX, -dirY, centerSigma };
 		bool const expSame{ true };
 		bool const gotSame{ nearlyEquals(imgQuadA, imgQuadB) };
@@ -100,7 +100,7 @@ namespace
 
 		if (! (gotSame == expSame))
 		{
-			oss << "Failure of sigQuadTarget half turn test\n";
+			oss << "Failure of imgQuadTarget half turn test\n";
 			oss << "imgQuadA: " << imgQuadA << '\n';
 			oss << "imgQuadB: " << imgQuadB << '\n';
 		}

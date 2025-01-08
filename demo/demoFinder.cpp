@@ -45,7 +45,7 @@ namespace quadloco
 {
 	//! Return "best" quad (one with highest detection weight)
 	inline
-	sig::QuadTarget
+	img::QuadTarget
 	bestQuadTargetFor
 		( ras::Grid<float> const & srcGrid
 		)
@@ -67,7 +67,7 @@ namespace quadloco
 		//
 		// Start with source image
 		//
-		sig::QuadTarget sigQuad;
+		img::QuadTarget sigQuad;
 		if (saveDiagnostics)
 		{
 			bool const okPgm
@@ -188,7 +188,7 @@ main
 		{ ops::grid::smoothGridFor<float>(useGrid, 5u, 2.5) };
 
 	// find center
-	sig::QuadTarget const sigQuad{ bestQuadTargetFor(softGrid) };
+	img::QuadTarget const sigQuad{ bestQuadTargetFor(softGrid) };
 	img::Spot const useCenter{ sigQuad.centerSpot() };
 
 	// upsample image and draw center in enlarged grid

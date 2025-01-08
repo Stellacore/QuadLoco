@@ -32,9 +32,9 @@
  */
 
 
+#include "imgQuadTarget.hpp"
 #include "imgRay.hpp"
 #include "imgSpot.hpp"
-#include "sigQuadTarget.hpp"
 
 #include <Engabra>
 
@@ -159,8 +159,8 @@ namespace sig
 	//! An index item and associated weight
 	using NdxWgt = ItemWgt<std::size_t>;
 
-	//! A sig::QuadTarget item and associated weight
-	using QuadWgt = ItemWgt<sig::QuadTarget>;
+	//! A img::QuadTarget item and associated weight
+	using QuadWgt = ItemWgt<img::QuadTarget>;
 
 
 	//! An angle item and associated weight

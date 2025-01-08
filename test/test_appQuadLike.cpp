@@ -30,10 +30,10 @@
 
 #include "appQuadLike.hpp"
 
+#include "imgQuadTarget.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "rasSizeHW.hpp"
-#include "sigQuadTarget.hpp"
 #include "simConfig.hpp"
 #include "simRender.hpp"
 
@@ -80,10 +80,10 @@ namespace
 			);
 		quadloco::ras::Grid<float> const pixGrid{ render.quadImage(numOver) };
 		// retrieve geometry of the simulated image
-		quadloco::sig::QuadTarget const expImgQuad{ render.sigQuadTarget() };
+		quadloco::img::QuadTarget const expImgQuad{ render.sigQuadTarget() };
 
 		// for this test, assume the found geometry is perfect
-		quadloco::sig::QuadTarget const & gotImgQuad = expImgQuad;
+		quadloco::img::QuadTarget const & gotImgQuad = expImgQuad;
 
 		// assess the quadness of pixels w.r.t. the estimated "found" geometry
 		std::ostringstream msg; // diagnostic info

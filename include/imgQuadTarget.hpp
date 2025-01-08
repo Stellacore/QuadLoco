@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::sig::QuadTarget
+ * \brief Declarations for quadloco::img::QuadTarget
  *
  */
 
@@ -48,7 +48,7 @@
 namespace quadloco
 {
 
-namespace sig
+namespace img
 {
 	//! Geometric description for perspective image of an obj::QuadTarget
 	struct QuadTarget
@@ -163,7 +163,7 @@ namespace sig
 		inline
 		bool
 		nearlyEquals
-			( quadloco::sig::QuadTarget const & other
+			( img::QuadTarget const & other
 			, double const tol = std::numeric_limits<double>::epsilon()
 			) const
 		{
@@ -222,7 +222,7 @@ namespace sig
 	}; // QuadTarget
 
 
-} // [sig]
+} // [img]
 
 } // [quadloco]
 
@@ -234,7 +234,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::sig::QuadTarget const & item
+		, quadloco::img::QuadTarget const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -245,7 +245,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::sig::QuadTarget const & item
+		( quadloco::img::QuadTarget const & item
 		)
 	{
 		return item.isValid();
@@ -255,8 +255,8 @@ namespace
 	inline
 	bool
 	nearlyEquals
-		( quadloco::sig::QuadTarget const & itemA
-		, quadloco::sig::QuadTarget const & itemB
+		( quadloco::img::QuadTarget const & itemA
+		, quadloco::img::QuadTarget const & itemB
 		, double const tol = std::numeric_limits<double>::epsilon()
 		)
 	{

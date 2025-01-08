@@ -31,6 +31,7 @@
  */
 
 
+#include "imgQuadTarget.hpp"
 #include "sigCenterFitter.hpp"
 #include "sigEdgeGrouper.hpp"
 #include "sigedgel.hpp"
@@ -43,7 +44,6 @@
 #include "opsPeakAngles.hpp"
 #include "rasGrid.hpp"
 #include "sigEdgeInfo.hpp"
-#include "sigQuadTarget.hpp"
 
 #include <algorithm>
 #include <array>
@@ -396,7 +396,7 @@ namespace sig
 			for (QuadWgt const & quadWgt : quadWgts)
 			{
 				// start with nominal Quad signal (use to qualify rays)
-				sig::QuadTarget const & srcQuad = quadWgt.item();
+				img::QuadTarget const & srcQuad = quadWgt.item();
 				double const & srcWgt = quadWgt.weight();
 
 				// Determine ray weighting based on collinearity and
@@ -426,7 +426,7 @@ namespace sig
 							{ fitSpotSigma.spot() // fit center location
 							+ img::Spot{ .5, .5 } // report subpix center
 							};
-						sig::QuadTarget const fitSigQuad
+						img::QuadTarget const fitSigQuad
 							{ centerSpotPixMiddle
 							, srcQuad.theDirX // keep src axis direction
 							, srcQuad.theDirY // keep src axis direction
@@ -450,7 +450,7 @@ namespace sig
 			return fitQuadWgts;
 		}
 
-		//! Search for combo of radLines fitting sig::QuadTarget
+		//! Search for combo of radLines fitting img::QuadTarget
 		inline
 		std::vector<QuadWgt>
 		quadWgtsFor
@@ -574,7 +574,7 @@ std::cout
 								{ direction(deltaNext) };
 
 							// generate candidate signal
-							sig::QuadTarget const sigQuad
+							img::QuadTarget const sigQuad
 								{ centerSpot, dirX, dirY };
 
 							// combine opposing edge weights for signal wgt
@@ -610,7 +610,7 @@ std::cout
 			std::size_t const numSW{ spotWgts.size() };
 
 
-			// Attempt to generate sig::QuadTarget for each spot
+			// Attempt to generate img::QuadTarget for each spot
 			for (std::size_t ndxSW{0u} ; ndxSW < numSW ; ++ndxSW)
 			{
 				// access input spot data

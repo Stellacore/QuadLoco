@@ -28,6 +28,7 @@
 */
 
 
+#include "imgQuadTarget.hpp"
 #include "imgSpot.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
@@ -35,7 +36,6 @@
 #include "rasGrid.hpp"
 #include "sigEdgeEval.hpp"
 #include "sigItemWgt.hpp"
-#include "sigQuadTarget.hpp"
 #include "simRender.hpp"
 
 #include <Engabra>
@@ -59,7 +59,7 @@ namespace sim
 	struct TestCase
 	{
 		ras::Grid<float> thePixGrid;
-		sig::QuadTarget theSigQuad;
+		img::QuadTarget theSigQuad;
 
 	}; // TestCase
 
@@ -67,8 +67,8 @@ namespace sim
 	struct TestResult
 	{
 		std::size_t const theNdx{};
-		sig::QuadTarget const theExpQuad{};
-		sig::QuadTarget const theGotQuad{};
+		img::QuadTarget const theExpQuad{};
+		img::QuadTarget const theGotQuad{};
 		double const theGotWgt{};
 
 		//! Descriptive information about this instance.
@@ -207,13 +207,13 @@ main
 			{ edgeEval.sigQuadWeights(gradGrid.hwSize()) };
 
 		// add to test result
-		sig::QuadTarget const & expQuad = testCase.theSigQuad;;
+		img::QuadTarget const & expQuad = testCase.theSigQuad;;
 		sig::SpotWgt const expSW{ expQuad.centerSpot(), 1. };
 		for (sig::QuadWgt const & sigQuadWgt : sigQuadWgts)
 		{
 			if (isValid(sigQuadWgt))
 			{
-				sig::QuadTarget const & gotQuad = sigQuadWgt.item();
+				img::QuadTarget const & gotQuad = sigQuadWgt.item();
 				double const & wgt = sigQuadWgt.weight();
 
 				sim::TestResult const testResult{ nn, expQuad, gotQuad, wgt };

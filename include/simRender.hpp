@@ -33,11 +33,11 @@
 
 
 #include "cast.hpp"
+#include "imgQuadTarget.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "rasChipSpec.hpp"
 #include "rasGrid.hpp"
-#include "sigQuadTarget.hpp"
 #include "simConfig.hpp"
 #include "simSampler.hpp"
 
@@ -107,7 +107,7 @@ namespace sim
 
 		//! Geometry of perspective image created by quadImage()
 		inline
-		sig::QuadTarget
+		img::QuadTarget
 		sigQuadTarget
 			() const
 		{

@@ -108,7 +108,7 @@ namespace
 			//quadloco::io::writeStretchPGM("sample.pgm", pixGrid);
 
 			// retrieve geometry of the simulated image
-			quadloco::sig::QuadTarget const expImgQuad
+			quadloco::img::QuadTarget const expImgQuad
 				{ render.sigQuadTarget() };
 			std::ostringstream msg;
 			double const quadProb

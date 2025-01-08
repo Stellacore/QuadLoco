@@ -69,7 +69,7 @@ namespace
 	inline
 	quadloco::ras::Grid<float>
 	simulatedQuadGrid
-		( quadloco::sig::QuadTarget * const & ptSigQuad = nullptr
+		( quadloco::img::QuadTarget * const & ptSigQuad = nullptr
 		)
 	{
 		using namespace quadloco;
@@ -125,7 +125,7 @@ namespace
 		using namespace quadloco;
 
 		// simulate quad target image and extract edgels
-		quadloco::sig::QuadTarget sigQuad{};  // set by simulation
+		quadloco::img::QuadTarget sigQuad{};  // set by simulation
 		ras::Grid<float> const srcGrid{ simulatedQuadGrid(&sigQuad) };
 		ras::Grid<float> const & pixGrid = srcGrid;
 //		ras::Grid<float> const pixGrid

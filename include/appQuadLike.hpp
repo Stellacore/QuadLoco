@@ -32,11 +32,11 @@
  */
 
 
+#include "imgQuadTarget.hpp"
 #include "imgSpot.hpp"
 #include "prbStats.hpp"
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
-#include "sigQuadTarget.hpp"
 
 #include <limits>
 #include <vector>
@@ -80,7 +80,7 @@ namespace app
 		SquareRadiiSamples
 		from
 			( ras::Grid<Type> const & pixGrid
-			, sig::QuadTarget const & imgQuad
+			, img::QuadTarget const & imgQuad
 			)
 		{
 			std::vector<Type> ppVals{};
@@ -267,7 +267,7 @@ namespace app
 	double
 	isQuadlike
 		( ras::Grid<Type> const & pixGrid
-		, sig::QuadTarget const & imgQuad
+		, img::QuadTarget const & imgQuad
 		, std::ostream * const & ptMessages = nullptr
 		)
 	{

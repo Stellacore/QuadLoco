@@ -32,12 +32,12 @@
  */
 
 
+#include "imgQuadTarget.hpp"
 #include "imgSpot.hpp"
 #include "imgVector.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "pixNoise.hpp"
-#include "sigQuadTarget.hpp"
 
 #include <Engabra>
 #include <Rigibra>
@@ -285,7 +285,7 @@ namespace sim
 
 		//! Geometry of perspective image created by quadImage()
 		inline
-		sig::QuadTarget
+		img::QuadTarget
 		sigQuadTarget
 			() const
 		{
@@ -312,7 +312,7 @@ namespace sim
 			Vector<double> const yDir{ direction(yMidInDet - centerInDet) };
 
 			constexpr double centerSigma{ 1./1024. };
-			sig::QuadTarget const simQuad{ center, xDir, yDir, centerSigma };
+			img::QuadTarget const simQuad{ center, xDir, yDir, centerSigma };
 			return simQuad;
 		}
 

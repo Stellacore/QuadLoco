@@ -36,6 +36,7 @@ set(unitTests
 	test_imgCircle  # geometric circle (and line intersection)
 	test_imgEdgel  # individual pixel edge information (Spot and Grad)
 	test_imgGrad  # pixel Gradent element type and functions
+	test_imgQuadTarget  # represent perspective image of obj::QuadTarget
 	test_imgRay  # a 2D geometric ray (start Spot and unit direction)
 	test_imgSpan  # half open interval (include start, excludes end)
 	test_imgSpot  # 'continuous' raster cell locations
@@ -68,7 +69,6 @@ set(unitTests
 	test_sigFindAD  # find maxima in sig::ParmAD space
 	test_sigItemWgt  # pairing of template item type and associated weight
 	test_sigParmAD  # Hough "alpha,delta" parameter representation
-	test_sigQuadTarget  # represent perspective image of obj::QuadTarget
 	test_sigSpotSigma  # a 2D location with associated uncertainty
 	test_simRender  # simulation of perspective images of quad target
 	test_simSampler  # simulation of image intensity sampling
