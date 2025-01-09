@@ -117,7 +117,7 @@ namespace ops
 				FwdIter itCurr{ itBeg };
 				for (std::size_t nn{0u} ; nn < numElem ; ++nn)
 				{
-					using Type = FwdIter::value_type;
+					using Type = typename FwdIter::value_type;
 					Type const & valPrev = *itPrev;
 					Type const & valCurr = *itCurr;
 
@@ -183,7 +183,7 @@ namespace ops
 			std::size_t const ndxPrev{ (ndxCurr + (numElem - 1u)) % numElem };
 			FwdIter const itPrev{ itBeg + ndxPrev };
 
-			using Type = FwdIter::value_type;
+			using Type = typename FwdIter::value_type;
 			Type const & valPrev = *itPrev;
 			Type const & valCurr = *itCurr;
 
@@ -205,7 +205,7 @@ namespace ops
 			if (0u == ndxCurr)
 			{
 				FwdIter const itCurr{ itBeg + ndxCurr };
-				using Type = FwdIter::value_type;
+				using Type = typename FwdIter::value_type;
 				Type const & valCurr = *itCurr;
 				Type const valPrev{ 0 };
 

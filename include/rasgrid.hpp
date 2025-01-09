@@ -465,7 +465,7 @@ namespace grid
 			ras::Grid<PixType> & grid = *ptGrid;
 
 			// find min max
-			using InIt = ras::Grid<PixType>::const_iterator;
+			using InIt = typename ras::Grid<PixType>::const_iterator;
 			std::pair<InIt, InIt> const iterMM
 				{ minmax_valid(grid.cbegin(), grid.cend()) };
 			PixType const min{ *(iterMM.first) };
