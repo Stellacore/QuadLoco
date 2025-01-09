@@ -36,7 +36,7 @@
 
 #include <array>
 #include <cmath>
-#include <format>
+#include <cstdio>
 
 
 namespace quadloco
@@ -69,21 +69,23 @@ namespace img
 		struct Formatter
 		{
 			//! std::format to apply to each of the two theComps
-			std::string const theFormatEach{ "{:4.1f}" };
+			std::string const theEachFmtCstyle{ "4.1f" };
 
-			// String after theFormatEach to encode each of the two values
+			// String after theEachFmtCstyle to encode each of the two values
 			inline
 			std::string
 			operator()
 				( Vector<Type> const & elem
 				) const
 			{
-				std::ostringstream fmt;
-				fmt << '(' << theFormatEach << ',' << theFormatEach << ')';
-				return std::vformat
-					( fmt.str()
-					, std::make_format_args(elem[0], elem[1])
-					);
+				std::string const fmt
+					{ theEachFmtCstyle + ' ' + theEachFmtCstyle };
+
+				constexpr std::size_t bufSize{ 1024u + 1u };
+				char buf[bufSize];
+				std::snprintf(buf, bufSize, fmt.c_str(), elem[0], elem[1]);
+
+				return std::string(buf);
 			}
 
 		}; // Formatter

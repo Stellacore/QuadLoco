@@ -57,6 +57,7 @@ set(BUILD_FLAGS_FOR_C_GCC
 	"${BUILD_FLAGS_FOR_C_ALL}"
 	#
 	# build differences
+	-DNOTAFLAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGg
 	-pthread
 	-fomit-frame-pointer
 	-fmax-errors=1  # keep template error message generation under control
@@ -85,6 +86,7 @@ set(BUILD_FLAGS_FOR_CXX_CLANG
 	# flags
 	-fstrict-enums
 	# warnings
+	-Wc++11-compat
 	)
 
 set(BUILD_FLAGS_FOR_CXX_GCC
@@ -95,6 +97,7 @@ set(BUILD_FLAGS_FOR_CXX_GCC
 	-fstrict-enums
 	-fno-nonansi-builtins
 	# warnings
+	-Wc++11-compat
 	)
 set(BUILD_FLAGS_FOR_CXX_VISUAL
 	${BUILD_FLAGS_FOR_C_VISUAL}

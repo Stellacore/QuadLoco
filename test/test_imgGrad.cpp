@@ -33,7 +33,6 @@
 #include "rasGrid.hpp"
 
 #include <algorithm>
-#include <format>
 #include <iostream>
 #include <sstream>
 
@@ -78,17 +77,6 @@ namespace
 
 	}
 
-	//! Examples for documentation
-	void
-	test1
-		( std::ostream & oss
-		)
-	{
-		// [DoxyExample01]
-
-		// [DoxyExample01]
-	}
-
 }
 
 //! Standard test case main wrapper
@@ -100,7 +88,6 @@ main
 	std::stringstream oss;
 
 	test0(oss);
-	test1(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

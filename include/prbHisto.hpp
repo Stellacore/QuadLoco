@@ -151,16 +151,16 @@ namespace prb
 			  &&    (value < theValueSpan.max())
 			   )
 			{
-				double const frac{ theValueSpan.fractionAtValue(value) };
-				double const dNdx{ theIndexSpan.valueAtFraction(frac) };
 				double dBin{ 0. };
-				double const binFrac{ std::modf(dNdx, &dBin) };
 				int const hitNdx{ static_cast<int>(dBin) };
 				double const maxDeltaVal{ nSigmaClip * valueSigma };
 				double const maxDeltaNdx{ theNdxPerVal * maxDeltaVal };
 				int const nDelta{ static_cast<int>(std::ceil(maxDeltaNdx)) };
 
 				/*
+				double const frac{ theValueSpan.fractionAtValue(value) };
+				double const dNdx{ theIndexSpan.valueAtFraction(frac) };
+				double const binFrac{ std::modf(dNdx, &dBin) };
 				std::cout << "       dBin: " << dBin << '\n';
 				std::cout << "     hitNdx: " << hitNdx << '\n';
 				std::cout << "    binFrac: " << binFrac << '\n';
@@ -172,7 +172,7 @@ namespace prb
 				for (int relNdx{-nDelta} ; (! (nDelta < relNdx)) ; ++relNdx)
 				{
 					int binNdx{ hitNdx + relNdx };
-					if (binNdx < theWeights.size())
+					if (binNdx < (int)theWeights.size())
 					{
 						double const valueDiff{ value - valueAtIndex(binNdx) };
 						double const probArg{ valueDiff / valueSigma };

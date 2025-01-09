@@ -32,6 +32,7 @@
  */
 
 
+#include <cmath>
 #include <random>
 
 
@@ -104,7 +105,7 @@ namespace pix
 			if (0. < intensityValue)
 			{
 				double const fullNumE{ theElectPerValue * intensityValue };
-				double const rootNumE{ std::sqrtf(fullNumE) };
+				double const rootNumE{ std::sqrt(fullNumE) };
 				std::size_t const distroMean
 					{ static_cast<std::size_t>(rootNumE) };
 

@@ -49,7 +49,6 @@ namespace tst
 	checkNdxGrid
 		( std::ostream & oss
 		, quadloco::ras::Grid<NdxRC> const & ndxGrid
-		, std::size_t const & expNum
 		, std::string const & tname
 		)
 	{
@@ -265,7 +264,7 @@ namespace
 
 		// check that indices are set properly
 		std::size_t const validCount
-			{ tst::checkNdxGrid(oss, testData, testData.size(), "fillChip") };
+			{ tst::checkNdxGrid(oss, testData, "fillChip") };
 		if (! (chipData.size() == validCount))
 		{
 			oss
@@ -344,7 +343,7 @@ namespace
 
 		// check that indices are set properly
 		std::size_t const validCount
-			{ tst::checkNdxGrid(oss, fullData, chipData.size(), "fillFull") };
+			{ tst::checkNdxGrid(oss, fullData, "fillFull") };
 		if (! (chipData.size() == validCount))
 		{
 			oss

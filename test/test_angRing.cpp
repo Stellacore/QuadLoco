@@ -124,7 +124,6 @@ namespace
 
 		// constexpr std::size_t nBins{ 5u };
 		// quadloco::ang::Ring const ring(nBins);
-		std::size_t const ndxCurr{};
 		std::size_t const ndxWrap4{ ring.indexRelativeTo(0u, -1) }; // exp 4
 		std::size_t const ndxWrap0{ ring.indexRelativeTo(0u,  5) }; // exp 0
 		std::size_t const ndxWrap1{ ring.indexRelativeTo(0u, -4) }; // exp 1

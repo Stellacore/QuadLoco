@@ -157,7 +157,7 @@ namespace ops
 			std::vector<ras::PeakRCV> peaks{ peakRCVs(fGrid, minValue) };
 			sort(peaks.rbegin(), peaks.rend());
 			return peaks;
-		};
+		}
 
 		/*! \brief Measure of how much largest peak stands out from second
 		 *

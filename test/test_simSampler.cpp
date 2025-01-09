@@ -90,7 +90,7 @@ namespace
 		// run multiple test cases
 		for (TestCase & testcase : testcases)
 		{
-			std::size_t const numPix{ std::max(hwChip.high(), hwChip.wide()) };
+		//	std::size_t const numPix{ std::max(hwChip.high(), hwChip.wide()) };
 			quadloco::sim::Config const config
 				{ objQuad
 				, camera
