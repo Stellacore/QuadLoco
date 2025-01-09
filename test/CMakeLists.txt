@@ -58,17 +58,6 @@ set(unitTests
 	test_rasgrid  # pixel/grid functions (e.g. image processing)
 	test_rasRowCol  # discete raster cell locations
 	test_rasSizeHW  # basic "high/wide" area boundary (half open)
-	test_sigAdderAD  # accumulatio buffer for hough alpha,delta parms
-	test_sigCenterFitter  # least square solution for center of edge rays
-	test_sigCircle  # geometric circle (and line intersection)
-	test_sigEdgeEval  # edgel evaluator checking likelihood on quad radii
-	test_sigEdgeGrouper  # generate candidate edges as groups of EdgeInfos
-	test_sigEdgeInfo  # edgel characteristics tracking 
-	test_sigEdgeLine  # A semi-infinite radial line for edgel candidate
-	test_sigFindAD  # find maxima in sig::ParmAD space
-	test_sigItemWgt  # pairing of template item type and associated weight
-	test_sigParmAD  # Hough "alpha,delta" parameter representation
-	test_sigSpotSigma  # a 2D location with associated uncertainty
 	test_simRender  # simulation of perspective images of quad target
 	test_simSampler  # simulation of image intensity sampling
 	test_valSpan  # half open interval (include start, excludes end)

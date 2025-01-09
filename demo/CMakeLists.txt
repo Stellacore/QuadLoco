@@ -29,7 +29,6 @@ set(ProgNames
 	demoVersion
 
 	demoEdgeDirAD
-	demoEdgeEval
 
 	)
 
