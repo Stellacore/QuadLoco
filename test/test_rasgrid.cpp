@@ -39,7 +39,6 @@
 
 #include <algorithm>
 #include <complex>
-#include <format>
 #include <iostream>
 #include <sstream>
 

@@ -33,7 +33,6 @@
 #include "rasGrid.hpp"
 
 #include <algorithm>
-#include <format>
 #include <iostream>
 #include <sstream>
 

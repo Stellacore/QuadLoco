@@ -36,7 +36,8 @@
 
 #include <array>
 #include <cmath>
-#include <format>
+//#include <format>
+#include <iostream>
 
 
 namespace quadloco
@@ -80,10 +81,12 @@ namespace img
 			{
 				std::ostringstream fmt;
 				fmt << '(' << theFormatEach << ',' << theFormatEach << ')';
-				return std::vformat
-					( fmt.str()
-					, std::make_format_args(elem[0], elem[1])
-					);
+std::cout << "\nTODO TODO TODO -- update format: '" << fmt.str() << "'\n";
+return "TODO";
+//				return std::vformat
+//					( fmt.str()
+//					, std::make_format_args(elem[0], elem[1])
+//					);
 			}
 
 		}; // Formatter
