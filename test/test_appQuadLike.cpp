@@ -68,14 +68,11 @@ namespace
 		// simulate face-on 1:1 image of a quad target
 		quadloco::sim::Config const config
 			{ quadloco::sim::Config::faceOn(objQuad, numPix) };
-		quadloco::obj::Camera const & camera = config.camera();
-		rigibra::Transform const & xCamWrtQua = config.xformStaWrtQuad();
 
 		// render simulated image
 		using opt = quadloco::sim::Sampler::OptionFlags;
 		quadloco::sim::Render const render
 			( config
-		//	( camera, xCamWrtQua, objQuad
 			, opt::None // no SceneBias nor ImageNoise
 			);
 		quadloco::ras::Grid<float> const pixGrid{ render.quadImage(numOver) };

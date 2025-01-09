@@ -155,7 +155,8 @@ namespace
 			, opt::None // no SceneBias nor ImageNoise
 			);
 
-		quadloco::ras::Grid<float> const fGrid{ render.quadImage() };
+		quadloco::ras::Grid<float> const fGrid
+			{ render.quadImage(numOverSample) };
 		// ... retrieve geometry of the simulated image
 		quadloco::img::QuadTarget const imgQuad{ render.imgQuadTarget() };
 

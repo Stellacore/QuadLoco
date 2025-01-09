@@ -81,8 +81,8 @@ namespace
 			{ center,  dirX,  dirY, centerSigma };
 
 		// get (image space) angle from X to Y
-		double expAngleYwX{ angleY - angleX };
-		double const gotAngleYwX{ imgQuad.angleSizeYwX() };
+//		double expAngleYwX{ angleY - angleX };
+//		double const gotAngleYwX{ imgQuad.angleSizeYwX() };
 
 		// the (ideal) images are symmetric under half turn rotation
 		quadloco::img::QuadTarget const imgQuadA{ imgQuad }; // copy ctor
