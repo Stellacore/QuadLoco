@@ -151,19 +151,21 @@ namespace prb
 			  &&    (value < theValueSpan.max())
 			   )
 			{
+				double const frac{ theValueSpan.fractionAtValue(value) };
+				double const dNdx{ theIndexSpan.valueAtFraction(frac) };
 				double dBin{ 0. };
+				(void)std::modf(dNdx, &dBin);
 				int const hitNdx{ static_cast<int>(dBin) };
+
 				double const maxDeltaVal{ nSigmaClip * valueSigma };
 				double const maxDeltaNdx{ theNdxPerVal * maxDeltaVal };
 				int const nDelta{ static_cast<int>(std::ceil(maxDeltaNdx)) };
 
 				/*
-				double const frac{ theValueSpan.fractionAtValue(value) };
-				double const dNdx{ theIndexSpan.valueAtFraction(frac) };
-				double const binFrac{ std::modf(dNdx, &dBin) };
+				double const binFrac1{ std::modf(dNdx, &dBin) };
 				std::cout << "       dBin: " << dBin << '\n';
 				std::cout << "     hitNdx: " << hitNdx << '\n';
-				std::cout << "    binFrac: " << binFrac << '\n';
+				std::cout << "   binFrac1: " << binFrac << '\n';
 				std::cout << "maxDeltaVal: " << maxDeltaVal << '\n';
 				std::cout << "maxDeltaNdx: " << maxDeltaNdx << '\n';
 				std::cout << " valueSigma: " << valueSigma << '\n';
@@ -222,7 +224,7 @@ namespace prb
 			return (theValueSpan.min() + delta);
 		}
 
-		//! Probability associated with (start of) binNdx
+		//! Probability associated with binNdx (norm to unit sum over histo)
 		inline
 		double
 		probabilityAtIndex
@@ -236,24 +238,6 @@ namespace prb
 			}
 			return prob;
 		}
-
-		/* TODO - comment/test if needed
-		//! Values of bins (corresponding with probabilities())
-		inline
-		std::vector<double>
-		values
-			() const
-		{
-			std::vector<double> vals;
-			std::size_t const numElem{ size() };
-			vals.reserve(numElem);
-			for (std::size_t binNdx{0u} ; binNdx < numElem ; ++binNdx)
-			{
-				vals.emplace_back(valueAtIndex(binNdx));
-			}
-			return vals;
-		}
-		*/
 
 		//! Accumulated probabilities (corresponding with values())
 		inline
@@ -307,12 +291,6 @@ namespace prb
 			) const
 		{
 			std::ostringstream oss;
-			double const sumWgts{ weightSum() };
-			double norm{ std::numeric_limits<double>::quiet_NaN() };
-			if (0. < sumWgts)
-			{
-				norm = (1. / sumWgts);
-			}
 			oss << infoString(title);
 			oss << "\n# binNdx, valueAtIndex, weights, binProb";
 			for (std::size_t bNdx{0u} ; bNdx < theWeights.size() ; ++bNdx)
@@ -323,7 +301,7 @@ namespace prb
 					<< std::setw(5u) << bNdx
 					<< ' ' << fixed(valueAtIndex(bNdx))
 					<< ' ' << fixed(weightAtIndex(bNdx))
-					<< ' ' << fixed(norm * weightAtIndex(bNdx))
+					<< ' ' << fixed(probabilityAtIndex(bNdx))
 					;
 			}
 			return oss.str();
