@@ -33,6 +33,9 @@
 
 
 #include <chrono>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 #include <string>
 
 
@@ -62,9 +65,11 @@ namespace sys
 		inline
 		void
 		restart
-			()
+			( std::string const & name = {}
+			)
 		{
 			theBeg = std::chrono::steady_clock::now();
+			theName = name;
 		}
 
 		//! Set theEnd time value (used for elapsed time evaluation)
@@ -83,8 +88,15 @@ namespace sys
 			() const
 		{
 			using namespace std::chrono;
-			duration const duro{ duration_cast<nanoseconds>(theEnd - theBeg) };
+			// clang complains about before c++17 compatibility
+		//	duration const duro{ duration_cast<nanoseconds>(theEnd - theBeg) };
+			// clang complains about missing '::num' member
+		//	duration<double, nanoseconds> const duro{ theEnd - theBeg };
+			// clang creates who-knows-what kind of type
+			auto const duro{ theEnd - theBeg };
+
 			double const delta{ 1.e-9 * static_cast<double>(duro.count()) };
+
 			return delta;
 		}
 
@@ -93,7 +105,7 @@ namespace sys
 		std::string
 		infoString
 			( std::string const & title = {}
-			, std::size_t const & numDigitAfter = 6u
+			, std::size_t const & numDigitAfter = 9u
 			) const
 		{
 			std::ostringstream oss;
