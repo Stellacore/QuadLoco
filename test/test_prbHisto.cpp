@@ -64,11 +64,11 @@ namespace
 		hist.addValue(115.0, 1.5);
 		hist.addValue(116.0, 1.5);
 		// A third peak
-		hist.addValue(197.99999, 1.5); // at end of span
-		hist.addValue(198.00000, 1.5); // outside span (not used)
+		hist.addValue(199.99999, 1.5); // at end of span
+		hist.addValue(200.00000, 1.5); // outside span (not used)
 
 		// expected peak location results
-		std::vector<double> const expPeakVals { 100., 115., 198.  };
+		std::vector<double> const expPeakVals { 100., 115., 199.  };
 
 		//std::cout << "hist: " << hist << '\n';
 		//std::cout << hist.infoStringContents("histC") << '\n';

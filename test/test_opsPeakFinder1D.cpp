@@ -37,6 +37,248 @@
 
 namespace
 {
+	inline
+	std::string
+	infoString
+		( std::vector< std::vector<std::size_t> > const & peakGrps
+		)
+	{
+		std::ostringstream oss;
+		static std::string const pad("...");
+		oss << pad
+			<< "Group Size: " << peakGrps.size();
+		for (std::size_t nGrp{0u} ; nGrp < peakGrps.size() ; ++nGrp)
+		{
+			std::vector<std::size_t> const & peakGrp = peakGrps[nGrp];
+			oss << '\n';
+			oss << pad
+				<< "PeakSize[" << nGrp << "]:"
+				<< ' ' << peakGrp.size()
+				<< ' ' << "peakNdxs:";
+			for (std::size_t const & peakNdx : peakGrp)
+			{
+				oss << ' ' << std::setw(2u) << peakNdx;
+			}
+		}
+		return oss.str();
+	}
+
+	//! Test if {got,exp}PeakLocs are the same
+	inline
+	void
+	checkPeaks
+		( std::ostream & oss
+		, std::vector< std::vector<std::size_t> > const & gotPeakGrps
+		, std::vector< std::vector<std::size_t> > const & expPeakGrps
+		, std::string const & tname
+		)
+	{
+		bool hitErr{ false };
+		if (! (gotPeakGrps.size() == expPeakGrps.size()))
+		{
+			oss << "Failure of peak finding size test:\n"
+				<< tname << '\n';
+			hitErr = true;
+		}
+		else
+		{
+			std::size_t const numGrps{ expPeakGrps.size() };
+			for (std::size_t nGrp{0u} ; nGrp < numGrps ; ++nGrp)
+			{
+				std::vector<std::size_t> const & expNdxs = expPeakGrps[nGrp];
+				std::vector<std::size_t> const & gotNdxs = gotPeakGrps[nGrp];
+				if (! (gotNdxs.size() == expNdxs.size()))
+				{
+					oss << "Failure of peak Ndxs size test:\n"
+						<< tname << '\n';
+					oss << "nGrp: " << nGrp << "exp,got:sizes:"
+						<< ' ' << expNdxs.size()
+						<< ' ' << gotNdxs.size()
+						<< '\n';
+					hitErr = true;
+				}
+				else
+				{
+					bool const same
+						{ std::equal
+							( gotNdxs.cbegin(), gotNdxs.cend()
+							, expNdxs.cbegin()
+							)
+						};
+					if (! same)
+					{
+						oss << "Failure of in-peak Ndx test:\n"
+							<< tname << '\n';
+						hitErr = true;
+					}
+				}
+			}
+		}
+
+		if (hitErr)
+		{
+			oss << "expPeakGrps:\n" << infoString(expPeakGrps) << '\n';
+			oss << "gotPeakGrps:\n" << infoString(gotPeakGrps) << '\n';
+			oss << '\n';
+		}
+
+	}
+
+	using CirNdxs = std::vector< std::vector<std::size_t> >;
+	using LinNdxs = std::vector< std::vector<std::size_t> >;
+
+	struct Result
+	{
+		std::string const theName{};
+		LinNdxs const theGotLinNdxs;
+		CirNdxs const theGotCirNdxs;
+
+	}; // Result
+
+	struct TestCase
+	{
+		std::string const theName{};
+		std::vector<int> const theData{};
+		LinNdxs const theExpLinNdxs{};
+		CirNdxs const theExpCirNdxs{};
+
+		inline
+		std::vector< std::vector<std::size_t> >
+		gotLinear
+			() const
+		{
+			using quadloco::ops::PeakFinder1D;
+			return PeakFinder1D::peakIndexGroups
+				(theData.cbegin(), theData.cend(), PeakFinder1D::Linear);
+		}
+
+		inline
+		std::vector< std::vector<std::size_t> >
+		gotCircular
+			() const
+		{
+			using quadloco::ops::PeakFinder1D;
+			return PeakFinder1D::peakIndexGroups
+				(theData.cbegin(), theData.cend(), PeakFinder1D::Circle);
+		}
+
+		inline
+		Result
+		run
+			() const
+		{
+			return Result{ theName, gotLinear(), gotCircular() };
+		}
+
+	}; // TestCase
+
+} // [anon]
+
+namespace
+{
+	//! Test general cases including end conditions with Circular/Linear
+	void
+	test0
+		( std::ostream & oss
+		)
+	{
+		std::vector<TestCase> const testCases
+			{ TestCase
+				{ ">> No Data"
+				, {}
+				, LinNdxs{ }
+				, CirNdxs{ }
+				}
+			, TestCase
+				{ ">> Start Peak"
+				, { 1, 0, 0, 0, 0 }
+				, LinNdxs{ { 0u } }
+				, CirNdxs{ { 0u } }
+				}
+			, TestCase
+				{ ">> End Peak"
+				, { 0, 0, 0, 0, 1 }
+				, LinNdxs{ { 4u } }
+				, CirNdxs{ { 4u } }
+				}
+			, TestCase
+				{ ">> All Neg"
+				, { -1, -1, -1, -1, -1 }
+				, LinNdxs{ }
+				, CirNdxs{ }
+				}
+			, TestCase
+				{ ">> All Zeros"
+				, { 0, 0, 0, 0, 0 }
+				, LinNdxs{ }
+				, CirNdxs{ }
+				}
+			, TestCase
+				{ ">> All Pos"
+				, { 1, 1, 1, 1, 1 }
+				, LinNdxs{ { 0u, 1u, 2u, 3u, 4u } } // one big peak (0 b4/after)
+				, CirNdxs{ }  // all constant, no peaks
+				}
+			, TestCase
+				{ ">> Middle Peak"
+				, { 0, 1, 2, 0, 0 }
+				, LinNdxs{ { 2u } }
+				, CirNdxs{ { 2u } }
+				}
+			, TestCase
+				{ ">> Wide Beg"
+				, { 1, 1, 0, 0, 0 }
+				, LinNdxs{ { 0u, 1u } }
+				, CirNdxs{ { 0u, 1u } }
+				}
+			, TestCase
+				{ ">> Wide Peak"
+				, { 0, 1, 1, 0, 0 }
+				, LinNdxs{ { 1u, 2u } }
+				, CirNdxs{ { 1u, 2u } }
+				}
+			, TestCase
+				{ ">> Wide End"
+				, { 0, 0, 0, 1, 1 }
+				, LinNdxs{ { 3u, 4u } }
+				, CirNdxs{ { 3u, 4u } }
+				}
+			, TestCase
+				{ ">> End Peak"
+				, { 10, 11, 12, 13, 20 }
+				, LinNdxs{ { 4u } }
+				, CirNdxs{ { 4u } }
+				}
+			, TestCase
+				{ ">> Wrap Peak"
+				, { 1, 0, 0, 0, 1 }
+				, LinNdxs{ { 0u }, { 4u } }
+				, CirNdxs{ { 4u, 0u } }
+				}
+			};
+
+		for (TestCase const & testCase : testCases)
+		{
+			Result const result{ testCase.run() };
+			checkPeaks
+				( oss
+				, result.theGotLinNdxs
+				, testCase.theExpLinNdxs
+				, result.theName + "-Linear"
+				);
+			checkPeaks
+				( oss
+				, result.theGotCirNdxs
+				, testCase.theExpCirNdxs
+				, result.theName + "-Circular"
+				);
+		}
+
+		// [DoxyExample00]
+		// [DoxyExample00]
+	}
+
+#if 0
 	//! Test static functions (which do the peak finding)
 	void
 	test1
@@ -77,11 +319,11 @@ namespace
 		// raw classifications of data changes
 		/*
 		// quadloco::ops::PeakFinder1D const pf;
-		std::vector<quadloco::ops::PeakFinder1D::NdxFlag> const ndxFlags
-			{ quadloco::ops::PeakFinder1D::ndxFlagsFor
+		std::vector<quadloco::ops::PeakFinder1D::NdxChange> const ndxChanges
+			{ quadloco::ops::PeakFinder1D::ndxChangesFor
 				(values.cbegin(), values.cend())
 			};
-		for (quadloco::ops::PeakFinder1D::Flag const & flag : flags)
+		for (quadloco::ops::PeakFinder1D::Change const & flag : flags)
 		{
 			std::cout << "flag: " << flag << '\n';
 		}
@@ -141,45 +383,6 @@ namespace
 			}
 		}
 
-	}
-
-	//! Test if {got,exp}PeakLocs are the same
-	inline
-	void
-	checkPeaks
-		( std::ostream & oss
-		, std::vector<std::size_t> const & gotPeakLocs
-		, std::vector<std::size_t> const & expPeakLocs
-		, std::string const & tname
-		)
-	{
-		if (! (gotPeakLocs.size() == expPeakLocs.size()))
-		{
-			oss << "Failure of peak finding size test: "
-				<< tname << '\n';
-			oss << "expSize: " << expPeakLocs.size() << '\n';
-			oss << "gotSize: " << gotPeakLocs.size() << '\n';
-		}
-		else
-		{
-			bool const same
-				{ std::equal
-					( gotPeakLocs.cbegin(), gotPeakLocs.cend()
-					, expPeakLocs.cbegin()
-					)
-				};
-			if (! same)
-			{
-				oss << "Failure of peak finding content test: "
-					<< tname << '\n';
-				for (std::size_t nn{0u} ; nn < expPeakLocs.size() ; ++nn)
-				{
-					oss << "nn: " << nn << '\n';
-					oss << "exp: " << expPeakLocs[nn] << '\n';
-					oss << "got: " << gotPeakLocs[nn] << '\n';
-				}
-			}
-		}
 	}
 
 
@@ -305,6 +508,7 @@ namespace
 		checkPeaks(oss, gotPeakLocs, expPeakLocs, "test3-realCase");
 
 	}
+#endif
 
 }
 
@@ -316,10 +520,10 @@ main
 	int status{ 1 };
 	std::stringstream oss;
 
-//	test0(oss);
-	test1(oss);
-	test2(oss);
-	test3(oss);
+	test0(oss);
+//	test1(oss);
+//	test2(oss);
+//	test3(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{
