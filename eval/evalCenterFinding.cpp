@@ -56,6 +56,9 @@
 namespace
 {
 
+// #define LargeTrial
+#define SmallTrial
+
 	struct MinDelMax
 	{
 		double const theMin;
@@ -132,6 +135,7 @@ namespace sim
 
 	constexpr double sPi{ std::numbers::pi_v<double> };
 
+#if defined(SmallTrial)
 	constexpr TrialSpec sTrialSmall
 		{ MinDelMax // azmMinDelMax
 			{ sPi * ( 0. / 180.)
@@ -149,6 +153,10 @@ namespace sim
 			, 2.000
 			}
 		};
+	static TrialSpec const sUseTrialSpec{ sTrialSmall };
+#endif
+
+#if defined(LargeTrial)
 	constexpr TrialSpec sTrial5k
 		{ MinDelMax // azmMinDelMax
 			{ sPi * ( 0. / 180.)
@@ -166,9 +174,8 @@ namespace sim
 			, 2.000
 			}
 		};
-
 	static TrialSpec const sUseTrialSpec{ sTrialSmall };
-//	static TrialSpec const sUseTrialSpec{ sTrial5k };
+#endif
 
 
 	//
@@ -579,9 +586,10 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 				Transform const xCamWrtTgt{ staLoc, staAtt };
 
 				// construct simulation configuration
+				using quadloco::sim::Config;
 				std::shared_ptr<quadloco::sim::Config> const ptConfig
-					{ std::make_shared<quadloco::sim::Config>
-						(target(), camera(), xCamWrtTgt)
+					{ std::make_shared<Config>
+						(Config{ target(), camera(), xCamWrtTgt })
 					};
 
 				// assemble data into Trial structure for overall admin
@@ -601,7 +609,7 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 
 	struct Outcome
 	{
-		std::shared_ptr<Trial> const thePtTrial{};
+		std::shared_ptr<Trial> const thePtTrial{ nullptr };
 
 		img::Spot const theGotCenter{};
 
@@ -762,7 +770,8 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 				ops::CenterRefiner const refiner(&srcGrid);
 				gotCenter = refiner.fitSpotNear(nomCenterRC);
 			}
-			ptOutcome = std::make_shared<Outcome>(ptTrial, gotCenter);
+			ptOutcome = std::make_shared<Outcome>
+				(Outcome{ ptTrial, gotCenter });
 		}
 		return ptOutcome;
 	}

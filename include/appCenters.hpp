@@ -110,7 +110,7 @@ namespace app
 					valueCombo *= static_cast<double>(valueB);
 				}
 				float const fVal{ static_cast<float>(valueCombo) };
-				peakCombos.emplace_back(ras::PeakRCV{ row, col, fVal });
+				peakCombos.emplace_back(ras::PeakRCV{ { row, col }, fVal });
 			}
 			std::sort(peakCombos.rbegin(), peakCombos.rend());
 		}

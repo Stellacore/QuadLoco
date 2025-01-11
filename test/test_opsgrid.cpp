@@ -172,7 +172,7 @@ namespace
 	//! check computation of radient grids
 	void
 	test2
-		( std::ostream & oss
+		( std::ostream & // oss
 		)
 	{
 		// [DoxyExample02]

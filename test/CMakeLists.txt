@@ -1,6 +1,5 @@
 #
-# MIT License
-#
+# MIT License #
 # Copyright (c) 2024 Stellacore Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -60,6 +59,7 @@ set(unitTests
 	test_rasSizeHW  # basic "high/wide" area boundary (half open)
 	test_simRender  # simulation of perspective images of quad target
 	test_simSampler  # simulation of image intensity sampling
+	test_sysTimer  # simple interval timer
 	test_valSpan  # half open interval (include start, excludes end)
 	test_xfmMapSizeArea  # raster cell to continous area mapping
 
@@ -72,9 +72,9 @@ foreach(aUnitTest ${unitTests}) # loop over all tests
 	target_compile_options(
 		${aUnitTest}
 		PRIVATE
-			$<$<CXX_COMPILER_ID:Clang>:${BUILD_FLAGS_FOR_CLANG}>
-			$<$<CXX_COMPILER_ID:GNU>:${BUILD_FLAGS_FOR_GCC}>
-			$<$<CXX_COMPILER_ID:MSVC>:${BUILD_FLAGS_FOR_VISUAL}>
+			$<$<CXX_COMPILER_ID:Clang>:${BUILD_FLAGS_FOR_CXX_CLANG}>
+			$<$<CXX_COMPILER_ID:GNU>:${BUILD_FLAGS_FOR_CXX_GCC}>
+			$<$<CXX_COMPILER_ID:MSVC>:${BUILD_FLAGS_FOR_CXX_VISUAL}>
 		)
 
 	target_include_directories(

@@ -65,45 +65,45 @@ namespace filter
 	 * Type is assumed to be real-like (i.e. are members of an algebraic
 	 * field) - e.g. 'float', 'double', 'complex', etc.
 	 */
-	template <typename Type>
+	template <typename OutType, typename SrcType>
 	struct WeightedSum
 	{
 		//! Filter weights (arbitrarily set by consumer)
-		ras::Grid<Type> const * const ptFilter;
+		ras::Grid<OutType> const * const ptFilter;
 
 		//! Filter response: updated by consider(), reported by operator()
-		Type theSum{ static_cast<Type>(0) };
+		OutType theSum{ static_cast<OutType>(0) };
 
 		//! Zero running sum (e.g. call every new window position)
 		inline
 		void
 		reset
-			( Type const & // srcValueAtCenter
+			( SrcType const & // srcValueAtCenter
 				// source cell value not needed here for simple filters
 			)
 		{
-			theSum = static_cast<Type>(0);
+			theSum = static_cast<SrcType>(0);
 		}
 
 		//! Weight srcValue by filter(wRow,wCol) and add into sum
 		inline
 		void
 		consider
-			( Type const & srcCellValue
+			( SrcType const & srcCellValue
 			, std::size_t const & wRow
 			, std::size_t const & wCol
 			)
 		{
 			if (engabra::g3::isValid(srcCellValue))
 			{
-				Type const & wgt = (*ptFilter)(wRow, wCol);
-				theSum += wgt * srcCellValue;
+				OutType const & wgt = (*ptFilter)(wRow, wCol);
+				theSum += wgt * static_cast<OutType>(srcCellValue);
 			}
 		}
 
 		//! Filter-weighted sum of values consider()'ed
 		inline
-		Type const &
+		OutType const &
 		operator()
 			() const
 		{

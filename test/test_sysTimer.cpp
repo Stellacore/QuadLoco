@@ -24,55 +24,64 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::img::Grad
+\brief Unit tests (and example) code for quadloco::sys::Timer
 */
 
+#include <iostream> // TODO
 
-#include "imgGrad.hpp"
-#include "rasgrid.hpp"
-#include "rasGrid.hpp"
+#include "sysTimer.hpp"
 
-#include <algorithm>
 #include <iostream>
 #include <sstream>
 
 
 namespace
 {
-	//! Check null/valid instances
+	//! Examples for documentation
 	void
-	test0
+	test1
 		( std::ostream & oss
 		)
 	{
-		// [DoxyExample00]
+		// [DoxyExample01]
 
-		// null pixel gradient element
-		quadloco::img::Grad const aNull{};
-		bool const expNull{ false };
-		bool const gotNull{ isValid(aNull) };
+		quadloco::sys::Timer timer{ "Name of Something" };
+		// ... (something being timed)
+		timer.stop();
 
-		// valid pixel gradent element
-		quadloco::img::Grad const aOkay{ 1.25, -2.15 };
-		bool const expOkay{ true };
-		bool const gotOkay{ isValid(aOkay) };
+		// get elapsed time (in [sec])
+		double const gotSec{ timer.elapsed() };
 
-		// [DoxyExample00]
+		// reuse timer instance to time something else
+		timer.restart("Something Else");
+		// ...
+		timer.stop();
 
-		if (! (gotOkay == expOkay))
+		// report time to stream
+		std::ostringstream strm;
+		// generic info
+		strm << "lineA: " << timer << '\n';
+		// or display with explicitly specified number of digits
+		strm << timer.infoString("lineB:", 9u) << '\n';
+
+		// [DoxyExample01]
+
+		if (! (0. < gotSec))
 		{
-			oss << "Failure of Okay img::Grad element test(0)\n";
-			oss << "exp: " << expOkay << '\n';
-			oss << "got: " << gotOkay << '\n';
-			oss << "aOkay: " << aOkay << '\n';
+			oss << "Failure of non-zero time test\n";
+			oss << "exp: greater than zero\n";
+			oss << "got: " << gotSec << '\n';
 		}
 
-		if (! (gotNull == expNull))
+		std::ostringstream msg;
+		msg << std::fixed << std::setprecision(9u) << timer.elapsed();
+		std::string const expStr{ msg.str() };
+		std::string const gotStr{ strm.str() };
+		if (std::string::npos == gotStr.find(expStr))
 		{
-			oss << "Failure of Null img::Grad element test(0)\n";
-			oss << "exp: " << expNull << '\n';
-			oss << "got: " << gotNull << '\n';
-			oss << "aNull: " << aNull << '\n';
+			oss << "Failure of timer output string test\n";
+			oss << "exp:\n" << expStr << '\n';
+			oss << "got:\n" << gotStr << '\n';
 		}
 
 	}
@@ -87,7 +96,8 @@ main
 	int status{ 1 };
 	std::stringstream oss;
 
-	test0(oss);
+//	test0(oss);
+	test1(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

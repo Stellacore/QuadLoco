@@ -51,7 +51,6 @@ namespace
 		// [DoxyExample01]
 
 		// setup simulation configuration
-		constexpr quadloco::ras::SizeHW hwChip{ 60u, 40u };
 		quadloco::obj::QuadTarget const objQuad(2.100);
 
 		quadloco::ras::SizeHW const format{ 128u, 128u };
@@ -90,7 +89,6 @@ namespace
 		// run multiple test cases
 		for (TestCase & testcase : testcases)
 		{
-			std::size_t const numPix{ std::max(hwChip.high(), hwChip.wide()) };
 			quadloco::sim::Config const config
 				{ objQuad
 				, camera

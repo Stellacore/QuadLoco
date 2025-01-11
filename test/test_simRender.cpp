@@ -155,7 +155,8 @@ namespace
 			, opt::None // no SceneBias nor ImageNoise
 			);
 
-		quadloco::ras::Grid<float> const fGrid{ render.quadImage() };
+		quadloco::ras::Grid<float> const fGrid
+			{ render.quadImage(numOverSample) };
 		// ... retrieve geometry of the simulated image
 		quadloco::img::QuadTarget const imgQuad{ render.imgQuadTarget() };
 
@@ -180,7 +181,7 @@ namespace
 		std::for_each
 			( fGrid.cbegin(), fGrid.cend()
 			, [&allValid] (float const & pixVal)
-				{ return engabra::g3::isValid(pixVal); }
+				{ return allValid &= engabra::g3::isValid(pixVal); }
 			);
 		if (! allValid)
 		{

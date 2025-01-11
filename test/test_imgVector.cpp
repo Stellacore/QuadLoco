@@ -106,7 +106,6 @@ namespace
 		)
 	{
 		using namespace quadloco;
-		constexpr img::Vector<float> const aNull{};
 
 		// [DoxyExample01]
 
@@ -169,6 +168,32 @@ namespace
 		// [DoxyExample02]
 		// [DoxyExample02]
 	}
+
+	//! Check vector operators
+	void
+	test3
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample03]
+
+		using namespace quadloco;
+
+		img::Vector<double> const aVec{ 1.25, 2.75 }; // exact binary numbers
+		img::Vector<double>::Formatter const fmtr{ "%5.3f" };
+		std::string const expStr("1.250 2.750");
+		std::string const gotStr{ fmtr(aVec) };
+
+		// [DoxyExample03]
+
+		if (! (gotStr == expStr))
+		{
+			oss << "Failure of Formatter test\n";
+			oss << "exp: '" << expStr << "'\n";
+			oss << "got: '" << gotStr << "'\n";
+		}
+	}
+
 }
 
 //! Standard test case main wrapper
@@ -182,6 +207,7 @@ main
 	test0(oss);
 	test1(oss);
 	test2(oss);
+	test3(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

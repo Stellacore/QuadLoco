@@ -59,9 +59,6 @@ namespace
 		std::ostringstream msg;
 		msg << "camera: " << camera << '\n';
 
-		// camera exterior frame is located at zero
-		engabra::g3::Vector const camLoc{ 0., 0., 0. };
-
 		// location relative to camera external frame
 		// naming relative to 3D exterior frame
 		// ('x' to right, 'y' up, 'z' toward viewer)
@@ -85,8 +82,8 @@ namespace
 		bool const okayRowTB{ (topOnDet.row() < botOnDet.row()) };
 		bool const okayColTB{ (topOnDet.col() == botOnDet.col()) };
 
-		double const objDistLR{ magnitude(rgtPntInExt - lftPntInExt) };
-		double const imgDistLR{ magnitude(rgtOnDet - lftOnDet) };
+	//	double const objDistLR{ magnitude(rgtPntInExt - lftPntInExt) };
+	//	double const imgDistLR{ magnitude(rgtOnDet - lftOnDet) };
 
 		// forward project detector spots from camera ...
 		using engabra::g3::Vector;

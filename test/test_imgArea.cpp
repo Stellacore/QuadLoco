@@ -157,7 +157,6 @@ namespace
 		//! Test each modulo fraction
 		for (WrapData const & wrap : wraps)
 		{
-			double const & expInto = wrap.theInto;
 			double const gotInto{ img::Area::principalFraction(wrap.theFrom) };
 			wrap.check(oss, gotInto);
 		}

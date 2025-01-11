@@ -95,10 +95,10 @@ namespace app
 			Vector const & ypDir = imgQuad.theDirY;
 			Vector const xnDir{ -xpDir };
 			Vector const ynDir{ -ypDir };
-			Vector const ppDir{ direction(xpDir + ypDir) }; // quad TR
-			Vector const npDir{ direction(xnDir + ypDir) }; // quad TL
-			Vector const pnDir{ direction(xpDir + ynDir) }; // quad BL
-			Vector const nnDir{ direction(xnDir + ynDir) }; // quad BR
+		//	Vector const ppDir{ direction(xpDir + ypDir) }; // quad TR
+		//	Vector const npDir{ direction(xnDir + ypDir) }; // quad TL
+		//	Vector const pnDir{ direction(xpDir + ynDir) }; // quad BL
+		//	Vector const nnDir{ direction(xnDir + ynDir) }; // quad BR
 
 			// follow radial edge from center outward
 			// start away from center (poor edge define)

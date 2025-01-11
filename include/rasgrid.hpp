@@ -465,7 +465,7 @@ namespace grid
 			ras::Grid<PixType> & grid = *ptGrid;
 
 			// find min max
-			using InIt = ras::Grid<PixType>::const_iterator;
+			using InIt = typename ras::Grid<PixType>::const_iterator;
 			std::pair<InIt, InIt> const iterMM
 				{ minmax_valid(grid.cbegin(), grid.cend()) };
 			PixType const min{ *(iterMM.first) };
@@ -536,12 +536,6 @@ namespace grid
 				{ (ndxRow2 < grid.high()) && (ndxCol2 < grid.wide()) };
 			if (isInMax)
 			{
-				// fraction into the cell where interpolation is to occur
-				double const rowFrac{ atRow - (double)(ndxRow1) };
-				double const colFrac{ atCol - (double)(ndxCol1) };
-
-				// Generate value spans at the four corners
-
 				// interpolate along first (lower bounding) edge
 				Type const val11{ grid(ndxRow1, ndxCol1) };
 				Type const val21{ grid(ndxRow2, ndxCol1) };

@@ -104,7 +104,7 @@ namespace ras
 				( orig.cbegin(), orig.cend()
 				, copy.begin()
 				);
-			return std::move(copy);
+			return copy;
 		}
 			
 
