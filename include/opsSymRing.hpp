@@ -191,7 +191,7 @@ namespace ops
 	 */
 	struct SymRing
 	{
-		ras::Grid<float> const * const & thePtSrc{ nullptr };
+		ras::Grid<float> const * const thePtSrc{ nullptr };
 
 		float theSrcMidValue{};
 		float theSrcFullRange{};
