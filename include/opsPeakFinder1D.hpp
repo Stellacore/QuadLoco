@@ -53,57 +53,59 @@ namespace ops
 	{
 		std::vector<std::vector<std::size_t> > const thePeakNdxGrps{};
 
+// TODO - explain Linear assumes 0 values on each end
 		//! Treat input domain is circular (wrap around) or linear (no wrap)
 		enum DataDomain
 		{
-			  Circle //!< Input data domain wraps around (e.g. angles)
-			, Linear //!< Input data domain is finite and unwrapped
+			  Linear //!< Input data domain is finite and unwrapped
+			, Circle //!< Input data domain wraps around (e.g. angles)
 		};
 
 		//! Data value transition type (current pixel w.r.t. prevous pixel)
-		enum Flag
+		enum Change
 		{
 			  Drop = 0
 			, Flat = 1
 			, Rise = 2
 
-		}; // Flag
+		}; // Change
 
 		//! 
-		struct NdxFlag
+		struct NdxChange
 		{
 			std::size_t theNdx;
-			Flag theFlag;
+			Change theChange;
 
-		}; // NdxFlag
+		}; // NdxChange
 
-		//! Name for flag enum values
+		//! Name for Change enum values
 		inline
 		static
 		std::string const &
 		stringFor
-			( Flag const & flag
+			( Change const & change
 			)
 		{
-			static std::array<std::string, 3u> const flagNames
+			static std::array<std::string, 3u> const changeNames
 				{ "d" //"v"//.Drop"
 				, "s" //"-"//.same"
 				, "u" //"^"//.Rise"
 				};
-			return flagNames[(std::size_t)flag];
+			return changeNames[(std::size_t)change];
 		}
 
-		//! Convert data stream into stream of value transition flags
+		//! Convert data stream into stream of value transition changes
+// TODO Assumes Circular!!
 		template <typename FwdIter>
 		inline
 		static
-		std::vector<NdxFlag>
-		ndxFlagsFor
+		std::vector<NdxChange>
+		ndxChangesFor
 			( FwdIter const & itBeg
 			, FwdIter const & itEnd
 			)
 		{
-			std::vector<NdxFlag> ndxFlags;
+			std::vector<NdxChange> ndxChanges;
 
 			std::size_t const numElem
 				{ (std::size_t)std::distance(itBeg, itEnd) };
@@ -111,7 +113,7 @@ namespace ops
 			if (0u < numElem)
 			{
 				std::size_t const numLast{ numElem - 1u };
-				ndxFlags.reserve(numElem);
+				ndxChanges.reserve(numElem);
 
 				FwdIter itPrev{ itBeg + numLast };
 				FwdIter itCurr{ itBeg };
@@ -121,17 +123,17 @@ namespace ops
 					Type const & valPrev = *itPrev;
 					Type const & valCurr = *itCurr;
 
-					Flag flag{ Flat };
+					Change change{ Flat };
 					if (valPrev < valCurr)
 					{
-						flag = Rise;
+						change = Rise;
 					}
 					else
 					if (valCurr < valPrev)
 					{
-						flag = Drop;
+						change = Drop;
 					}
-					ndxFlags.emplace_back(NdxFlag{ nn, flag });
+					ndxChanges.emplace_back(NdxChange{ nn, change });
 
 					// increment iterators and wrap at end
 					++itPrev;
@@ -142,38 +144,38 @@ namespace ops
 
 			} // (1u < numElem)
 
-			return ndxFlags;
+			return ndxChanges;
 		}
 
-		//! Flag associated with transition of values from previous to current
+		//! Change associated with transition of values from previous to current
 		template <typename Type>
 		inline
 		static
-		Flag
-		flagFor
+		Change
+		changeFor
 			( Type const & valPrev
 			, Type const & valCurr
 			)
 		{
-			Flag flag{ Flat };
+			Change change{ Flat };
 			if (valPrev < valCurr)
 			{
-				flag = Rise;
+				change = Rise;
 			}
 			else
 			if (valCurr < valPrev)
 			{
-				flag = Drop;
+				change = Drop;
 			}
-			return flag;
+			return change;
 		}
 
-		//! Determine value transition flag at ndxCurr from itBeg
+		//! Determine value transition change at ndxCurr from itBeg
 		template <typename FwdIter>
 		inline
 		static
-		Flag
-		flagForIndexCircle
+		Change
+		changeForIndexCircle
 			( std::size_t const & ndxCurr
 			, std::size_t const & numElem
 			, FwdIter const & itBeg
@@ -187,43 +189,51 @@ namespace ops
 			Type const & valPrev = *itPrev;
 			Type const & valCurr = *itCurr;
 
-			return flagFor(valPrev, valCurr);
+			return changeFor(valPrev, valCurr);
 		}
 
-		//! Determine value transition flag at ndxCurr from itBeg
+		//! Determine value transition change at ndxCurr from itBeg
 		template <typename FwdIter>
 		inline
 		static
-		Flag
-		flagForIndexLinear
+		Change
+		changeForIndexLinear
 			( std::size_t const & ndxCurr
 			, std::size_t const & numElem
 			, FwdIter const & itBeg
 			)
 		{
-			Flag flag{ Flat };
-			if (0u == ndxCurr)
+			Change change{ Flat };
+			if ((0u < ndxCurr) && ((ndxCurr + 1u) < numElem))
+			{
+				change = changeForIndexCircle(ndxCurr, numElem, itBeg);
+			}
+			else
 			{
 				FwdIter const itCurr{ itBeg + ndxCurr };
 				using Type = typename FwdIter::value_type;
 				Type const & valCurr = *itCurr;
-				Type const valPrev{ 0 };
-
-				flag = flagFor(valPrev, valCurr);
+				if (0u == ndxCurr)
+				{
+					Type const valPrev{ 0 };
+					change = changeFor(valPrev, valCurr);
+				}
+				else
+				if (numElem == (ndxCurr + 1u))
+				{
+					Type const valNext{ 0 };
+					change = changeFor(valCurr, valNext);
+				}
 			}
-			else
-			{
-				flag = flagForIndexCircle(ndxCurr, numElem, itBeg);
-			}
-			return flag;
+			return change;
 		}
 
-		//! Determine value transition flag at ndxCurr from itBeg
+		//! Determine value transition change at ndxCurr from itBeg
 		template <typename FwdIter>
 		inline
 		static
-		Flag
-		flagForIndex
+		Change
+		changeForIndex
 			( std::size_t const & ndxCurr
 			, std::size_t const & numElem
 			, FwdIter const & itBeg
@@ -232,16 +242,23 @@ namespace ops
 		{
 			if (Circle == dataDomain)
 			{
-				return flagForIndexCircle(ndxCurr, numElem, itBeg);
+				return changeForIndexCircle(ndxCurr, numElem, itBeg);
 			}
 			else
 			// if (Linear == dataDomain)
 			{
-				return flagForIndexLinear(ndxCurr, numElem, itBeg);
+				return changeForIndexLinear(ndxCurr, numElem, itBeg);
 			}
 		}
 
-		//! Return collections of indices associated with data peaks
+#if 0
+		/*! Return collections of indices associated with data peaks.
+		 *
+		 * Each element in the return collection is a groups of indices
+		 * associated with an individual peak in the overall data. The
+		 * indices within each group span the width of a spread out
+		 * (e.g. flat-top) peak.
+		 */
 		template <typename FwdIter>
 		inline
 		static
@@ -256,31 +273,45 @@ namespace ops
 			std::size_t const numElem
 				{ (std::size_t)std::distance(itBeg, itEnd) };
 
+std::cout << "\npeakIndexGroups:\n";
+std::cout << "dataDomain: " << dataDomain << '\n';
+
 			if (0u < numElem)
 			{
 				std::size_t const numLast{ numElem - 1u };
 
-				// gather indices assocaited with peaks
-				peakNdxGrps.reserve(numElem); // impossible worst case
+				// allocate space for index groups - one per possible peak
+				peakNdxGrps.reserve(numElem); // an impossible worst case
 
-				// set initial tracking flag state based on wrap around
-				// condition from first element
-				Flag const flag0
-					{ flagForIndex(0, numElem, itBeg, dataDomain) };
-				bool trackingPeak{ (Drop == flag0) };
+				// set end point changes
+				Change const change0
+					{ changeForIndex(0, numElem, itBeg, dataDomain) };
+				Change const changeN
+					{ changeForIndex(numLast, numElem, itBeg, dataDomain) };
+				// set initial tracking state
+				bool trackingPeak{ (Drop == change0) };
 
+				// indices for next upcomming peak
 				std::vector<std::size_t> currPeakNdxs;
-			//	std::string dnote;
-			//	std::string unote;
-			//	std::string tnote;
+				currPeakNdxs.reserve(numElem); // worst case
+
+std::cout << " change0: " << stringFor(change0) << '\n';
+std::cout << " changeN: " << stringFor(changeN) << '\n';
+
+				// Traverse data backward from end to begining.
+				// Search for 'drop' features that signify the end of a peak.
+
+			/**/	std::string dnote;
+			/**/	std::string unote;
+			/**/	std::string tnote;
 				for (std::size_t nn{0u} ; nn < numElem ; ++nn)
 				{
 					std::size_t const nnRev{ numLast - nn };
 					std::size_t const & ndx = nnRev;
 
-					// NOTE: Could compute transition flags here as needed.
-					Flag const flag
-						{ flagForIndex(ndx, numElem, itBeg, dataDomain) };
+					// NOTE: Could compute transition changes here as needed.
+					Change const change
+						{ changeForIndex(ndx, numElem, itBeg, dataDomain) };
 
 					if (trackingPeak)
 					{
@@ -290,24 +321,24 @@ namespace ops
 					// when hitting drop (from reverse direction) is
 					// candidate start of peak (until an 'up' unless
 					// first hitting another drop)
-				//	dnote = "       ";
-					if (Drop == flag)
+				/**/	dnote = "       ";
+					if (Drop == change)
 					{
 						// start MAYBE peak tracking (pending an up encounter)
-					//	dnote = "d-start";
+					/**/	dnote = "d-start";
 						trackingPeak = true;
 						currPeakNdxs.clear();
 					}
 
 					// hitting a rise signals the (reverse direction) end
 					// of peak when tracking is active.
-				//	unote = "       ";
-					if (Rise == flag)
+				/**/	unote = "       ";
+					if (Rise == change)
 					{
 						if (trackingPeak)
 						{
 							// all currently tracked indices are part of peak
-						//	unote = "u-PEAK ";
+						/**/	unote = "u-PEAK ";
 							peakNdxGrps.emplace_back(currPeakNdxs);
 							trackingPeak = false;
 						}
@@ -319,7 +350,6 @@ namespace ops
 						}
 					}
 
-					/*
 					tnote = "    ";
 					if (trackingPeak)
 					{
@@ -327,12 +357,13 @@ namespace ops
 					}
 					std::cout
 						<< "ndx: " << std::setw(3u) << ndx
-						<< ' ' << "flag: " << stringFor(flag)
+						<< ' ' << "change: " << stringFor(change)
 						<< ' ' << dnote
 						<< ' ' << tnote
 						<< ' ' << unote
 						<< '\n'
 						;
+					/*
 					*/
 
 				}
@@ -340,6 +371,7 @@ namespace ops
 
 			return peakNdxGrps;
 		}
+#endif
 
 		//! Construct collections of peaks from data values
 		template <typename FwdIter>
@@ -361,9 +393,9 @@ namespace ops
 		{
 			std::vector<std::size_t> peakNdxs;
 			peakNdxs.reserve(thePeakNdxGrps.size());
-			for (std::vector<std::vector<std::size_t> >::const_reverse_iterator
-				itR{thePeakNdxGrps.crbegin()}
-				; thePeakNdxGrps.crend() != itR ; ++itR)
+			for (std::vector<std::vector<std::size_t> >::const_iterator
+				itR{thePeakNdxGrps.cbegin()}
+				; thePeakNdxGrps.cend() != itR ; ++itR)
 			{
 				std::vector<std::size_t> const & peakNdxGrp = *itR;
 				// NOTE: Indices in group are reversed (largest to smallest)
@@ -374,6 +406,313 @@ namespace ops
 			return peakNdxs;
 		}
 
+		//! Function object to track indices involved in peaks
+		struct PeakTracker
+		{
+			std::vector<std::vector<std::size_t> > thePeakNdxGrps{};
+			std::vector<std::size_t> theActiveNdxs{};
+			bool theIsTracking{};
+
+			//! Allocate space for tracking structures, set tracking state
+			inline
+			explicit
+			PeakTracker
+				( std::size_t const & numElem
+				, bool const & trackingState = false
+				)
+				: thePeakNdxGrps{}
+				, theActiveNdxs{}
+				, theIsTracking{ trackingState }
+			{
+				thePeakNdxGrps.reserve(numElem);
+				theActiveNdxs.reserve(numElem);
+			}
+
+			//! Mark begining of (potential) peak - enable tracking
+			inline
+			void
+			beginPeakMaybe
+				( std::size_t const & ndx
+				)
+			{
+				theActiveNdxs.clear();
+				theActiveNdxs.emplace_back(ndx);
+				theIsTracking = true;
+			}
+
+			//! Mark end of peak - disable tracking
+			inline
+			void
+			endPeak
+				()
+			{
+				if (! theActiveNdxs.empty())
+				{
+
+					/*
+					std::cout << "  endPeak: size:"
+						<< ' ' << theActiveNdxs.size() << "  ndxs: ";
+					for (std::size_t const & ndx : theActiveNdxs)
+					{
+						std::cout << ' ' << ndx;
+					}
+					std::cout << '\n';
+					*/
+
+					thePeakNdxGrps.emplace_back(theActiveNdxs);
+					theActiveNdxs.clear();
+				}
+				theIsTracking = false;
+			}
+
+			//! True if current tracking top of (potential) peak
+			inline
+			bool
+			isTracking
+				() const
+			{
+				return theIsTracking;
+			}
+
+			//! start Ndx of current tracking peak - only valid if isTracking()
+			inline
+			std::size_t
+			currPeakBegNdx
+				() const
+			{
+				std::size_t begNdx{ std::numeric_limits<std::size_t>::max() };
+				if (! theActiveNdxs.empty())
+				{
+					begNdx = theActiveNdxs.front();
+				}
+				return begNdx;
+			}
+
+			//! Consider ndx with change from data[ndx-1] to data[ndx]
+			inline
+			void
+			consider
+				( Change const & changePrevToCurr
+				, std::size_t const & ndx
+				)
+			{
+				if (Rise == changePrevToCurr)
+				{
+					// not part of a peak, start of peak potentially follows
+					beginPeakMaybe(ndx);
+				}
+				else
+				if (Drop == changePrevToCurr)
+				{
+					if (isTracking())
+					{
+						endPeak();
+					}
+					// else // continue waiting for a rise
+				}
+				else // (Flat == changePrevToCurr)
+				{
+					if (isTracking())
+					{
+						// on potential peak, save indices until confirm or not
+						theActiveNdxs.emplace_back(ndx);
+					}
+					// else // after a peak, waiting for a rise
+				}
+			}
+
+		}; // PeakTracker
+
+		/*! Return collections of indices associated with data peaks.
+		 *
+		 * Each element in the return collection is a groups of indices
+		 * associated with an individual peak in the overall data. The
+		 * indices within each group span the width of a spread out
+		 * (e.g. flat-top) peak.
+		 */
+		template <typename FwdIter>
+		inline
+		static
+		std::vector<std::vector<std::size_t> >
+		peakIndexGroups
+			( FwdIter const & itBeg
+			, FwdIter const & itEnd
+			, DataDomain const & dataDomain = Circle
+			)
+		{
+			std::vector<std::vector<std::size_t> > peakNdxGrps;
+			std::size_t const numElem
+				{ (std::size_t)std::distance(itBeg, itEnd) };
+
+			if (0u < numElem)
+			{
+				std::size_t const numLast{ numElem - 1u };
+
+				using Type = typename FwdIter::value_type;
+
+				Type valuePrior{ 0 };
+				Type valueAfter{ 0 };
+				if (Circle == dataDomain)
+				{
+					valuePrior = *(itBeg + numLast);
+					valueAfter = *itBeg;
+				}
+
+				PeakTracker tracker(numElem);
+
+constexpr bool show{ false };
+if (show)
+{
+std::cout << '\n';
+std::cout << "valuePrior: " << valuePrior << '\n';
+std::cout << "valueAfter: " << valueAfter << '\n';
+}
+
+				std::vector<std::size_t> currPeakNdxs;
+				currPeakNdxs.reserve(numElem);
+
+				// initial change (prior compared to curr(ndx=0);
+				std::size_t ndx{0u};
+				FwdIter const iterDawn{ itBeg + ndx };
+				Change const changeDawn{ changeFor(valuePrior, *iterDawn) };
+if (show)
+{
+std::cout << "ndx,change:"
+	<< ' ' << "from:"
+	<< ' ' << std::setw(2u) << std::fixed << valuePrior
+	<< ' ' << "into:"
+	<< ' ' << "data[" << ndx << "]:"
+	<< ' ' << std::setw(2u) << std::fixed << *iterDawn
+	<< ' ' << stringFor(changeDawn)
+	<< '\n';
+}
+
+				tracker.consider(changeDawn, ndx);
+
+				// intermediate changes
+				for (ndx = 1u ; ndx < numElem ; ++ndx)
+				{
+					FwdIter const iterPrev{ itBeg + (ndx - 1u) };
+					FwdIter const iterCurr{ itBeg + ndx };
+					Type const & valuePrev = *iterPrev;
+					Type const & valueCurr = *iterCurr;
+					Change const changeCurr{ changeFor(valuePrev, valueCurr) };
+if (show)
+{
+std::cout << "ndx,change:"
+	<< ' ' << "from:"
+	<< ' ' << std::setw(2u) << std::fixed << valuePrev
+	<< ' ' << "into:"
+	<< ' ' << "data[" << ndx << "]:"
+	<< ' ' << std::setw(2u) << std::fixed << *iterCurr
+	<< ' ' << stringFor(changeCurr)
+	<< '\n';
+}
+
+					tracker.consider(changeCurr, ndx);
+				}
+
+				// ONE PAST - end condition change
+				ndx = numElem;
+				FwdIter const iterLast{ itBeg + numLast };
+				Change const changeLast{ changeFor(*iterLast, valueAfter) };
+				if (Drop == changeLast)
+				{
+					tracker.endPeak();
+				}
+if (show)
+{
+std::cout << "ndx,change:"
+	<< ' ' << "from:"
+	<< ' ' << "data[" << ndx << "]:"
+	<< ' ' << std::setw(2u) << std::fixed << *iterLast
+	<< ' ' << "into:"
+	<< ' ' << std::setw(2u) << std::fixed << valueAfter
+	<< ' ' << stringFor(changeLast)
+	<< '\n';
+}
+
+				// Wrap-around peak continuation
+				if (Drop == changeLast)
+				{
+					tracker.endPeak();
+				}
+				else
+				if (Rise == changeLast)
+				{
+					// tracker.beginPeakMaybe(); // no effect afterward
+				}
+				else
+				if (Flat == changeLast)
+				{
+					// for circular domain,
+					// if peak is active at end, continue (re-)tracking
+					// from begining of currently active peak
+					if (tracker.isTracking() && (Circle == dataDomain))
+					{
+						std::size_t const begNdx{ tracker.currPeakBegNdx() };
+						if (begNdx < std::numeric_limits<std::size_t>::max())
+						{
+							for (std::size_t ndx{0u} ; ndx < begNdx ; ++ndx)
+							{
+								std::size_t const ndxWrap
+									{ (numElem - 1u + ndx) % numElem };
+
+if (show)
+{
+std::cout << "check for wrap around\n";
+std::cout << "iterPrev at: " << ndxWrap << '\n';
+}
+
+								FwdIter const iterPrev{ itBeg + ndxWrap };
+								FwdIter const iterCurr{ itBeg + ndx };
+								Type const & valuePrev = *iterPrev;
+								Type const & valueCurr = *iterCurr;
+								Change const changeCurr
+									{ changeFor(valuePrev, valueCurr) };
+if (show)
+{
+std::cout << "ndx,change:"
+	<< ' ' << "from:"
+	<< ' ' << std::setw(2u) << std::fixed << valuePrev
+	<< ' ' << "into:"
+	<< ' ' << "data[" << ndxWrap << "]:"
+	<< ' ' << std::setw(2u) << std::fixed << *iterCurr
+	<< ' ' << stringFor(changeCurr)
+	<< '\n';
+}
+
+								tracker.consider(changeCurr, ndx);
+								if (! tracker.isTracking())
+								{
+									break;
+								}
+
+							} // for(ndx)
+
+						} // begNdx
+
+					} // tracking Circle
+
+				} // (Flat == changeLast)
+
+				peakNdxGrps = tracker.thePeakNdxGrps;
+
+			} // (0 < numElem)
+
+			/*
+			for (std::vector<std::size_t> const & peakNdxGrp : peakNdxGrps)
+			{
+				std::cout << "@@ NdxGrp\n";
+				for (std::size_t const & peakNdx : peakNdxGrp)
+				{
+					std::cout << "@@    peakNdx: " << peakNdx << '\n';
+				}
+			}
+			*/
+
+			return peakNdxGrps;
+		}
 
 	}; // PeakFinder1D
 
@@ -382,3 +721,29 @@ namespace ops
 
 } // [quadloco]
 
+/*
+				struct PeakTrack
+				{
+					std::vector<std::size_t> theCurrNdxs;
+
+					inline void consider
+						( Change const & change
+						)
+					{
+					}
+
+					inline void restart()
+						{ theCurrNdxs.clear() };
+
+					inline void addTo
+						(std::vector<std::vector<std::size_t> > * const & ptAll
+						)
+					{
+						ptAll->emplace_back(theCurrNdxs)
+					}
+
+				}; // PeakTrack
+
+				PeakTrack ptRise{};
+				PeakTrack ptDrop{};
+*/
