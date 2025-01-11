@@ -191,7 +191,7 @@ namespace ops
 	 */
 	struct SymRing
 	{
-		ras::Grid<float> const * const & thePtSrc{ nullptr };
+		ras::Grid<float> const * const thePtSrc{ nullptr };
 
 		float theSrcMidValue{};
 		float theSrcFullRange{};
@@ -442,6 +442,58 @@ namespace ops
 			return outVal;
 		}
 
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << '\n';
+			}
+			if (thePtSrc)
+			{
+				oss
+					<< "*thePtSrc: " << *thePtSrc
+					<< '\n'
+					<< "theSrcMidValue: " << theSrcMidValue
+					<< '\n'
+					<< "theSrcFullRange: " << theSrcFullRange
+					<< '\n'
+					<< "theHalfFilterSize: " << theHalfFilterSize
+					<< '\n'
+					<< "theHalfRingSize: " << theHalfRingSize
+					<< '\n'
+					<< "theMinPosNeg: " << theMinPosNeg
+					<< '\n'
+					<< "theRelRCs.size: " << theRelRCs.size()
+					<< '\n'
+					;
+			}
+			return oss.str();
+		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoStringContents
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			oss << infoString(title) << '\n';
+			for (ras::RelRC const & relRC : theRelRCs)
+			{
+				oss << "... relRC: " << relRC << '\n';
+			}
+			return oss.str();
+		}
+
+
+
 	}; // SymRing
 
 
@@ -496,4 +548,21 @@ namespace ops
 } // [ops]
 
 } // [quadloco]
+
+namespace
+{
+
+	//! Put instance to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::ops::SymRing const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+} // [anon/global]
 

@@ -55,7 +55,7 @@ namespace
 		quadloco::obj::QuadTarget const origQuadTgt{ fullEdgeMag };
 
 		// radius to all outer corners is the same
-		constexpr double expRadOuter{ std::sqrt(2.) * halfEdgeMag };
+		double const expRadOuter{ std::sqrt(2.) * halfEdgeMag };
 		double const gotRadOuter{ origQuadTgt.radiusOuter() };
 		// radius to all midside (background) corners is same
 		constexpr double expRadInner{ halfEdgeMag };

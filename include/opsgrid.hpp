@@ -584,7 +584,7 @@ namespace grid
 		, ras::Grid<OutType> const & filter
 		)
 	{
-		ops::filter::WeightedSum bFunc{ &filter };
+		ops::filter::WeightedSum<OutType, SrcType> bFunc{ &filter };
 		return functionResponse
 			<OutType, SrcType>
 			(srcGrid, filter.hwSize(), bFunc);
@@ -605,7 +605,7 @@ namespace grid
 	{
 		ras::Grid<OutType> const filter
 			{ ras::kernel::gauss<OutType>(halfSize, sigma) };
-		ops::filter::WeightedSum<OutType> bFunc{ &filter };
+		ops::filter::WeightedSum<OutType, SrcType> bFunc{ &filter };
 		return functionResponse
 			<OutType, SrcType>
 			(srcGrid, filter.hwSize(), bFunc);

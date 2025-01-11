@@ -181,7 +181,7 @@ namespace
 		std::for_each
 			( fGrid.cbegin(), fGrid.cend()
 			, [&allValid] (float const & pixVal)
-				{ return engabra::g3::isValid(pixVal); }
+				{ return allValid &= engabra::g3::isValid(pixVal); }
 			);
 		if (! allValid)
 		{

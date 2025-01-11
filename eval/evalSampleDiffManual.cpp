@@ -323,6 +323,7 @@ namespace eval
 namespace
 {
 
+	/* - unused
 	//! Put item to stream
 	inline
 	std::ostream &
@@ -334,6 +335,7 @@ namespace
 		ostrm << item.infoString();
 		return ostrm;
 	}
+	*/
 
 	//! Put item to stream
 	inline
