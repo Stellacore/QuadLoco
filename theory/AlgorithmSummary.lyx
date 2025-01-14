@@ -120,8 +120,101 @@ set_width "auto"
 Introduction
 \end_layout
 
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename AlgoExQuadsInItaly.png
+	width 100col%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Quadrant-targets-in-wild"
+
+\end_inset
+
+Example quadrant targets on historic buildings in Italy encountered incidentally.
+ Although the exact purpose of these specific targets is unknown, quadrant
+ pattern targets are often used in archaeological surveys, historical preservati
+on, photogrammetric documentation/reality capture and technical engineering
+ studies.
+ Photos by Johann Albrecht.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Algorithms
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename AlgoExSimQuad.png
+	width 100col%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Example-simulated-image"
+
+\end_inset
+
+Example simulated quad target image.
+ The high contrast, four quadrant pattern is self evident.
+ This example is generated with project program demo/demoSimQuadImage and
+ is an example of simulating only the target area (no surrounding background
+ pixels) which includes radiometric noise, but no radiometric trend bias.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
