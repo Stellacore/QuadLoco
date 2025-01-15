@@ -60,16 +60,30 @@ namespace ops
 
 namespace grid
 {
+	//! Pair start (included) and end (excluded) index values
+	struct NdxBegEnd
+	{
+		std::size_t theBeg{ 0u };
+		std::size_t theEnd{ 0u };
+	};
 
 
-	/*! \brief Compute img::Grad for each pixel location (except at edges).
+	/*! \brief Compute img::Grad for each pixel within specified ranges.
 	 *
-	 * The gradient is computed from the 8 immediate neighbor pixels as
-	 * a least squares linear fit. The 4 corner samples are weighted by
-	 * 1/sqrt(2) as much as the 4 edge samples.
+	 * For each pixel within specified row/col ranges, the gradient is
+	 * computed from the 8 immediate neighbor pixels as a least squares
+	 * linear fit. I.e. like fitting a geometric plane to the radiometric
+	 * "surface" defined by the 9 neighborhood values.  The 4 corner
+	 * samples are weighted by 1/sqrt(2) the weight of the 4 edge samples.
 	 *
-	 * E.g. Expressed as a digital window, the filter weights are:
-	 * \verbatim
+	 * Results are placed directly into an *externally allocated* output
+	 * grid via the pointer ptGrads.
+	 *
+	 * NOTE: This function *assumes* the row/col begin/end ranges are
+	 * valid and fall *entirely* inside the source image.
+	 *
+	 * The gradient computation may be expressed as a digital window with
+	 * filter weights as follows.
 	 *
 	 * ir2 = 1. / sqrt(2.);  // inverse root 2
 	 * scl = 1. / (4.*ir2 + 2.*1.)
@@ -85,6 +99,77 @@ namespace grid
 	 * \endverbatim
 	 */
 	inline
+	void
+	fillGradientBy8x
+		( ras::Grid<img::Grad> * const & ptGrads
+		, ras::Grid<float> const & inGrid
+		, NdxBegEnd const & rowBegEnd
+		, NdxBegEnd const & colBegEnd
+		)
+	{
+		ras::Grid<img::Grad> & grads = *ptGrads;
+
+		std::size_t const & rowNdxBeg = rowBegEnd.theBeg;
+		std::size_t const & rowNdxEnd = rowBegEnd.theEnd;
+		std::size_t const & colNdxBeg = colBegEnd.theBeg;
+		std::size_t const & colNdxEnd = colBegEnd.theEnd;
+
+		for (std::size_t row{rowNdxBeg} ; row < rowNdxEnd ; ++row)
+		{
+			std::size_t const rowT{ row - 1u };
+			std::size_t const & rowM = row;
+			std::size_t const rowB{ row + 1u };
+
+			for (std::size_t col{colNdxBeg} ; col < colNdxEnd ; ++col)
+			{
+				std::size_t const colL{ col - 1u };
+				std::size_t const & colM = col;
+				std::size_t const colR{ col + 1u };
+
+				double const & TL = inGrid(rowT, colL);
+				double const & TM = inGrid(rowT, colM);
+				double const & TR = inGrid(rowT, colR);
+
+				double const & ML = inGrid(rowM, colL);
+				//double const & MM = inGrid(rowM, colM);
+				double const & MR = inGrid(rowM, colR);
+
+				double const & BL = inGrid(rowB, colL);
+				double const & BM = inGrid(rowB, colM);
+				double const & BR = inGrid(rowB, colR);
+
+				// corner and edge filter values and (normalized) weights
+				constexpr double fC{ 1./std::numbers::sqrt2_v<double> };
+				constexpr double fE{ 1. };
+				constexpr double wSum{ 4.*fC + 2.*fE };
+				constexpr double wC{ fC / wSum };
+				constexpr double wE{ fE / wSum };
+
+				double const rowGrad
+					{ wC * (BL - TL)
+					+ wE * (BM - TM)
+					+ wC * (BR - TR)
+					};
+
+				double const colGrad
+					{ wC * (TR - TL)
+					+ wE * (MR - ML)
+					+ wC * (BR - BL)
+					};
+
+				grads(row,col) = img::Grad{ rowGrad, colGrad };
+			}
+		}
+	}
+
+
+	/*! \brief Compute img::Grad for each pixel location (except at edges).
+	 *
+	 * This function determines appropriate row/col range limits and then
+	 * runs fillGradientBy8x() for computation within the valid source
+	 * image sub area.
+	 */
+	inline
 	ras::Grid<img::Grad>
 	gradientGridBy8x
 		( ras::Grid<float> const & inGrid
@@ -93,70 +178,29 @@ namespace grid
 		ras::Grid<img::Grad> grads;
 
 		// check if there is enough room to process anything
-		std::size_t const stepFull{ 2u };
+		std::size_t const stepHalf{ 1u };
+		std::size_t const stepFull{ 2u * stepHalf };
 		if ((stepFull < inGrid.high()) && (stepFull < inGrid.wide()))
 		{
 			// allocate space
 			ras::SizeHW const hwSize{ inGrid.hwSize() };
 			grads = ras::Grid<img::Grad>(hwSize);
 
-			//! Determine start and end indices
-			std::size_t const rowNdxBeg{ 1u };
-			std::size_t const rowNdxEnd{ rowNdxBeg + hwSize.high() - stepFull };
-			std::size_t const colNdxBeg{ 1u };
-			std::size_t const colNdxEnd{ colNdxBeg + hwSize.wide() - stepFull };
-
 			// set border to null values
 			static img::Grad const gNull{};
 			ras::grid::fillBorder
-				(grads.begin(), grads.hwSize(), 1u, gNull);
+				(grads.begin(), grads.hwSize(), stepHalf, gNull);
 
-			for (std::size_t row{rowNdxBeg} ; row < rowNdxEnd ; ++row)
-			{
-				std::size_t const rowT{ row - 1u };
-				std::size_t const & rowM = row;
-				std::size_t const rowB{ row + 1u };
+			//! Determine start and end indices
+			std::size_t const rowNdxBeg{ stepHalf };
+			std::size_t const rowNdxEnd{ rowNdxBeg + hwSize.high() - stepFull };
+			std::size_t const colNdxBeg{ stepHalf };
+			std::size_t const colNdxEnd{ colNdxBeg + hwSize.wide() - stepFull };
 
-				for (std::size_t col{colNdxBeg} ; col < colNdxEnd ; ++col)
-				{
-					std::size_t const colL{ col - 1u };
-					std::size_t const & colM = col;
-					std::size_t const colR{ col + 1u };
-
-					double const & TL = inGrid(rowT, colL);
-					double const & TM = inGrid(rowT, colM);
-					double const & TR = inGrid(rowT, colR);
-
-					double const & ML = inGrid(rowM, colL);
-					//double const & MM = inGrid(rowM, colM);
-					double const & MR = inGrid(rowM, colR);
-
-					double const & BL = inGrid(rowB, colL);
-					double const & BM = inGrid(rowB, colM);
-					double const & BR = inGrid(rowB, colR);
-
-					// corner and edge filter values and (normalized) weights
-					constexpr double fC{ 1./std::numbers::sqrt2_v<double> };
-					constexpr double fE{ 1. };
-					constexpr double wSum{ 4.*fC + 2.*fE };
-					constexpr double wC{ fC / wSum };
-					constexpr double wE{ fE / wSum };
-
-					double const rowGrad
-						{ wC * (BL - TL)
-						+ wE * (BM - TM)
-						+ wC * (BR - TR)
-						};
-
-					double const colGrad
-						{ wC * (TR - TL)
-						+ wE * (MR - ML)
-						+ wC * (BR - BL)
-						};
-
-					grads(row,col) = img::Grad{ rowGrad, colGrad };
-				}
-			}
+			// define valid interior sub area to process
+			NdxBegEnd const rowBegEnd{ rowNdxBeg, rowNdxEnd };
+			NdxBegEnd const colBegEnd{ colNdxBeg, colNdxEnd };
+			fillGradientBy8x(&grads, inGrid, rowBegEnd, colBegEnd);
 		}
 
 		return grads;
