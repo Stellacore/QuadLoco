@@ -27,7 +27,6 @@ set(unitTests
 	_  # test template
 	test_Version  # test project version info retrieval
 
-	test_angLikely  # angular value likelihood estimation
 	test_angRing  # wrap around data structures e.g. for angles
 	test_appQuadLike  # probabilitic assessor of quad target pixel patterns
 	test_cast  # data type conversion operations
@@ -46,6 +45,7 @@ set(unitTests
 	test_opsEigen2D  # Eigen value decompositions
 	test_opsFence  # bounding region determination
 	test_opsgrid  # Edgel extraction
+	test_opsPeakAngles  # angular value likelihood estimation
 	test_opsPeakFinder1D  # peak finding over a 1D collection
 	test_opsSymRing  # point reflection symmetry filter
 	test_pix  # pixel image manipulations
