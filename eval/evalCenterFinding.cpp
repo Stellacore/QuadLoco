@@ -55,9 +55,25 @@
 
 namespace
 {
+	//
+	// Test conditions
+	//
 
-// #define LargeTrial
-#define SmallTrial
+	//! Define number of test cases to run
+//#	define SmallTrial  // about 64
+#	define LargeTrial  // about 5940
+
+	/*! NOTE: this value depends (significantly) on amount of simulation noise
+	 *
+	 * This threshold can be lowered if oversampling (sSamplerOverNum) value
+	 * is increased - which can increase simulation run time substantially.
+	 */
+	constexpr double sMaxPixErr{ 3./4. };
+
+} // [anon]
+
+namespace
+{
 
 	struct MinDelMax
 	{
@@ -174,7 +190,7 @@ namespace sim
 			, 2.000
 			}
 		};
-	static TrialSpec const sUseTrialSpec{ sTrialSmall };
+	static TrialSpec const sUseTrialSpec{ sTrial5k };
 #endif
 
 
@@ -525,7 +541,7 @@ namespace sim
 			if (thePtConfig)
 			{
 				oss
-					<< '\n'
+					<< "  "
 					<< infoStringConfig()
 					;
 			}
@@ -619,7 +635,7 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 		isValid
 			() const
 		{
-			return ((bool)thePtTrial);
+			return ((bool)thePtTrial && theGotCenter.isValid());
 		}
 
 		inline
@@ -654,7 +670,7 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 		inline
 		bool
 		success
-			( double const & magDifMax = 1./32.
+			( double const & magDifMax
 			) const
 		{
 			bool okay{ isValid() };
@@ -662,7 +678,10 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 			{
 				// if members exist, compare center finding at magDifMax
 				double const magDifGot{ magnitude(centerDif()) };
-				okay = (magDifGot < magDifMax);
+				if (engabra::g3::isValid(magDifGot))
+				{
+					okay = (magDifGot < magDifMax);
+				}
 			}
 			return okay;
 		}
@@ -821,25 +840,36 @@ std::cout << "starting evaluation\n";
 		std::ostringstream rptAll;
 		std::vector<std::shared_ptr<sim::Outcome> > ptOutcomeErrs;
 		ptOutcomeErrs.reserve(ptOutcomeAlls.size());
+		std::vector<std::shared_ptr<sim::Outcome> > ptOutcomeBads;
+		ptOutcomeBads.reserve(ptOutcomeAlls.size());
 		for (std::shared_ptr<sim::Outcome> const & ptOutcomeAll : ptOutcomeAlls)
 		{
 			rptAll
 				<< ptOutcomeAll->infoStringReport()
 				<< '\n';
-//			rptAll << ptOutcomeAll->infoString() << '\n';
-			if (! ptOutcomeAll->success())
+			if (! ptOutcomeAll->isValid())
+			{
+				ptOutcomeBads.emplace_back(ptOutcomeAll);
+			}
+			else
+			if (! ptOutcomeAll->success(sMaxPixErr))
 			{
 				ptOutcomeErrs.emplace_back(ptOutcomeAll);
 			}
 		}
 		timerReport.stop();
-std::cout << "num ptOutcomeErrs: " <<  ptOutcomeErrs.size() << '\n';
 
 		// report on unsuccessful trials
 		std::ostringstream rptErr;
 		for (std::shared_ptr<sim::Outcome> const & ptOutcomeErr : ptOutcomeErrs)
 		{
 			rptErr << ptOutcomeErr->infoString() << '\n';
+		}
+		std::ostringstream rptBad;
+		for (std::shared_ptr<sim::Outcome> const & ptOutcomeBad : ptOutcomeBads)
+		{
+			// rptBad << ptOutcomeBad->infoString() << '\n';
+			rptBad << ptOutcomeBad->thePtTrial->infoString() << '\n';
 		}
 
 		// [DoxyExample01]
@@ -861,11 +891,30 @@ std::cout << "num ptOutcomeErrs: " <<  ptOutcomeErrs.size() << '\n';
 			oss << "Failure of all good ptOutcome test\n";
 			hitErr = true;
 		}
+		if (! rptBad.str().empty())
+		{
+			oss << "Failure of all valid ptOutcome test\n";
+			hitErr = true;
+		}
 
 		if (hitErr)
 		{
+			oss << "\n--- Null results\n" << '\n';
+			oss << rptBad.str() << '\n';
 			oss << "\n*** Error trials\n" << '\n';
-		//	oss << rptErr.str() << '\n';
+			oss << rptErr.str() << '\n';
+			oss << '\n';
+			using engabra::g3::io::fixed;
+			std::size_t const numGood
+				{ ptOutcomeAlls.size() 
+				- ptOutcomeErrs.size() 
+				- ptOutcomeBads.size() 
+				};
+			oss << "       sMaxPixErr: " <<  fixed(sMaxPixErr, 3u, 3u) << '\n';
+			oss << "num ptOutcomeAlls: " <<  ptOutcomeAlls.size() << '\n';
+			oss << "num          Good: " <<  numGood << '\n';
+			oss << "num          Errs: " <<  ptOutcomeErrs.size() << '\n';
+			oss << "num          Null: " <<  ptOutcomeBads.size() << '\n';
 		}
 
 		std::ofstream ofs("evalCenterFinding.dat");
@@ -876,10 +925,6 @@ std::cout << "num ptOutcomeErrs: " <<  ptOutcomeErrs.size() << '\n';
 		std::cout << "  timer::Proc: " << timerProc << '\n';
 		std::cout << "timer::Report: " << timerReport << '\n';
 		std::cout << "===============\n";
-
-std::chrono::steady_clock::period const foo;
-std::cout << "foo: " << foo.num << ' ' << foo.den << '\n';
-//std::cout << "period: " << std::chrono::steady_clock::period << '\n';
 
 	}
 
