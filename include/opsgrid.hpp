@@ -36,6 +36,7 @@
 #include "imgEdgel.hpp"
 #include "imgGrad.hpp"
 #include "opsfilter.hpp"
+#include "rasChipSpec.hpp"
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
 #include "raskernel.hpp"
@@ -60,14 +61,6 @@ namespace ops
 
 namespace grid
 {
-	//! Pair start (included) and end (excluded) index values
-	struct NdxBegEnd
-	{
-		std::size_t theBeg{ 0u };
-		std::size_t theEnd{ 0u };
-	};
-
-
 	/*! \brief Compute img::Grad for each pixel within specified ranges.
 	 *
 	 * For each pixel within specified row/col ranges, the gradient is
@@ -85,6 +78,7 @@ namespace grid
 	 * The gradient computation may be expressed as a digital window with
 	 * filter weights as follows.
 	 *
+	 * \verbatim
 	 * ir2 = 1. / sqrt(2.);  // inverse root 2
 	 * scl = 1. / (4.*ir2 + 2.*1.)
 	 *
@@ -103,16 +97,15 @@ namespace grid
 	fillGradientBy8x
 		( ras::Grid<img::Grad> * const & ptGrads
 		, ras::Grid<float> const & inGrid
-		, NdxBegEnd const & rowBegEnd
-		, NdxBegEnd const & colBegEnd
+		, ras::ChipSpec const & chipSpec
 		)
 	{
 		ras::Grid<img::Grad> & grads = *ptGrads;
 
-		std::size_t const & rowNdxBeg = rowBegEnd.theBeg;
-		std::size_t const & rowNdxEnd = rowBegEnd.theEnd;
-		std::size_t const & colNdxBeg = colBegEnd.theBeg;
-		std::size_t const & colNdxEnd = colBegEnd.theEnd;
+		std::size_t const rowNdxBeg{ chipSpec.srcRowBeg() };
+		std::size_t const rowNdxEnd{ chipSpec.srcRowEnd() };
+		std::size_t const colNdxBeg{ chipSpec.srcColBeg() };
+		std::size_t const colNdxEnd{ chipSpec.srcColEnd() };
 
 		for (std::size_t row{rowNdxBeg} ; row < rowNdxEnd ; ++row)
 		{
@@ -192,15 +185,19 @@ namespace grid
 				(grads.begin(), grads.hwSize(), stepHalf, gNull);
 
 			//! Determine start and end indices
-			std::size_t const rowNdxBeg{ stepHalf };
-			std::size_t const rowNdxEnd{ rowNdxBeg + hwSize.high() - stepFull };
-			std::size_t const colNdxBeg{ stepHalf };
-			std::size_t const colNdxEnd{ colNdxBeg + hwSize.wide() - stepFull };
+			ras::ChipSpec const chipSpec
+				{ ras::RowCol
+					{ stepHalf
+					, stepHalf
+					}
+				, ras::SizeHW
+					{ (hwSize.high() - stepFull)
+					, (hwSize.wide() - stepFull)
+					}
+				};
 
 			// define valid interior sub area to process
-			NdxBegEnd const rowBegEnd{ rowNdxBeg, rowNdxEnd };
-			NdxBegEnd const colBegEnd{ colNdxBeg, colNdxEnd };
-			fillGradientBy8x(&grads, inGrid, rowBegEnd, colBegEnd);
+			fillGradientBy8x(&grads, inGrid, chipSpec);
 		}
 
 		return grads;
