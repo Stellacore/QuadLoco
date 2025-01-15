@@ -180,8 +180,12 @@ sideways false
 status open
 
 \begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Graphics
-	filename AlgoExSimQuad.png
+	filename AlgoExQuadPattern.png
 	width 100col%
 
 \end_inset
@@ -192,15 +196,11 @@ status open
 \begin_layout Plain Layout
 \begin_inset CommandInset label
 LatexCommand label
-name "fig:Example-simulated-image"
+name "fig:Quadrant-target-pattern"
 
 \end_inset
 
-Example simulated quad target image.
- The high contrast, four quadrant pattern is self evident.
- This example is generated with project program demo/demoSimQuadImage and
- is an example of simulating only the target area (no surrounding background
- pixels) which includes radiometric noise, but no radiometric trend bias.
+Quadrant target pattern concepts.
 \end_layout
 
 \end_inset
@@ -807,8 +807,53 @@ An best fit (average) edgel is computed for each group.
 Results
 \end_layout
 
+\begin_layout Subsection
+Simulation
+\end_layout
+
 \begin_layout Standard
-Simulation suite of data
+Simulation of data....
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename AlgoExSimQuad.png
+	width 100col%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Example-simulated-image"
+
+\end_inset
+
+Example simulated quad target image.
+ The high contrast, four quadrant pattern is self evident.
+ This example is generated with project program demo/demoSimQuadImage and
+ is an example of simulating only the target area (no surrounding background
+ pixels).
+ This example includes radiometric noise, but no radiometric trend bias.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
