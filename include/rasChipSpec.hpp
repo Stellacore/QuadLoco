@@ -95,7 +95,7 @@ namespace ras
 		//! Row within (implicit) full raster data where this chip starts
 		inline
 		std::size_t const &
-		row0
+		srcRowBeg
 			() const
 		{
 			return theOrigRC.row();
@@ -104,10 +104,28 @@ namespace ras
 		//! Column within (implicit) full raster data where this chip starts
 		inline
 		std::size_t const &
-		col0
+		srcColBeg
 			() const
 		{
 			return theOrigRC.col();
+		}
+
+		//! Row within (implicit) full raster data where this chip starts
+		inline
+		std::size_t
+		srcRowEnd
+			() const
+		{
+			return (srcRowBeg() + high());
+		}
+
+		//! Column within (implicit) full raster data where this chip starts
+		inline
+		std::size_t
+		srcColEnd
+			() const
+		{
+			return (srcColBeg() + wide());
 		}
 
 		//! True if this chip region entirely fits inside fullSizeHW.
