@@ -782,20 +782,29 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 		if (ptTrial)
 		{
 			ras::Grid<float> const & srcGrid = ptTrial->srcGrid();
-			std::vector<ras::PeakRCV> const symPeaks
+			std::vector<ras::PeakRCV> const symPeakRCVs
 				{ app::multiSymRingPeaks(srcGrid, sAppRingHalfSizes) };
 
-//			std::vector<ras::PeakRCV> const 
-			std::vector<ras::PeakRCV> const & peaks = symPeaks;
-
 			img::Spot gotCenter{};
-			if (! peaks.empty())
+			if (! symPeakRCVs.empty())
 			{
-				ras::PeakRCV const & peak = peaks.front();
+// TODO which one?
+				// refined center location based on half-turn symmetry
+				ras::PeakRCV const & peak = symPeakRCVs.front();
 				ras::RowCol const & nomCenterRC = peak.theRowCol;
 				ops::CenterRefiner const refiner(&srcGrid);
 				gotCenter = refiner.fitSpotNear(nomCenterRC);
+
+// TODO which one?
+				// qualified hits based on proximal edgel support
+				/*
+				ops::EdgeCenters const edgeCenters(srcGrid);
+				std::vector<img::Hit> const qualHits
+					{ edgeCenters.edgeQualifiedHits(symPeakRCVs) };
+				gotCenter = qualHits.front().location();
+				*/
 			}
+
 			ptOutcome = std::make_shared<Outcome>
 				(Outcome{ ptTrial, gotCenter });
 
@@ -803,8 +812,8 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 			if ("sim00152_1" == ptTrial->baseName())
 			{
 				std::ofstream ofs("sim00152_1_info.dat");
-				ofs << "peaks.size(): " << peaks.size() << '\n';
-				for (ras::PeakRCV const & peak : peaks)
+				ofs << "symPeakRCVs.size(): " << symPeakRCVs.size() << '\n';
+				for (ras::PeakRCV const & peak : symPeakRCVs)
 				{
 					ofs << "...peak: " << peak << '\n';
 				}
