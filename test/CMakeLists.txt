@@ -33,6 +33,7 @@ set(unitTests
 	test_imgArea  # a 2D range of values
 	test_imgEdgel  # individual pixel edge information (Spot and Grad)
 	test_imgGrad  # pixel Gradent element type and functions
+	test_imgHit  # a 2D location with associated significance and uncertainty
 	test_imgQuadTarget  # represent perspective image of obj::QuadTarget
 	test_imgRay  # a 2D geometric ray (start Spot and unit direction)
 	test_imgSpot  # 'continuous' raster cell locations
