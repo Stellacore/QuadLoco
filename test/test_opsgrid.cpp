@@ -404,6 +404,88 @@ namespace
 		}
 	}
 
+	//! Check sub grid gradients
+	void
+	test6
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample06]
+
+		using namespace quadloco;
+
+		// fill grid with background values
+		ras::SizeHW const hwSize{ 15u, 16u };
+		ras::Grid<float> srcGrid{ hwSize };
+		std::fill(srcGrid.begin(), srcGrid.end(), 0.f);
+
+		// set a 'spike' value near middle
+		constexpr std::size_t srcRow0{ 6u };
+		constexpr std::size_t srcCol0{ 5u };
+		srcGrid(srcRow0, srcCol0) = 1.f;
+
+		// get gradient values from small sub area
+
+		// define sub area
+		std::size_t const halfChip{ 2u };
+		ras::ChipSpec const chipSpec
+			{ ras::RowCol{ srcRow0 - halfChip, srcCol0 - halfChip }
+			, ras::SizeHW{ 5u, 5u }
+			};
+
+		// compute gradients
+		ras::Grid<img::Grad> const gotGrad
+			{ ops::grid::gradientSubGridBy8x(srcGrid, chipSpec) };
+
+		// transform gradients to magnitudes for easy testing below
+		ras::Grid<float> gotGMag{ gotGrad.hwSize() };
+		ras::Grid<float>::iterator itGMag{ gotGMag.begin() };
+		for (ras::Grid<img::Grad>::const_iterator
+			itGrad{gotGrad.cbegin()} ; gotGrad.cend() != itGrad
+			; ++itGrad, ++itGMag)
+		{
+			*itGMag = magnitude(*itGrad);
+		}
+
+		// expect gradient value in all 8 neighbors
+		ras::Grid<float> expGMag{ chipSpec.hwSize() };
+		std::fill(expGMag.begin(), expGMag.end(), 0.f);
+		double const ir2{ 1. / std::sqrt(2.) };
+		double const scl{ 1. / (4.*ir2 + 2.*1.) };
+		std::size_t const chpRow0{ chipSpec.high() / 2u };
+		std::size_t const chpCol0{ chipSpec.wide() / 2u };
+		//
+		expGMag(chpRow0-1u, chpCol0-1u) = scl * 1.;
+		expGMag(chpRow0-1u, chpCol0   ) = scl * 1.;
+		expGMag(chpRow0-1u, chpCol0+1u) = scl * 1.;
+		//
+		expGMag(chpRow0   , chpCol0-1u) = scl * 1.;
+		expGMag(chpRow0   , chpCol0   ) = scl * 0.;
+		expGMag(chpRow0   , chpCol0+1u) = scl * 1.;
+		//
+		expGMag(chpRow0+1u, chpCol0-1u) = scl * 1.;
+		expGMag(chpRow0+1u, chpCol0   ) = scl * 1.;
+		expGMag(chpRow0+1u, chpCol0+1u) = scl * 1.;
+
+		// [DoxyExample06]
+
+		if (! nearlyEquals(gotGMag, expGMag))
+		{
+			oss << "Failure of gotGMag nearlyEquals test\n";
+			img::Vector<double>::Formatter const fmtr{ "%6.3f" };
+		//	oss << srcGrid.infoStringContents("srcGrid", "%6.3f") << '\n';
+			oss << gotGrad.infoStringContents("gotGrad", fmtr, "  ") << '\n';
+			oss << expGMag.infoStringContents("expGMag", "%6.3f") << '\n';
+			oss << gotGMag.infoStringContents("gotGMag", "%6.3f") << '\n';
+			oss << '\n';
+			oss << "chipSpec: " << chipSpec << '\n';
+			oss << " expGMag: " << expGMag << '\n';
+			oss << " gotGrad: " << gotGrad << '\n';
+			oss << " gotGMag: " << gotGMag << '\n';
+			oss << '\n';
+		}
+	}
+
 }
 
 //! Standard test case main wrapper
@@ -420,6 +502,7 @@ main
 	test3(oss);
 	test4(oss);
 	test5(oss);
+	test6(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

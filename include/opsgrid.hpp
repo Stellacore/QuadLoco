@@ -155,6 +155,36 @@ namespace grid
 		}
 	}
 
+	/*! \brief Gradient sub grid corresponding to ChipSpec from source Grid
+	 *
+	 * An edge gradient response is computed for every inGrid pixel that
+	 * is within chipSpec.  The results - a smaller grid of size
+	 * chipSpec.hwSize() - are copied into the return grid.
+	 *
+	 * The return grid is the same size as chipSpec and contains the
+	 * edge response from the chipSpec-defined area within inGrid.
+	 */
+	inline
+	ras::Grid<img::Grad>
+	gradientSubGridBy8x
+		( ras::Grid<float> const & inGrid
+		, ras::ChipSpec const & chipSpec
+		)
+	{
+		ras::Grid<img::Grad> grads;
+		if (chipSpec.fitsInto(inGrid.hwSize()))
+		{
+			// allocate return structure
+			ras::Grid<img::Grad> tmpFull{ inGrid.hwSize() };
+			// no need to init (since unset values cropped away below)
+
+			// compute gradients
+			fillGradientBy8x(&tmpFull, inGrid, chipSpec);
+			grads = ras::grid::subGridValuesFrom(tmpFull, chipSpec);
+		}
+		return grads;
+	}
+
 
 	/*! \brief Compute img::Grad for each pixel location (except at edges).
 	 *
@@ -184,7 +214,7 @@ namespace grid
 			ras::grid::fillBorder
 				(grads.begin(), grads.hwSize(), stepHalf, gNull);
 
-			//! Determine start and end indices
+			//! determine start and end indices
 			ras::ChipSpec const chipSpec
 				{ ras::RowCol
 					{ stepHalf
@@ -196,7 +226,7 @@ namespace grid
 					}
 				};
 
-			// define valid interior sub area to process
+			// compute gradients
 			fillGradientBy8x(&grads, inGrid, chipSpec);
 		}
 
@@ -506,13 +536,15 @@ namespace grid
 	 * in srcGrid is visted other than the first/last hwBox.{high,wide}()
 	 * rows/columns around the boarder (which are set to NaN in output).
 	 *
-	 * At each input cell the functor, boxFunc, is allowed to assess
+	 * At each input cell in the source grid, boxFunc.reset() is called
+	 * to allow function to reset behavior based on the new current
+	 * source image cell values. Then boxFunc, is provided with assess to
 	 * srcGrid information (via a call to boxFunc.consider() for every
-	 * srcGrid cell. After doing this for every srcCell that falls
-	 * within the (then current) hwBox windows, the evaluation function,
-	 * boxFunc(), is called and result is assigned to the output grid
+	 * srcGrid cell in the hwBox window around current source cell. After
+	 * calling consider() for every cell in hwBox, the evaluation function,
+	 * boxFunc(), is called and the result is assigned to the output grid
 	 * cell (at the same row,col location as the srcGrid cell then
-	 * being evaluated.
+	 * being evaluated).
 	 *
 	 * \note
 	 * boxFunc must provide the following methods:
