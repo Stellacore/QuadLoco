@@ -49,8 +49,11 @@ namespace ops
 	template <typename Type>
 	struct Fence
 	{
+		//! Number of sample included
 		std::size_t theCount{ 0u };
+		//! Minimum of all samples considered (or NaN if none)
 		Type theMin{ std::numeric_limits<Type>::max() };
+		//! Maximum of all samples considered (or NaN if none)
 		Type theMax{ std::numeric_limits<Type>::lowest() };
 
 		//! True if this instance is contains valid data (and not empty)

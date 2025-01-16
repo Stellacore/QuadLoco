@@ -66,9 +66,13 @@ namespace io
 	//! Utility for handling PGM header data i/o
 	struct Header
 	{
+		//! 'Magic' strint indicating PGM (i.e. "P5")
 		std::string theMagic;
+		//! Number of rows in image
 		unsigned int theHigh;
+		//! Number of columns in image
 		unsigned int theWide;
+		//! Largest pixel value to expect (e.g. 256, or 65536)
 		unsigned int theMaxPix;
 
 		//! Populate header from input stream (positioned at start of file)

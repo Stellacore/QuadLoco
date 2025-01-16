@@ -68,6 +68,43 @@ namespace sim
 		rigibra::Transform const theStaWrtQuad{};
 
 
+		//! Viewing obj::QuadTarget face-on exactly filling camera format
+		inline
+		static
+		Config
+		faceOn
+			( obj::QuadTarget const & objQuad
+			, std::size_t const & numPixHW
+			)
+		{
+			// configure camera and orientation such that
+			// camera format exactly matches the objQuad target
+
+			//
+			// create a 1:1 camera geometry
+			// * pd == high() == wide()
+			//
+			quadloco::ras::SizeHW const format{ numPixHW, numPixHW };
+			double const pdToMatch{ (double)numPixHW };
+			quadloco::obj::Camera const camera{ format, pdToMatch };
+
+			//
+			// exterior orientation - fit to obj quad target size
+			// * directly above the quad target
+			// * with object distance matching objQuad edge mag
+			//   (so that 1:objQuadTarget unit == 1:imgDetector unit)
+			//
+			double const camOriZ{ objQuad.edgeMag() };
+			engabra::g3::Vector const stationAbove{ 0., 0., camOriZ };
+			rigibra::Transform const xCamWrtQuad
+				{ stationAbove
+				, rigibra::identity<rigibra::Attitude>()
+				};
+
+			return Config{ objQuad, camera, xCamWrtQuad };
+		}
+
+
 		//! Object space target (comprising the scene to be simulated)
 		inline
 		obj::QuadTarget const &
@@ -162,43 +199,6 @@ namespace sim
 				};
 			return ras::ChipSpec{ rc0, hwSize };
 		}
-
-		//! Viewing obj::QuadTarget face-on exactly filling camera format
-		inline
-		static
-		Config
-		faceOn
-			( obj::QuadTarget const & objQuad
-			, std::size_t const & numPixHW
-			)
-		{
-			// configure camera and orientation such that
-			// camera format exactly matches the objQuad target
-
-			//
-			// create a 1:1 camera geometry
-			// * pd == high() == wide()
-			//
-			quadloco::ras::SizeHW const format{ numPixHW, numPixHW };
-			double const pdToMatch{ (double)numPixHW };
-			quadloco::obj::Camera const camera{ format, pdToMatch };
-
-			//
-			// exterior orientation - fit to obj quad target size
-			// * directly above the quad target
-			// * with object distance matching objQuad edge mag
-			//   (so that 1:objQuadTarget unit == 1:imgDetector unit)
-			//
-			double const camOriZ{ objQuad.edgeMag() };
-			engabra::g3::Vector const stationAbove{ 0., 0., camOriZ };
-			rigibra::Transform const xCamWrtQuad
-				{ stationAbove
-				, rigibra::identity<rigibra::Attitude>()
-				};
-
-			return Config{ objQuad, camera, xCamWrtQuad };
-		}
-
 
 		//! True if this instance contains valid data
 		inline

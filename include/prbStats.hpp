@@ -124,7 +124,7 @@ namespace prb
 			consider(beg, end);
 		}
 
-		/*! Adjust the current min/max values to accomodate all samps
+		/*! \brief Adjust the current min/max values to accomodate all samps
 		 *
 		 * NOTE: null values (NaN==value) are *NOT* considered
 		 */
@@ -167,7 +167,7 @@ namespace prb
 			}
 		}
 
-		/*! Adjust the current min/max values to accomodate all samps
+		/*! \brief Adjust the current min/max values to accomodate all samps
 		 *
 		 * NOTE: null values (NaN==value) are *NOT* considered
 		 */

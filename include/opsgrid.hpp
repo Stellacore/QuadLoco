@@ -36,6 +36,7 @@
 #include "imgEdgel.hpp"
 #include "imgGrad.hpp"
 #include "opsfilter.hpp"
+#include "rasChipSpec.hpp"
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
 #include "raskernel.hpp"
@@ -60,17 +61,24 @@ namespace ops
 
 namespace grid
 {
-
-
-	/*! \brief Compute img::Grad for each pixel location (except at edges).
+	/*! \brief Compute img::Grad for each pixel within specified ranges.
 	 *
-	 * The gradient is computed from the 8 immediate neighbor pixels as
-	 * a least squares linear fit. The 4 corner samples are weighted by
-	 * 1/sqrt(2) as much as the 4 edge samples.
+	 * For each pixel within specified row/col ranges, the gradient is
+	 * computed from the 8 immediate neighbor pixels as a least squares
+	 * linear fit. I.e. like fitting a geometric plane to the radiometric
+	 * "surface" defined by the 9 neighborhood values.  The 4 corner
+	 * samples are weighted by 1/sqrt(2) the weight of the 4 edge samples.
 	 *
-	 * E.g. Expressed as a digital window, the filter weights are:
+	 * Results are placed directly into an *externally allocated* output
+	 * grid via the pointer ptGrads.
+	 *
+	 * NOTE: This function *assumes* the row/col begin/end ranges are
+	 * valid and fall *entirely* inside the source image.
+	 *
+	 * The gradient computation may be expressed as a digital window with
+	 * filter weights as follows.
+	 *
 	 * \verbatim
-	 *
 	 * ir2 = 1. / sqrt(2.);  // inverse root 2
 	 * scl = 1. / (4.*ir2 + 2.*1.)
 	 *
@@ -85,6 +93,106 @@ namespace grid
 	 * \endverbatim
 	 */
 	inline
+	void
+	fillGradientBy8x
+		( ras::Grid<img::Grad> * const & ptGrads
+		, ras::Grid<float> const & inGrid
+		, ras::ChipSpec const & chipSpec
+		)
+	{
+		ras::Grid<img::Grad> & grads = *ptGrads;
+
+		std::size_t const rowNdxBeg{ chipSpec.srcRowBeg() };
+		std::size_t const rowNdxEnd{ chipSpec.srcRowEnd() };
+		std::size_t const colNdxBeg{ chipSpec.srcColBeg() };
+		std::size_t const colNdxEnd{ chipSpec.srcColEnd() };
+
+		for (std::size_t row{rowNdxBeg} ; row < rowNdxEnd ; ++row)
+		{
+			std::size_t const rowT{ row - 1u };
+			std::size_t const & rowM = row;
+			std::size_t const rowB{ row + 1u };
+
+			for (std::size_t col{colNdxBeg} ; col < colNdxEnd ; ++col)
+			{
+				std::size_t const colL{ col - 1u };
+				std::size_t const & colM = col;
+				std::size_t const colR{ col + 1u };
+
+				double const & TL = inGrid(rowT, colL);
+				double const & TM = inGrid(rowT, colM);
+				double const & TR = inGrid(rowT, colR);
+
+				double const & ML = inGrid(rowM, colL);
+				//double const & MM = inGrid(rowM, colM);
+				double const & MR = inGrid(rowM, colR);
+
+				double const & BL = inGrid(rowB, colL);
+				double const & BM = inGrid(rowB, colM);
+				double const & BR = inGrid(rowB, colR);
+
+				// corner and edge filter values and (normalized) weights
+				constexpr double fC{ 1./std::numbers::sqrt2_v<double> };
+				constexpr double fE{ 1. };
+				constexpr double wSum{ 4.*fC + 2.*fE };
+				constexpr double wC{ fC / wSum };
+				constexpr double wE{ fE / wSum };
+
+				double const rowGrad
+					{ wC * (BL - TL)
+					+ wE * (BM - TM)
+					+ wC * (BR - TR)
+					};
+
+				double const colGrad
+					{ wC * (TR - TL)
+					+ wE * (MR - ML)
+					+ wC * (BR - BL)
+					};
+
+				grads(row,col) = img::Grad{ rowGrad, colGrad };
+			}
+		}
+	}
+
+	/*! \brief Gradient sub grid corresponding to ChipSpec from source Grid
+	 *
+	 * An edge gradient response is computed for every inGrid pixel that
+	 * is within chipSpec.  The results - a smaller grid of size
+	 * chipSpec.hwSize() - are copied into the return grid.
+	 *
+	 * The return grid is the same size as chipSpec and contains the
+	 * edge response from the chipSpec-defined area within inGrid.
+	 */
+	inline
+	ras::Grid<img::Grad>
+	gradientSubGridBy8x
+		( ras::Grid<float> const & inGrid
+		, ras::ChipSpec const & chipSpec
+		)
+	{
+		ras::Grid<img::Grad> grads;
+		if (chipSpec.fitsInto(inGrid.hwSize()))
+		{
+			// allocate return structure
+			ras::Grid<img::Grad> tmpFull{ inGrid.hwSize() };
+			// no need to init (since unset values cropped away below)
+
+			// compute gradients
+			fillGradientBy8x(&tmpFull, inGrid, chipSpec);
+			grads = ras::grid::subGridValuesFrom(tmpFull, chipSpec);
+		}
+		return grads;
+	}
+
+
+	/*! \brief Compute img::Grad for each pixel location (except at edges).
+	 *
+	 * This function determines appropriate row/col range limits and then
+	 * runs fillGradientBy8x() for computation within the valid source
+	 * image sub area.
+	 */
+	inline
 	ras::Grid<img::Grad>
 	gradientGridBy8x
 		( ras::Grid<float> const & inGrid
@@ -93,70 +201,33 @@ namespace grid
 		ras::Grid<img::Grad> grads;
 
 		// check if there is enough room to process anything
-		std::size_t const stepFull{ 2u };
+		std::size_t const stepHalf{ 1u };
+		std::size_t const stepFull{ 2u * stepHalf };
 		if ((stepFull < inGrid.high()) && (stepFull < inGrid.wide()))
 		{
 			// allocate space
 			ras::SizeHW const hwSize{ inGrid.hwSize() };
 			grads = ras::Grid<img::Grad>(hwSize);
 
-			//! Determine start and end indices
-			std::size_t const rowNdxBeg{ 1u };
-			std::size_t const rowNdxEnd{ rowNdxBeg + hwSize.high() - stepFull };
-			std::size_t const colNdxBeg{ 1u };
-			std::size_t const colNdxEnd{ colNdxBeg + hwSize.wide() - stepFull };
-
 			// set border to null values
 			static img::Grad const gNull{};
 			ras::grid::fillBorder
-				(grads.begin(), grads.hwSize(), 1u, gNull);
+				(grads.begin(), grads.hwSize(), stepHalf, gNull);
 
-			for (std::size_t row{rowNdxBeg} ; row < rowNdxEnd ; ++row)
-			{
-				std::size_t const rowT{ row - 1u };
-				std::size_t const & rowM = row;
-				std::size_t const rowB{ row + 1u };
+			//! determine start and end indices
+			ras::ChipSpec const chipSpec
+				{ ras::RowCol
+					{ stepHalf
+					, stepHalf
+					}
+				, ras::SizeHW
+					{ (hwSize.high() - stepFull)
+					, (hwSize.wide() - stepFull)
+					}
+				};
 
-				for (std::size_t col{colNdxBeg} ; col < colNdxEnd ; ++col)
-				{
-					std::size_t const colL{ col - 1u };
-					std::size_t const & colM = col;
-					std::size_t const colR{ col + 1u };
-
-					double const & TL = inGrid(rowT, colL);
-					double const & TM = inGrid(rowT, colM);
-					double const & TR = inGrid(rowT, colR);
-
-					double const & ML = inGrid(rowM, colL);
-					//double const & MM = inGrid(rowM, colM);
-					double const & MR = inGrid(rowM, colR);
-
-					double const & BL = inGrid(rowB, colL);
-					double const & BM = inGrid(rowB, colM);
-					double const & BR = inGrid(rowB, colR);
-
-					// corner and edge filter values and (normalized) weights
-					constexpr double fC{ 1./std::numbers::sqrt2_v<double> };
-					constexpr double fE{ 1. };
-					constexpr double wSum{ 4.*fC + 2.*fE };
-					constexpr double wC{ fC / wSum };
-					constexpr double wE{ fE / wSum };
-
-					double const rowGrad
-						{ wC * (BL - TL)
-						+ wE * (BM - TM)
-						+ wC * (BR - TR)
-						};
-
-					double const colGrad
-						{ wC * (TR - TL)
-						+ wE * (MR - ML)
-						+ wC * (BR - BL)
-						};
-
-					grads(row,col) = img::Grad{ rowGrad, colGrad };
-				}
-			}
+			// compute gradients
+			fillGradientBy8x(&grads, inGrid, chipSpec);
 		}
 
 		return grads;
@@ -465,13 +536,15 @@ namespace grid
 	 * in srcGrid is visted other than the first/last hwBox.{high,wide}()
 	 * rows/columns around the boarder (which are set to NaN in output).
 	 *
-	 * At each input cell the functor, boxFunc, is allowed to assess
+	 * At each input cell in the source grid, boxFunc.reset() is called
+	 * to allow function to reset behavior based on the new current
+	 * source image cell values. Then boxFunc, is provided with assess to
 	 * srcGrid information (via a call to boxFunc.consider() for every
-	 * srcGrid cell. After doing this for every srcCell that falls
-	 * within the (then current) hwBox windows, the evaluation function,
-	 * boxFunc(), is called and result is assigned to the output grid
+	 * srcGrid cell in the hwBox window around current source cell. After
+	 * calling consider() for every cell in hwBox, the evaluation function,
+	 * boxFunc(), is called and the result is assigned to the output grid
 	 * cell (at the same row,col location as the srcGrid cell then
-	 * being evaluated.
+	 * being evaluated).
 	 *
 	 * \note
 	 * boxFunc must provide the following methods:

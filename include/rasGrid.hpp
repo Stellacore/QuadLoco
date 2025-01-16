@@ -65,11 +65,16 @@ namespace ras
 
 	public: // typedef
 
+		//! Data type for values of individual cells within grid.
 		typedef Type value_type;
+		//! Type for writable iterator moving forward over this grid.
 		typedef Type * iterator;
+		//! Type for readonly iterator moving forward over this grid.
 		typedef Type const * const_iterator;
-		typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+		//! Write/Read iterator moving from back to front
 		typedef std::reverse_iterator<iterator> reverse_iterator;
+		//! Readonly iterator moving from back to front
+		typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
 		// static methods
 

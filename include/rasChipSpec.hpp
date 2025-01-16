@@ -52,8 +52,10 @@ namespace ras
 	 */
 	struct ChipSpec
 	{
-		ras::RowCol const theOrigRC;
-		ras::SizeHW const theSizeHW;
+		//! Chip upper left corner is at this location in source image.
+		ras::RowCol const theSrcOrigRC;
+		//! The height/width of this chip.
+		ras::SizeHW const theChipSizeHW;
 
 
 		//! True if this instance contains non trivial values
@@ -62,52 +64,79 @@ namespace ras
 		isValid
 			() const
 		{
-			return theSizeHW.isValid();
+			return theChipSizeHW.isValid();
 		}
 
-		//! Size of this chip - convenience for theSizeHW
+		//! The row/column in source image for this chip's UL corner
+		inline
+		ras::RowCol const &
+		srcOrigRC
+			() const
+		{
+			return theSrcOrigRC;
+		}
+
+		//! Size of this chip - convenience for theChipSizeHW
 		inline
 		ras::SizeHW const &
 		hwSize
 			() const
 		{
-			return theSizeHW;
+			return theChipSizeHW;
 		}
 
-		//! Number rows in this chip - convenience for theSizeHW.high()
+		//! Number rows in this chip - convenience for theChipSizeHW.high()
 		inline
 		std::size_t
 		high
 			() const
 		{
-			return theSizeHW.high();
+			return theChipSizeHW.high();
 		}
 
-		//! Number columns in this chip - convenience for theSizeHW.wide()
+		//! Number columns in this chip - convenience for theChipSizeHW.wide()
 		inline
 		std::size_t
 		wide
 			() const
 		{
-			return theSizeHW.wide();
+			return theChipSizeHW.wide();
 		}
 
 		//! Row within (implicit) full raster data where this chip starts
 		inline
 		std::size_t const &
-		row0
+		srcRowBeg
 			() const
 		{
-			return theOrigRC.row();
+			return theSrcOrigRC.row();
 		}
 
 		//! Column within (implicit) full raster data where this chip starts
 		inline
 		std::size_t const &
-		col0
+		srcColBeg
 			() const
 		{
-			return theOrigRC.col();
+			return theSrcOrigRC.col();
+		}
+
+		//! Row within (implicit) full raster data where this chip starts
+		inline
+		std::size_t
+		srcRowEnd
+			() const
+		{
+			return (srcRowBeg() + high());
+		}
+
+		//! Column within (implicit) full raster data where this chip starts
+		inline
+		std::size_t
+		srcColEnd
+			() const
+		{
+			return (srcColBeg() + wide());
 		}
 
 		//! True if this chip region entirely fits inside fullSizeHW.
@@ -121,9 +150,9 @@ namespace ras
 			// However, since using unsigned sizes, do NOT try to
 			// subtract the 1u value here, but instead ...
 			std::size_t const chipRowEndInFull
-				{ theOrigRC.row() + theSizeHW.high() };
+				{ theSrcOrigRC.row() + theChipSizeHW.high() };
 			std::size_t const chipColEndInFull
-				{ theOrigRC.col() + theSizeHW.wide() };
+				{ theSrcOrigRC.col() + theChipSizeHW.wide() };
 			// ... account for the 1u difference in test here
 			bool const rowIsIn{ chipRowEndInFull < (fullSizeHW.high()+1u) };
 			bool const colIsIn{ chipColEndInFull < (fullSizeHW.wide()+1u) };
@@ -137,10 +166,10 @@ namespace ras
 			( ras::RowCol const & rcInFull
 			) const
 		{
-			// rcInChip = (rcInFull - theOrigRC)
+			// rcInChip = (rcInFull - theSrcOrigRC)
 			return ras::RowCol
-				{ rcInFull.row() - theOrigRC.row()
-				, rcInFull.col() - theOrigRC.col()
+				{ rcInFull.row() - theSrcOrigRC.row()
+				, rcInFull.col() - theSrcOrigRC.col()
 				};
 		}
 
@@ -151,12 +180,12 @@ namespace ras
 			( ras::RowCol const & rcInChip
 			) const
 		{
-			// rcInChip = (rcInFull - theOrigRC)
-			// rcInChip + theOrigRC = rcInFull
-			// rcInFull = rcInChip + theOrigRC
+			// rcInChip = (rcInFull - theSrcOrigRC)
+			// rcInChip + theSrcOrigRC = rcInFull
+			// rcInFull = rcInChip + theSrcOrigRC
 			return ras::RowCol
-				{ rcInChip.row() + theOrigRC.row()
-				, rcInChip.col() + theOrigRC.col()
+				{ rcInChip.row() + theSrcOrigRC.row()
+				, rcInChip.col() + theSrcOrigRC.col()
 				};
 		}
 
@@ -194,9 +223,9 @@ namespace ras
 				oss << title << ' ';
 			}
 			oss
-				<< "origRC: " << theOrigRC
+				<< "origRC: " << theSrcOrigRC
 				<< ' '
-				<< "sizeHW: " << theSizeHW
+				<< "sizeHW: " << theChipSizeHW
 				;
 			return oss.str();
 		}

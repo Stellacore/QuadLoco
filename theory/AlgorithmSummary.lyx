@@ -120,8 +120,101 @@ set_width "auto"
 Introduction
 \end_layout
 
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename AlgoExQuadsInItaly.png
+	width 100col%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Quadrant-targets-in-wild"
+
+\end_inset
+
+Example quadrant targets on historic buildings in Italy encountered incidentally.
+ Although the exact purpose of these specific targets is unknown, quadrant
+ pattern targets are often used in archaeological surveys, historical preservati
+on, photogrammetric documentation/reality capture and technical engineering
+ studies.
+ Photos by Johann Albrecht.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Algorithms
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename AlgoExQuadPattern.png
+	width 100col%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Quadrant-target-pattern"
+
+\end_inset
+
+Quadrant target pattern concepts.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
@@ -129,7 +222,17 @@ Terminology
 \end_layout
 
 \begin_layout Standard
-TODO/ Detection
+In its current form (ca Q4 2024), QuadLoco assumes that the target has been
+ preliminarily detected.
+ A practical definition of 
+\begin_inset Quotes eld
+\end_inset
+
+Detection
+\begin_inset Quotes erd
+\end_inset
+
+
 \begin_inset CommandInset nomenclature
 LatexCommand nomenclature
 prefix "Detection"
@@ -139,7 +242,19 @@ literal "false"
 
 \end_inset
 
- vs Localization
+ is that a bounding image chip can be extracted from an overall larger source
+ image, and the resulting chip contains at least the center of the quad
+ target signal.
+ Given a detected quad target, the QuadLoco software provides center point
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Localization
+\begin_inset Quotes erd
+\end_inset
+
+
 \begin_inset CommandInset nomenclature
 LatexCommand nomenclature
 prefix "Localization"
@@ -150,6 +265,9 @@ literal "false"
 \end_inset
 
 .
+ The center point is localized to sub pixel precision by a image processing
+ computations that respond to a combination of quad target signal characteristic
+s
 \end_layout
 
 \begin_layout Standard
@@ -412,6 +530,100 @@ are likely radially opposite to others
 \end_layout
 
 \begin_layout Subsection
+Theory
+\end_layout
+
+\begin_layout Standard
+Algorithms:
+\end_layout
+
+\begin_layout Itemize
+Symmetry filter, SymRing, to highlight center pixel (list of candidates)
+\end_layout
+
+\begin_layout Itemize
+Corroboration by multiple SymRings
+\end_layout
+
+\begin_layout Itemize
+Half-Turn symmetry filter to provide smooth surface used for sub pixel peak
+ location
+\end_layout
+
+\begin_layout Itemize
+Peak estimation (currently using a simplistic weighted centroid algorithm).
+\end_layout
+
+\begin_layout Subsubsection
+Annular Filter - SymRing
+\end_layout
+
+\begin_layout Standard
+Characteristics within filter window (SymRing annulus)
+\end_layout
+
+\begin_layout Itemize
+High contrast
+\end_layout
+
+\begin_layout Itemize
+Half turn rotation symmetry
+\end_layout
+
+\begin_layout Itemize
+Repeated azimuthal hi-lo-hi-lo pattern.
+\end_layout
+
+\begin_layout Subsubsection
+Multi Radius Corroboration
+\end_layout
+
+\begin_layout Standard
+Run SymRing filter with sequence of filter radii (e.g.
+ 5, and 3 seems to work well for simulated data).
+ Multiply the results together.
+\end_layout
+
+\begin_layout Standard
+Note that only the first filter is run over the entire image.
+ Peaks are found in the response.
+ The following sequence of SymRing filters are then run only at the locations
+ of the initial peaks.
+\end_layout
+
+\begin_layout Subsubsection
+Half Turn SSD
+\end_layout
+
+\begin_layout Standard
+This is done instead of peak finding in the SymRing response.
+\end_layout
+
+\begin_layout Standard
+TODO - probably SimRing response peaks should be tried for subpixel location.
+\end_layout
+
+\begin_layout Subsubsection
+Peak Estimation
+\end_layout
+
+\begin_layout Standard
+Peak estimation is based on a weighted computation in the neighborhood of
+ the strongest single peak.
+ A neighborhood of SSD responses is converted to peak weights by remapping
+ the SSD values to pseudo probabilities as follows.
+ The peak (maximum in neighborhood) is mapped to zero.
+ The smallest SSD response in the hood is mapped to 4.
+ The weight of each pixel is assigned using a Gaussian function with the
+ remapped value (0-4) as argument.
+\end_layout
+
+\begin_layout Standard
+The returned peak, is the weighted centroid of the neighborhood locations
+ weighted by the Gaussian of the remapped SSD values.
+\end_layout
+
+\begin_layout Subsection
 Basic Steps
 \end_layout
 
@@ -589,6 +801,63 @@ An best fit (average) edgel is computed for each group.
 \end_inset
 
 
+\end_layout
+
+\begin_layout Section
+Results
+\end_layout
+
+\begin_layout Subsection
+Simulation
+\end_layout
+
+\begin_layout Standard
+Simulation of data....
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename AlgoExSimQuad.png
+	width 100col%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Example-simulated-image"
+
+\end_inset
+
+Example simulated quad target image.
+ The high contrast, four quadrant pattern is self evident.
+ This example is generated with project program demo/demoSimQuadImage and
+ is an example of simulating only the target area (no surrounding background
+ pixels).
+ This example includes radiometric noise, but no radiometric trend bias.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Example of real quads
 \end_layout
 
 \begin_layout Section

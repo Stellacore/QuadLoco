@@ -29,6 +29,7 @@ set(ProgNames
 	demoVersion
 
 	demoEdgeDirAD
+	demoSimQuadImage
 
 	)
 

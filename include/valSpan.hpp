@@ -43,10 +43,12 @@ namespace quadloco
 namespace val
 {
 
-	//! A half open interval
+	//! A half open interval - i.e. [min(),max())
 	struct Span
 	{
+		//! The (included) value defining start of continuous range
 		double const theBeg{ engabra::g3::null<double>() };
+		//! The (excluded) value just past end of continous range
 		double const theEnd{ engabra::g3::null<double>() };
 
 		//! True if this instance contains valid data

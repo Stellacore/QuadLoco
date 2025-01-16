@@ -72,7 +72,7 @@ namespace prb
 
 	public:
 
-		// Construct invalid instance
+		//! Construct null (isValid() == false) instance
 		inline
 		explicit
 		Gauss1D

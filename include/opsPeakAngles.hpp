@@ -50,10 +50,24 @@ namespace quadloco
 
 namespace ops
 {
-	//! \brief Angle likelihood estimation
+	/*! \brief Angle likelihood estimation via circular histogram management.
+	 *
+	 * Construct an instance with a specified number of angular
+	 * quantiziation bins.
+	 *
+	 * Use the add() function to incorporate weighted angle values into
+	 * the histogram.
+	 *
+	 * Once accumulations are complete, the indicesOfPeaks() and
+	 * anglesOfPeaks() methods report local peaks in the (then current)
+	 * histogram.
+	 */
 	struct PeakAngles
 	{
+		//! Provide angle/index relationship (with wrap around).
 		ang::Ring const theRing{};
+
+		//! Histogram of values - with indices matching those in #theRing.
 		std::vector<double> theBinSums{};
 
 		//! Construct a default (null) instance
@@ -102,7 +116,20 @@ namespace ops
 			return theRing.angleDelta();
 		}
 
-		//! Incorporate weighted angle value into ring buffer
+		/*! \brief Incorporate weighted angle probability density function.
+		 *
+		 * This function adds a (pseudo) probability density into the
+		 * accumulation array.
+		 *
+		 * The density function is an (unnormalized) Guassian with mean
+		 * equal to the angle value and with standard deviation equal to
+		 * the halfBinSpread argument. The overall (Gaussian) function
+		 * has max amplitied equal to the provided weight value.
+		 *
+		 * E.g.. adds a values into adjacement bins (da) with function
+		 * of the form:
+		 * \arg f(da) = weight * std::exp(-sq((angle-da) / halfBinSpread))
+		 */
 		inline
 		void
 		add

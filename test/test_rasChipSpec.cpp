@@ -255,8 +255,8 @@ namespace
 			{
 				NdxRC const chipNdx{ chipData(testRow, testCol) };
 				NdxRC const testNdx
-					{ chipNdx.first - chipSpec.row0()
-					, chipNdx.second - chipSpec.col0()
+					{ chipNdx.first - chipSpec.srcRowBeg()
+					, chipNdx.second - chipSpec.srcColBeg()
 					};
 				testData(testRow, testCol) = testNdx;
 			}
@@ -315,8 +315,8 @@ namespace
 			{
 				// expected position of (chipRow,chipCol) inside fullData
 				NdxRC const fullNdxRC
-					{ chipRow + chipSpec.row0()
-					, chipCol + chipSpec.col0()
+					{ chipRow + chipSpec.srcRowBeg()
+					, chipCol + chipSpec.srcColBeg()
 					};
 				chipData(chipRow, chipCol) = fullNdxRC;
 			}
@@ -325,7 +325,7 @@ namespace
 		// use chip spec to set associated cells in full data structure
 		bool const okayFill
 			{ quadloco::ras::grid::setSubGridInside
-				(&fullData, chipData, chipSpec.theOrigRC)
+				(&fullData, chipData, chipSpec.srcOrigRC())
 			};
 
 		// [DoxyExample03]

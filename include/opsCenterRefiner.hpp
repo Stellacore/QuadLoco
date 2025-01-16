@@ -92,6 +92,7 @@ namespace ops
 
 	public:
 
+		//! Attach refiner to source grid with specific refinement parameters.
 		inline
 		explicit
 		CenterRefiner
