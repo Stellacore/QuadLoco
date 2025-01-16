@@ -613,10 +613,14 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 					{ std::make_shared<Trial>(nSta, nRoll, ptConfig) };
 				ptTrials.emplace_back(ptTrial);
 
-//std::string const baseName{ ptTrial->baseName() };
-//std::string const fileName{ (ptTrial->baseName() + ".pgm") };
-//(void)io::writeStretchPGM(fileName, ptTrial->srcGrid());
-
+				/*
+				if ("sim00152_1" == ptTrial->baseName())
+				{
+					std::cout << ptTrial->infoString() << '\n';
+					std::string const fileName{ (ptTrial->baseName()+".pgm") };
+					(void)io::writeStretchPGM(fileName, ptTrial->srcGrid());
+				}
+				*/
 			}
 		}
 		return ptTrials;
@@ -713,7 +717,6 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 					<< "  mag: " << fixed(magnitude(centerDif()), 3u, 2u)
 				<< '\n'
 				;
-
 			return oss.str();
 		}
 
@@ -785,12 +788,25 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 			img::Spot gotCenter{};
 			if (! peaks.empty())
 			{
-				ras::RowCol const & nomCenterRC = peaks.front().theRowCol;
+				ras::PeakRCV const & peak = peaks.front();
+				ras::RowCol const & nomCenterRC = peak.theRowCol;
 				ops::CenterRefiner const refiner(&srcGrid);
 				gotCenter = refiner.fitSpotNear(nomCenterRC);
 			}
 			ptOutcome = std::make_shared<Outcome>
 				(Outcome{ ptTrial, gotCenter });
+
+			/*
+			if ("sim00152_1" == ptTrial->baseName())
+			{
+				std::ofstream ofs("sim00152_1_info.dat");
+				ofs << "peaks.size(): " << peaks.size() << '\n';
+				for (ras::PeakRCV const & peak : peaks)
+				{
+					ofs << "...peak: " << peak << '\n';
+				}
+			}
+			*/
 		}
 		return ptOutcome;
 	}
