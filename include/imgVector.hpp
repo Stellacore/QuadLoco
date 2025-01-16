@@ -71,7 +71,7 @@ namespace img
 			//! std::format to apply to each of the two theComps
 			std::string const theEachFmtCstyle{ "4.1f" };
 
-			// String after theEachFmtCstyle to encode each of the two values
+			//! String after theEachFmtCstyle to encode each of the two values
 			inline
 			std::string
 			operator()
@@ -91,6 +91,7 @@ namespace img
 		}; // Formatter
 
 
+		//! Noop dtor.
 		inline
 		~Vector
 			() = default;

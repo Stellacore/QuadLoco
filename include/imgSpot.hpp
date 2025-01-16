@@ -53,6 +53,7 @@ namespace img
 	//! Discrete grid location in row,colum order.
 	struct Spot : public img::Vector<double>
 	{
+		//! Default construction of a null instance (isValid() == false)
 		inline
 		explicit
 		Spot
@@ -60,6 +61,7 @@ namespace img
 			: img::Vector<double>{}
 		{ }
 
+		//! Explicit value construction.
 		inline
 		explicit
 		Spot
@@ -69,6 +71,7 @@ namespace img
 			: img::Vector<double>{ val0, val1 }
 		{ }
 
+		//! Construct with values after cast to double type
 		inline
 		explicit
 		Spot
@@ -81,6 +84,7 @@ namespace img
 				}
 		{ }
 
+		//! Construct from baseclass instance.
 		inline
 		explicit
 		Spot
@@ -89,6 +93,7 @@ namespace img
 			: img::Vector<double>{ vec2D.theData }
 		{ }
 
+		//! Noop dtor.
 		inline
 		virtual
 		~Spot

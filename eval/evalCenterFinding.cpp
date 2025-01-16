@@ -433,7 +433,7 @@ namespace sim
 
 			ras::ChipSpec const chipSpec
 				{ thePtConfig->chipSpecForQuad(theChipPad) };
-			img::Spot const chip0{ cast::imgSpot(chipSpec.theOrigRC) };
+			img::Spot const chip0{ cast::imgSpot(chipSpec.srcOrigRC()) };
 
 			img::Spot const centerInChp{ centerInImg - chip0 };
 			return centerInChp;

@@ -325,7 +325,7 @@ namespace
 		// use chip spec to set associated cells in full data structure
 		bool const okayFill
 			{ quadloco::ras::grid::setSubGridInside
-				(&fullData, chipData, chipSpec.theOrigRC)
+				(&fullData, chipData, chipSpec.srcOrigRC())
 			};
 
 		// [DoxyExample03]

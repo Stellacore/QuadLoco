@@ -52,10 +52,10 @@ namespace app
 	struct SquareRadiiSamples
 	{
 		// samples drawn from the signal flat areas (radially between edges)
-		std::vector<Type> thePPs{};  // TR square
-		std::vector<Type> theNPs{};  // TL square
-		std::vector<Type> theNNs{};  // BL square
-		std::vector<Type> thePNs{};  // BR square
+		std::vector<Type> thePPs{};  //!< TR square samples
+		std::vector<Type> theNPs{};  //!< TL square samples
+		std::vector<Type> theNNs{};  //!< BL square samples
+		std::vector<Type> thePNs{};  //!< BR square samples
 
 
 		//! True if each radii contains at least this many samples
@@ -194,6 +194,7 @@ namespace app
 			return allVals;
 		}
 
+		//! Descriptive information about this instance.
 		inline
 		std::string
 		infoString

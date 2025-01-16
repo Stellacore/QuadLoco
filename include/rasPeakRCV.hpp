@@ -51,7 +51,9 @@ namespace ras
 	//! \brief Peak Row,Col,Value
 	struct PeakRCV
 	{
+		//! Location of peak (within assumed raster grid)
 		ras::RowCol theRowCol;
+		//! Value (e.g elevation) of peak
 		double theValue{ engabra::g3::null<double>() };
 
 		//! True if this instance has valid content

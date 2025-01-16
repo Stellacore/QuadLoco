@@ -51,10 +51,16 @@ namespace ops
 	//! Utility for finding inflection peaks in array of data
 	struct PeakFinder1D
 	{
+		//! Collection of collections each of which contains indices in a peak
 		std::vector<std::vector<std::size_t> > const thePeakNdxGrps{};
 
-// TODO - explain Linear assumes 0 values on each end
-		//! Treat input domain is circular (wrap around) or linear (no wrap)
+		/*! \brief Is input domain circular (wrap around) or linear (no wrap)
+		 *
+		 * Note that Linear domain treats values just before and just after
+		 * the data array as having 0 values. E.g. a first element value
+		 * of data[0]=2 is considered a Rise, and data[0]=-1 is considered
+		 * a Drop.
+		 */
 		enum DataDomain
 		{
 			  Linear //!< Input data domain is finite and unwrapped
@@ -70,10 +76,12 @@ namespace ops
 
 		}; // Change
 
-		//! 
+		//! \brief Track data index and Change from previous index to this one.
 		struct NdxChange
 		{
+			//! The index at which Change is evaluated
 			std::size_t theNdx;
+			//! The change from (theNdx-1) until (theNdx).
 			Change theChange;
 
 		}; // NdxChange
@@ -94,8 +102,9 @@ namespace ops
 			return changeNames[(std::size_t)change];
 		}
 
+#if 0
+// TODO Assumes Circular wrap around!!
 		//! Convert data stream into stream of value transition changes
-// TODO Assumes Circular!!
 		template <typename FwdIter>
 		inline
 		static
@@ -146,8 +155,9 @@ namespace ops
 
 			return ndxChanges;
 		}
+#endif
 
-		//! Change associated with transition of values from previous to current
+		//! Change associated with value transition from previous to current
 		template <typename Type>
 		inline
 		static
@@ -251,128 +261,6 @@ namespace ops
 			}
 		}
 
-#if 0
-		/*! Return collections of indices associated with data peaks.
-		 *
-		 * Each element in the return collection is a groups of indices
-		 * associated with an individual peak in the overall data. The
-		 * indices within each group span the width of a spread out
-		 * (e.g. flat-top) peak.
-		 */
-		template <typename FwdIter>
-		inline
-		static
-		std::vector<std::vector<std::size_t> >
-		peakIndexGroups
-			( FwdIter const & itBeg
-			, FwdIter const & itEnd
-			, DataDomain const & dataDomain = Circle
-			)
-		{
-			std::vector<std::vector<std::size_t> > peakNdxGrps;
-			std::size_t const numElem
-				{ (std::size_t)std::distance(itBeg, itEnd) };
-
-std::cout << "\npeakIndexGroups:\n";
-std::cout << "dataDomain: " << dataDomain << '\n';
-
-			if (0u < numElem)
-			{
-				std::size_t const numLast{ numElem - 1u };
-
-				// allocate space for index groups - one per possible peak
-				peakNdxGrps.reserve(numElem); // an impossible worst case
-
-				// set end point changes
-				Change const change0
-					{ changeForIndex(0, numElem, itBeg, dataDomain) };
-				Change const changeN
-					{ changeForIndex(numLast, numElem, itBeg, dataDomain) };
-				// set initial tracking state
-				bool trackingPeak{ (Drop == change0) };
-
-				// indices for next upcomming peak
-				std::vector<std::size_t> currPeakNdxs;
-				currPeakNdxs.reserve(numElem); // worst case
-
-std::cout << " change0: " << stringFor(change0) << '\n';
-std::cout << " changeN: " << stringFor(changeN) << '\n';
-
-				// Traverse data backward from end to begining.
-				// Search for 'drop' features that signify the end of a peak.
-
-			/**/	std::string dnote;
-			/**/	std::string unote;
-			/**/	std::string tnote;
-				for (std::size_t nn{0u} ; nn < numElem ; ++nn)
-				{
-					std::size_t const nnRev{ numLast - nn };
-					std::size_t const & ndx = nnRev;
-
-					// NOTE: Could compute transition changes here as needed.
-					Change const change
-						{ changeForIndex(ndx, numElem, itBeg, dataDomain) };
-
-					if (trackingPeak)
-					{
-						currPeakNdxs.emplace_back(ndx);
-					}
-
-					// when hitting drop (from reverse direction) is
-					// candidate start of peak (until an 'up' unless
-					// first hitting another drop)
-				/**/	dnote = "       ";
-					if (Drop == change)
-					{
-						// start MAYBE peak tracking (pending an up encounter)
-					/**/	dnote = "d-start";
-						trackingPeak = true;
-						currPeakNdxs.clear();
-					}
-
-					// hitting a rise signals the (reverse direction) end
-					// of peak when tracking is active.
-				/**/	unote = "       ";
-					if (Rise == change)
-					{
-						if (trackingPeak)
-						{
-							// all currently tracked indices are part of peak
-						/**/	unote = "u-PEAK ";
-							peakNdxGrps.emplace_back(currPeakNdxs);
-							trackingPeak = false;
-						}
-						else
-						{
-							// spurious 'rise' encountered outside of peak
-						//	unote = "u-end  ";
-							currPeakNdxs.clear();
-						}
-					}
-
-					tnote = "    ";
-					if (trackingPeak)
-					{
-						tnote = "t-on";
-					}
-					std::cout
-						<< "ndx: " << std::setw(3u) << ndx
-						<< ' ' << "change: " << stringFor(change)
-						<< ' ' << dnote
-						<< ' ' << tnote
-						<< ' ' << unote
-						<< '\n'
-						;
-					/*
-					*/
-
-				}
-			}
-
-			return peakNdxGrps;
-		}
-#endif
-
 		//! Construct collections of peaks from data values
 		template <typename FwdIter>
 		inline
@@ -409,8 +297,11 @@ std::cout << " changeN: " << stringFor(changeN) << '\n';
 		//! Function object to track indices involved in peaks
 		struct PeakTracker
 		{
+			//! Collections of collections of indices that comprise a peak
 			std::vector<std::vector<std::size_t> > thePeakNdxGrps{};
+			//! Collection of indices which are current *candidate* for peak
 			std::vector<std::size_t> theActiveNdxs{};
+			//! True when current tracking state *might* possibly be on a peak
 			bool theIsTracking{};
 
 			//! Allocate space for tracking structures, set tracking state
@@ -523,7 +414,7 @@ std::cout << " changeN: " << stringFor(changeN) << '\n';
 
 		}; // PeakTracker
 
-		/*! Return collections of indices associated with data peaks.
+		/*! \brief Return collections of indices associated with data peaks.
 		 *
 		 * Each element in the return collection is a groups of indices
 		 * associated with an individual peak in the overall data. The

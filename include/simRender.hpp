@@ -169,7 +169,7 @@ namespace sim
 				ras::SizeHW hwSize{ ptGrid->hwSize() };
 				if (chipSpec.isValid())
 				{
-					rc0 = chipSpec.theOrigRC;
+					rc0 = chipSpec.srcOrigRC();
 					hwSize = chipSpec.hwSize();
 				}
 				ras::ChipSpec chip{ rc0, hwSize };

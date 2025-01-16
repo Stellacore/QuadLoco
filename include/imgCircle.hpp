@@ -132,7 +132,7 @@ namespace img
 		Circle const theCircle{};
 
 
-		/*! Pair of solutions at sides of edge gradient that intersect circle.
+		/*! \brief Pair of solutions at sides of edges that intersect circle.
 		 *
 		 * NOTE: The edgel defines a location and intensity gradient, g.
 		 *       This function defines a line direction *PERPENDICULAR* to

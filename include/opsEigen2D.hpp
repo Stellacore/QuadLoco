@@ -48,9 +48,13 @@ namespace ops
 	//! \brief Eigen decomposition for a 2x2 matrix (no complex result support)
 	struct Eigen2D
 	{
+		//! Minimum eigenvalue
 		double theLamMin;
+		//! Maximum eigenvalue
 		double theLamMax;
+		//! Eigenvector for minimum eigenvalue
 		img::Vector<double> theVecMin;
+		//! Eigenvector for maximum eigenvalue
 		img::Vector<double> theVecMax;
 
 		//! True if absolute value of A and B are *both* less than machine eps
@@ -69,7 +73,7 @@ namespace ops
 				);
 		}
 
-		// Perform eigen value/vector decomposition
+		//! Perform eigen value/vector decomposition
 		inline
 		explicit
 		Eigen2D
@@ -110,6 +114,7 @@ namespace ops
 			}
 		}
 
+		//! Smallest eigenvalue
 		inline
 		double const &
 		valueMin
@@ -118,6 +123,7 @@ namespace ops
 			return theLamMin;
 		}
 
+		//! Largest eigenvalue
 		inline
 		double const &
 		valueMax
@@ -126,6 +132,7 @@ namespace ops
 			return theLamMax;
 		}
 
+		//! Eigenvector corresponding with valueMin()
 		inline
 		img::Vector<double> const &
 		vectorMin
@@ -134,6 +141,7 @@ namespace ops
 			return theVecMin;
 		}
 
+		//! Eigenvector corresponding with valueMax()
 		inline
 		img::Vector<double> const &
 		vectorMax

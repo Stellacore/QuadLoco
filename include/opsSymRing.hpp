@@ -191,15 +191,23 @@ namespace ops
 	 */
 	struct SymRing
 	{
+		//! Access into (externally managed) source data
 		ras::Grid<float> const * const thePtSrc{ nullptr };
 
+		//! Middle range value over source data (.5*(min()+max()))
 		float theSrcMidValue{};
+		//! Range of source data values (max() - min())
 		float theSrcFullRange{};
 
+		//! Radius of the symmetry ring filter
 		int const theHalfFilterSize{};
+		//! Relative row/col index offsets that define a quantized annulus
 		std::vector<ras::RelRC> theRelRCs{};
-		std::size_t const theHalfRingSize{ 0u };
 
+
+		//! Cached value: identical with theRelRCs.size()
+		std::size_t const theHalfRingSize{ 0u };
+		//! Tunning parm - min number cell values in each transition zone
 		static constexpr std::size_t theMinPosNeg{ 1u };
 
 		//! \brief Construct to operate on ptSrc image.
@@ -242,17 +250,24 @@ namespace ops
 		//! \brief Track statistics for values in annular filter ring
 		struct RingStats
 		{
-			// track contrast limits over annulus
+			//! Minimum value encountered within annulus sampling
 			double theMin{ std::numeric_limits<double>::quiet_NaN() };
+			//! Maximukm value encountered within annulus sampling
 			double theMax{ std::numeric_limits<double>::quiet_NaN() };
 
+			//! Number of samples in SSD sum
 			std::size_t theCount{ 0u };
 
 			// track differences in radially opposite values
+
+			//! Sum squared differences between one half of annulus and other
 			double theSumSqDif{ 0.f };
 
 			// track balance of +/- values in the annulus
+
+			//! Number of cell values encountered that are above mid value
 			std::size_t theNumPos{ 0u };
+			//! Number of cell values encountered that are below mid value
 			std::size_t theNumNeg{ 0u };
 
 			//! True if there is at least one sample

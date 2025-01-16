@@ -45,18 +45,21 @@ namespace quadloco
 
 namespace xfm
 {
-	//!< A 2D scaling transformation between "Size" and "Area" spaces.
+	//! \brief A 2D scaling transformation between "Size" and "Area" spaces.
 	struct MapSizeArea
 	{
+		//! Definition of transform domain (often float values for ras::SizeHW)
 		img::Area theSize{};
+		//! A (floating point precision) area defining the transform range
 		img::Area theArea{};
 
-		//! Interpretation at Area edges
+		//! \brief Interpretation at Area edges
 		enum EdgeMode
 			{ Clip //!< Return null for data outide of *theArea*
 			, Wrap //!< Wrap data into *theArea*
 			};
 
+		//! Specification if this transform should Clip or Wrap at edges
 		EdgeMode theEdgeMode{};
 
 		//! A mapping between "grid" space and "area" space

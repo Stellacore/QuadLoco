@@ -51,6 +51,7 @@ namespace img
 	struct Grad : public img::Vector<double>
 	{
 
+		//! Default construction of a null instance (isValid() == false)
 		inline
 		explicit
 		Grad
@@ -58,6 +59,7 @@ namespace img
 			: img::Vector<double>{}
 		{ }
 
+		//! Explicit value construction.
 		inline
 		explicit
 		Grad
@@ -67,6 +69,7 @@ namespace img
 			: img::Vector<double>{ val0, val1 }
 		{ }
 
+		//! Construct from baseclass instance.
 		inline
 		explicit
 		Grad
@@ -75,6 +78,7 @@ namespace img
 			: img::Vector<double>{ vec2D.theData }
 		{ }
 
+		//! Noop dtor.
 		inline
 		virtual
 		~Grad
