@@ -44,7 +44,7 @@ namespace
 		( std::ostream & oss
 		)
 	{
-		// [DoxyExample01]
+		// [DoxyExample01a]
 
 		// A default null camera
 		quadloco::obj::Camera const nullCam{};
@@ -54,6 +54,10 @@ namespace
 		constexpr quadloco::ras::SizeHW format{ 128u, 256u };
 		constexpr double pd{ 300. };
 		quadloco::obj::Camera const camera{ format, pd };
+
+		// [DoxyExample01a]
+
+		// [DoxyExample01b]
 
 		// output to stream
 		std::ostringstream msg;
@@ -103,7 +107,7 @@ namespace
 		double const botErrMag
 			{ engabra::g3::magnitude((botDirInExt * botPntInExt).theBiv) };
 
-		// [DoxyExample01]
+		// [DoxyExample01b]
 
 		if (! nullIsOkay)
 		{

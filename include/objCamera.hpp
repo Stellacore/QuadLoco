@@ -69,6 +69,8 @@ namespace obj
 	 * The "z" axis points away from the exterior object space (e.g.
 	 * points expressed in the camera exterior frame should generally
 	 * have negative 'z' coordinate values.
+	 *
+	 * \snippet test_objCamera.cpp DoxyExample01a
 	 */
 	struct Camera
 	{
