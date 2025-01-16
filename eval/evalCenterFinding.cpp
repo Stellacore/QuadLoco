@@ -782,8 +782,11 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 		if (ptTrial)
 		{
 			ras::Grid<float> const & srcGrid = ptTrial->srcGrid();
-			std::vector<ras::PeakRCV> const peaks
+			std::vector<ras::PeakRCV> const symPeaks
 				{ app::multiSymRingPeaks(srcGrid, sAppRingHalfSizes) };
+
+//			std::vector<ras::PeakRCV> const 
+			std::vector<ras::PeakRCV> const & peaks = symPeaks;
 
 			img::Spot gotCenter{};
 			if (! peaks.empty())
@@ -891,6 +894,17 @@ std::cout << "starting evaluation\n";
 		// [DoxyExample01]
 		// [DoxyExample01]
 
+		std::ostringstream msgTime;
+		double const dAll{ (double)(ptOutcomeAlls.size()) };
+		double const tPerEach{ timerProc.elapsed() / dAll };
+		using engabra::g3::io::fixed;
+		msgTime << "===============\n";
+		msgTime << "   timer::Sim: " << timerSim << '\n';
+		msgTime << "  timer::Proc: " << timerProc << '\n';
+		msgTime << "timer::Report: " << timerReport << '\n';
+		msgTime << "  ProcPerEach: " << fixed(tPerEach, 1u, 6u) << '\n';
+		msgTime << "===============\n";
+
 		bool hitErr{ false };
 		if (ptTrials.empty())
 		{
@@ -931,16 +945,13 @@ std::cout << "starting evaluation\n";
 			oss << "num          Good: " <<  numGood << '\n';
 			oss << "num          Errs: " <<  ptOutcomeErrs.size() << '\n';
 			oss << "num          Null: " <<  ptOutcomeBads.size() << '\n';
+			oss << msgTime.str() << '\n';
 		}
 
 		std::ofstream ofs("evalCenterFinding.dat");
 		ofs << rptAll.str() << '\n';
 
-		std::cout << "===============\n";
-		std::cout << "   timer::Sim: " << timerSim << '\n';
-		std::cout << "  timer::Proc: " << timerProc << '\n';
-		std::cout << "timer::Report: " << timerReport << '\n';
-		std::cout << "===============\n";
+		std::cout << msgTime.str() << '\n';
 
 	}
 
