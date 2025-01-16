@@ -38,6 +38,7 @@
 #include "rasChipSpec.hpp"
 #include "rasSizeHW.hpp"
 
+#include <Engabra>
 #include <Rigibra>
 
 #include <array>
@@ -102,6 +103,48 @@ namespace sim
 				};
 
 			return Config{ objQuad, camera, xCamWrtQuad };
+		}
+
+		//! Camera orientation which points it at target center (at origin)
+		inline
+		static
+		rigibra::Transform
+		xformCamWrtTgt
+			( engabra::g3::Vector const & camLoc
+				//!< Location of camera entrance pupil (expressed in obj space)
+			, double const & physRollAngleSize = 0.
+				//!< Camera roll (wrt shortest "point at target" rotation)
+			)
+		{
+			rigibra::Transform xCamWrtTgt{};
+
+			if (engabra::g3::isValid(camLoc))
+			{
+				using namespace engabra::g3;
+				using namespace rigibra;
+
+				PhysAngle const physRollAngle{ physRollAngleSize * e12 };
+				Attitude const attViewWrtLook(physRollAngle);
+
+				// station geometry
+				static Vector const tgtLoc{ zero<Vector>() }; // by assumption
+				Vector const staDelta{ tgtLoc - camLoc };
+				Vector const lookDir{ direction(staDelta) };
+
+				// determine attitude to look at the target
+				static Vector const camViewDir{ -e3 }; // by camera convention
+				Spinor const spinToView{ camViewDir * lookDir };
+				//
+				PhysAngle const physAngle{ logG2(spinToView).theBiv };
+				Attitude const attLookWrtRef(physAngle);
+
+				// final view attitude is combined roll after pointing
+				Attitude const staAtt(attViewWrtLook * attLookWrtRef);
+
+				xCamWrtTgt = Transform{ camLoc, staAtt };
+			}
+
+			return xCamWrtTgt;
 		}
 
 

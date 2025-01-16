@@ -579,27 +579,10 @@ namespace sim
 std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 			for (std::size_t nRoll{0u} ; nRoll < numRollSteps; ++nRoll)
 			{
+				// synthesize camera orientation for current test case
 				double const roll{ (double)nRoll * rollDelta };
-				PhysAngle const physRoll{ roll * e12 };
-				Attitude const attViewWrtLook(physRoll);
-
-				// station geometry
-				static Vector const tgtLoc{ zero<Vector>() }; // by assumption
-				Vector const staDelta{ tgtLoc - staLoc };
-				Vector const lookDir{ direction(staDelta) };
-
-				// determine attitude to look at the target
-				static Vector const camViewDir{ -e3 }; // by camera convention
-				Spinor const spinToView{ camViewDir * lookDir };
-				//
-				PhysAngle const physAngle{ logG2(spinToView).theBiv };
-				Attitude const attLookWrtRef(physAngle);
-
-				// final view attitude is combined roll after pointing
-				Attitude const staAtt(attViewWrtLook * attLookWrtRef);
-
-				// use resulting transformation to create sim configuration
-				Transform const xCamWrtTgt{ staLoc, staAtt };
+				Transform const xCamWrtTgt
+					{ sim::Config::xformCamWrtTgt(staLoc, roll) };
 
 				// construct simulation configuration
 				using quadloco::sim::Config;
