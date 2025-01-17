@@ -251,7 +251,8 @@ namespace sim
 		{
 			double intensity{ engabra::g3::null<double>() };
 			double sum{ 0. };
-			double count{ 0. };
+			double countGot{ 0. };
+			double const countMin{ (double)(numOverSamps / 2u) };
 			std::size_t const numSamps{ 1u + numOverSamps };
 			for (std::size_t nn{0u} ; nn < numSamps ; ++nn)
 			{
@@ -272,13 +273,13 @@ namespace sim
 					if (engabra::g3::isValid(qSig))
 					{
 						sum += qSig;
-						count += 1.;
+						countGot += 1.;
 					}
 				}
 			}
-			if (0. < count)
+			if (countMin < countGot)
 			{
-				intensity = (1./count) * sum;
+				intensity = (1./countGot) * sum;
 			}
 			return intensity;
 		}
