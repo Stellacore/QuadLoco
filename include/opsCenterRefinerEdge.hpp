@@ -27,14 +27,17 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::ops::EdgeCenter namespace
+ * \brief Declarations for quadloco::ops::CenterRefinerEdge namespace
  *
  */
 
 
 #include "imgGrad.hpp"
+#include "imgHit.hpp"
+#include "imgSpot.hpp"
 #include "opsgrid.hpp"
 #include "rasGrid.hpp"
+#include "rasPeakRCV.hpp"
 
 
 namespace quadloco
@@ -50,7 +53,7 @@ namespace ops
 	 * refinements.
 	 *
 	 */
-	class EdgeCenter
+	class CenterRefinerEdge
 	{
 		//! Gradient values for each source image cell.
 		ras::Grid<img::Grad> const theGradGrid{};
@@ -60,11 +63,22 @@ namespace ops
 		//! Compute and cache gradient values for use in other methods.
 		inline
 		explicit
-		EdgeCenter
+		CenterRefinerEdge
 			( ras::Grid<float> const & srcGrid
 			)
 			: theGradGrid{ ops::grid::gradientGridBy8x(srcGrid) }
 		{ }
+
+		//! Compute refine center point hits for all peakRCVs candidates
+		inline
+		std::vector<img::Hit>
+		centerHits
+			( std::vector<ras::PeakRCV> const & // peakRCVs
+			) const
+		{
+			return {};//TODO
+		}
+
 
 /*
  * The function fitSpotNear() computes a refined center point in the
@@ -75,19 +89,21 @@ namespace ops
 
 		/*! \brief Estimated quad target center refinement based on edges.
 		 */
+		/*
 		inline
 		img::Spot
 		fitSpotNear
-			( ras::RowCol const & rcHoodCenterInSrc
+			( ras::RowCol const & // rcHoodCenterInSrc
 				//!< Center of window in which to search for edges
-			, std::size_t const & radiusSearch = 7u
+			, std::size_t const & // radiusSearch = 7u
 				//!< Radius over which to consider edges
 			) const
 		{
-			return {};
+			return img::Spot{}; //TODO
 		}
+		*/
 
-	}; // EdgeCenter
+	}; // CenterRefinerEdge
 
 
 } // [ops]
