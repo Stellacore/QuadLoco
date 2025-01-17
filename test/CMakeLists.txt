@@ -42,7 +42,7 @@ set(unitTests
 	test_objCamera  # simplified ideal perspective camera
 	test_objQuadTarget  # represent physical target object
 	test_opsAllPeaks2D  # peak finding over a 2D grid
-	test_opsCenterRefiner  # sub-cell refinement of nominal center location
+	test_opsCenterRefinerSSD  # sub-cell center refinement using half-turn SSD
 	test_opsEigen2D  # Eigen value decompositions
 	test_opsFence  # bounding region determination
 	test_opsgrid  # Edgel extraction

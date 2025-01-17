@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::ops::CenterRefiner namespace
+ * \brief Declarations for quadloco::ops::CenterRefinerSSD namespace
  *
  */
 
@@ -50,7 +50,7 @@ namespace ops
 {
 
 	//! \brief Center finding functions assocaited with an external source grid
-	class CenterRefiner
+	class CenterRefinerSSD
 	{
 		// access into external source grid
 		ras::Grid<float> const * const thePtSrcGrid{ nullptr };
@@ -95,7 +95,7 @@ namespace ops
 		//! Attach refiner to source grid with specific refinement parameters.
 		inline
 		explicit
-		CenterRefiner
+		CenterRefinerSSD
 			( ras::Grid<float> const * const ptSrcGrid
 				//!< Access to source grid (under consumer management)
 			, std::size_t const & halfHood = 2u
@@ -270,7 +270,7 @@ namespace ops
 			return fitSpot;
 		}
 
-	}; // CenterRefiner
+	}; // CenterRefinerSSD
 
 
 } // [ops]

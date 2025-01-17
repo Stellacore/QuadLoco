@@ -34,7 +34,7 @@
 #include "io.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
-#include "opsCenterRefiner.hpp"
+#include "opsCenterRefinerSSD.hpp"
 #include "rasChipSpec.hpp"
 #include "rasGrid.hpp"
 #include "rasPeakRCV.hpp"
@@ -775,7 +775,7 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 				// refined center location based on half-turn symmetry
 				ras::PeakRCV const & peak = symPeakRCVs.front();
 				ras::RowCol const & nomCenterRC = peak.theRowCol;
-				ops::CenterRefiner const refiner(&srcGrid);
+				ops::CenterRefinerSSD const refiner(&srcGrid);
 				gotCenter = refiner.fitSpotNear(nomCenterRC);
 
 // TODO which one?
