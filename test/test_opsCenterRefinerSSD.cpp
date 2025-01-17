@@ -49,19 +49,6 @@
 
 namespace
 {
-	//! Construct a camera with format/PD matching numPixOnEdge
-	inline
-	quadloco::obj::Camera
-	cameraFitTo
-		( std::size_t const & numPixOnEdge
-		)
-	{
-		return quadloco::obj::Camera
-			{ quadloco::ras::SizeHW{ numPixOnEdge, numPixOnEdge }
-			, static_cast<double>(numPixOnEdge) // pd
-			};
-	}
-
 	//! Simulate a strong signal quad image
 	inline
 	quadloco::ras::Grid<float>
@@ -80,13 +67,13 @@ namespace
 				, QuadTarget::WithSurround | QuadTarget::WithTriangle
 				)
 			//
-//			, cameraFitTo(128u)
-			, cameraFitTo( 32u)
-//			, cameraFitTo( 31u)
-//			, cameraFitTo( 16u)
-//			, cameraFitTo( 15u)
-//			, cameraFitTo(  8u)
-//			, cameraFitTo(  7u)
+//			, obj::Camera::isoCam(128u)
+			, obj::Camera::isoCam( 32u)
+//			, obj::Camera::isoCam( 31u)
+//			, obj::Camera::isoCam( 16u)
+//			, obj::Camera::isoCam( 15u)
+//			, obj::Camera::isoCam(  8u)
+//			, obj::Camera::isoCam(  7u)
 			//
 			, rigibra::Transform
 				{ engabra::g3::Vector{ 0., 0., 1. }
