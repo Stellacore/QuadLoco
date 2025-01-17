@@ -105,7 +105,7 @@ main
 
 		// simulation test configuration
 		constexpr std::size_t numOverSample{ 256u }; // 0-> no over sampling
-		ras::Grid<float> const pixGrid{ render.quadImage(numOverSample) };
+		ras::Grid<float> const pixGrid{ render.quadGrid(numOverSample) };
 
 		// save to file
 		bool const okaySave{ quadloco::io::writeStretchPGM(savePath, pixGrid) };

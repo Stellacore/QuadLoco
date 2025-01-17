@@ -82,7 +82,7 @@ namespace
 			, opt::None // no SceneBias nor ImageNoise
 			);
 		quadloco::ras::Grid<float> const gotPixGrid
-			{ render.quadImage(numOverSample) };
+			{ render.quadGrid(numOverSample) };
 
 		// For this test case, quad should exactly fill the 2x2 grid
 		// E.g., gotPixGrid should contain values:
@@ -156,7 +156,7 @@ namespace
 			);
 
 		quadloco::ras::Grid<float> const fGrid
-			{ render.quadImage(numOverSample) };
+			{ render.quadGrid(numOverSample) };
 		// ... retrieve geometry of the simulated image
 		quadloco::img::QuadTarget const imgQuad{ render.imgQuadTarget() };
 

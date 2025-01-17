@@ -284,7 +284,7 @@ namespace sim
 			return intensity;
 		}
 
-		//! Geometry of perspective image created by quadImage()
+		//! Geometry of perspective image created by quadGrid()
 		inline
 		img::QuadTarget
 		imgQuadTarget

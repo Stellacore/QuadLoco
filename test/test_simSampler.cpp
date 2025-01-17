@@ -102,7 +102,7 @@ namespace
 				// None, AddSceneBias, AddImageNoise
 				, opt::None | opt::AddImageNoise
 				);
-			quadloco::ras::Grid<float> const pixGrid{ render.quadImage() };
+			quadloco::ras::Grid<float> const pixGrid{ render.quadGrid() };
 			//quadloco::io::writeStretchPGM("sample.pgm", pixGrid);
 
 			// retrieve geometry of the simulated image

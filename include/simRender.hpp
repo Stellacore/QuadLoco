@@ -49,6 +49,14 @@ namespace quadloco
 
 namespace sim
 {
+	//! \brief Simulated target data (grid and image geometry)
+	struct QuadData
+	{
+		ras::Grid<float> const theGrid;
+		img::QuadTarget const theImgQuad;
+
+	}; // QuadData
+
 	//! Functor for rendering simulated quadrant images
 	class Render
 	{
@@ -105,7 +113,7 @@ namespace sim
 			return (theSampler.isValid());
 		}
 
-		//! Geometry of perspective image created by quadImage()
+		//! Geometry of perspective image created by quadGrid()
 		inline
 		img::QuadTarget
 		imgQuadTarget
@@ -137,7 +145,7 @@ namespace sim
 		//! Simulate image through ctor's camera and orientation
 		inline
 		ras::Grid<float>
-		quadImage
+		quadGrid
 			( std::size_t const & numOverSamp = 64u
 				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
 			) const
@@ -146,6 +154,20 @@ namespace sim
 			std::fill(grid.begin(), grid.end(), engabra::g3::null<float>());
 			injectTargetInto(&grid, numOverSamp);
 			return grid;
+		}
+
+		//! Simulated grid and image geometry data.
+		inline
+		QuadData
+		quadData
+			( std::size_t const & numOverSamp = 64u
+				//!< Number of *ADDITIONAL* intra-pixel *OVER* samplings
+			) const
+		{
+			return QuadData
+				{ quadGrid(numOverSamp)
+				, imgQuadTarget()
+				};
 		}
 
 		//! Simulate image and set pixel values inside of provided grid

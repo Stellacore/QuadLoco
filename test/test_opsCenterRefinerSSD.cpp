@@ -95,7 +95,7 @@ namespace
 		{
 			*ptSigQuad = render.imgQuadTarget();
 		}
-		return render.quadImage(numOverSample);
+		return render.quadGrid(numOverSample);
 	}
 
 	//! Examples for documentation
