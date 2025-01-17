@@ -49,55 +49,6 @@
 
 namespace
 {
-	//! Simulate a strong signal quad image
-	inline
-	quadloco::ras::Grid<float>
-	simulatedQuadGrid
-		( quadloco::img::QuadTarget * const & ptSigQuad = nullptr
-		)
-	{
-		using namespace quadloco;
-		using namespace quadloco::obj;
-		sim::Config const config
-			{ obj::QuadTarget
-				( 1.00
-			//	, QuadTarget::None
-			//	, QuadTarget::WithSurround
-			//	, QuadTarget::WithTriangle
-				, QuadTarget::WithSurround | QuadTarget::WithTriangle
-				)
-			//
-//			, obj::Camera::isoCam(128u)
-			, obj::Camera::isoCam( 32u)
-//			, obj::Camera::isoCam( 31u)
-//			, obj::Camera::isoCam( 16u)
-//			, obj::Camera::isoCam( 15u)
-//			, obj::Camera::isoCam(  8u)
-//			, obj::Camera::isoCam(  7u)
-			//
-			, rigibra::Transform
-				{ engabra::g3::Vector{ 0., 0., 1. }
-				, rigibra::Attitude
-					{ rigibra::PhysAngle
-						{ engabra::g3::BiVector{ 0., 0., 0. } }
-					}
-				}
-			};
-		using namespace quadloco::sim;
-		sim::Render const render
-			( config
-		//	, Sampler::None
-			, Sampler::AddSceneBias | Sampler::AddImageNoise
-		//	, Sampler::AddImageNoise
-			);
-		std::size_t const numOverSample{ 64u };
-		if (ptSigQuad)
-		{
-			*ptSigQuad = render.imgQuadTarget();
-		}
-		return render.quadGrid(numOverSample);
-	}
-
 	//! Examples for documentation
 	void
 	test1
@@ -106,10 +57,17 @@ namespace
 	{
 		using namespace quadloco;
 
+		constexpr std::size_t formatAndPd{ 32u };
+		constexpr std::size_t numOverSamp{ 64u };
+
 		// simulate quad target image and extract edgels
 		quadloco::img::QuadTarget imgQuad{};  // set by simulation
-		ras::Grid<float> const srcGrid{ simulatedQuadGrid(&imgQuad) };
-		img::Spot const expCenterSpot{ imgQuad.centerSpot() };
+		sim::QuadData const simQuadData
+			{ sim::Render::simpleQuadData
+				(formatAndPd, numOverSamp)
+			};
+		ras::Grid<float> const & srcGrid = simQuadData.theGrid;
+		img::Spot const expCenterSpot{ simQuadData.theImgQuad.centerSpot() };
 
 		//(void)io::writeStretchPGM("srcGrid.pgm", srcGrid);
 

@@ -57,11 +57,49 @@ namespace sim
 
 	}; // QuadData
 
+
 	//! Functor for rendering simulated quadrant images
 	class Render
 	{
 		//! Cached data - must be set in ctor
 		Sampler const theSampler;
+
+	public: // static functions
+
+		//! Simulated grid and image geometry data.
+		inline
+		static
+		QuadData
+		simpleQuadData
+			( std::size_t const & formatAndPd = 32u
+			, std::size_t const & numOverSample = 64u
+			, engabra::g3::Vector const & dirToCamera = { 0., 0., 1. }
+			, engabra::g3::BiVector const & physAngleCamWrtTgt = { 0., 0., 0. }
+			, double const & objQuadEdgeSize = 1.
+			)
+		{
+			using namespace engabra::g3;
+			using namespace rigibra;
+			using quadloco::obj::QuadTarget;
+			using quadloco::sim::Sampler;
+
+			sim::Render const render
+				( obj::Camera::isoCam(formatAndPd)
+				, Transform
+					{ dirToCamera
+					, Attitude{ PhysAngle{ physAngleCamWrtTgt } }
+					}
+				, QuadTarget
+					( objQuadEdgeSize
+					, QuadTarget::None
+					| QuadTarget::WithSurround | QuadTarget::WithTriangle
+					)
+				, Sampler::None
+				| Sampler::AddSceneBias | Sampler::AddImageNoise
+				);
+
+			return render.quadData(numOverSample);
+		}
 
 	public:
 
