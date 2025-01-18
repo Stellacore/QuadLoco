@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::ops::PeakAngles
+ * \brief Declarations for quadloco::ops::AngleTracker
  *
  */
 
@@ -62,7 +62,7 @@ namespace ops
 	 * anglesOfPeaks() methods report local peaks in the (then current)
 	 * histogram.
 	 */
-	struct PeakAngles
+	struct AngleTracker
 	{
 		//! Provide angle/index relationship (with wrap around).
 		ang::Ring const theRing{};
@@ -73,13 +73,13 @@ namespace ops
 		//! Construct a default (null) instance
 		inline
 		explicit
-		PeakAngles
+		AngleTracker
 			() = default;
 
 		//! Construct accumulation buffer with requested number of bins
 		inline
 		explicit
-		PeakAngles
+		AngleTracker
 			( std::size_t const & numAngBins
 			)
 			: theRing(numAngBins)
@@ -249,7 +249,7 @@ namespace ops
 			return oss.str();
 		}
 
-	}; // PeakAngles
+	}; // AngleTracker
 
 
 } // [ops]
@@ -264,7 +264,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::ops::PeakAngles const & item
+		, quadloco::ops::AngleTracker const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -275,7 +275,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::ops::PeakAngles const & item
+		( quadloco::ops::AngleTracker const & item
 		)
 	{
 		return item.isValid();
