@@ -71,7 +71,7 @@ namespace
 
 		// add a value near start of bin (near phase wrap location)
 		double const expAngle{ .125 };
-		angleProb.add(expAngle);
+		angleProb.consider(expAngle);
 
 		// get angles 
 		std::vector<double> const gotPeakAngles{ angleProb.anglesOfPeaks() };
