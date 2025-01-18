@@ -36,7 +36,12 @@
 #include "opsmatrix.hpp"
 #include "rasGrid.hpp"
 
+#include <Engabra>
+
 #include <cmath>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 
 namespace quadloco
@@ -49,13 +54,29 @@ namespace ops
 	struct Eigen2D
 	{
 		//! Minimum eigenvalue
-		double theLamMin;
+		double theLamMin{ engabra::g3::null<double>() };
+
 		//! Maximum eigenvalue
-		double theLamMax;
+		double theLamMax{ engabra::g3::null<double>() };
+
 		//! Eigenvector for minimum eigenvalue
-		img::Vector<double> theVecMin;
+		img::Vector<double> theVecMin{};
+
 		//! Eigenvector for maximum eigenvalue
-		img::Vector<double> theVecMax;
+		img::Vector<double> theVecMax{};
+
+
+		//! True if decomposition is well defined
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  engabra::g3::isValid(theLamMin)
+				&& engabra::g3::isValid(theLamMax)
+				);
+		}
 
 		//! True if absolute value of A and B are *both* less than machine eps
 		inline
@@ -72,6 +93,12 @@ namespace ops
 				&& (std::abs(valB) < eps)
 				);
 		}
+
+		//! Default construction of a null (isValid() == false) instance
+		inline
+		explicit
+		Eigen2D
+			() = default;
 
 		//! Perform eigen value/vector decomposition
 		inline
@@ -111,6 +138,8 @@ namespace ops
 					theVecMin = { theLamMin - dd, cc };
 					theVecMax = { theLamMax - dd, cc };
 				}
+				theVecMin = direction(theVecMin);
+				theVecMax = direction(theVecMax);
 			}
 		}
 
@@ -150,10 +179,63 @@ namespace ops
 			return theVecMax;
 		}
 
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			using engabra::g3::io::fixed;
+			oss
+				<< "theLamMin: " << fixed(theLamMin)
+				<< ' ' 
+				<< "theVecMin: " << theVecMin
+				<< '\n'
+				<< "theLamMax: " << fixed(theLamMax)
+				<< ' ' 
+				<< "theVecMax: " << theVecMax
+				;
+
+			return oss.str();
+		}
+
 	}; // Eigen2D
 
 
 } // [ops]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::ops::Eigen2D const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::ops::Eigen2D const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
 
