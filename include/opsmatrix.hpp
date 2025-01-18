@@ -55,6 +55,25 @@ namespace ops
 
 namespace
 {
+	//! 2D Matrix scalar (pre)multiplication
+	inline
+	quadloco::ras::Grid<double>
+	operator*
+		( double const & scale
+		, quadloco::ras::Grid<double> const & matrix
+		)
+	{
+		using namespace quadloco;
+		ras::Grid<double> result(matrix.hwSize());
+		ras::Grid<double>::const_iterator itIn{ matrix.cbegin() };
+		ras::Grid<double>::iterator itOut{ result.begin() };
+		while (result.end() != itOut)
+		{
+			*itOut++ = scale * (*itIn++);
+		}
+		return result;
+	}
+
 	//! 2D Matrix (pre)multiplication: result = mat2D * vec2D
 	inline
 	quadloco::img::Vector<double>
