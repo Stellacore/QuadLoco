@@ -28,6 +28,7 @@
 */
 
 
+#include "ang.hpp"
 #include "appCenters.hpp"
 #include "cast.hpp"
 #include "imgSpot.hpp"
@@ -214,8 +215,8 @@ namespace sim
 		{
 			using namespace engabra::g3;
 			double const magXY{ std::hypot(vec[0], vec[1]) };
-			double const angleVert{ std::atan2(magXY, vec[2]) };
-			double const angleAzim{ std::atan2(vec[1], vec[0]) };
+			double const angleVert{ quadloco::ang::atan2(magXY, vec[2]) };
+			double const angleAzim{ quadloco::ang::atan2(vec[1], vec[0]) };
 			double const rangeDist{ magnitude(vec) };
 			return { angleAzim, angleVert, rangeDist };
 		}

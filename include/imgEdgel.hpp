@@ -121,7 +121,7 @@ namespace img
 			() const
 		{
 			img::Grad const grad{ gradient() };
-			return ang::atan2(grad[1], grad[0]);
+			return angleSize(grad);
 		}
 
 		//! True if location is in front of edge (relative to gradient)

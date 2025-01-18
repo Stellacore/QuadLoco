@@ -189,10 +189,9 @@ namespace
 			// expected computation
 			double const & testAngle = gotTC.theTestAngle;
 			double const & gotMainAngle = gotTC.theMainAngle;
-			double const expMainAngle
-				{ quadloco::ang::atan2
-					(std::sin(testAngle), std::cos(testAngle))
-				};
+			quadloco::img::Vector<double> const testDir
+					{ std::cos(testAngle), std::sin(testAngle) };
+			double const expMainAngle{ angleSize(testDir) };
 			double const distFromStart{ (expMainAngle + piOne) };
 			double const dubBins{ distFromStart / binDelta };
 			std::size_t const expNdx{ (std::size_t)std::floor(dubBins) };
@@ -322,7 +321,7 @@ namespace
 		angles.reserve(spots.size());
 		for (quadloco::img::Spot const & spot : spots)
 		{
-			angles.emplace_back(quadloco::ang::atan2(spot[1], spot[0]));
+			angles.emplace_back(angleSize(spot));
 		}
 		return angles;
 	}
@@ -345,7 +344,7 @@ namespace
 		std::vector<img::Spot> const spots
 			{ spotsAbout(expSpot, sigma, numSpots) };
 		std::vector<double> const angles{ anglesFromSpots(spots) };
-		double const expAngle{ ang::atan2(expSpot[1], expSpot[0]) };
+		double const expAngle{ angleSize(expSpot) };
 
 		// accumulate angles into ring buffer
 		std::size_t const numBins{ 32u };
