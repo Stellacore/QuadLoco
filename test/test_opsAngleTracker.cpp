@@ -67,18 +67,28 @@ namespace
 
 		// construct an accumulation buffer - here with just few bins
 		std::size_t const numBins{ 8u };
-		quadloco::ops::AngleTracker angleProb(numBins);
+		quadloco::ops::AngleTracker angleTracker(numBins);
 
 		// add a value near start of bin (near phase wrap location)
 		double const expAngle{ .125 };
-		angleProb.consider(expAngle);
+		angleTracker.consider(expAngle);
 
 		// get angles 
-		std::vector<double> const gotPeakAngles{ angleProb.anglesOfPeaks() };
+		std::vector<double> const gotPeakAngles{ angleTracker.anglesOfPeaks() };
 		std::size_t const expNumPeaks{ 1u };
 		std::size_t const gotNumPeaks{ gotPeakAngles.size() };
 
+		double const expProb{ 1. }; // since only one peak
+		double const gotProb{ angleTracker.probAtAngle(expAngle) };
+
 		// [DoxyExample01]
+
+		if (! engabra::g3::nearlyEquals(gotProb, expProb))
+		{
+			oss << "Failure of gotProb test\n";
+			oss << "exp: " << expProb << '\n';
+			oss << "got: " << gotProb << '\n';
+		}
 
 		if (! (gotNumPeaks == expNumPeaks))
 		{
@@ -89,7 +99,7 @@ namespace
 		else
 		{
 			double const & gotAngle = gotPeakAngles.front();
-			double const tolAngle{ angleProb.angleDelta() };
+			double const tolAngle{ angleTracker.angRing().angleDelta() };
 			if (! engabra::g3::nearlyEqualsAbs(gotAngle, expAngle, tolAngle))
 			{
 				oss << "Failure of gotAngle test\n";

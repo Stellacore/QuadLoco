@@ -62,7 +62,7 @@ namespace ops
 	 * anglesOfPeaks() methods report local peaks in the (then current)
 	 * histogram.
 	 */
-	struct AngleTracker
+	class AngleTracker
 	{
 		//! Provide angle/index relationship (with wrap around).
 		ang::Ring const theRing{};
@@ -72,6 +72,8 @@ namespace ops
 
 		//! Cached values - current sum of all theBinSums
 		double theTotalSum{ 0. };
+
+	public:
 
 		//! Construct a default (null) instance
 		inline
@@ -86,7 +88,7 @@ namespace ops
 			( std::size_t const & numAngBins
 			)
 			: theRing(numAngBins)
-			, theBinSums(numAngBins, 0.)
+			, theBinSums(theRing.size(), 0.)
 			, theTotalSum{ 0. }
 		{ }
 
@@ -103,6 +105,15 @@ namespace ops
 				);
 		}
 
+		//! Underlying circular ring buffer geometry
+		inline
+		ang::Ring const &
+		angRing
+			() const
+		{
+			return theRing;
+		}
+
 		//! Number of bins in accumulation buffer.
 		inline
 		std::size_t
@@ -110,15 +121,6 @@ namespace ops
 			() const
 		{
 			return theBinSums.size();
-		}
-
-		//! Angular resolution of accumulation buffer (aka bin width)
-		inline
-		double
-		angleDelta
-			() const
-		{
-			return theRing.angleDelta();
 		}
 
 		//! Angle associated with (start of) accumulation ndx-th bin
@@ -129,6 +131,35 @@ namespace ops
 			) const
 		{
 			return theRing.angleAtIndex(ndx);
+		}
+
+		//! Relative value of ndx-th accumulation buffer bin
+		inline
+		double
+		probAtIndex
+			( std::size_t const & ndx
+			) const
+		{
+			double prob{ std::numeric_limits<double>::quiet_NaN() };
+			if (std::numeric_limits<double>::epsilon() < theTotalSum)
+			{
+				if (ndx < theBinSums.size())
+				{
+					prob = (theBinSums[ndx] / theTotalSum);
+				}
+			}
+			return prob;
+		}
+
+		//! Relative histogram value (probability) of histogram at this angle
+		inline
+		double
+		probAtAngle
+			( double const & angle
+			) const
+		{
+			std::size_t const ndxCurr{ theRing.indexFor(angle) };
+			return probAtIndex(ndxCurr);
 		}
 
 		/*! \brief Incorporate weighted angle probability density function.
@@ -197,55 +228,56 @@ namespace ops
 				(theBinSums.cbegin(), theBinSums.cend(), PeakFinder1D::Circle);
 		}
 
+		//! Indices for local peaks (near middle for plateaus)
+		inline
+		std::vector<std::size_t>
+		indicesOfPeaks
+			() const
+		{
+			return peakFinder1D().peakIndices();
+		}
+
+		//! Angles associated with ndxs
+		inline
+		std::vector<double>
+		anglesFor
+			( std::vector<std::size_t> const & ndxs
+			) const
+		{
+			std::vector<double> angles;
+			angles.reserve(ndxs.size());
+			for (std::size_t const & ndx : ndxs)
+			{
+				// return (start of)bin angle associated with ndx
+				angles.emplace_back(angleAtIndex(ndx));
+			}
+			return angles;
+		}
+
+		//! Probabilities associated with ndxs
+		inline
+		std::vector<double>
+		probsFor
+			( std::vector<std::size_t> const & ndxs
+			) const
+		{
+			std::vector<double> probs;
+			probs.reserve(ndxs.size());
+			for (std::size_t const & ndx : ndxs)
+			{
+				// return (start of)bin angle associated with ndx
+				probs.emplace_back(probAtIndex(ndx));
+			}
+			return probs;
+		}
+
 		//! Angles for local peaks (near middle for plateaus)
 		inline
 		std::vector<double>
 		anglesOfPeaks
 			() const
 		{
-			std::vector<double> peakAngles;
-			std::vector<std::size_t> const ndxs{ peakFinder1D().peakIndices() };
-			peakAngles.reserve(ndxs.size());
-			for (std::size_t const & ndx : ndxs)
-			{
-				// return (start of)bin angle associated with ndx
-				peakAngles.emplace_back(angleAtIndex(ndx));
-			}
-			return peakAngles;
-		}
-
-		//! Ring buffer weight at angle
-		inline
-		double
-		probAtIndex
-			( std::size_t const & ndx
-			) const
-		{
-			double prob{ std::numeric_limits<double>::quiet_NaN() };
-			if (std::numeric_limits<double>::epsilon() < theTotalSum)
-			{
-				if (ndx < theBinSums.size())
-				{
-					prob = (theBinSums[ndx] / theTotalSum);
-				}
-			}
-			return prob;
-		}
-
-		//! Ring buffer weight at angle
-		inline
-		double
-		probAtAngle
-			( double const & angle
-			) const
-		{
-			double prob{ std::numeric_limits<double>::quiet_NaN() };
-			if (std::numeric_limits<double>::epsilon() < theTotalSum)
-			{
-				std::size_t const ndx{ theRing.indexFor(angle) };
-				prob = (theBinSums[ndx] / theTotalSum);
-			}
-			return prob;
+			return anglesFor(indicesOfPeaks());
 		}
 
 		//! Descriptive information about this instance.
