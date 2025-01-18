@@ -146,7 +146,7 @@ namespace ang
 		//! Angle value associated with (start of) bin ndx
 		inline
 		double
-		angleAt
+		angleAtIndex
 			( std::size_t const & ndx
 			) const
 		{
