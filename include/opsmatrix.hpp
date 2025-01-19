@@ -26,35 +26,96 @@
 #pragma once
 
 
-#include "imgVector.hpp"
-#include "rasGrid.hpp"
-
-
 /*! \file
  * \brief Declarations for quadloco::ops namespace matrix operations
  *
  */
 
 
-// #include "TODO.hpp"
+#include "imgVector.hpp"
+#include "rasGrid.hpp"
+
+#include <algorithm>
 
 
-/*
 namespace quadloco
 {
 
 namespace ops
 {
 
+	//! Use ras::Grid as a matrix data container
+	using Matrix = quadloco::ras::Grid<double>;
 
-} // [NM]
+namespace matrix
+{
+	//
+	// Matrix constructions
+	//
+
+	//! A (dim x dim) identity matrix
+	inline
+	Matrix
+	identity
+		( std::size_t const & dim
+		)
+	{
+		Matrix mat(dim, dim);
+		std::fill(mat.begin(), mat.end(), 0.);
+		for (std::size_t nn{0u} ; nn < dim ; ++nn)
+		{
+			mat(nn, nn) = 1.;
+		}
+		return mat;
+	}
+
+	//! A diagonal matrix filled with elems along the diagonal
+	inline
+	Matrix
+	diagonal
+		( std::initializer_list<double> const & elems
+		)
+	{
+		Matrix mat{ elems.size(), elems.size() };
+		std::fill(mat.begin(), mat.end(), 0.);
+		for (std::size_t nn{0u} ; nn < elems.size() ; ++nn)
+		{
+			mat(nn, nn) = elems.begin()[nn];
+		}
+		return mat;
+	}
+
+	//
+	// Matrix functions
+	//
+
+	inline
+	Matrix
+	copyOf
+		( Matrix const & srcMat
+		)
+	{
+		Matrix outMat(srcMat.hwSize());
+		std::copy
+			( srcMat.cbegin(), srcMat.cend()
+			, outMat.begin()
+			);
+		return outMat;
+	}
+
+} // [matrix]
+
+} // [ops]
 
 } // [quadloco]
-*/
 
 
 namespace
 {
+	//
+	// Global operators
+	//
+
 	//! 2D Matrix scalar (pre)multiplication
 	inline
 	quadloco::ras::Grid<double>
