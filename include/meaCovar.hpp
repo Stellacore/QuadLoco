@@ -113,7 +113,7 @@ namespace mea
 			{
 				double const lam1{ theEig.valueMin() };
 				double const lam2{ theEig.valueMax() };
-				rms = lam1 + lam2;
+				rms = .5 * (lam1 + lam2);
 			}
 			return rms;
 		}
@@ -186,6 +186,8 @@ namespace mea
 				<< fixed(coMat(1u, 0u), 6u, 6u)
 				<< ' '
 				<< fixed(coMat(1u, 1u), 6u, 6u)
+				<< '\n'
+				<< "devRMS: " << fixed(deviationRMS(), 3u, 6u)
 				;
 			return oss.str();
 		}

@@ -73,7 +73,7 @@ namespace
 
 		// basic construction
 		constexpr double expSigma{ 4. };
-		double const expRMS{ std::sqrt(2.) * expSigma };
+		double const expRMS{ expSigma };
 		mea::Covar const easyCovar(expSigma);
 		double const gotRMS{ easyCovar.deviationRMS() };
 		mea::Covar const copy(easyCovar);
