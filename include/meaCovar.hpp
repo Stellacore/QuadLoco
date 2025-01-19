@@ -52,11 +52,8 @@ namespace mea
 	//! \brief Covariance information for 2D data
 	class Covar
 	{
-		//! Covariance matrix data values
-		ops::Matrix const theCovarMat{};
-
-		//! Eigen decomposition of theCovarMat
-		ops::Eigen2D const theEig{};
+		//! Eigen decomposition of covariance matrix
+		ops::Eigen2D theEig{};
 
 		//! Diagonal covariance matrix corresponding with sigma
 		inline
@@ -67,7 +64,7 @@ namespace mea
 			)
 		{
 			double const covarMag{ sigma * sigma };
-			return (covarMag * ops::matrix::identity(1u));
+			return (covarMag * ops::matrix::identity(2u));
 		}
 
 	public:
@@ -82,13 +79,12 @@ namespace mea
 		inline
 		explicit
 		Covar
-			( ops::Matrix const & covarData
+			( ops::Matrix const & covarMat
 			)
-			: theCovarMat{ ops::matrix::copyOf(covarData) }
-			, theEig(theCovarMat)
+			: theEig(covarMat)
 		{ }
 
-		//! Convenience ctor - create matrix with squared sigma on diagaonals
+		//! Convenience ctor - create matrix with squared sigma on diagonals
 		inline
 		explicit
 		Covar
@@ -97,14 +93,13 @@ namespace mea
 			: Covar(Covar::fromSigma(sigma))
 		{ }
 
-
 		//! True if this instance contains viable data
 		inline
 		bool
 		isValid
 			() const
 		{
-			return theCovarMat.isValid();
+			return theEig.isValid();
 		}
 
 		//! Estimated circular uncertainty (root-mean-square of semiaxes)
@@ -116,12 +111,20 @@ namespace mea
 			double rms{ std::numeric_limits<double>::quiet_NaN() };
 			if (isValid())
 			{
-				ops::Eigen2D const eig(theCovarMat);
-				double const lam1{ eig.valueMin() };
-				double const lam2{ eig.valueMax() };
+				double const lam1{ theEig.valueMin() };
+				double const lam2{ theEig.valueMax() };
 				rms = lam1 + lam2;
 			}
 			return rms;
+		}
+
+		//! Estimated circular uncertainty (root-mean-square of semiaxes)
+		inline
+		double
+		deviationRMS
+			() const
+		{
+			return std::sqrt(covarianceRMS());
 		}
 
 		//! Uncertainty ellipse semi-axis of shortest length
@@ -152,13 +155,13 @@ namespace mea
 			return semiAxis;
 		}
 
-		//! Estimated circular uncertainty (root-mean-square of semiaxes)
+		//! Matrix values reconstituted from eigen decomposition
 		inline
-		double
-		deviationRMS
+		ras::Grid<double>
+		matrix
 			() const
 		{
-			return std::sqrt(covarianceRMS());
+			return theEig.matrix();
 		}
 
 		//! Descriptive information about this instance.
@@ -174,14 +177,20 @@ namespace mea
 				oss << title << '\n';
 			}
 			using engabra::g3::io::fixed;
+			ops::Matrix const coMat{ matrix() };
 			oss
-				<< fixed(theCovarMat(0u, 0u), 6u, 6u)
+				<< fixed(coMat(0u, 0u), 6u, 6u)
 				<< ' '
-				<< fixed(theCovarMat(0u, 1u), 6u, 6u)
+				<< fixed(coMat(0u, 1u), 6u, 6u)
 				<< '\n'
-				<< fixed(theCovarMat(1u, 0u), 6u, 6u)
+				<< fixed(coMat(1u, 0u), 6u, 6u)
 				<< ' '
-				<< fixed(theCovarMat(1u, 1u), 6u, 6u)
+				<< fixed(coMat(1u, 1u), 6u, 6u)
+				;
+			oss
+				<< '\n'
+				<< "eigen decomp\n"
+				<< theEig.matrix().infoStringContents("", "%12.6f")
 				;
 			return oss.str();
 		}
