@@ -187,11 +187,6 @@ namespace mea
 				<< ' '
 				<< fixed(coMat(1u, 1u), 6u, 6u)
 				;
-			oss
-				<< '\n'
-				<< "eigen decomp\n"
-				<< theEig.matrix().infoStringContents("", "%12.6f")
-				;
 			return oss.str();
 		}
 
