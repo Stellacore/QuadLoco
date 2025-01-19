@@ -38,6 +38,7 @@
 #include "rasGrid.hpp"
 
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 
@@ -126,6 +127,31 @@ namespace mea
 			return theCovar.deviationRMS();
 		}
 
+		//! True if this and other have same data within tolerance
+		inline
+		bool
+		nearlyEquals
+			( Vector const & other
+			, double const & tol = std::numeric_limits<double>::epsilon()
+			) const
+		{
+			bool same{ isValid() && other.isValid() };
+			if (same)
+			{
+				ops::Matrix const matA{ theCovar.matrix() };
+				ops::Matrix const matB{ other.theCovar.matrix() };
+				using engabra::g3::nearlyEquals;
+				same =
+					(  theLoc.nearlyEquals(other.theLoc, tol)
+					&& nearlyEquals(matA(0u, 0u), matB(0u, 0u))
+					&& nearlyEquals(matA(0u, 1u), matB(0u, 1u))
+					&& nearlyEquals(matA(1u, 0u), matB(1u, 0u))
+					&& nearlyEquals(matA(1u, 1u), matB(1u, 1u))
+					);
+			}
+			return same;
+		}
+
 		//! Descriptive information about this instance.
 		inline
 		std::string
@@ -176,6 +202,18 @@ namespace
 		)
 	{
 		return item.isValid();
+	}
+
+	//! True if both instances have same data within tolerance.
+	inline
+	bool
+	nearlyEquals
+		( quadloco::mea::Vector const & itemA
+		, quadloco::mea::Vector const & itemB
+		, double const & tol = std::numeric_limits<double>::epsilon()
+		)
+	{
+		return itemA.nearlyEquals(itemB, tol);
 	}
 
 } // [anon/global]

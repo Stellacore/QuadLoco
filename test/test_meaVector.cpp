@@ -66,7 +66,7 @@ namespace
 
 		if (! (gotIsValid == expIsValid))
 		{
-			oss << "Failure of gotIsValid null test\n";
+			oss << "Failure of gotIsValid null test0\n";
 			oss << "exp: " << expIsValid << '\n';
 			oss << "got: " << gotIsValid << '\n';
 			oss << "aNull: " << aNull << '\n';
@@ -74,14 +74,14 @@ namespace
 
 		if (! nearlyEquals(gotLoc, expLoc))
 		{
-			oss << "Failure of gotLoc test\n";
+			oss << "Failure of gotLoc test0\n";
 			oss << "exp: " << expLoc << '\n';
 			oss << "got: " << gotLoc << '\n';
 		}
 		if (! engabra::g3::nearlyEquals(gotSigma, expSigma))
 		{
 			using engabra::g3::io::fixed;
-			oss << "Failure of gotSigma test\n";
+			oss << "Failure of gotSigma test0\n";
 			oss << "exp: " << fixed(expSigma) << '\n';
 			oss << "got: " << fixed(gotSigma) << '\n';
 		}
@@ -102,10 +102,10 @@ namespace
 		// define uncertainty associated with this locaiton
 		double const expSigmaMin{ 2. };
 		double const expSigmaMax{ 3. * expSigmaMin };
-		double const covarMin{ expSigmaMin * expSigmaMin };
-		double const covarMax{ expSigmaMax * expSigmaMax };
+		double const expCovarMin{ expSigmaMin * expSigmaMin };
+		double const expCovarMax{ expSigmaMax * expSigmaMax };
 		ops::Matrix const covarMat
-			{ ops::matrix::diagonal({ covarMin, covarMax }) };
+			{ ops::matrix::diagonal({ expCovarMin, expCovarMax }) };
 		img::Vector<double> const expSemiAxisMin{ expSigmaMin, 0. };
 		img::Vector<double> const expSemiAxisMax{ 0., expSigmaMax };
 
@@ -118,7 +118,8 @@ namespace
 		img::Vector<double> const gotSemiAxisMax{ covar.semiAxisMax() };
 
 		double const gotSigma{ covar.deviationRMS() };
-		double const expSigma{ std::hypot(expSigmaMin, expSigmaMax) };
+		double const expSigma
+			{ std::hypot(expSigmaMin, expSigmaMax) / std::sqrt(2.) };
 
 		// [DoxyExample01]
 
@@ -126,19 +127,19 @@ namespace
 		if (! engabra::g3::nearlyEquals(gotSigma, expSigma, tol))
 		{
 			using namespace engabra::g3::io;
-			oss << "Failure of gotSigma null test\n";
+			oss << "Failure of gotSigma test1\n";
 			oss << "exp: " << fixed(expSigma) << '\n';
 			oss << "got: " << fixed(gotSigma) << '\n';
 		}
 		if (! nearlyEquals(gotSemiAxisMin, expSemiAxisMin, tol))
 		{
-			oss << "Failure of gotSemiAxisMin null test\n";
+			oss << "Failure of gotSemiAxisMin test1\n";
 			oss << "exp: " << expSemiAxisMin << '\n';
 			oss << "got: " << gotSemiAxisMin << '\n';
 		}
 		if (! nearlyEquals(gotSemiAxisMax, expSemiAxisMax, tol))
 		{
-			oss << "Failure of gotSemiAxisMax null test\n";
+			oss << "Failure of gotSemiAxisMax test1\n";
 			oss << "exp: " << expSemiAxisMax << '\n';
 			oss << "got: " << gotSemiAxisMax << '\n';
 			oss << "meaPnt: " << meaPnt << '\n';
