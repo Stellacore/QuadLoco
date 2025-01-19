@@ -55,7 +55,7 @@ namespace mea
 		img::Vector<double> theLoc{};
 
 		//! Best estimate of uncertainty as standard covariance
-		Covar const theCovar{};
+		Covar theCovar{};
 
 	public:
 
