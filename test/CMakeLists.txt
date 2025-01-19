@@ -39,6 +39,9 @@ set(unitTests
 	test_imgSpot  # 'continuous' raster cell locations
 	test_imgVector  # support for 2D vector operations
 	test_io  # basic i/o support (e.g. pgm images)
+	test_meaCluster  # 2d point cloud properties and statistics
+	test_meaCovar  # 2D covariance object
+	test_meaVector  # 2D point measurement with location and uncertainty
 	test_objCamera  # simplified ideal perspective camera
 	test_objQuadTarget  # represent physical target object
 	test_opsAllPeaks2D  # peak finding over a 2D grid

@@ -7,7 +7,8 @@
 #namespaces="ang img pix ras prb io cast xfm obj ops sig app sim"
 
 # list in order from highest level to lowest - fewer crossing lines
-namespaces="sim app  sig  ops  obj xfm cast io prb  ras  pix  img  ang val sys"
+namespaces=\
+"sim app  sig  ops  obj xfm cast io prb  ras  pix mea  img  ang val sys"
 
 
 echo "digraph {"

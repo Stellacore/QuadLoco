@@ -179,6 +179,26 @@ namespace ops
 			return theVecMax;
 		}
 
+		//! Matrix values reconstituted from eigen decomposition
+		inline
+		ras::Grid<double>
+		matrix
+			() const
+		{
+			ops::Matrix mat(2u, 2u);
+			double const & v11 = theVecMin[0];
+			double const & v12 = theVecMin[1];
+			double const & d1 = theLamMin;
+			double const & v21 = theVecMax[0];
+			double const & v22 = theVecMax[1];
+			double const & d2 = theLamMax;
+			mat(0u, 0u) = v11*d1*v11 + v12*d2*v12;
+			mat(0u, 1u) = v11*d1*v21 + v12*d2*v22;
+			mat(1u, 0u) = v21*d1*v11 + v22*d2*v12;
+			mat(1u, 1u) = v21*d1*v21 + v22*d2*v22;
+			return mat;
+		}
+
 		//! Descriptive information about this instance.
 		inline
 		std::string
