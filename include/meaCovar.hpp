@@ -187,7 +187,7 @@ namespace mea
 				<< ' '
 				<< fixed(coMat(1u, 1u), 6u, 6u)
 				<< '\n'
-				<< "devRMS: " << fixed(deviationRMS(), 3u, 6u)
+				<< "       devRMS: " << fixed(deviationRMS())
 				;
 			return oss.str();
 		}
