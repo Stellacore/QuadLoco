@@ -36,7 +36,12 @@
 #include "opsmatrix.hpp"
 #include "rasGrid.hpp"
 
+#include <Engabra>
+
 #include <cmath>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 
 namespace quadloco
@@ -49,13 +54,29 @@ namespace ops
 	struct Eigen2D
 	{
 		//! Minimum eigenvalue
-		double theLamMin;
+		double theLamMin{ engabra::g3::null<double>() };
+
 		//! Maximum eigenvalue
-		double theLamMax;
+		double theLamMax{ engabra::g3::null<double>() };
+
 		//! Eigenvector for minimum eigenvalue
-		img::Vector<double> theVecMin;
+		img::Vector<double> theVecMin{};
+
 		//! Eigenvector for maximum eigenvalue
-		img::Vector<double> theVecMax;
+		img::Vector<double> theVecMax{};
+
+
+		//! True if decomposition is well defined
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  engabra::g3::isValid(theLamMin)
+				&& engabra::g3::isValid(theLamMax)
+				);
+		}
 
 		//! True if absolute value of A and B are *both* less than machine eps
 		inline
@@ -73,6 +94,12 @@ namespace ops
 				);
 		}
 
+		//! Default construction of a null (isValid() == false) instance
+		inline
+		explicit
+		Eigen2D
+			() = default;
+
 		//! Perform eigen value/vector decomposition
 		inline
 		explicit
@@ -80,8 +107,8 @@ namespace ops
 			( ras::Grid<double> const & mat2D
 			)
 		{
-			double const det{ determinant(mat2D) };
-			double const trc{ trace(mat2D) };
+			double const det{ determinant2x2(mat2D) };
+			double const trc{ trace2x2(mat2D) };
 
 			double const radicand{ .25*trc*trc - det };
 			if (! (radicand < 0.))
@@ -111,6 +138,8 @@ namespace ops
 					theVecMin = { theLamMin - dd, cc };
 					theVecMax = { theLamMax - dd, cc };
 				}
+				theVecMin = direction(theVecMin);
+				theVecMax = direction(theVecMax);
 			}
 		}
 
@@ -150,10 +179,83 @@ namespace ops
 			return theVecMax;
 		}
 
+		//! Matrix values reconstituted from eigen decomposition
+		inline
+		ras::Grid<double>
+		matrix
+			() const
+		{
+			ops::Matrix mat(2u, 2u);
+			double const & v11 = theVecMin[0];
+			double const & v12 = theVecMin[1];
+			double const & d1 = theLamMin;
+			double const & v21 = theVecMax[0];
+			double const & v22 = theVecMax[1];
+			double const & d2 = theLamMax;
+			mat(0u, 0u) = v11*d1*v11 + v12*d2*v12;
+			mat(0u, 1u) = v11*d1*v21 + v12*d2*v22;
+			mat(1u, 0u) = v21*d1*v11 + v22*d2*v12;
+			mat(1u, 1u) = v21*d1*v21 + v22*d2*v22;
+			return mat;
+		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << ' ';
+			}
+			using engabra::g3::io::fixed;
+			oss
+				<< "theLamMin: " << fixed(theLamMin)
+				<< ' ' 
+				<< "theVecMin: " << theVecMin
+				<< '\n'
+				<< "theLamMax: " << fixed(theLamMax)
+				<< ' ' 
+				<< "theVecMax: " << theVecMax
+				;
+
+			return oss.str();
+		}
+
 	}; // Eigen2D
 
 
 } // [ops]
 
 } // [quadloco]
+
+
+namespace
+{
+	//! Put item.infoString() to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::ops::Eigen2D const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+	//! True if item is not null
+	inline
+	bool
+	isValid
+		( quadloco::ops::Eigen2D const & item
+		)
+	{
+		return item.isValid();
+	}
+
+} // [anon/global]
 

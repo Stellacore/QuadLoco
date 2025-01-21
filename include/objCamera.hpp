@@ -69,6 +69,8 @@ namespace obj
 	 * The "z" axis points away from the exterior object space (e.g.
 	 * points expressed in the camera exterior frame should generally
 	 * have negative 'z' coordinate values.
+	 *
+	 * \snippet test_objCamera.cpp DoxyExample01a
 	 */
 	struct Camera
 	{
@@ -77,6 +79,26 @@ namespace obj
 
 		//! Principal distance in [pix] - assume centered on format
 		double const thePD{ engabra::g3::null<double>() };
+
+
+		/*! \brief Camera with square format with edges and PD all the same.
+		 *
+		 * Useful for testing and simulation. With this geometry, when
+		 * placing camera in object space at a distance of edgeAndPD from
+		 * a square target, the target approximately fills the format.
+		 */
+		inline
+		static
+		Camera
+		isoCam
+			( std::size_t const & edgeAndPD = 100u
+			)
+		{
+			return Camera
+				{ ras::SizeHW{ edgeAndPD, edgeAndPD }
+				, static_cast<double>(edgeAndPD)
+				};
+		}
 
 		//! True if this instance contains valid data
 		inline

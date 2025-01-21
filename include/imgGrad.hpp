@@ -43,11 +43,7 @@ namespace quadloco
 namespace img
 {
 
-	/*! \brief GRADent ELement structure representing a directed edge gradient.
-	 *
-	 * \note For computing gradient values over entire ras::Grid instances
-	 * refer to functions in rasgrid.hpp (e.g. gradientGridBy8x()).
-	 */
+	//! \brief GRADent ELement structure representing a directed edge gradient.
 	struct Grad : public img::Vector<double>
 	{
 

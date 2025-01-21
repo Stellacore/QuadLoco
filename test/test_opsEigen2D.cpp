@@ -30,6 +30,7 @@
 
 #include "opsEigen2D.hpp"
 
+#include "prbGauss1D.hpp"
 #include "opsmatrix.hpp"
 #include "rasGrid.hpp"
 
@@ -41,7 +42,57 @@
 
 namespace
 {
-	//! Examples for documentation
+	//! Check default operations
+	void
+	test0
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample00]
+
+		using namespace quadloco;
+
+		ops::Eigen2D const aNull{};
+		bool const gotIsValid{ isValid(aNull) };
+		bool const expIsValid{ false };
+
+		ras::Grid<double> matZero(2u, 2u);
+		ops::Eigen2D const eigZero(matZero);
+		double const gotValMinZero{ eigZero.valueMin() };
+		double const gotValMaxZero{ eigZero.valueMax() };
+		double const expValMinZero{ 0. };
+		double const expValMaxZero{ 0. };
+
+
+		// [DoxyExample00]
+
+		using engabra::g3::io::fixed;
+
+		if (! engabra::g3::nearlyEquals(gotValMinZero, expValMinZero))
+		{
+			oss << "Failure of gotValMinZero test\n";
+			oss << "exp: " << fixed(expValMinZero) << '\n';
+			oss << "got: " << fixed(gotValMinZero) << '\n';
+			oss << "eigZero:\n" << eigZero << '\n';
+		}
+		if (! engabra::g3::nearlyEquals(gotValMaxZero, expValMaxZero))
+		{
+			oss << "Failure of gotValMaxZero test\n";
+			oss << "exp: " << fixed(expValMaxZero) << '\n';
+			oss << "got: " << fixed(gotValMaxZero) << '\n';
+			oss << "eigZero:\n" << eigZero << '\n';
+		}
+
+		if (! (gotIsValid == expIsValid))
+		{
+			oss << "Failure of aNull validity test\n";
+			oss << "exp: " << expIsValid << '\n';
+			oss << "got: " << gotIsValid << '\n';
+			oss << "aNull: " << aNull << '\n';
+		}
+	}
+
+	//! Test decomposition via definition
 	void
 	test1
 		( std::ostream & oss
@@ -73,13 +124,16 @@ namespace
 		img::Vector<double> const chkVecMax
 			{ (1./gotValMax) * (matrix * gotVecMax) };
 
-		bool const okayMin{ nearlyEquals(chkVecMin, gotVecMin) };
-		bool const okayMax{ nearlyEquals(chkVecMax, gotVecMax) };
+		constexpr double tol{ 8. * std::numeric_limits<double>::epsilon() };
+		bool const okayMin{ nearlyEquals(chkVecMin, gotVecMin, tol) };
+		bool const okayMax{ nearlyEquals(chkVecMax, gotVecMax, tol) };
 
 		// [DoxyExample01]
 
 		if (! (okayMin && okayMax))
 		{
+			img::Vector<double> const difVecMin{ gotVecMin - chkVecMin };
+			img::Vector<double> const difVecMax{ gotVecMax - chkVecMax };
 			using engabra::g3::io::fixed;
 			oss << "Failure of eigen relationship test\n";
 			oss << "gotValMin: " << fixed(gotValMin) << '\n';
@@ -88,8 +142,92 @@ namespace
 			oss << "gotVecMax: " << gotVecMax << '\n';
 			oss << "chkVecMin: " << chkVecMin << '\n';
 			oss << "chkVecMax: " << chkVecMax << '\n';
+			oss << "difVecMin: " << difVecMin << '\n';
+			oss << "difVecMax: " << difVecMax << '\n';
 		}
 
+	}
+
+	//! Test use with scatter data
+	void
+	test2
+		( std::ostream & oss
+		)
+	{
+		// [DoxyExample02]
+
+		using namespace quadloco;
+
+		using Vec2D = img::Vector<double>;
+		Vec2D const expDir{ direction(Vec2D{ 3., -7. }) };
+		constexpr double expSampSigma{ 1.75 };
+
+		// generate scatter matrix using 
+		ras::Grid<double> scatter(2u, 2u);
+		std::fill(scatter.begin(), scatter.end(), 0.);
+
+		// generate samples along a line (one eigenvalue is 0.)
+		// and accumulate in scatter matrix
+		prb::Gauss1D const gauss( 0., expSampSigma);
+		double count{ 0. };
+		double sumWgts{ 0. };
+		double const lim{ 10. * expSampSigma };
+		double const del{ (1./16.) * expSampSigma };
+		for (double xx{-lim} ; xx < lim ; xx += del)
+		{
+			double const pdf{ gauss(xx) };
+			double const weight{ 1000. * pdf };
+
+			Vec2D const relLoc{ xx * expDir };
+			scatter(0u, 0u) += weight * relLoc[0] * relLoc[0];
+			scatter(0u, 1u) += weight * relLoc[0] * relLoc[1];
+		// 	scatter(1u, 0u) += weight * relLoc[1] * relLoc[0];
+			scatter(1u, 1u) += weight * relLoc[1] * relLoc[1];
+			sumWgts += weight;
+			++count;
+		}
+		scatter(1u, 0u) = scatter(0u, 1u); // is symmetric (and pos.def)
+
+		// compute *sample* statistics
+
+		// point location *sample* covariance is normalized weight matrix
+		ras::Grid<double> const sampCovar{ (1./sumWgts) * scatter };
+
+		// perform eigen decomposition of covariance matrix
+		ops::Eigen2D const sampEig(sampCovar);
+
+		// uncertainty (1-sigma) ellipsoid semiaxes are sqrt() of eigenvalues
+		// by construction of test case, min eigenvalue is zero
+		double const gotSampSigma{ std::sqrt(sampEig.valueMax()) };
+
+		// estimate centroid fit statistics
+
+		ras::Grid<double> const fitCovar{ (1./count) * sampCovar };
+		double const expFitSigma{ (1./std::sqrt(count)) * expSampSigma };
+		ops::Eigen2D const fitEig(fitCovar);
+		double const gotFitSigma{ std::sqrt(fitEig.valueMax()) };
+
+		// [DoxyExample02]
+
+		constexpr double tol{ 8. * std::numeric_limits<double>::epsilon() };
+		if (! engabra::g3::nearlyEquals(gotSampSigma, expSampSigma, tol))
+		{
+			double const difSampSigma{ gotSampSigma - expSampSigma };
+			using namespace engabra::g3::io;
+			oss << "Failure of gotSampSigma scatter matrix test\n";
+			oss << "exp: " << fixed(expSampSigma) << '\n';
+			oss << "got: " << fixed(gotSampSigma) << '\n';
+			oss << "dif: " << enote(difSampSigma) << '\n';
+		}
+		if (! engabra::g3::nearlyEquals(gotFitSigma, expFitSigma, tol))
+		{
+			double const difFitSigma{ gotFitSigma - expFitSigma };
+			using namespace engabra::g3::io;
+			oss << "Failure of gotFitSigma scatter matrix test\n";
+			oss << "exp: " << fixed(expFitSigma) << '\n';
+			oss << "got: " << fixed(gotFitSigma) << '\n';
+			oss << "dif: " << enote(difFitSigma) << '\n';
+		}
 	}
 
 }
@@ -102,8 +240,9 @@ main
 	int status{ 1 };
 	std::stringstream oss;
 
-//	test0(oss);
+	test0(oss);
 	test1(oss);
+	test2(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

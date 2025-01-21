@@ -33,19 +33,24 @@ set(unitTests
 	test_imgArea  # a 2D range of values
 	test_imgEdgel  # individual pixel edge information (Spot and Grad)
 	test_imgGrad  # pixel Gradent element type and functions
+	test_imgHit  # a 2D location with associated significance and uncertainty
 	test_imgQuadTarget  # represent perspective image of obj::QuadTarget
 	test_imgRay  # a 2D geometric ray (start Spot and unit direction)
 	test_imgSpot  # 'continuous' raster cell locations
 	test_imgVector  # support for 2D vector operations
 	test_io  # basic i/o support (e.g. pgm images)
+	test_meaCluster  # 2d point cloud properties and statistics
+	test_meaCovar  # 2D covariance object
+	test_meaVector  # 2D point measurement with location and uncertainty
 	test_objCamera  # simplified ideal perspective camera
 	test_objQuadTarget  # represent physical target object
 	test_opsAllPeaks2D  # peak finding over a 2D grid
-	test_opsCenterRefiner  # sub-cell refinement of nominal center location
+	test_opsAngleTracker  # angular value likelihood estimation
+	test_opsCenterRefinerEdge  # sub-cell center refinement using local edges
+	test_opsCenterRefinerSSD  # sub-cell center refinement using half-turn SSD
 	test_opsEigen2D  # Eigen value decompositions
 	test_opsFence  # bounding region determination
 	test_opsgrid  # Edgel extraction
-	test_opsPeakAngles  # angular value likelihood estimation
 	test_opsPeakFinder1D  # peak finding over a 1D collection
 	test_opsSymRing  # point reflection symmetry filter
 	test_pix  # pixel image manipulations

@@ -28,13 +28,15 @@
 */
 
 
+#include "ang.hpp"
 #include "appCenters.hpp"
 #include "cast.hpp"
 #include "imgSpot.hpp"
 #include "io.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
-#include "opsCenterRefiner.hpp"
+#include "opsCenterRefinerEdge.hpp"
+#include "opsCenterRefinerSSD.hpp"
 #include "rasChipSpec.hpp"
 #include "rasGrid.hpp"
 #include "rasPeakRCV.hpp"
@@ -214,8 +216,8 @@ namespace sim
 		{
 			using namespace engabra::g3;
 			double const magXY{ std::hypot(vec[0], vec[1]) };
-			double const angleVert{ std::atan2(magXY, vec[2]) };
-			double const angleAzim{ std::atan2(vec[1], vec[0]) };
+			double const angleVert{ quadloco::ang::atan2(magXY, vec[2]) };
+			double const angleAzim{ quadloco::ang::atan2(vec[1], vec[0]) };
 			double const rangeDist{ magnitude(vec) };
 			return { angleAzim, angleVert, rangeDist };
 		}
@@ -579,27 +581,10 @@ namespace sim
 std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 			for (std::size_t nRoll{0u} ; nRoll < numRollSteps; ++nRoll)
 			{
+				// synthesize camera orientation for current test case
 				double const roll{ (double)nRoll * rollDelta };
-				PhysAngle const physRoll{ roll * e12 };
-				Attitude const attViewWrtLook(physRoll);
-
-				// station geometry
-				static Vector const tgtLoc{ zero<Vector>() }; // by assumption
-				Vector const staDelta{ tgtLoc - staLoc };
-				Vector const lookDir{ direction(staDelta) };
-
-				// determine attitude to look at the target
-				static Vector const camViewDir{ -e3 }; // by camera convention
-				Spinor const spinToView{ camViewDir * lookDir };
-				//
-				PhysAngle const physAngle{ logG2(spinToView).theBiv };
-				Attitude const attLookWrtRef(physAngle);
-
-				// final view attitude is combined roll after pointing
-				Attitude const staAtt(attViewWrtLook * attLookWrtRef);
-
-				// use resulting transformation to create sim configuration
-				Transform const xCamWrtTgt{ staLoc, staAtt };
+				Transform const xCamWrtTgt
+					{ sim::Config::xformCamWrtTgt(staLoc, roll) };
 
 				// construct simulation configuration
 				using quadloco::sim::Config;
@@ -782,20 +767,60 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 		if (ptTrial)
 		{
 			ras::Grid<float> const & srcGrid = ptTrial->srcGrid();
-			std::vector<ras::PeakRCV> const symPeaks
+			std::vector<ras::PeakRCV> const symPeakRCVs
 				{ app::multiSymRingPeaks(srcGrid, sAppRingHalfSizes) };
 
-//			std::vector<ras::PeakRCV> const 
-			std::vector<ras::PeakRCV> const & peaks = symPeaks;
-
 			img::Spot gotCenter{};
-			if (! peaks.empty())
+			if (! symPeakRCVs.empty())
 			{
-				ras::PeakRCV const & peak = peaks.front();
-				ras::RowCol const & nomCenterRC = peak.theRowCol;
-				ops::CenterRefiner const refiner(&srcGrid);
-				gotCenter = refiner.fitSpotNear(nomCenterRC);
+				// The SSD symmetry filter seems to be much more robust
+				// especially for smaller windows where edges are not well
+				// defined until 3-4+ pixels away from the center.
+
+				// The Edge filter is much more unstable - although for
+				// a larger windows (and larger target size), it seems to
+				// provide very good sub pixel location.
+
+				// E.g. For SSD:
+				//   num ptOutcomeAlls: 5940
+				//   num          Good: 3669
+				//   num          Errs: 12
+				//   num          Null: 2259
+
+				// E.g. For Edge:
+				//   num ptOutcomeAlls: 5940
+				//   num          Good: 1483
+				//   num          Errs: 1126
+				//   num          Null: 3331
+
+				constexpr bool useRefinerSSD{ true };
+				constexpr bool useRefinerEdge{ (! useRefinerSSD) };
+
+				if (useRefinerSSD)
+				{
+					// refine center location based on half-turn symmetry
+					ras::PeakRCV const & peak = symPeakRCVs.front();
+					ras::RowCol const & nomCenterRC = peak.theRowCol;
+					ops::CenterRefinerSSD const ssdRefiner(&srcGrid);
+					gotCenter = ssdRefiner.fitSpotNear(nomCenterRC);
+				}
+
+				if (useRefinerEdge)
+				{
+					// refine center location based on edge response geometry
+					std::size_t const halfRadius{ 5u };
+					ops::CenterRefinerEdge const edgeRefiner(srcGrid);
+					std::vector<img::Hit> centerHits
+						{ edgeRefiner.centerHits(symPeakRCVs, halfRadius) };
+					if (! centerHits.empty())
+					{
+						// could just find the max prob or min uncertainty one
+						std::sort(centerHits.rbegin(), centerHits.rend());
+						gotCenter = centerHits.front().location();
+					}
+				}
 			}
+
 			ptOutcome = std::make_shared<Outcome>
 				(Outcome{ ptTrial, gotCenter });
 
@@ -803,8 +828,8 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 			if ("sim00152_1" == ptTrial->baseName())
 			{
 				std::ofstream ofs("sim00152_1_info.dat");
-				ofs << "peaks.size(): " << peaks.size() << '\n';
-				for (ras::PeakRCV const & peak : peaks)
+				ofs << "symPeakRCVs.size(): " << symPeakRCVs.size() << '\n';
+				for (ras::PeakRCV const & peak : symPeakRCVs)
 				{
 					ofs << "...peak: " << peak << '\n';
 				}

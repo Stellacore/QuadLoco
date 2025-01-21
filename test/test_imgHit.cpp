@@ -24,19 +24,21 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::ang::PeakAngles
+\brief Unit tests (and example) code for quadloco::img::Hit
 */
 
 
-#include "opsPeakAngles.hpp"
+#include "imgHit.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 
 namespace
 {
-	//! Check basics
+	//! Examples for documentation
 	void
 	test0
 		( std::ostream & oss
@@ -44,17 +46,17 @@ namespace
 	{
 		// [DoxyExample00]
 
-		quadloco::ops::PeakAngles const aNull{};
-		bool const expIsValid{ false };
-		bool const gotIsValid{ isValid(aNull) };
+		using namespace quadloco;
+
+		img::Hit const aNull{};
+		if ( isValid(aNull)) // a null/default instance should *not* be valid
+		{
+			oss << "Failure of aNull test\n";
+			oss << "aNull: " << aNull << '\n'; // op<<() overload
+		}
 
 		// [DoxyExample00]
 
-		if (! (gotIsValid == expIsValid))
-		{
-			oss << "Failure of aNull test\n";
-			oss << "aNull: " << aNull << '\n';
-		}
 	}
 
 	//! Examples for documentation
@@ -65,38 +67,31 @@ namespace
 	{
 		// [DoxyExample01]
 
-		// construct an accumulation buffer - here with just few bins
-		std::size_t const numBins{ 8u };
-		quadloco::ops::PeakAngles angleProb(numBins);
+		using namespace quadloco;
 
-		// add a value near start of bin (near phase wrap location)
-		double const expAngle{ .125 };
-		angleProb.add(expAngle);
+		// use with collection
+		img::Hit const expBig{ img::Spot{ 23., 25. }, .75, .125 };
+		std::vector<img::Hit> hits
+			{ img::Hit(img::Spot{ 13., 15. }, .25, .125) // smallest
+			, expBig // largest
+			, img::Hit(33u, 35u, .50, .125) // middle
+			, img::Hit(img::Spot{ 43., 45. }, .50, .125) // middle
+			};
 
-		// get angles 
-		std::vector<double> const gotPeakAngles{ angleProb.anglesOfPeaks() };
-		std::size_t const expNumPeaks{ 1u };
-		std::size_t const gotNumPeaks{ gotPeakAngles.size() };
+		// sort by significance (largest to smallest - via reverse iterators)
+		std::sort(hits.rbegin(), hits.rend());
+
+		// largest (most significant) values should now be at front
+		img::Hit const & gotBig = hits.front();
+		bool const bigAtFront{ nearlyEquals(gotBig, expBig) };
 
 		// [DoxyExample01]
 
-		if (! (gotNumPeaks == expNumPeaks))
+		if (! bigAtFront)
 		{
-			oss << "Failure of gotNumPeaks of peaks test\n";
-			oss << "exp: " << expNumPeaks << '\n';
-			oss << "got: " << gotNumPeaks << '\n';
-		}
-		else
-		{
-			double const & gotAngle = gotPeakAngles.front();
-			double const tolAngle{ angleProb.angleDelta() };
-			if (! engabra::g3::nearlyEqualsAbs(gotAngle, expAngle, tolAngle))
-			{
-				oss << "Failure of gotAngle test\n";
-				oss << "exp: " << expAngle << '\n';
-				oss << "got: " << gotAngle << '\n';
-				oss << "tol: " << tolAngle << '\n';
-			}
+			oss << "Failure of gotBig at front test\n";
+			oss << "exp: " << expBig << '\n';
+			oss << "got: " << gotBig << '\n';
 		}
 	}
 

@@ -189,10 +189,9 @@ namespace
 			// expected computation
 			double const & testAngle = gotTC.theTestAngle;
 			double const & gotMainAngle = gotTC.theMainAngle;
-			double const expMainAngle
-				{ quadloco::ang::atan2
-					(std::sin(testAngle), std::cos(testAngle))
-				};
+			quadloco::img::Vector<double> const testDir
+					{ std::cos(testAngle), std::sin(testAngle) };
+			double const expMainAngle{ angleSize(testDir) };
 			double const distFromStart{ (expMainAngle + piOne) };
 			double const dubBins{ distFromStart / binDelta };
 			std::size_t const expNdx{ (std::size_t)std::floor(dubBins) };
@@ -251,16 +250,16 @@ namespace
 		std::size_t const numParts{ 4u };
 		quadloco::ang::Ring const ring(numParts);
 
-		double const gotAng0{ ring.angleAt(0u) };
+		double const gotAng0{ ring.angleAtIndex(0u) };
 		double const expAng0{ -quadloco::ang::piOne() };
 
-		double const gotAng1{ ring.angleAt(1u) };
+		double const gotAng1{ ring.angleAtIndex(1u) };
 		double const expAng1{ -.5*quadloco::ang::piOne() };
 
-		double const gotAng2{ ring.angleAt(2u) };
+		double const gotAng2{ ring.angleAtIndex(2u) };
 		double const expAng2{ 0. };
 
-		double const gotAng3{ ring.angleAt(3u) };
+		double const gotAng3{ ring.angleAtIndex(3u) };
 		double const expAng3{  .5*quadloco::ang::piOne() };
 
 		// [DoxyExample02]
@@ -322,7 +321,7 @@ namespace
 		angles.reserve(spots.size());
 		for (quadloco::img::Spot const & spot : spots)
 		{
-			angles.emplace_back(quadloco::ang::atan2(spot[1], spot[0]));
+			angles.emplace_back(angleSize(spot));
 		}
 		return angles;
 	}
@@ -345,7 +344,7 @@ namespace
 		std::vector<img::Spot> const spots
 			{ spotsAbout(expSpot, sigma, numSpots) };
 		std::vector<double> const angles{ anglesFromSpots(spots) };
-		double const expAngle{ ang::atan2(expSpot[1], expSpot[0]) };
+		double const expAngle{ angleSize(expSpot) };
 
 		// accumulate angles into ring buffer
 		std::size_t const numBins{ 32u };
@@ -360,7 +359,7 @@ namespace
 			// use gaussian function to distribute in adjacent bins
 			static prb::Gauss1D const gauss(0., ring.angleDelta());
 			// distance into current bin
-			double const offset{ angle - ring.angleAt(ndxCurr) };
+			double const offset{ angle - ring.angleAtIndex(ndxCurr) };
 			binSums[ndxPrev] += gauss(offset - ring.angleDelta());
 			binSums[ndxCurr] += gauss(offset);
 			binSums[ndxNext] += gauss(offset + ring.angleDelta());
@@ -371,7 +370,7 @@ namespace
 			{ std::max_element(binSums.cbegin(), binSums.cend()) };
 		std::size_t const ndxMax
 			{ (std::size_t)std::distance(binSums.cbegin(), itMax) };
-		double const gotAngle{ ring.angleAt(ndxMax) };
+		double const gotAngle{ ring.angleAtIndex(ndxMax) };
 		double const tol{ ring.angleDelta() };
 
 		// [DoxyExample03]
@@ -382,7 +381,7 @@ namespace
 			std::cout << "binSum:"
 				<< ' ' << std::setw(3u) << ndx
 				<< ' ' << engabra::g3::io::fixed(binSums[ndx])
-				<< ' ' << engabra::g3::io::fixed(ring.angleAt(ndx))
+				<< ' ' << engabra::g3::io::fixed(ring.angleAtIndex(ndx))
 				<< '\n';
 		}
 		std::cout << "ndxMax: " << ndxMax << '\n';

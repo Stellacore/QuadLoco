@@ -30,6 +30,7 @@
 
 #include "io.hpp"
 #include "objQuadTarget.hpp"
+#include "rasSizeHW.hpp"
 #include "simConfig.hpp"
 #include "simRender.hpp"
 
@@ -53,62 +54,81 @@ main
 {
 	if (! (1 < argc))
 	{
-		std::cout <<
-			"\nSimulate a quad target image and save to (PGM) file"
-			"\n"
-			"\nUsage: <progname> <outFileName>.pgm"
-			"\n\n";
+		std::cerr << '\n';
+		std::cerr << "\nSimulate a quad target image and save to PGM file.";
+		std::cerr << '\n';
+		std::cerr << "Usage: <progname> <savePath.pgm>\n";
+		std::cerr << '\n';
+		std::cerr << 
+			"  Program simulates a quad target image (using hard coded"
+			"\nparameter values) and saved it to specified output path"
+			"\n(in grayscale PGM format)."
+			"\n\n"
+			;
 		return 1;
 	}
 	std::string const appName{ argv[0] };
 	std::string const savePath{ argv[1] };
 
-	// configuration parameters
-	double const edgeMag{ .125 };
-	std::size_t const numPix{ 64u };
-	std::size_t const numOverSamp{ 256u };
-
-
-	// define quad target
-	using quadloco::obj::QuadTarget;
-	QuadTarget const objQuad
-		{ edgeMag
-		, QuadTarget::None
-		};
-
-	// specify imaging geometry
-	quadloco::sim::Config const config
-		{ quadloco::sim::Config::faceOn(objQuad, numPix) };
-
-	// render image
-	quadloco::sim::Render const render
-		{ config
-		, quadloco::sim::Sampler::OptionFlags::AddImageNoise
-		};
-	quadloco::ras::Grid<float> const pixGrid
-		{ render.quadImage(numOverSamp) };
-
-
-	// save to file
-	bool const okaySave{ quadloco::io::writeStretchPGM(savePath, pixGrid) };
-
-
-	// summarize result
-	std::cout <<
-		"\nSummary:"
-		"\nProgram: " << appName
-		;
-	if (okaySave)
+	if (! savePath.empty())
 	{
-		std::cout << "\nSuccess:";
+		using namespace quadloco;
+
+		// define camera geometry (ideal perspective) to use for simulation
+		ras::SizeHW const format{ 80u, 120u }; // real cameras *much* larger
+		double const pd{ 100. };
+		obj::Camera const camera{ format, pd };
+
+		// define a quad target object
+		constexpr double edgeMag{ .050 }; // quad target 5cm on a side
+		obj::QuadTarget const objQuad
+			( edgeMag
+			, obj::QuadTarget::None
+		//	| obj::QuadTarget::WithTriangle
+		//	| obj::QuadTarget::WithSurround
+			);
+
+		// define camera location w.r.t. target [m]
+		engabra::g3::Vector const camLoc{ .03, .05, .08 };
+
+		// setup rendering object
+		constexpr double rollSize{ .25 }; // .25 is near 14 deg
+		sim::Render const render
+			{ camera
+			// xformCamWrtTgt - orients camera to point at target center
+			, sim::Config::xformCamWrtTgt(camLoc, rollSize)
+			, objQuad
+			, sim::Sampler::None
+			| sim::Sampler::AddSceneBias
+			| sim::Sampler::AddImageNoise
+			};
+
+		// simulation test configuration
+		constexpr std::size_t numOverSample{ 256u }; // 0-> no over sampling
+		ras::Grid<float> const pixGrid{ render.quadGrid(numOverSample) };
+
+		// save to file
+		bool const okaySave{ quadloco::io::writeStretchPGM(savePath, pixGrid) };
+
+
+		// summarize result
+		std::cout <<
+			"\nSummary:"
+			"\nProgram: " << appName
+			;
+		if (okaySave)
+		{
+			std::cout << "\nSuccess:";
+		}
+		else
+		{
+			std::cout << "\nERROR - Unable to write output file!";
+		}
+		std::cout <<
+			"\nOutFile: " << savePath << 
+			"\n\n";
+
 	}
-	else
-	{
-		std::cout << "\nERROR - Unable to write output file!";
-	}
-	std::cout <<
-		"\nOutFile: " << savePath << 
-		"\n\n";
 
 	return 0;
 }

@@ -24,7 +24,7 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::CenterRefine
+\brief Unit tests (and example) code for quadloco::CenterRefinerSSD
 */
 
 
@@ -35,7 +35,7 @@
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
 #include "opsAllPeaks2D.hpp"
-#include "opsCenterRefiner.hpp"
+#include "opsCenterRefinerSSD.hpp"
 #include "rasGrid.hpp"
 #include "rasPeakRCV.hpp"
 #include "rasSizeHW.hpp"
@@ -49,68 +49,6 @@
 
 namespace
 {
-	//! Construct a camera with format/PD matching numPixOnEdge
-	inline
-	quadloco::obj::Camera
-	cameraFitTo
-		( std::size_t const & numPixOnEdge
-		)
-	{
-		return quadloco::obj::Camera
-			{ quadloco::ras::SizeHW{ numPixOnEdge, numPixOnEdge }
-			, static_cast<double>(numPixOnEdge) // pd
-			};
-	}
-
-	//! Simulate a strong signal quad image
-	inline
-	quadloco::ras::Grid<float>
-	simulatedQuadGrid
-		( quadloco::img::QuadTarget * const & ptSigQuad = nullptr
-		)
-	{
-		using namespace quadloco;
-		using namespace quadloco::obj;
-		sim::Config const config
-			{ obj::QuadTarget
-				( 1.00
-			//	, QuadTarget::None
-			//	, QuadTarget::WithSurround
-			//	, QuadTarget::WithTriangle
-				, QuadTarget::WithSurround | QuadTarget::WithTriangle
-				)
-			//
-//			, cameraFitTo(128u)
-			, cameraFitTo( 32u)
-//			, cameraFitTo( 31u)
-//			, cameraFitTo( 16u)
-//			, cameraFitTo( 15u)
-//			, cameraFitTo(  8u)
-//			, cameraFitTo(  7u)
-			//
-			, rigibra::Transform
-				{ engabra::g3::Vector{ 0., 0., 1. }
-				, rigibra::Attitude
-					{ rigibra::PhysAngle
-						{ engabra::g3::BiVector{ 0., 0., 0. } }
-					}
-				}
-			};
-		using namespace quadloco::sim;
-		sim::Render const render
-			( config
-		//	, Sampler::None
-			, Sampler::AddSceneBias | Sampler::AddImageNoise
-		//	, Sampler::AddImageNoise
-			);
-		std::size_t const numOverSample{ 64u };
-		if (ptSigQuad)
-		{
-			*ptSigQuad = render.imgQuadTarget();
-		}
-		return render.quadImage(numOverSample);
-	}
-
 	//! Examples for documentation
 	void
 	test1
@@ -119,10 +57,17 @@ namespace
 	{
 		using namespace quadloco;
 
+		constexpr std::size_t formatAndPd{ 32u };
+		constexpr std::size_t numOverSamp{ 64u };
+
 		// simulate quad target image and extract edgels
 		quadloco::img::QuadTarget imgQuad{};  // set by simulation
-		ras::Grid<float> const srcGrid{ simulatedQuadGrid(&imgQuad) };
-		img::Spot const expCenterSpot{ imgQuad.centerSpot() };
+		sim::QuadData const simQuadData
+			{ sim::Render::simpleQuadData
+				(formatAndPd, numOverSamp)
+			};
+		ras::Grid<float> const & srcGrid = simQuadData.theGrid;
+		img::Spot const expCenterSpot{ simQuadData.theImgQuad.centerSpot() };
 
 		//(void)io::writeStretchPGM("srcGrid.pgm", srcGrid);
 
@@ -148,7 +93,7 @@ std::cout << "  distinction: " << engabra::g3::io::fixed(distinction) << '\n';
 			// [DoxyExample01b]
 
 			ras::RowCol const & nominalCenterRC = peakRCVs.front().theRowCol;
-			ops::CenterRefiner const refiner(&srcGrid, 2u, 6u);
+			ops::CenterRefinerSSD const refiner(&srcGrid, 2u, 6u);
 			img::Spot const gotCenterSpot
 				{ refiner.fitSpotNear(nominalCenterRC) };
 

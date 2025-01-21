@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::ops::PeakAngles
+ * \brief Declarations for quadloco::ops::AngleTracker
  *
  */
 
@@ -55,14 +55,14 @@ namespace ops
 	 * Construct an instance with a specified number of angular
 	 * quantiziation bins.
 	 *
-	 * Use the add() function to incorporate weighted angle values into
+	 * Use the consider() function to incorporate weighted angle values into
 	 * the histogram.
 	 *
 	 * Once accumulations are complete, the indicesOfPeaks() and
 	 * anglesOfPeaks() methods report local peaks in the (then current)
 	 * histogram.
 	 */
-	struct PeakAngles
+	class AngleTracker
 	{
 		//! Provide angle/index relationship (with wrap around).
 		ang::Ring const theRing{};
@@ -70,21 +70,28 @@ namespace ops
 		//! Histogram of values - with indices matching those in #theRing.
 		std::vector<double> theBinSums{};
 
+		//! Cached values - current sum of all theBinSums
+		double theTotalSum{ 0. };
+
+	public:
+
 		//! Construct a default (null) instance
 		inline
 		explicit
-		PeakAngles
+		AngleTracker
 			() = default;
 
 		//! Construct accumulation buffer with requested number of bins
 		inline
 		explicit
-		PeakAngles
+		AngleTracker
 			( std::size_t const & numAngBins
 			)
 			: theRing(numAngBins)
-			, theBinSums(numAngBins, 0.)
+			, theBinSums(theRing.size(), 0.)
+			, theTotalSum{ 0. }
 		{ }
+
 
 		//! True if this instance is valid (not null)
 		inline
@@ -98,6 +105,15 @@ namespace ops
 				);
 		}
 
+		//! Underlying circular ring buffer geometry
+		inline
+		ang::Ring const &
+		angRing
+			() const
+		{
+			return theRing;
+		}
+
 		//! Number of bins in accumulation buffer.
 		inline
 		std::size_t
@@ -107,13 +123,43 @@ namespace ops
 			return theBinSums.size();
 		}
 
-		//! Angular resolution of accumulation buffer (aka bin width)
+		//! Angle associated with (start of) accumulation ndx-th bin
 		inline
 		double
-		angleDelta
-			() const
+		angleAtIndex
+			( std::size_t const & ndx
+			) const
 		{
-			return theRing.angleDelta();
+			return theRing.angleAtIndex(ndx);
+		}
+
+		//! Relative value of ndx-th accumulation buffer bin
+		inline
+		double
+		probAtIndex
+			( std::size_t const & ndx
+			) const
+		{
+			double prob{ std::numeric_limits<double>::quiet_NaN() };
+			if (std::numeric_limits<double>::epsilon() < theTotalSum)
+			{
+				if (ndx < theBinSums.size())
+				{
+					prob = (theBinSums[ndx] / theTotalSum);
+				}
+			}
+			return prob;
+		}
+
+		//! Relative histogram value (probability) of histogram at this angle
+		inline
+		double
+		probAtAngle
+			( double const & angle
+			) const
+		{
+			std::size_t const ndxCurr{ theRing.indexFor(angle) };
+			return probAtIndex(ndxCurr);
 		}
 
 		/*! \brief Incorporate weighted angle probability density function.
@@ -132,7 +178,7 @@ namespace ops
 		 */
 		inline
 		void
-		add
+		consider
 			( double const & angle
 				//!< Angle value at which to add weighted contributions
 			, double const & weight = 1.
@@ -146,8 +192,10 @@ namespace ops
 
 			// add largest weight into main bin
 			std::size_t const ndxCurr{ theRing.indexFor(angle) };
-			double const offset{ angle - theRing.angleAt(ndxCurr) };
-			theBinSums[ndxCurr] += weight * gauss(offset);
+			double const offset{ angle - angleAtIndex(ndxCurr) };
+			double const dSum{ weight * gauss(offset) };
+			theBinSums[ndxCurr] += dSum;
+			theTotalSum += dSum;
 
 			// add decreasing weights into (circularly) adjacent bins
 			for (std::size_t dn{0u} ; dn < halfBinSpread ; ++dn)
@@ -157,24 +205,70 @@ namespace ops
 				int const dnPos{ (int)dn };
 				std::size_t const ndxPos
 					{ theRing.indexRelativeTo(ndxCurr, dnPos) };
-				theBinSums[ndxPos] += weight * gauss(offset + angDelta);
+				double const dSumPos{ weight * gauss(offset + angDelta) };
+				theBinSums[ndxPos] += dSumPos;
+				theTotalSum += dSumPos;
 
 				int const dnNeg{ -dnPos };
 				std::size_t const ndxNeg
 					{ theRing.indexRelativeTo(ndxCurr, dnNeg) };
-				theBinSums[ndxNeg] += weight * gauss(offset - angDelta);
+				double const dSumNeg{ weight * gauss(offset - angDelta) };
+				theBinSums[ndxNeg] += dSumNeg;
+				theTotalSum += dSumNeg;
 			}
 		}
 
-		//! Local peaks in angle data buffer
+		//! Peak finder for exploring peaks in angle accumulation buffer
+		inline
+		PeakFinder1D
+		peakFinder1D
+			() const
+		{
+			return PeakFinder1D
+				(theBinSums.cbegin(), theBinSums.cend(), PeakFinder1D::Circle);
+		}
+
+		//! Indices for local peaks (near middle for plateaus)
 		inline
 		std::vector<std::size_t>
 		indicesOfPeaks
 			() const
 		{
-			ops::PeakFinder1D const peakFinder
-				(theBinSums.cbegin(), theBinSums.cend());
-			return peakFinder.peakIndices();
+			return peakFinder1D().peakIndices();
+		}
+
+		//! Angles associated with ndxs
+		inline
+		std::vector<double>
+		anglesFor
+			( std::vector<std::size_t> const & ndxs
+			) const
+		{
+			std::vector<double> angles;
+			angles.reserve(ndxs.size());
+			for (std::size_t const & ndx : ndxs)
+			{
+				// return (start of)bin angle associated with ndx
+				angles.emplace_back(angleAtIndex(ndx));
+			}
+			return angles;
+		}
+
+		//! Probabilities associated with ndxs
+		inline
+		std::vector<double>
+		probsFor
+			( std::vector<std::size_t> const & ndxs
+			) const
+		{
+			std::vector<double> probs;
+			probs.reserve(ndxs.size());
+			for (std::size_t const & ndx : ndxs)
+			{
+				// return (start of)bin angle associated with ndx
+				probs.emplace_back(probAtIndex(ndx));
+			}
+			return probs;
 		}
 
 		//! Angles for local peaks (near middle for plateaus)
@@ -183,28 +277,7 @@ namespace ops
 		anglesOfPeaks
 			() const
 		{
-			std::vector<double> peakAngles;
-			std::vector<std::size_t> const ndxs{ indicesOfPeaks() };
-			peakAngles.reserve(ndxs.size());
-			for (std::size_t const & ndx : ndxs)
-			{
-				// return (start of)bin angle associated with ndx
-				peakAngles.emplace_back(theRing.angleAt(ndx));
-				// weighted average angle (based on two adjacent bin values)
-			//	peakAngles.emplace_back(weightedAngleAt(ndx));
-			}
-			return peakAngles;
-		}
-
-		//! Ring buffer weight at angle
-		inline
-		double
-		binSumAtAngle
-			( double const & angle
-			) const
-		{
-			std::size_t const ndx{ theRing.indexFor(angle) };
-			return theBinSums[ndx];
+			return anglesFor(indicesOfPeaks());
 		}
 
 		//! Descriptive information about this instance.
@@ -242,14 +315,15 @@ namespace ops
 				oss
 					<< '\n'
 					<< std::setw(3u) << nbin
-					<< ' ' << fixed(theRing.angleAt(nbin), 6u, 6u)
+					<< ' ' << fixed(angleAtIndex(nbin), 6u, 6u)
 					<< ' ' << fixed(theBinSums[nbin], 6u, 6u)
+					<< ' ' << fixed(probAtIndex(nbin), 6u, 6u)
 					;
 			}
 			return oss.str();
 		}
 
-	}; // PeakAngles
+	}; // AngleTracker
 
 
 } // [ops]
@@ -264,7 +338,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::ops::PeakAngles const & item
+		, quadloco::ops::AngleTracker const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -275,7 +349,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::ops::PeakAngles const & item
+		( quadloco::ops::AngleTracker const & item
 		)
 	{
 		return item.isValid();

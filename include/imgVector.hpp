@@ -32,6 +32,8 @@
  */
 
 
+#include "ang.hpp"
+
 #include <Engabra>
 
 #include <array>
@@ -212,6 +214,17 @@ namespace img
 			unit = (1./mag) * vec;
 		}
 		return unit;
+	}
+
+	//! Angle size in half open interval [-pi,pi)
+	template <typename Type>
+	inline
+	Type
+	angleSize
+		( Vector<Type> const & vec
+		)
+	{
+		return ang::atan2(vec[1], vec[0]);
 	}
 
 

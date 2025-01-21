@@ -27,18 +27,17 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::img::Edgel
+ * \brief Declarations for quadloco::mea::Vector namespace
  *
  */
 
 
-#include "ang.hpp"
-#include "imgGrad.hpp"
-#include "imgRay.hpp"
-#include "imgSpot.hpp"
+#include "imgVector.hpp"
+#include "meaCovar.hpp"
+#include "opsmatrix.hpp"
+#include "rasGrid.hpp"
 
-#include <Engabra>
-
+#include <iostream>
 #include <limits>
 #include <sstream>
 #include <string>
@@ -47,115 +46,110 @@
 namespace quadloco
 {
 
-namespace img
+namespace mea
 {
 
-	//! Edge element in 2D space (location and gradient)
-	class Edgel : public img::Ray
+	//! \brief Location and uncertainty as normal probability distribution.
+	class Vector
 	{
-		//! Magnitude of the gradient
-		double theMag{ std::numeric_limits<double>::quiet_NaN() };
+		//! Best estimate of location
+		img::Vector<double> theLoc{};
+
+		//! Best estimate of uncertainty as standard covariance
+		Covar theCovar{};
 
 	public:
 
-		//! Constuct invalid (null) instance
+		//! Default construction of null instance (isValid() == false)
 		inline
 		explicit
-		Edgel
+		Vector
 			() = default;
 
-		//! Value construction
+		//! Construct with location and identify covariance matrix
 		inline
 		explicit
-		Edgel
-			( img::Spot const & spot
-			, img::Grad const & grad
+		Vector
+			( img::Vector<double> const & loc
+			, double const & sigma
 			)
-			: Ray{ spot, grad }
-			, theMag{ img::magnitude(grad) }
+			: theLoc{ loc }
+			, theCovar(sigma)
 		{ }
 
-		//! True if both the point location and gradent direction are valid
+		//! Construct with location and identify covariance matrix
+		inline
+		explicit
+		Vector
+			( img::Vector<double> const & loc
+			, ops::Matrix const & covar
+			)
+			: theLoc{ loc }
+			, theCovar(covar)
+		{ }
+
+		//! True if this instance contains viable data
 		inline
 		bool
 		isValid
 			() const
 		{
 			return
-				(  img::Ray::isValid()
-				&& engabra::g3::isValid(theMag)
+				(  theLoc.isValid()
+				&& theCovar.isValid()
 				);
 		}
 
-		//! Location of this edgel
+		//! Best estimated location
 		inline
-		img::Spot
+		img::Vector<double> const &
 		location
 			() const
 		{
-			return img::Spot(start());
+			return theLoc;
 		}
 
-		//! Gradient at this edgel location
+		//! Direct access to covariance structure
 		inline
-		img::Grad
-		gradient
+		Covar const &
+		covar
 			() const
 		{
-			return img::Grad(theMag * direction());
+			return theCovar;
 		}
 
-		//! Magnitude of this edge
-		inline
-		double const &
-		magnitude
-			() const
-		{
-			return theMag;
-		}
-
-		//! Angle of gradient vector
+		//! Estimated circular uncertainty (root-mean-square of semiaxes)
 		inline
 		double
-		angle
+		deviationRMS
 			() const
 		{
-			img::Grad const grad{ gradient() };
-			return angleSize(grad);
+			return theCovar.deviationRMS();
 		}
 
-		//! True if location is in front of edge (relative to gradient)
-		inline
-		bool
-		spotInFront
-			( img::Spot const & imgSpot
-			) const
-		{
-			return isAhead(imgSpot);
-		}
-
-		//! True if location is behind the edge (relative to gradient)
-		inline
-		bool
-		spotInBack
-			( img::Spot const & imgSpot
-			) const
-		{
-			return isBehind(imgSpot);
-		}
-
-		//! True if components are same as those of other within tol
+		//! True if this and other have same data within tolerance
 		inline
 		bool
 		nearlyEquals
-			( Edgel const & other
+			( Vector const & other
 			, double const & tol = std::numeric_limits<double>::epsilon()
 			) const
 		{
-			return
-				(  img::Ray::nearlyEquals(other, tol)
-				&& engabra::g3::nearlyEquals(theMag, other.theMag, tol)
-				);
+			bool same{ isValid() && other.isValid() };
+			if (same)
+			{
+				ops::Matrix const matA{ theCovar.matrix() };
+				ops::Matrix const matB{ other.theCovar.matrix() };
+				using engabra::g3::nearlyEquals;
+				same =
+					(  theLoc.nearlyEquals(other.theLoc, tol)
+					&& nearlyEquals(matA(0u, 0u), matB(0u, 0u))
+					&& nearlyEquals(matA(0u, 1u), matB(0u, 1u))
+					&& nearlyEquals(matA(1u, 0u), matB(1u, 0u))
+					&& nearlyEquals(matA(1u, 1u), matB(1u, 1u))
+					);
+			}
+			return same;
 		}
 
 		//! Descriptive information about this instance.
@@ -171,19 +165,20 @@ namespace img
 				oss << title << ' ';
 			}
 			oss
-				<< "location(): " << location()
-				<< ' '
-				<< "gradient(): " << gradient()
+				<< theLoc
+				<< '\n'
+				<< theCovar
 				;
-
 			return oss.str();
 		}
 
-	}; // Edgel
+	}; // Vector
 
-} // [img]
+
+} // [mea]
 
 } // [quadloco]
+
 
 namespace
 {
@@ -192,7 +187,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::img::Edgel const & item
+		, quadloco::mea::Vector const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -203,18 +198,18 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::img::Edgel const & item
+		( quadloco::mea::Vector const & item
 		)
 	{
 		return item.isValid();
 	}
 
-	//! True if both items have very nearly the same values
+	//! True if both instances have same data within tolerance.
 	inline
 	bool
 	nearlyEquals
-		( quadloco::img::Edgel const & itemA
-		, quadloco::img::Edgel const & itemB
+		( quadloco::mea::Vector const & itemA
+		, quadloco::mea::Vector const & itemB
 		, double const & tol = std::numeric_limits<double>::epsilon()
 		)
 	{
@@ -222,3 +217,4 @@ namespace
 	}
 
 } // [anon/global]
+

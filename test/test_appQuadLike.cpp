@@ -75,7 +75,7 @@ namespace
 			( config
 			, opt::None // no SceneBias nor ImageNoise
 			);
-		quadloco::ras::Grid<float> const pixGrid{ render.quadImage(numOver) };
+		quadloco::ras::Grid<float> const pixGrid{ render.quadGrid(numOver) };
 		// retrieve geometry of the simulated image
 		quadloco::img::QuadTarget const expImgQuad{ render.imgQuadTarget() };
 
