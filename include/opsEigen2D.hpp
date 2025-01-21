@@ -107,8 +107,8 @@ namespace ops
 			( ras::Grid<double> const & mat2D
 			)
 		{
-			double const det{ determinant(mat2D) };
-			double const trc{ trace(mat2D) };
+			double const det{ determinant2x2(mat2D) };
+			double const trc{ trace2x2(mat2D) };
 
 			double const radicand{ .25*trc*trc - det };
 			if (! (radicand < 0.))
