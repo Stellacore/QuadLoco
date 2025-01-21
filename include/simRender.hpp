@@ -92,10 +92,12 @@ namespace sim
 				, QuadTarget
 					( objQuadEdgeSize
 					, QuadTarget::None
-					| QuadTarget::WithSurround | QuadTarget::WithTriangle
+					| QuadTarget::WithSurround
+					| QuadTarget::WithTriangle
 					)
 				, Sampler::None
-				| Sampler::AddSceneBias | Sampler::AddImageNoise
+				| Sampler::AddSceneBias
+				| Sampler::AddImageNoise
 				);
 
 			return render.quadData(numOverSample);
