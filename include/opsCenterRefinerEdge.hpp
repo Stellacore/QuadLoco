@@ -148,11 +148,65 @@ namespace ops
 			axisMag = eig.valueMax() * eig.vectorMax();
 
 			return axisMag;
-
 		}
 
 	}; // EdgeGroup
 
+
+	//! Estimated center point given 4 edge locations and directions
+	inline
+	mea::Vector
+	meaVectorFitFrom
+		( std::array<img::Vector<double>, 4u> const & edgeLocs
+			//!< locations of points on each radial edge
+		, std::array<img::Vector<double>, 4u> const & edgeDirs
+			//!< Corresponding (radial) directions
+		)
+	{
+		mea::Vector meaVec{};
+
+		// Assemble radial rays from EdgeGroup geometries
+		ops::Matrix DtD(2u, 2u);
+		img::Vector<double> Dts{ 0., 0. };
+		std::fill(DtD.begin(), DtD.end(), 0.);
+		for (std::size_t nGrp{0u} ; nGrp < 4u ; ++nGrp)
+		{
+			using Vec = img::Vector<double>;
+			Vec const & si = edgeLocs[nGrp];
+			Vec const & di = edgeDirs[nGrp];
+
+			double const & di1 = di[0];
+			double const & di2 = di[1];
+			double const sidi{ outer(si, di) };
+
+			// accumulate layer of normal system matrix
+			DtD(0u, 0u) +=  di2*di2;
+			DtD(0u, 1u) += -di2*di1;
+			DtD(1u, 0u) += -di1*di2;
+			DtD(1u, 1u) +=  di1*di1;
+
+			// accumulate layer of right hand side vector
+			Dts.theData[0u] +=  di2*sidi;
+			Dts.theData[1u] += -di1*sidi;
+		}
+
+		ops::Matrix const invDtD{ inverse2x2(DtD) };
+		img::Vector<double> const solnPnt{ invDtD * Dts };
+
+		if (solnPnt.isValid())
+		{
+			// For unexplained reason, the computations here
+			// seem to be half a pixel short in each direction.
+			// Therefore, add a half cell to recognize this
+			img::Vector<double> const halfCell{ .5, .5 };
+			img::Spot const fitLoc{ solnPnt + halfCell };
+			//
+			ops::Matrix const & covar = invDtD;
+			meaVec = mea::Vector(fitLoc, covar);
+		}
+
+		return meaVec;
+	}
 
 	//! Pseudo-probabilty that ang1 and ang2 are oppositely directed
 	inline
@@ -324,7 +378,7 @@ namespace ops
 			std::size_t const numPeaks{ peakAngles.size() };
 			if (3u < numPeaks) // expect at least four
 			{
-//using engabra::g3::io::fixed;
+				// create (circular) histogram of angle probabilities
 				std::vector<std::size_t> const peakNdxs
 					{ angleTracker.indicesOfPeaks() };
 				std::vector<AngProb> angProbs;
@@ -334,13 +388,6 @@ namespace ops
 					double const angle{ angleTracker.angleAtIndex(peakNdx) };
 					double const prob{ angleTracker.probAtIndex(peakNdx) };
 					angProbs.emplace_back(AngProb{ angle, prob });
-
-//std::cout << "peakAngle:"
-//	<< ' ' << std::setw(2u) << peakNdx
-//	<< ' ' << fixed(angle)
-//	<< ' ' << fixed(prob)
-//	<< '\n';
-
 				}
 
 				// there should be four strong, relatively isolated peaks
@@ -361,40 +408,25 @@ namespace ops
 						{ return (ap1.theAng < ap2.theAng); }
 					);
 
-				// compute stats for angle peaks vs angle background
+				// compute stats for angle peaks vs angle background probs
 				prb::Stats<float> statsBig{};
 				prb::Stats<float> statsSml{};
-//std::cout << "----\n";
 				for (std::size_t nBig{0u} ; nBig < 4u ; ++nBig)
 				{
 					statsBig.consider(angProbs[nBig].theProb);
-
-//std::cout << "sortAngle:"
-//	<< ' ' << std::setw(2u) << nBig
-//	<< ' ' << fixed(angProbs[nBig].theAng)
-//	<< ' ' << fixed(angProbs[nBig].theProb)
-//	<< '\n';
-
 				}
 				for (std::size_t nSml{4u} ; nSml < numPeaks ; ++nSml)
 				{
 					statsSml.consider(angProbs[nSml].theProb);
-//std::cout << " smlAngle:"
-//	<< ' ' << std::setw(2u) << nSml
-//	<< ' ' << fixed(angProbs[nSml].theAng)
-//	<< ' ' << fixed(angProbs[nSml].theProb)
-//	<< '\n';
 				}
 
-//std::cout << "statsBig: " << statsBig << '\n';
-//std::cout << "statsSml: " << statsSml << '\n';
-
-
-				// since at least four candidates, 'big' stats are valid
+				// since there are at least four candidates (if test above)
+				// the 'big' stats are all valid
 				double const minBig{ statsBig.min() };
 				double const devBig{ statsBig.deviation() };
 
-				// there may be arbitrary number of small peaks
+				// establish threshold of the smaller (e.g. noise) peaks
+				// there may be arbitrary number of small peaks (if any)
 				double maxSml{ statsSml.max() };
 				if (! engabra::g3::isValid(maxSml))
 				{
@@ -447,130 +479,38 @@ namespace ops
 				double const weight{ std::exp(-arg*arg) };
 				sampleGroups[ndxGrp].add(edgel.location(), weight);
 			}
-/*
-for (std::size_t nGrp{0u} ; nGrp < sampleGroups.size() ; ++nGrp)
-{
-	EdgeGroup const & sampleGroup = sampleGroups[nGrp];
-	for (EdgeGroup::Sample const & samp : sampleGroup.theSamps)
-	{
-		std::cout
-			<< "nGrp: " << nGrp
-			<< "  "
-			<< "samp: " << samp.theLoc
-			<< "  "
-			<< "wgt: " << samp.theWeight
-			<< '\n';
-			;
-	}
-}
-*/
 
-			// averge directions from opposite radial edges
-			std::array<img::Vector<double>, 4u> const meanLocs
+			// centroids of each edge group - to provide point on edges
+			std::array<img::Vector<double>, 4u> const edgeLocs
 				{ sampleGroups[0].centroid()
 				, sampleGroups[1].centroid()
 				, sampleGroups[2].centroid()
 				, sampleGroups[3].centroid()
 				};
 
+			// averge directions from opposite radial edges to get
+			// oppositely consistent radial directions
 			img::Vector<double> const aveDirA
 				{ .5
-				* (sampleGroups[0].semiAxisMax(meanLocs[0])
-				+ sampleGroups[2].semiAxisMax(meanLocs[0]))
+				* (sampleGroups[0].semiAxisMax(edgeLocs[0])
+				+ sampleGroups[2].semiAxisMax(edgeLocs[0]))
 				};
 			img::Vector<double> const aveDirB
 				{ .5
-				* (sampleGroups[1].semiAxisMax(meanLocs[0])
-				+ sampleGroups[3].semiAxisMax(meanLocs[0]))
+				* (sampleGroups[1].semiAxisMax(edgeLocs[0])
+				+ sampleGroups[3].semiAxisMax(edgeLocs[0]))
 				};
-			std::array<img::Vector<double>, 4u> const aveDirs
-				{ aveDirA, aveDirB, aveDirA, aveDirB };
 
-			// Assemble radial rays from EdgeGroup geometries
-//std::cout << "--\n";
-			ops::Matrix DtD(2u, 2u);
-			img::Vector<double> Dts{ 0., 0. };
-			std::fill(DtD.begin(), DtD.end(), 0.);
-			for (std::size_t nGrp{0u} ; nGrp < sampleGroups.size() ; ++nGrp)
+			// check if radial edge statistica are valid
+			if (aveDirA.isValid() && aveDirB.isValid())
 			{
-				using Vec = img::Vector<double>;
-				Vec const & si = meanLocs[nGrp];
-				Vec const & di = aveDirs[nGrp];
+				// use opposing edge averages instead of individual ones
+				std::array<img::Vector<double>, 4u> const edgeDirs
+					{ aveDirA, aveDirB, aveDirA, aveDirB };
 
-				double const & di1 = di[0];
-				double const & di2 = di[1];
-				double const sidi{ outer(si, di) };
-
-				// (ai^bi) = ai1*bi2 - ai2*bi1
-
-				// (si^di) = si1*di2 - si2*di1
-				// (pi^di) = pi1*di2 - pi2*di1
-
-				// (p1^d1) = p11*d12 - p12*d11
-				// (p2^d2) = p21*d22 - p22*d21
-				// (p3^d3) = p31*d32 - p32*d31
-				// (p4^d4) = p41*d42 - p42*d41
-
-				// (p1^d1) = d12  -d11
-				// (p2^d2) = d22  -d21
-				// (p3^d3) = d32  -d31
-				// (p4^d4) = d42  -d41
-
-//		 d12  d22  d32  d42
-//		-d11 -d21 -d31 -d41
-
-				DtD(0u, 0u) +=  di2*di2;
-				DtD(0u, 1u) += -di2*di1;
-				DtD(1u, 0u) += -di1*di2;
-				DtD(1u, 1u) +=  di1*di1;
-
-				// (si^di) = si1*di2 - si2*di1
-
-				// (s1^d1) = s11*d12 - s12*d11
-				// (s2^d2) = s21*d22 - s22*d21
-				// (s3^d3) = s31*d32 - s32*d31
-				// (s4^d4) = s41*d42 - s42*d41
-
-//		 d12  d22  d32  d42
-//		-d11 -d21 -d31 -d41
-
-//				Dts.theData[0u] +=  di2 * (si1*di2 - si2*di1);
-//				Dts.theData[1u] += -di1 * (si1*di2 - si2*di1);
-
-				Dts.theData[0u] +=  di2*sidi;
-				Dts.theData[1u] += -di1*sidi;
-
-
-//using engabra::g3::io::fixed;
-//std::cout << " si: " << si << '\n';
-//std::cout << " di: " << di << '\n';
-
+				// compute center fit to all four edges
+				meaVec = meaVectorFitFrom(edgeLocs, edgeDirs);
 			}
-
-			ops::Matrix const invDtD{ inverse2x2(DtD) };
-			img::Vector<double> const solnPnt{ invDtD * Dts };
-
-			if (solnPnt.isValid())
-			{
-				// For unexplained reason, the computations here
-				// seem to be half a pixel short in each direction.
-				// Therefore, add a half cell to recognize this
-				img::Vector<double> const halfCell{ .5, .5 };
-				img::Spot const fitLoc{ solnPnt + halfCell };
-				//
-				ops::Matrix const & covar = invDtD;
-				meaVec = mea::Vector(fitLoc, covar);
-			}
-
-
-/*
-//std::cout << "   peakQuad:\n" << peakQuad.infoString() << '\n';
-//std::cout << "edgels.size: " << edgels.size() << '\n';
-std::cout << "  nomCenter: " << nomCenter << '\n';
-std::cout << "    solnPnt: " << solnPnt << '\n';
-std::cout << "     meaVec: " << meaVec << '\n';
-std::cout << invDtD.infoStringContents("invDtD", "%9.6f") << '\n';
-*/
 
 			return meaVec;
 		}
@@ -712,7 +652,6 @@ std::cout << invDtD.infoStringContents("invDtD", "%9.6f") << '\n';
 				// process neighborhoods around each candidate center
 				for (ras::PeakRCV const & peakRCV : peakRCVs)
 				{
-std::cout << "peakRCV: " << peakRCV << '\n';
 					ras::RowCol const & nomRC = peakRCV.theRowCol;
 					img::Spot const nomCenter{ cast::imgSpot(nomRC) };
 					if (liveArea.contains(nomCenter))
@@ -720,44 +659,15 @@ std::cout << "peakRCV: " << peakRCV << '\n';
 						img::Hit const hit{ imgHitNear(nomRC, searchRadius) };
 						if (hit.isValid())
 						{
-std::cout << "....hit: " << hit << '\n';
 							hits.emplace_back(hit);
 						}
 					}
-					else
-					{
-					}
-
-
 				}
-			}
+
+			} // hw < theGradGrid sizes
 
 			return hits;
 		}
-
-
-/*
- * The function fitSpotNear() computes a refined center point in the
- * vicinity of a candidate target center location. The refined location
- * is determined from the gradient values in the specified neighborhood
- * of the candidate location.
- */
-
-		/*! \brief Estimated quad target center refinement based on edges.
-		 */
-		/*
-		inline
-		img::Spot
-		fitSpotNear
-			( ras::RowCol const & // rcHoodCenterInSrc
-				//!< Center of window in which to search for edges
-			, std::size_t const & // searchRadius = 7u
-				//!< Radius over which to consider edges
-			) const
-		{
-			return img::Spot{}; //TODO
-		}
-		*/
 
 	}; // CenterRefinerEdge
 
