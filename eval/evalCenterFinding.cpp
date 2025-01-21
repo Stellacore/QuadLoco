@@ -35,6 +35,7 @@
 #include "io.hpp"
 #include "objCamera.hpp"
 #include "objQuadTarget.hpp"
+#include "opsCenterRefinerEdge.hpp"
 #include "opsCenterRefinerSSD.hpp"
 #include "rasChipSpec.hpp"
 #include "rasGrid.hpp"
@@ -772,21 +773,52 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 			img::Spot gotCenter{};
 			if (! symPeakRCVs.empty())
 			{
-// TODO which one?
-				// refined center location based on half-turn symmetry
-				ras::PeakRCV const & peak = symPeakRCVs.front();
-				ras::RowCol const & nomCenterRC = peak.theRowCol;
-				ops::CenterRefinerSSD const refiner(&srcGrid);
-				gotCenter = refiner.fitSpotNear(nomCenterRC);
+				// The SSD symmetry filter seems to be much more robust
+				// especially for smaller windows where edges are not well
+				// defined until 3-4+ pixels away from the center.
 
-// TODO which one?
-				// qualified hits based on proximal edgel support
-				/*
-				ops::EdgeCenters const edgeCenters(srcGrid);
-				std::vector<img::Hit> const qualHits
-					{ edgeCenters.edgeQualifiedHits(symPeakRCVs) };
-				gotCenter = qualHits.front().location();
-				*/
+				// The Edge filter is much more unstable - although for
+				// a larger windows (and larger target size), it seems to
+				// provide very good sub pixel location.
+
+				// E.g. For SSD:
+				//   num ptOutcomeAlls: 5940
+				//   num          Good: 3669
+				//   num          Errs: 12
+				//   num          Null: 2259
+
+				// E.g. For Edge:
+				//   num ptOutcomeAlls: 5940
+				//   num          Good: 1483
+				//   num          Errs: 1126
+				//   num          Null: 3331
+
+				constexpr bool useRefinerSSD{ true };
+				constexpr bool useRefinerEdge{ (! useRefinerSSD) };
+
+				if (useRefinerSSD)
+				{
+					// refine center location based on half-turn symmetry
+					ras::PeakRCV const & peak = symPeakRCVs.front();
+					ras::RowCol const & nomCenterRC = peak.theRowCol;
+					ops::CenterRefinerSSD const ssdRefiner(&srcGrid);
+					gotCenter = ssdRefiner.fitSpotNear(nomCenterRC);
+				}
+
+				if (useRefinerEdge)
+				{
+					// refine center location based on edge response geometry
+					std::size_t const halfRadius{ 5u };
+					ops::CenterRefinerEdge const edgeRefiner(srcGrid);
+					std::vector<img::Hit> centerHits
+						{ edgeRefiner.centerHits(symPeakRCVs, halfRadius) };
+					if (! centerHits.empty())
+					{
+						// could just find the max prob or min uncertainty one
+						std::sort(centerHits.rbegin(), centerHits.rend());
+						gotCenter = centerHits.front().location();
+					}
+				}
 			}
 
 			ptOutcome = std::make_shared<Outcome>
