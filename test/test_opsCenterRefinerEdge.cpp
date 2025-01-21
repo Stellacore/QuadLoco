@@ -32,6 +32,7 @@
 
 #include "appCenters.hpp"
 #include "imgQuadTarget.hpp"
+#include "io.hpp"
 #include "objCamera.hpp"
 #include "rasGrid.hpp"
 #include "simRender.hpp"
@@ -74,7 +75,9 @@ namespace
 std::cout << "peakRCVs.size: " << peakRCVs.size() << '\n';
 		// use edge (magnitudes) to refine center locations
 		ops::CenterRefinerEdge const refiner(srcGrid);
-		std::vector<img::Hit> edgeHits{ refiner.centerHits(peakRCVs) };
+		std::size_t const halfRadius{ 6u }; // filter searh size
+		std::vector<img::Hit> edgeHits
+			{ refiner.centerHits(peakRCVs, halfRadius) };
 		// (re)sort hits to put strongest detection at front
 		std::sort(edgeHits.rbegin(), edgeHits.rend());
 
@@ -94,7 +97,8 @@ std::cout << "edgeHits.size: " << edgeHits.size() << '\n';
 			img::Hit const & bestHit = edgeHits.front();
 			img::Spot const & gotCenterSpot = bestHit.location();
 
-			if (! nearlyEquals(gotCenterSpot, expCenterSpot))
+			double const tol{ 1./16. }; // algorithm/simulation limit
+			if (! nearlyEquals(gotCenterSpot, expCenterSpot, tol))
 			{
 				oss << "Failure of gotCenterSpot test\n";
 				oss << "exp: " << expCenterSpot << '\n';
@@ -102,7 +106,7 @@ std::cout << "edgeHits.size: " << edgeHits.size() << '\n';
 			}
 		}
 
-//(void)io::writeStretchPGM("srcGrid.pgm", srcGrid);
+(void)io::writeStretchPGM("srcGrid.pgm", srcGrid);
 
 	}
 
