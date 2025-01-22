@@ -353,7 +353,7 @@ namespace
 			, ras::SizeHW{ expFilter.hwSize() }
 			};
 		ras::Grid<double> const gotFilter // impulse response
-			{ ras::grid::subGridValuesFrom(gotValues, responseChip) };
+			{ ras::grid::subGridValuesFrom<double>(gotValues, responseChip) };
 
 		// [DoxyExample04]
 

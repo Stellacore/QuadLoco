@@ -423,20 +423,20 @@ namespace grid
 	}
 
 	//! Copy of fullGrid pixels defined by chip spec region
-	template <typename Type>
+	template <typename OutType, typename SrcType>
 	inline
-	ras::Grid<Type>
+	ras::Grid<OutType>
 	subGridValuesFrom
-		( ras::Grid<Type> const & fullGrid
+		( ras::Grid<SrcType> const & fullGrid
 		, ras::ChipSpec const & chipSpec
 		)
 	{
-		ras::Grid<Type> values;
+		ras::Grid<OutType> values;
 		if (chipSpec.fitsInto(fullGrid.hwSize()))
 		{
 			std::size_t const high{ chipSpec.high() };
 			std::size_t const wide{ chipSpec.wide() };
-			values = ras::Grid<Type>(chipSpec.hwSize());
+			values = ras::Grid<OutType>(chipSpec.hwSize());
 			for (std::size_t rowChip{0u} ; rowChip < high ; ++rowChip)
 			{
 				for (std::size_t colChip{0u} ; colChip < wide ; ++colChip)
@@ -444,7 +444,7 @@ namespace grid
 					ras::RowCol const rcChip{ rowChip, colChip };
 					ras::RowCol const rcFull
 						{ chipSpec.rcFullForChipRC(rcChip) };
-					values(rcChip) = fullGrid(rcFull);
+					values(rcChip) = static_cast<OutType>(fullGrid(rcFull));
 				}
 			}
 		}

@@ -26,6 +26,7 @@ set(ProgNames
 
 	evalCenterFinding
 	evalReadPGM
+	evalSampleCenterFind
 	evalSampleDiffManual
 	evalSampleSumSqDiff
 	evalSampleSymRing
