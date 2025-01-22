@@ -33,6 +33,7 @@
 
 
 #include "opsAllPeaks2D.hpp"
+#include "opsCenterRefinerSSD.hpp"
 #include "opsSymRing.hpp"
 #include "prbStats.hpp"
 #include "rasGrid.hpp"
@@ -133,6 +134,37 @@ namespace app
 
 		return multiSymRingPeaks(srcGrid, srcStats, ringHalfSizes);
 	}
+
+
+	//! Refined center hit via multiSymRingPeaks and CenterRefinerSSD.
+	inline
+	img::Hit
+	refinedCenterHitFrom
+		( ras::Grid<float> const & srcGrid
+		, std::vector<std::size_t> const & halfRingSizes = { 5u, 3u  }
+		)
+	{
+		img::Hit centerHit;
+
+		// find nominal peaks
+		std::vector<ras::PeakRCV> peakRCVs
+			{ app::multiSymRingPeaks(srcGrid, halfRingSizes) };
+
+		if (! peakRCVs.empty())
+		{
+			// refine peak with max value
+			std::vector<ras::PeakRCV>::const_iterator const itMax
+				{ std::max_element(peakRCVs.cbegin(), peakRCVs.cend()) };
+			if (peakRCVs.cend() != itMax)
+			{
+				ras::PeakRCV const & peakRCV = *itMax;
+				ops::CenterRefinerSSD const refiner(&srcGrid);
+				centerHit = refiner.fitHitNear(peakRCV.theRowCol);
+			}
+		}
+		return centerHit;
+	}
+
 
 } // [app]
 
