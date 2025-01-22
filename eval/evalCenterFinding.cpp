@@ -802,7 +802,8 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 					ras::PeakRCV const & peak = symPeakRCVs.front();
 					ras::RowCol const & nomCenterRC = peak.theRowCol;
 					ops::CenterRefinerSSD const ssdRefiner(&srcGrid);
-					gotCenter = ssdRefiner.fitSpotNear(nomCenterRC);
+					img::Hit const hit{ ssdRefiner.fitHitNear(nomCenterRC) };
+					gotCenter = hit.location();
 				}
 
 				if (useRefinerEdge)

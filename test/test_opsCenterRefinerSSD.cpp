@@ -94,10 +94,12 @@ std::cout << "  distinction: " << engabra::g3::io::fixed(distinction) << '\n';
 
 			ras::RowCol const & nominalCenterRC = peakRCVs.front().theRowCol;
 			ops::CenterRefinerSSD const refiner(&srcGrid, 2u, 6u);
-			img::Spot const gotCenterSpot
-				{ refiner.fitSpotNear(nominalCenterRC) };
+			img::Hit const gotCenterHit
+				{ refiner.fitHitNear(nominalCenterRC) };
+			img::Spot const & gotCenterSpot = gotCenterHit.location();
 
-			img::Spot const difCenterSpot{ gotCenterSpot - expCenterSpot };
+			img::Spot const difCenterSpot
+				{ gotCenterHit.location() - expCenterSpot };
 			double const difMag{ magnitude(difCenterSpot) };
 
 			// [DoxyExample01b]
@@ -106,7 +108,8 @@ using engabra::g3::io::fixed;
 std::cout << " peakRCVs.front: " << peakRCVs.front() << '\n';
 std::cout << "nominalCenterRC: " << nominalCenterRC << '\n';
 std::cout << "  expCenterSpot: " << expCenterSpot << '\n';
-std::cout << "  gotCenterSpot: " << gotCenterSpot << '\n';
+std::cout << "  gotCenterSpot: " << gotCenterSpot
+	<< "  from,hit: " << gotCenterHit << '\n';
 std::cout << "  difCenterSpot: "
 	<< difCenterSpot << "  mag: " << fixed(difMag, 2u, 2u) << '\n';
 		}
