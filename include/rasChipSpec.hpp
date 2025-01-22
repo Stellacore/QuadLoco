@@ -32,6 +32,7 @@
  */
 
 
+#include "imgSpot.hpp"
 #include "rasGrid.hpp"
 #include "rasRowCol.hpp"
 #include "rasSizeHW.hpp"
@@ -74,6 +75,20 @@ namespace ras
 			() const
 		{
 			return theSrcOrigRC;
+		}
+
+		//! Source spot location at center of chip
+		inline
+		img::Spot
+		srcCenterSpot
+			() const
+		{
+			return img::Spot
+				{ static_cast<double>(srcOrigRC().row())
+					+ (.5 * static_cast<double>(high()))
+				, static_cast<double>(srcOrigRC().col())
+					+ (.5 * static_cast<double>(wide()))
+				};
 		}
 
 		//! Size of this chip - convenience for theChipSizeHW
@@ -157,6 +172,20 @@ namespace ras
 			bool const rowIsIn{ chipRowEndInFull < (fullSizeHW.high()+1u) };
 			bool const colIsIn{ chipColEndInFull < (fullSizeHW.wide()+1u) };
 			return (rowIsIn && colIsIn);
+		}
+
+		//! Spot location in source image corresponding with chip spot
+		inline
+		img::Spot
+		fullSpotForChipSpot
+			( img::Spot const & chipSpot
+			) const
+		{
+			// rcInChip = (rcInFull - theSrcOrigRC)
+			return img::Spot
+				{ chipSpot.row() + static_cast<double>(theSrcOrigRC.row())
+				, chipSpot.col() + static_cast<double>(theSrcOrigRC.col())
+				};
 		}
 
 		//! Chip row/col expression given full image row/col (no checking)
