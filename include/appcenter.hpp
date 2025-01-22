@@ -48,6 +48,9 @@ namespace quadloco
 namespace app
 {
 
+namespace center
+{
+
 	/*! \brief Peaks from application of multiple combined symmetry filters
 	 *
 	 * The halfSize values define the collection of SymRing filters that
@@ -139,7 +142,7 @@ namespace app
 	//! Refined center hit via multiSymRingPeaks and CenterRefinerSSD.
 	inline
 	img::Hit
-	refinedCenterHitFrom
+	refinedHitFrom
 		( ras::Grid<float> const & srcGrid
 		, std::vector<std::size_t> const & halfRingSizes = { 5u, 3u  }
 		)
@@ -148,7 +151,7 @@ namespace app
 
 		// find nominal peaks
 		std::vector<ras::PeakRCV> peakRCVs
-			{ app::multiSymRingPeaks(srcGrid, halfRingSizes) };
+			{ app::center::multiSymRingPeaks(srcGrid, halfRingSizes) };
 
 		if (! peakRCVs.empty())
 		{
@@ -164,6 +167,8 @@ namespace app
 		}
 		return centerHit;
 	}
+
+} // [center]
 
 
 } // [app]

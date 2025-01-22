@@ -32,7 +32,7 @@
  */
 
 
-#include "appCenters.hpp"
+#include "appcenter.hpp"
 #include "cast.hpp"
 #include "imgHit.hpp"
 #include "imgSpot.hpp"
@@ -165,7 +165,7 @@ namespace keyed
 				{ ras::grid::subGridValuesFrom<float>(loadGrid, chipSpec) };
 
 			// find and refine center location
-			img::Hit const chipHit{ refinedCenterHitFrom(srcGrid) };
+			img::Hit const chipHit{ center::refinedHitFrom(srcGrid) };
 
 			if (isValid(chipHit))
 			{

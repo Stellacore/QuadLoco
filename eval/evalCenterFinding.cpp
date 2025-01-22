@@ -29,7 +29,7 @@
 
 
 #include "ang.hpp"
-#include "appCenters.hpp"
+#include "appcenter.hpp"
 #include "cast.hpp"
 #include "imgSpot.hpp"
 #include "io.hpp"
@@ -768,7 +768,7 @@ std::cout << "Simulating target for staLoc: " << staLoc << '\n';
 		{
 			ras::Grid<float> const & srcGrid = ptTrial->srcGrid();
 			std::vector<ras::PeakRCV> const symPeakRCVs
-				{ app::multiSymRingPeaks(srcGrid, sAppRingHalfSizes) };
+				{ app::center::multiSymRingPeaks(srcGrid, sAppRingHalfSizes) };
 
 			img::Spot gotCenter{};
 			if (! symPeakRCVs.empty())

@@ -28,7 +28,7 @@
 */
 
 
-#include "appCenters.hpp"
+#include "appcenter.hpp"
 #include "imgQuadTarget.hpp"
 #include "imgSpot.hpp"
 #include "io.hpp"
@@ -75,7 +75,7 @@ namespace
 
 		// find nominal center with symmetry filter response peak
 		std::vector<ras::PeakRCV> const peakRCVs
-			{ app::multiSymRingPeaks(srcGrid) };
+			{ app::center::multiSymRingPeaks(srcGrid) };
 		double const distinction{ ops::AllPeaks2D::distinction(peakRCVs) };
 
 		// [DoxyExample01a]

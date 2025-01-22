@@ -39,6 +39,13 @@
 
 
 /*! \brief Identify quad target center points in loaded PGM image
+ *
+ * Load an image and a collection of row/col locations (in *.meapoint format)
+ * For each of the loaded row/col locations, extract an image chip centered
+ * on that location (ref hardcoded chip size). Each chip is fed into the
+ * center localization algorithm which uses two steps:
+ * \arg 1) annular symmetry filter for candidate peak finding; and
+ * \arg 2) a half-turn SSD filter for refining the peak location.
 */
 int
 main
@@ -54,7 +61,19 @@ main
 		std::cerr << "Usage: <progname> <srcFile.pgm\n";
 		std::cerr << '\n';
 		std::cerr << 
-			"  Program ...." //TODO
+			"  Program that determines refined center points for real image"
+			"\n"
+			"\nAn image (PGM format only) loaded as source data. Assuming"
+			"\na corresponding <srcFile>.meapoint file exists, it's contents"
+			"\nare loaded and each location is used to define the center of"
+			"\nan image chip."
+			"\n"
+			"\nEach chip definition is used to extract a small sub grid"
+			"\nfrom the source image. This grid is processed to determine"
+			"\na best hit that represents and estimated quad center (or"
+			"\na null value if none can be determined"
+			"\n"
+			"\nResults are reported to standard output."
 			"\n\n"
 			;
 		return 1;
