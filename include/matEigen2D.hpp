@@ -27,13 +27,13 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::ops::Eigen2D namespace
+ * \brief Declarations for quadloco::mat::Eigen2D namespace
  *
  */
 
 
 #include "imgVector.hpp"
-#include "opsmatrix.hpp"
+#include "mat.hpp"
 #include "rasGrid.hpp"
 
 #include <Engabra>
@@ -47,7 +47,7 @@
 namespace quadloco
 {
 
-namespace ops
+namespace mat
 {
 
 	//! \brief Eigen decomposition for a 2x2 matrix (no complex result support)
@@ -185,7 +185,7 @@ namespace ops
 		matrix
 			() const
 		{
-			ops::Matrix mat(2u, 2u);
+			Matrix mat(2u, 2u);
 			double const & v11 = theVecMin[0];
 			double const & v12 = theVecMin[1];
 			double const & d1 = theLamMin;
@@ -228,7 +228,7 @@ namespace ops
 	}; // Eigen2D
 
 
-} // [ops]
+} // [mat]
 
 } // [quadloco]
 
@@ -240,7 +240,7 @@ namespace
 	std::ostream &
 	operator<<
 		( std::ostream & ostrm
-		, quadloco::ops::Eigen2D const & item
+		, quadloco::mat::Eigen2D const & item
 		)
 	{
 		ostrm << item.infoString();
@@ -251,7 +251,7 @@ namespace
 	inline
 	bool
 	isValid
-		( quadloco::ops::Eigen2D const & item
+		( quadloco::mat::Eigen2D const & item
 		)
 	{
 		return item.isValid();

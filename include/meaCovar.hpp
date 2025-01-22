@@ -32,8 +32,8 @@
  */
 
 
-#include "opsEigen2D.hpp"
-#include "opsmatrix.hpp"
+#include "matEigen2D.hpp"
+#include "mat.hpp"
 #include "rasGrid.hpp"
 
 #include <cmath>
@@ -53,18 +53,18 @@ namespace mea
 	class Covar
 	{
 		//! Eigen decomposition of covariance matrix
-		ops::Eigen2D theEig{};
+		mat::Eigen2D theEig{};
 
 		//! Diagonal covariance matrix corresponding with sigma
 		inline
 		static
-		ops::Matrix
+		mat::Matrix
 		fromSigma
 			( double const & sigma
 			)
 		{
 			double const covarMag{ sigma * sigma };
-			return (covarMag * ops::matrix::identity(2u));
+			return (covarMag * mat::identity(2u));
 		}
 
 	public:
@@ -79,7 +79,7 @@ namespace mea
 		inline
 		explicit
 		Covar
-			( ops::Matrix const & covarMat
+			( mat::Matrix const & covarMat
 			)
 			: theEig(covarMat)
 		{ }
@@ -177,7 +177,7 @@ namespace mea
 				oss << title << '\n';
 			}
 			using engabra::g3::io::fixed;
-			ops::Matrix const coMat{ matrix() };
+			mat::Matrix const coMat{ matrix() };
 			oss
 				<< fixed(coMat(0u, 0u), 6u, 6u)
 				<< ' '

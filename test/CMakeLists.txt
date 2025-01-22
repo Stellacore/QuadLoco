@@ -39,6 +39,7 @@ set(unitTests
 	test_imgSpot  # 'continuous' raster cell locations
 	test_imgVector  # support for 2D vector operations
 	test_io  # basic i/o support (e.g. pgm images)
+	test_matEigen2D  # Eigen value decompositions
 	test_meaCluster  # 2d point cloud properties and statistics
 	test_meaCovar  # 2D covariance object
 	test_meaVector  # 2D point measurement with location and uncertainty
@@ -48,7 +49,6 @@ set(unitTests
 	test_opsAngleTracker  # angular value likelihood estimation
 	test_opsCenterRefinerEdge  # sub-cell center refinement using local edges
 	test_opsCenterRefinerSSD  # sub-cell center refinement using half-turn SSD
-	test_opsEigen2D  # Eigen value decompositions
 	test_opsFence  # bounding region determination
 	test_opsgrid  # Edgel extraction
 	test_opsPeakFinder1D  # peak finding over a 1D collection
