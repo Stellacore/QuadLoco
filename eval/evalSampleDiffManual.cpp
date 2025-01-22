@@ -28,7 +28,7 @@
 */
 
 
-#include "appCenters.hpp"
+#include "appcenter.hpp"
 
 #include "cast.hpp"
 #include "imgSpot.hpp"
@@ -499,7 +499,7 @@ namespace eval
 		std::vector<std::size_t> const halfSizes{ 5u, 3u };
 //		std::vector<std::size_t> const halfSizes{ 5u };
 		std::vector<ras::PeakRCV> const peakCombos
-			{ app::multiSymRingPeaks(srcGrid, halfSizes) };
+			{ app::center::multiSymRingPeaks(srcGrid, halfSizes) };
 
 		// get largest peak
 		if (! peakCombos.empty())
