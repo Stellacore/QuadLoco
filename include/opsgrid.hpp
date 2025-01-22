@@ -180,7 +180,7 @@ namespace grid
 
 			// compute gradients
 			fillGradientBy8x(&tmpFull, inGrid, chipSpec);
-			grads = ras::grid::subGridValuesFrom(tmpFull, chipSpec);
+			grads = ras::grid::subGridValuesFrom<img::Grad>(tmpFull, chipSpec);
 		}
 		return grads;
 	}

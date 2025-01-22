@@ -168,11 +168,11 @@ namespace
 		// Extract computed gradient values within edge regions
 		ChipSpec const tbChipSpec{ RowCol{ 3u, 1u }, SizeHW{ 2u, 6u } };
 		Grid<Grad> const tbGotChipGrads
-			{ grid::subGridValuesFrom(tbGrads, tbChipSpec) };
+			{ grid::subGridValuesFrom<Grad>(tbGrads, tbChipSpec) };
 		//
 		ChipSpec const lrChipSpec{ RowCol{ 1u, 3u }, SizeHW{ 6u, 2u } };
 		Grid<Grad> const lrGotChipGrads
-			{ grid::subGridValuesFrom(lrGrads, lrChipSpec) };
+			{ grid::subGridValuesFrom<Grad>(lrGrads, lrChipSpec) };
 
 		// Create expected chips populated with expected grad values
 		Grid<Grad> tbExpChipGrads(tbGotChipGrads.hwSize());

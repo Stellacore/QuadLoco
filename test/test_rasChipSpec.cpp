@@ -228,7 +228,9 @@ namespace
 
 		// fill chip raster with data from the full size grid
 		quadloco::ras::Grid<NdxRC> const chipData
-			{ quadloco::ras::grid::subGridValuesFrom(fullData, chipSpec) };
+			{ quadloco::ras::grid::subGridValuesFrom<NdxRC>
+				(fullData, chipSpec)
+			};
 		bool const okayFill{ chipSpec.isValid() };
 
 		// [DoxyExample02]
