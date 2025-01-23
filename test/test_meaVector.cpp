@@ -104,8 +104,8 @@ namespace
 		double const expSigmaMax{ 3. * expSigmaMin };
 		double const expCovarMin{ expSigmaMin * expSigmaMin };
 		double const expCovarMax{ expSigmaMax * expSigmaMax };
-		ops::Matrix const covarMat
-			{ ops::matrix::diagonal({ expCovarMin, expCovarMax }) };
+		mat::Matrix const covarMat
+			{ mat::diagonal({ expCovarMin, expCovarMax }) };
 		img::Vector<double> const expSemiAxisMin{ expSigmaMin, 0. };
 		img::Vector<double> const expSemiAxisMax{ 0., expSigmaMax };
 

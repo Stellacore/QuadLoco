@@ -24,14 +24,14 @@
 
 
 /*! \file
-\brief Unit tests (and example) code for quadloco::ops::Eigen2D
+\brief Unit tests (and example) code for quadloco::mat::Eigen2D
 */
 
 
-#include "opsEigen2D.hpp"
+#include "matEigen2D.hpp"
 
+#include "mat.hpp"
 #include "prbGauss1D.hpp"
-#include "opsmatrix.hpp"
 #include "rasGrid.hpp"
 
 #include <Engabra>
@@ -52,12 +52,12 @@ namespace
 
 		using namespace quadloco;
 
-		ops::Eigen2D const aNull{};
+		mat::Eigen2D const aNull{};
 		bool const gotIsValid{ isValid(aNull) };
 		bool const expIsValid{ false };
 
 		ras::Grid<double> matZero(2u, 2u);
-		ops::Eigen2D const eigZero(matZero);
+		mat::Eigen2D const eigZero(matZero);
 		double const gotValMinZero{ eigZero.valueMin() };
 		double const gotValMaxZero{ eigZero.valueMax() };
 		double const expValMinZero{ 0. };
@@ -110,7 +110,7 @@ namespace
 		matrix(1, 1) =  2.125;
 
 		// Create eigen decomposition instance
-		ops::Eigen2D const eigen(matrix);
+		mat::Eigen2D const eigen(matrix);
 
 		// Get eigen values and vectors (here assuming for 2D matrix)
 		double const gotValMin{ eigen.valueMin() };
@@ -194,7 +194,7 @@ namespace
 		ras::Grid<double> const sampCovar{ (1./sumWgts) * scatter };
 
 		// perform eigen decomposition of covariance matrix
-		ops::Eigen2D const sampEig(sampCovar);
+		mat::Eigen2D const sampEig(sampCovar);
 
 		// uncertainty (1-sigma) ellipsoid semiaxes are sqrt() of eigenvalues
 		// by construction of test case, min eigenvalue is zero
@@ -204,7 +204,7 @@ namespace
 
 		ras::Grid<double> const fitCovar{ (1./count) * sampCovar };
 		double const expFitSigma{ (1./std::sqrt(count)) * expSampSigma };
-		ops::Eigen2D const fitEig(fitCovar);
+		mat::Eigen2D const fitEig(fitCovar);
 		double const gotFitSigma{ std::sqrt(fitEig.valueMax()) };
 
 		// [DoxyExample02]

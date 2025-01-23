@@ -79,13 +79,13 @@ namespace
 		mea::Covar const copy(easyCovar);
 
 		// general covariance matrix (must be symmetric)
-		ops::Matrix expFullMat(2u, 2u);
+		mat::Matrix expFullMat(2u, 2u);
 		expFullMat(0u, 0u) = 2.;
 		expFullMat(0u, 1u) = 3.;
 		expFullMat(1u, 0u) = expFullMat(0u, 1u);
 		expFullMat(1u, 1u) = 7.;
 		mea::Covar const fullCovar(expFullMat);
-		ops::Matrix const gotFullMat{ fullCovar.matrix() };
+		mat::Matrix const gotFullMat{ fullCovar.matrix() };
 
 		// use in a collection
 		std::vector<mea::Covar> const covars

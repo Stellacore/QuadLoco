@@ -27,7 +27,7 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::ops namespace matrix operations
+ * \brief Declarations for quadloco::mat namespace
  *
  */
 
@@ -40,15 +40,15 @@
 
 namespace quadloco
 {
-
-namespace ops
+/*! \brief Namespaced functions and utilities for quadloco::mat (matrices)
+ */
+namespace mat
 {
 
 	//! Use ras::Grid as a matrix data container
 	using Matrix = quadloco::ras::Grid<double>;
 
-namespace matrix
-{
+
 	//
 	// Matrix constructions
 	//
@@ -103,9 +103,55 @@ namespace matrix
 		return outMat;
 	}
 
-} // [matrix]
+	//! Trace of 2x2 matrix
+	inline
+	double
+	trace2x2
+		( quadloco::ras::Grid<double> const & mat2D
+		)
+	{
+		return (mat2D(0, 0) + mat2D(1, 1));
+	}
 
-} // [ops]
+	//! Determinant of 2x2 matrix
+	inline
+	double
+	determinant2x2
+		( quadloco::ras::Grid<double> const & mat2D
+		)
+	{
+		return (mat2D(0, 0) * mat2D(1, 1) - mat2D(1, 0) * mat2D(0, 1));
+	}
+
+	//! Matrix inverse of a 2x2 matrix
+	inline
+	Matrix
+	inverse2x2
+		( Matrix const & fwd2x2
+		)
+	{
+		Matrix inv2x2{};
+		if ((2u == fwd2x2.high()) && (2u == fwd2x2.wide()))
+		{
+			inv2x2 = Matrix(2u, 2u);
+			double const & aa = fwd2x2(0u, 0u);
+			double const & bb = fwd2x2(0u, 1u);
+			double const & cc = fwd2x2(1u, 0u);
+			double const & dd = fwd2x2(1u, 1u);
+			double const det{ aa*dd - bb*cc };
+			if (std::numeric_limits<double>::epsilon() < std::abs(det))
+			{
+				double const scl{ 1. / det };
+				inv2x2(0u, 0u) =  dd * scl;
+				inv2x2(0u, 1u) = -bb * scl;
+				inv2x2(1u, 0u) = -cc * scl;
+				inv2x2(1u, 1u) =  aa * scl;
+			}
+		}
+		return inv2x2;
+	}
+
+} // [mat]
 
 } // [quadloco]
 
@@ -149,54 +195,5 @@ namespace
 			};
 	}
 
-	//! Trace of 2x2 matrix
-	inline
-	double
-	trace2x2
-		( quadloco::ras::Grid<double> const & mat2D
-		)
-	{
-		return (mat2D(0, 0) + mat2D(1, 1));
-	}
-
-	//! Determinant of 2x2 matrix
-	inline
-	double
-	determinant2x2
-		( quadloco::ras::Grid<double> const & mat2D
-		)
-	{
-		return (mat2D(0, 0) * mat2D(1, 1) - mat2D(1, 0) * mat2D(0, 1));
-	}
-
-	//! Matrix inverse of a 2x2 matrix
-	inline
-	quadloco::ops::Matrix
-	inverse2x2
-		( quadloco::ops::Matrix const & fwd2x2
-		)
-	{
-		quadloco::ops::Matrix inv2x2{};
-		if ((2u == fwd2x2.high()) && (2u == fwd2x2.wide()))
-		{
-			inv2x2 = quadloco::ops::Matrix(2u, 2u);
-			double const & aa = fwd2x2(0u, 0u);
-			double const & bb = fwd2x2(0u, 1u);
-			double const & cc = fwd2x2(1u, 0u);
-			double const & dd = fwd2x2(1u, 1u);
-			double const det{ aa*dd - bb*cc };
-			if (std::numeric_limits<double>::epsilon() < std::abs(det))
-			{
-				double const scl{ 1. / det };
-				inv2x2(0u, 0u) =  dd * scl;
-				inv2x2(0u, 1u) = -bb * scl;
-				inv2x2(1u, 0u) = -cc * scl;
-				inv2x2(1u, 1u) =  aa * scl;
-			}
-		}
-		return inv2x2;
-	}
-
 } // [anon/global]
-
 

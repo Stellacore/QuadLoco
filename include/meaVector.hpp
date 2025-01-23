@@ -33,8 +33,8 @@
 
 
 #include "imgVector.hpp"
+#include "mat.hpp"
 #include "meaCovar.hpp"
-#include "opsmatrix.hpp"
 #include "rasGrid.hpp"
 
 #include <iostream>
@@ -82,7 +82,7 @@ namespace mea
 		explicit
 		Vector
 			( img::Vector<double> const & loc
-			, ops::Matrix const & covar
+			, mat::Matrix const & covar
 			)
 			: theLoc{ loc }
 			, theCovar(covar)
@@ -138,8 +138,8 @@ namespace mea
 			bool same{ isValid() && other.isValid() };
 			if (same)
 			{
-				ops::Matrix const matA{ theCovar.matrix() };
-				ops::Matrix const matB{ other.theCovar.matrix() };
+				mat::Matrix const matA{ theCovar.matrix() };
+				mat::Matrix const matB{ other.theCovar.matrix() };
 				using engabra::g3::nearlyEquals;
 				same =
 					(  theLoc.nearlyEquals(other.theLoc, tol)

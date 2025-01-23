@@ -40,9 +40,9 @@
 #include "imgHit.hpp"
 #include "imgRay.hpp"
 #include "imgSpot.hpp"
+#include "matEigen2D.hpp"
 #include "meaVector.hpp"
 #include "opsAngleTracker.hpp"
-#include "opsEigen2D.hpp"
 #include "opsgrid.hpp"
 #include "prbStats.hpp"
 #include "rasGrid.hpp"
@@ -144,7 +144,7 @@ namespace ops
 			scatter(1u, 0u) = scatter(0u, 1u); // symmetric
 			scatter(1u, 1u) /= sumWgts;
 
-			ops::Eigen2D const eig(scatter);
+			mat::Eigen2D const eig(scatter);
 			axisMag = eig.valueMax() * eig.vectorMax();
 
 			return axisMag;
@@ -166,7 +166,7 @@ namespace ops
 		mea::Vector meaVec{};
 
 		// Assemble radial rays from EdgeGroup geometries
-		ops::Matrix DtD(2u, 2u);
+		mat::Matrix DtD(2u, 2u);
 		img::Vector<double> Dts{ 0., 0. };
 		std::fill(DtD.begin(), DtD.end(), 0.);
 		for (std::size_t nGrp{0u} ; nGrp < 4u ; ++nGrp)
@@ -190,7 +190,7 @@ namespace ops
 			Dts.theData[1u] += -di1*sidi;
 		}
 
-		ops::Matrix const invDtD{ inverse2x2(DtD) };
+		mat::Matrix const invDtD{ mat::inverse2x2(DtD) };
 		img::Vector<double> const solnPnt{ invDtD * Dts };
 
 		if (solnPnt.isValid())
@@ -201,7 +201,7 @@ namespace ops
 			img::Vector<double> const halfCell{ .5, .5 };
 			img::Spot const fitLoc{ solnPnt + halfCell };
 			//
-			ops::Matrix const & covar = invDtD;
+			mat::Matrix const & covar = invDtD;
 			meaVec = mea::Vector(fitLoc, covar);
 		}
 
