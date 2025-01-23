@@ -144,6 +144,7 @@ namespace keyed
 	keyCenterHitsNearTo
 		( std::map<QuadKey, ras::ChipSpec> const & keyChips
 		, ras::Grid<std::uint8_t> const & loadGrid
+		, std::vector<std::size_t> const & ringHalfSizes
 		)
 	{
 		std::map<QuadKey, img::Hit> keyCenterHits{};
@@ -160,7 +161,8 @@ namespace keyed
 				{ ras::grid::subGridValuesFrom<float>(loadGrid, chipSpec) };
 
 			// find and refine center location
-			img::Hit const chipHit{ center::refinedHitFrom(srcGrid) };
+			img::Hit const chipHit
+				{ center::refinedHitFrom(srcGrid, ringHalfSizes) };
 
 			if (isValid(chipHit))
 			{
