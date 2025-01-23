@@ -59,9 +59,25 @@ namespace app
 namespace keyed
 {
 	//! Identifier for individual quad targets (e.g. for image with several)
-	using QuadKey = std::size_t;
+	using QuadKey = std::string;
 
-	//! Load img::Spot locations from *.meaPnt file (row,col only)
+	/*! Load img::Spot locations from *.meaPnt file (row,col only)
+	 *
+	 * The .meapoint file format is collection of ascii records, one
+	 * per image spot. Each record is of the form:
+	 * \arg ID Row Col  Srr Src Scc
+	 *
+	 * Where
+	 * \arg  ID: alpha-numeric ID
+	 * \arg Row: Row location
+	 * \arg Col: Column location
+	 * \arg Srr: Row-Row covariance
+	 * \arg Src: Row-Col cross variance (=Scr)
+	 * \arg Scc: Col-Col covariance
+	 *
+	 * Note that all numeric fields (after the ID) are floating point
+	 * values (e.g. expressing values with subpixel precision).
+	 */
 	inline
 	std::map<QuadKey, ras::RowCol>
 	keyMeaPointRCs
@@ -71,25 +87,25 @@ namespace keyed
 		std::map<QuadKey, ras::RowCol> keyRCs;
 		std::ifstream ifs(path);
 		std::string line;
-		std::string strKey;
-		std::set<std::string> strKeys{};
+		QuadKey key;
 		double row;
 		double col;
 		while (ifs.good() && (! ifs.eof()))
 		{
 			std::getline(ifs, line);
 			std::istringstream iss(line);
-			iss >> strKey >> row >> col;
+			iss >> key >> row >> col;
 			if (! iss.bad())
 			{
-				strKeys.insert(strKey);
-				std::size_t const key{ strKeys.size() };
 				img::Spot const spot{ row, col };
 				ras::RowCol const rc{ cast::rasRowCol(spot) };
-				keyRCs.emplace_hint
-					( keyRCs.end()
-					, std::make_pair(key, rc)
-					);
+				if ((! key.empty()) && isValid(rc))
+				{
+					keyRCs.emplace_hint
+						( keyRCs.end()
+						, std::make_pair(key, rc)
+						);
+				}
 			}
 		}
 		return keyRCs;
@@ -113,7 +129,7 @@ namespace keyed
 		for (std::map<QuadKey, ras::RowCol>::value_type
 			const & keyCenterRC : keyCenterRCs)
 		{
-			std::size_t const & key = keyCenterRC.first;
+			QuadKey const & key = keyCenterRC.first;
 			std::size_t const & row0 = keyCenterRC.second.row();
 			std::size_t const & col0 = keyCenterRC.second.col();
 			if ( (chipHalfHigh < row0)
