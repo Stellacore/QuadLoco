@@ -142,16 +142,11 @@ namespace keyed
 	inline
 	std::map<QuadKey, img::Hit>
 	keyCenterHitsNearTo
-		( std::map<QuadKey, ras::RowCol> const & keyCenterRCs
-		, ras::SizeHW const & hwChip
+		( std::map<QuadKey, ras::ChipSpec> const & keyChips
 		, ras::Grid<std::uint8_t> const & loadGrid
 		)
 	{
 		std::map<QuadKey, img::Hit> keyCenterHits{};
-
-		// Define chip specs centered on locations of interest
-		std::map<QuadKey, ras::ChipSpec> const keyChips
-			{ keyChipSpecsFor(keyCenterRCs, hwChip, loadGrid.hwSize()) };
 
 		// Extract refined center locations for each chip
 		for (std::map<QuadKey, ras::ChipSpec>::value_type

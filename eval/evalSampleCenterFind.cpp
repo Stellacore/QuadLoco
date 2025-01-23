@@ -99,10 +99,16 @@ main
 	std::map<QuadKey, ras::RowCol> const keyNominalRCs
 		{ app::keyed::keyMeaPointRCs(meaPath) };
 
+	// Define chip specs centered on locations of interest
+	std::map<QuadKey, ras::ChipSpec> const keyChips
+		{ app::keyed::keyChipSpecsFor
+			(keyNominalRCs, hwChip, loadGrid.hwSize())
+		};
+
 
 	// Find and refine quad target center locatinos
 	std::map<QuadKey, img::Hit> const keyCenterHits
-		{ app::keyed::keyCenterHitsNearTo(keyNominalRCs, hwChip, loadGrid) };
+		{ app::keyed::keyCenterHitsNearTo(keyChips, loadGrid) };
 
 
 	// report input nominal values
