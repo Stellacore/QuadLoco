@@ -1,0 +1,67 @@
+
+Data Types
+
+	ang:
+		angLikely.hpp -> ang::Likely
+		datRing.hpp -> ang::Ring
+
+	img:
+		datArea.hpp -> img::Area
+		datChipSpec.hpp -> img::Chip
+		datCircle.hpp -> img::Circle
+		pixEdgel.hpp -> img::Edgel
+		pixGrad.hpp -> img::Grad  (img::Vector<> baseclass)
+		<Ray> -> img::Ray
+		pixSampler.hpp -> img::Sampler
+		datSpot.hpp -> img::Spot  (img::Vector<> baseclass)
+		pixSpot.hpp -> img::Spot  (img::Vector<> baseclass)
+		datVec2D<>.hpp -> img::Vector
+
+	obj:
+		objQuadTarget.hpp -> obj::QuadTarget
+		imgCamera.hpp -> obj::Camera
+
+	ras:
+		datGrid.hpp -> ras::Grid
+		pixgrid.hpp -> ras::Grid
+		datRowCol.hpp -> ras::RowCol
+		datSizeHW.hpp -> ras::SizeHW
+
+Processing
+
+	ops:
+		houghAdderAD.hpp -> ops:AdderParmAD
+		sigPeakFinder.hpp -> ops::PeakFinder
+		datFence.hpp -> ops::Fence
+
+	pix:
+		pix.hpp -> pix::
+		pixNoise.hpp -> pix::Noise
+
+	prb:
+		prbGauss1D.hpp -> prb::Gauss1D
+		prbquad.hpp -> prb::quad
+		prbQuadness.hpp -> prb::Quadness
+		prbStats.hpp -> prb::Stats
+
+	sig:
+		datSpan.hpp -> sig::span
+		houghParmAD.hpp -> sig:ParmAD
+		imgQuadTarget.hpp sig::QuadTarget
+
+	sim:
+		simConfig.hpp -> sim::Config
+		simgrid.hpp -> sim::grid
+		simRender.hpp -> sim::Render
+		simSampler.hpp -> sim::Sampler
+
+	xfm:
+		datMapSizeArea.hpp -> xfm::MapChipArea
+
+Software
+
+	utl:
+		cast.hpp -> utl::cast
+		io.hpp -> utl::io
+
+

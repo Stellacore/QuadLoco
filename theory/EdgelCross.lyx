@@ -1,0 +1,604 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass IEEEtran
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine biblatex
+\cite_engine_type authoryear
+\biblatex_bibstyle authoryear
+\biblatex_citestyle authoryear
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Quad Target Center from Edgel Crossings
+\end_layout
+
+\begin_layout Author
+Stellacore Corporation
+\begin_inset Newline newline
+\end_inset
+
+Dave Knopp
+\end_layout
+
+\begin_layout Abstract
+This technical note describes a recipe for estimating quadrant target center
+ locations from the consensus of randomly selected combinations of edge
+ elements (edgels).
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Section
+Methodology
+\end_layout
+
+\begin_layout Subsection
+Edgels
+\end_layout
+
+\begin_layout Standard
+An image can be represented as a raster grid of radiometric values and the
+ radiometric gradient may be evaluated at each grid location.
+ The combination of raster location, and gradient vector defines an edge
+ element or 
+\begin_inset Quotes eld
+\end_inset
+
+Edgel
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Figure
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:An-Edgel"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ illustrates this at one grid cell in a section of a raster representing
+ the digital image of a quadrant target.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename EdgelCrossRaster.png
+	lyxscale 50
+	width 100col%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:An-Edgel"
+
+\end_inset
+
+An Edgel (Edge Element) in the context of value changes within a raster
+ grid.
+ The edgel is specified by the combination of its row and column location
+ within the raster grid (vector, 
+\begin_inset Formula $s$
+\end_inset
+
+, in the text) and the two components of the radiometric gradient evaluated
+ at that location (vector, 
+\begin_inset Formula $g$
+\end_inset
+
+, in the text).
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+If two edgels are located on a quad target's adjacent radial edges, each
+ of the two edge directions is perpendicular to the respective Edgel's gradient,
+ and (in ideal case) those two edge directions intersect near the center
+ of the target.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename EdgelCrossMeet.ipe
+	width 100col%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Edgel-Intersection"
+
+\end_inset
+
+Edgel intersection point associated with two Edgels.
+ The first edgel is defined by start point, 
+\begin_inset Formula $s_{1}$
+\end_inset
+
+ and radiometric gradient, 
+\begin_inset Formula $g_{1}$
+\end_inset
+
+, while the second is characterized by 
+\begin_inset Formula $s_{2}$
+\end_inset
+
+ and 
+\begin_inset Formula $g_{2}$
+\end_inset
+
+.
+ If the two edgels are on adjacent radial edges, then the edge intersection
+ point, 
+\begin_inset Formula $c$
+\end_inset
+
+, is an estimator of the quadrant target center.
+ For the 
+\begin_inset Formula $k$
+\end_inset
+
+-th edgel, the intersection point satisfies 
+\begin_inset Formula $\left(c-s_{k}\right)\cdot g_{k}=0$
+\end_inset
+
+.
+ For two edgels, 
+\begin_inset Formula $k=1,2$
+\end_inset
+
+, this represents a system of two equations in two scalar unknowns (components
+ of 
+\begin_inset Formula $c$
+\end_inset
+
+).
+ The relative orthogonality of the two edge directions, provides a measure
+ of stability and confidence in the location.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Intersection Location
+\end_layout
+
+\begin_layout Standard
+The intersection of two (non parallel) edges is readily determined by the
+ location and direction data associated with two edgels.
+ For edgels that are on (or near) a radial edge of the quadrant target image,
+ the edge intersection point, 
+\begin_inset Formula $c$
+\end_inset
+
+, must (exactly or approximately) satisfy the scalar relationship,
+\begin_inset Formula 
+\[
+\left(s-c\right)\cdot g=0
+\]
+
+\end_inset
+
+for each edgel.
+\end_layout
+
+\begin_layout Standard
+This is a scalar equation involving two unknown scalar values, 
+\begin_inset Formula $c_{1}$
+\end_inset
+
+ and 
+\begin_inset Formula $c_{2}$
+\end_inset
+
+.
+ It may also be expressed as
+\begin_inset Formula 
+\[
+g\cdot c=g\cdot s
+\]
+
+\end_inset
+
+or in terms of the vector components
+\begin_inset Formula 
+\[
+g_{1}c_{1}+g_{2}c_{2}=g_{1}s_{1}+g_{2}s_{2}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Given two edgels, 
+\begin_inset Formula $a$
+\end_inset
+
+ and 
+\begin_inset Formula $b$
+\end_inset
+
+, the two center relationships form a simultaneous system of equations,
+ that may be expressed in matrix form as
+\begin_inset Formula 
+\[
+\left[\begin{array}{cc}
+g_{a1} & g_{a2}\\
+g_{b1} & g_{b2}
+\end{array}\right]\left[\begin{array}{c}
+c_{1}\\
+c_{2}
+\end{array}\right]_{ab}=\left[\begin{array}{c}
+g_{a1}s_{a1}+g_{a2}s_{a2}\\
+g_{b1}s_{b1}+g_{b2}s_{b2}
+\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The determinant, 
+\begin_inset Formula $D_{ab}$
+\end_inset
+
+, of the coefficient matrix may be expressed as
+\begin_inset Formula 
+\[
+D_{ab}=g_{a1}g_{b2}-g_{a2}g_{b1}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For 
+\begin_inset Formula $D_{ab}\ne0$
+\end_inset
+
+, a unique solution for 
+\begin_inset Formula $c$
+\end_inset
+
+ exists and may be expressed as
+\begin_inset Formula 
+\[
+c_{ab}=\left[\begin{array}{c}
+c_{1}\\
+c_{2}
+\end{array}\right]_{ab}=\frac{1}{D_{ab}}\left[\begin{array}{cc}
+g_{b2} & -g_{a2}\\
+-g_{b1} & g_{a1}
+\end{array}\right]\left[\begin{array}{c}
+g_{a1}s_{a1}+g_{a2}s_{a2}\\
+g_{b1}s_{b1}+g_{b2}s_{b2}
+\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Combining Center Point Estimates
+\end_layout
+
+\begin_layout Standard
+The numeric value of, 
+\begin_inset Formula $D_{ab}$
+\end_inset
+
+, has the same size as the (2D) outer product of the two vectors, 
+\begin_inset Formula $g_{1}$
+\end_inset
+
+ and 
+\begin_inset Formula $g_{2}$
+\end_inset
+
+.
+ The magnitude of this value is a measure of the independence of the two
+ directions - i.e.
+ is a measure of the stability of the intersection point.
+ 
+\end_layout
+
+\begin_layout Standard
+Therefore, given multiple estimates of the center point location (computed
+ from different pairs of edgels), it is reasonable to form a weighted composite
+ of the individual estimates, and it is not unreasonable to use the magnitude,
+ 
+\begin_inset Formula $\left|D_{ab}\right|$
+\end_inset
+
+, as the weight factor.
+\end_layout
+
+\begin_layout Standard
+Using this approach, a weighted center location estimate can be formed as
+\begin_inset Formula 
+\[
+\tilde{c}\equiv\frac{\sum_{ab}\left|D_{ab}\right|c_{ab}}{\sum_{ab}\left|D_{ab}\right|}
+\]
+
+\end_inset
+
+The magnitude of the determinant/weight factor cancels in the numerator
+ but leaves a sign to be determined as the sign of 
+\begin_inset Formula $D_{ab}$
+\end_inset
+
+.
+\begin_inset Formula 
+\[
+\tilde{c}\equiv\frac{\sum_{ab}\text{sgn\left(D_{ab}\right)}\left[\begin{array}{cc}
+g_{b2} & -g_{a2}\\
+-g_{b1} & g_{a1}
+\end{array}\right]\left[\begin{array}{c}
+g_{a1}s_{a1}+g_{a2}s_{a2}\\
+g_{b1}s_{b1}+g_{b2}s_{b2}
+\end{array}\right]}{\sum_{ab}\left|D_{ab}\right|}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Center Point Accumulation
+\end_layout
+
+\begin_layout Standard
+If the edges are all expected to be on the quad target radial edges, the
+ above weighted average value, 
+\begin_inset Formula $\tilde{c}$
+\end_inset
+
+, might be used directly to estimate the center point.
+\end_layout
+
+\begin_layout Standard
+For the more common case in which the edgel collection contains edgels from
+ other edges as well, then the weighted average will be biased, often dramatical
+ly, by the outlier edgels.
+ In this case, the center estimates can be accumulated in a summation grid
+ instead of blindly averaging them together.
+\end_layout
+
+\begin_layout Standard
+Using the accumulation grid allows a probabilistic style 
+\begin_inset Quotes eld
+\end_inset
+
+voting
+\begin_inset Quotes erd
+\end_inset
+
+ for which center point estimates reinforce each other.
+\end_layout
+
+\begin_layout Standard
+One simple approach is as follows.
+\end_layout
+
+\begin_layout Itemize
+For the case here, assume the actual center point is known to be within
+ the image space over which edgels are sampled.
+\end_layout
+
+\begin_layout Itemize
+Select various pairs of edgels to use for computation.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+E.g.
+ use all edgels, only use some number of the strongest ones, use a random
+ sample pairing approach, etc.
+ Then for each pair
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+For the collection of edgel pairs,
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Compute 
+\begin_inset Formula $c_{ab}$
+\end_inset
+
+ for pair comprising edgels, 
+\begin_inset Formula $a$
+\end_inset
+
+ and 
+\begin_inset Formula $b$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+Determine the raster grid location for this center point
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Add weight accumulation values into the grid
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+If location is not on the grid, just ignore this pair (since it conflicts
+ with 
+\begin_inset Quotes eld
+\end_inset
+
+center containing
+\begin_inset Quotes erd
+\end_inset
+
+ assumption above)
+\end_layout
+
+\begin_layout Itemize
+If in the grid, add an accumulation value(s) into the grid.
+ E.g.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Add the 
+\begin_inset Formula $\left|D_{ab}\right|$
+\end_inset
+
+ value as a measure of how well determined the point is
+\end_layout
+
+\begin_layout Itemize
+Add a pseudo-probability value to the grid cell (and perhaps to neighbors
+ as well)
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Section
+Result
+\end_layout
+
+\end_body
+\end_document

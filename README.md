@@ -1,20 +1,50 @@
-# QuadLoco - Crazy fast quadrant target center locator
+# QuadLoco - A fast, high precision, quadrant target center locator
 
+This package provides a single algorithm focused on the accurate
+location of the precise center of a quadrant target.
 
 ## Purpose
 
-Quadrant targets are useful for supporting very precise location measurements
-in various photogrammetry and computer vision applications.
+Quadrant targets are high contrast signal targets that are useful for
+performing very precise location measurements in the context of
+photogrammetry and computer vision applications.
 
-Classic quadrant target is pattern of alternating light and dark quadrants of
-a square. Often seen on spacecraft and launch vehicles and robot development
-and testing environments.
+The quad target pattern has characteristics that are conducive to high
+accuracy center point location with high precision - often to within a
+small fraction of a pixel.
+
+The classic quadrant target is pattern of alternating light and dark
+colored quadrants of a square. These and similar patterns are often 
+visible in industrial settings, on spacecraft launch vehicles and
+in precision metrology environments.
+
+QuadLoco is a C++ open source software library that provides fast,
+reliable and accurate finding of the center point in digital images
+quad targets.
+
 
 There are multiple phases:
 * Detection (finding what features in an image are likely quadrant targets)
 * Localization (finding center with subpixel precision and accuracy)
 * Verification (using "find" solution to verify raster sample is a quad target)
 
+## Build
+
+```
+CC=/usr/bin/clang CXX=/usr/bin/clang++\
+ \
+ cmake\
+ -DCMAKE_BUILD_TYPE=Release\
+ -DCMAKE_PREFIX_PATH=/tmpLocal/\
+ -DCMAKE_INSTALL_PREFIX=/tmpLocal/\
+ ~/repos/QuadLoco\
+ &&\
+ cmake --build . --target all -j `nproc`\
+ &&\
+ ctest
+ &&\
+ cpack
+```
 
 ## Project Concepts
 
@@ -27,16 +57,28 @@ There are multiple phases:
 
 #### Terminology
 
-* Quadrants
-	- Four areas
-	- Image Space:
-		-- Half-turn rotation symmetry in perspective images
-		-- Point reflection symmetry of areas
+Features
+
+* Line - infinitely long and undirected
+
+* Segment (of line) - finite section of a line that is assigned a direction.
+
+	- Defined by a two points: a begin and an end
+	- Segment Direction (SegDir): defined as unit vector from begin toward end
+	- Edge Direction (EdgDir): righthand perpendicular to SegDir
+
+* Quadrant
+
+	- Invariant:
+		-- Four individual Quadrant areas that form the target signal
 	- Object Space:
 		-- Each of four areas has same geometry
 		-- Half-turn rotation symmetry
 		-- Quarter turn radiometric antisymmetry
 		-- right angle radial edge segments
+		-- Point reflection symmetry of areas
+	- Image Space:
+		-- Half-turn rotation symmetry in perspective images
 		-- Point reflection symmetry of areas
 
 * Radiometric Convention
@@ -47,61 +89,84 @@ There are multiple phases:
 
 	- Background - dark color (treat like holes in the surround)
 
-	- Signal - the two background quadrants
+	- Signal - the two background quadrants. Defined by edges including
 
-	- Square Areas (squares) - the four geometric quadrants of the target
-	two of which are defined by the background signal area, and two
-	of which are defined on top of the forground/surround areas that
-	are geometrically symmetric with the background signal squares
-	under a one-quarter turn symmetry.
+		-- edge: radial segments (with one end at center)
+
+		-- edge: outer segments (perpendicular to the radial edges)
+
+		-- area: background squares delimited by four edges each
 
 * Border
 
-	- Corners - two: defined by outer edge of background quadrant
+	- Corners - two: defined by intersection of adjacent outer edge segments
 
 		-- Outside Signal Corners
 
-		-- Inside signal Corners
+		-- Inside Signal Corners (end points of radial edges)
 
-* Radial edges
+* Edge Relationships
 
-	- Four of them defined by edges of background/signal quadrants
-	which come close to eh target center.
+	- The four radial edges point toward the vicinity of the center
+	(they do not point exactly at the center because of radiometric
+	effects such as blooming which displace radial edges transversly)
 
-	- Opposing edges (the two radial edges that are approximately
-	colinear with each other (albeit oppositely directed)
+	- Each radial edge points toward a midside corner.
 
 	- Adjacent edges (two radial edges that share a quadrant area in
 	common.
 
-* Center - theoreticaly point
+	- Opposite edges are the the two radial edges that are approximately
+	colinear with each other (albeit oppositely directed).
 
-	- At mid point of the two inside signal corners
+	- Opposite edges generally exhibit approximately equal and
+	opposite transverse displacements as a function of radiometric
+	effects.  Therefore, the midline halfway between opposite radial
+	edges very nearly passes through the center.
 
-	- At point which is half-way between each pair of opposing edges
 
-### Image Properties
+* Center - theoretical point
 
-* Finder working with data from a perspective image - specifically
+	- For work here, the center is assumed to be part of the (pixel)
+	data sample (e.g. center is visible in tentative selection window)
 
-	- homogenous areas remain relatively homogenous
-	- there is a reasonable Signal/Noise ratio
-	- the edges are straight lines
-		- if perspective image contains distortion, edgel positions
-		should be corrected. TODO/TBD - how/where to do this in design
+	- For practial purposes the image center can be defined as the
+	point which simultaneously (e.g. in least squares sense) is closest
+	to being colinear with all four radial edges.
 
-### Algorithm Assumptions
 
-* Assume a full target is contained within the raster search area
+### Target Image Properties
 
-	- there are at least a few (e.g. 3-5) pixels visible on each radial leg
+* A perspective image of the target has theoretically useful properties
+that include:
 
+	- approximately homogenous areas remain relatively homogenous
+		-- variation due to illumination change
+		-- radiometric noise from various sources
+
+	- under true perspective projection, straight lines map into straight
+	lines. For systems that have significant optical distortion either:
+		-- algorithms should use corrected pixel coordinate locations
+		-- detection/localization can be performed on a resampled image
+		-- TODO/TBD - how/where to do this in design
+
+	- there is a reasonable Signal/Noise ratio - specifically the variance
+	of the foreground pixels and the variance of the background pixels is
+	small compared with the distinction between background and foreground
+	expected pixel values.
 
 
 ## General Approach
 
-* Define geometry for sampling original raster image
+* Obtain a raster data sample from original image. E.g. by cropping pixels
+from an image, or perhaps by performing a resampling operation to correct
+for lens distortion.
 
+	- Assume raster sample provides intensity values. Lowest values
+	are associated with the (darker) background signal, and higher values
+	are associated with the (lighter) foreground signal.
+
+///--- TBD
 * Compute edgel data from source image (keeping track of edge strengths
   and locations.
 
@@ -113,6 +178,7 @@ There are multiple phases:
 
 	- Ideally for all four, but accept that one or two of the edges
 	may contain relatively few pixels compred with the other two.
+---/// TBD
 
 * Estimate center point area
 
@@ -143,9 +209,11 @@ There are multiple phases:
 	quad target center and significant-enough" number of pixels on each fo
 	the four radial edges.
 
+* Radon transform - search for minima and maxima in integral signals?
+
 * Hough detection - specialized version based on perimeter circle.
 
-	- Utilize a circumscribing ciricle that contains the entire sample area.
+	- Utilize a circumscribing circle that contains the entire sample area.
 
 		-- in practice extract sample from a circular region
 		-- scale position data such that perimeter circle has unit radius
@@ -155,5 +223,136 @@ There are multiple phases:
 
 		-- represent first intersection point as angle position on the circle
 		-- represent the second point as signed angular difference from first
+
+## Software Components
+
+### Project namespace headers
+
+#### Namespace Summary
+
+The project top level namespace is "quadloco". All declarations can be
+accessed by including the top level file
+
+* QuadLoco (or QuadLoco.hpp) - Project top level header - includes all others
+e.g.
+	```
+	#include <QuadLoco>
+	```
+
+The top level "quadloco" namespace includes a number of sub-namespaces:
+
+* ang::  Angle data (e.g. Ring, ...)
+* cast::  Casting functions
+* img::  Image space - 2D data types (e.g. Spot, Grad, Area, ...
+* io::  Input/Output basic capabilities
+* obj::  Object space - 3D data type (e.g. QuadTarget, ...)
+* ops::  Operations and processing (GridFilter, PeakFinder, ...)
+* pix::  Picture element/radiometry (e.g.Noise, ...)
+* prb::  Probability theory (e.g. Gauss1D, Stats, ...)
+* ras::  Raster data (e.g. Grid, RowCol, SizeHW, ...)
+* sig::  Signal processing (e.g. QuadTarget, ParmAD, ...)
+* sim::  Simulation capabilities (e.g. Config, QuadTarget, grid, ...)
+* xfm::  Transformationx (e.g. MapSizeArea, ...)
+
+#### Namespace Detail
+
+Each project namespace has its own namespace header file that includes all
+components of that namespace. The header files are:
+
+* QuadLoco (or QuadLoco.hpp) - Project top level header - includes all others
+
+* ang.hpp - Angle data structures and manipulations
+
+	ang.hpp -- basic angle values and functions
+	angRing.hpp -- Wrap-around buffer
+	angLikely.hpp -- Pseudo-probability interpretation of ang::Ring buffer
+
+* cast.hpp - Casting functions for converting between data types
+
+	cast.hpp -- Basic cast functions
+
+* img.hpp - Image space - 2D - data types
+
+	img.hpp --
+
+	-- Discrete
+
+	imgChipSpec.hpp -- Sub area within a raster grid
+
+	-- Continuous
+
+	imgSpan.hpp -- A half open interval of values [min,max)
+	imgVector.hpp -- General 2D vector representation and operations
+	imgSpot.hpp -- An img::Vector with location specific methods
+	imgGrad.hpp -- An img::Vector with gradient specific methods
+
+	-- Composite
+
+	imgRay.hpp -- General 2D ray reprentation (start point and unit direction)
+	imgEdgel.hpp -- An img::Ray with edge gradient related methods
+
+	-- geometry
+
+	imgArea.hpp -- Rectangular region with half open high,wide spans
+	imgCircle.hpp -- Circle data (center spot and radius)
+
+
+* io.hpp - Input/Output basic capabilities
+
+	io.hpp -- Simple save and load functions (e.g. *.pgm files)
+
+* obj.hpp - Object space - 3D - data type
+
+	obj.hpp -- 
+	objCamera.hpp -- Perspective image projection model
+	objQuadTarget.hpp -- Description of quad target geometry and radiometry
+
+* ops.hpp - Operations and processing capabilities
+
+	ops.hpp --
+	opsAdderAD.hpp -- Accumulator for Hough (Alpha,Delta) parameters
+	opsFence.hpp -- Tracker for determining (min,max) of value samples
+	opsgrid.hpp -- Functions that operate on ras::Grid data
+	opsPeakFinder.hpp -- Location of multiple peaks within 1D buffer
+	opsGridFilter.hpp -- Digital filter computations on raster grid data
+
+* pix.hpp - Picture element (radiometry) related capabilities
+
+	pix.hpp -- Type definitions and validity testing for floating point pixels
+	pixNoise.hpp -- Digital imaging noise models
+
+* prb.hpp - Probability theory functions and utilities
+
+	prb.hpp -- 
+	prbGauss1D.hpp -- Gaussian probability PDF value computation
+	prbquad.hpp -- Assess "quad target-ness" of raster data signal
+	prbStats.hpp -- Statistics accumulation over scalar samples
+
+* ras.hpp - Raster data types
+
+	ras.hpp -- 
+	rasGrid.hpp -- Data structure of cells in a high,wide grid configuration
+	rasgrid.hpp -- Functions that operate on ras::Grid data
+	rasRowCol.hpp -- Indices pair specifying location within ras::Grid
+	rasSizeHW.hpp -- Value pair specifying height,width of ras::Grid like data
+
+* sig.hpp - Signal processing types and functions
+
+	sig.hpp --
+	sigParmAD.hpp -- Parameters "Alpha,Delta" representing Hough line segment
+	sigQuadTarget.hpp -- Description of (perspective) image of obj::QuadTarget
+
+* sim.hpp - Simulation capabilities
+
+	sim.hpp -- General functions useful for simulation
+	simConfig.hpp -- Description of geometry for img::QuadTarget simulation
+	simgrid.hpp -- Simulate ras::Grid data with various edge properties
+	simRender.hpp -- Produce a ras::Grid containing simulated img::QuadTarget
+	simSampler.hpp -- Ray-trace style radiometric sampling of obj::QuadTarget
+
+* xfm.hpp - Transformation functions and capabilities
+
+	xfm.hpp --
+	xfmMapSizeArea.hpp -- Transform data between ras::SizeHW and img::Area
 
 
