@@ -146,6 +146,7 @@ target_link_libraries(
 	${thisProjLib}
 	PRIVATE
 		Engabra::Engabra
+		Rigibra::Rigibra
 	)
 
 ##
