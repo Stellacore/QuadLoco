@@ -32,168 +32,21 @@
  */
 
 
-#include "imgVector.hpp"
-#include "rasGrid.hpp"
-
-#include <algorithm>
+#include "matEigen2D.hpp"
+#include "matfunc.hpp"
+#include "mattype.hpp"
 
 
 namespace quadloco
 {
-/*! \brief Namespaced functions and utilities for quadloco::mat (matrices)
+
+/*! \brief Namespaced functions and utilities for (limited) matrix capabilties
  */
 namespace mat
 {
-
-	//! Use ras::Grid as a matrix data container
-	using Matrix = quadloco::ras::Grid<double>;
-
-
-	//
-	// Matrix constructions
-	//
-
-	//! A (dim x dim) identity matrix
-	inline
-	Matrix
-	identity
-		( std::size_t const & dim
-		)
-	{
-		Matrix mat(dim, dim);
-		std::fill(mat.begin(), mat.end(), 0.);
-		for (std::size_t nn{0u} ; nn < dim ; ++nn)
-		{
-			mat(nn, nn) = 1.;
-		}
-		return mat;
-	}
-
-	//! A diagonal matrix filled with elems along the diagonal
-	inline
-	Matrix
-	diagonal
-		( std::initializer_list<double> const & elems
-		)
-	{
-		Matrix mat{ elems.size(), elems.size() };
-		std::fill(mat.begin(), mat.end(), 0.);
-		for (std::size_t nn{0u} ; nn < elems.size() ; ++nn)
-		{
-			mat(nn, nn) = elems.begin()[nn];
-		}
-		return mat;
-	}
-
-	//
-	// Matrix functions
-	//
-
-	inline
-	Matrix
-	copyOf
-		( Matrix const & srcMat
-		)
-	{
-		Matrix outMat(srcMat.hwSize());
-		std::copy
-			( srcMat.cbegin(), srcMat.cend()
-			, outMat.begin()
-			);
-		return outMat;
-	}
-
-	//! Trace of 2x2 matrix
-	inline
-	double
-	trace2x2
-		( quadloco::ras::Grid<double> const & mat2D
-		)
-	{
-		return (mat2D(0, 0) + mat2D(1, 1));
-	}
-
-	//! Determinant of 2x2 matrix
-	inline
-	double
-	determinant2x2
-		( quadloco::ras::Grid<double> const & mat2D
-		)
-	{
-		return (mat2D(0, 0) * mat2D(1, 1) - mat2D(1, 0) * mat2D(0, 1));
-	}
-
-	//! Matrix inverse of a 2x2 matrix
-	inline
-	Matrix
-	inverse2x2
-		( Matrix const & fwd2x2
-		)
-	{
-		Matrix inv2x2{};
-		if ((2u == fwd2x2.high()) && (2u == fwd2x2.wide()))
-		{
-			inv2x2 = Matrix(2u, 2u);
-			double const & aa = fwd2x2(0u, 0u);
-			double const & bb = fwd2x2(0u, 1u);
-			double const & cc = fwd2x2(1u, 0u);
-			double const & dd = fwd2x2(1u, 1u);
-			double const det{ aa*dd - bb*cc };
-			if (std::numeric_limits<double>::epsilon() < std::abs(det))
-			{
-				double const scl{ 1. / det };
-				inv2x2(0u, 0u) =  dd * scl;
-				inv2x2(0u, 1u) = -bb * scl;
-				inv2x2(1u, 0u) = -cc * scl;
-				inv2x2(1u, 1u) =  aa * scl;
-			}
-		}
-		return inv2x2;
-	}
 
 } // [mat]
 
 } // [quadloco]
 
-
-namespace
-{
-	//
-	// Global operators
-	//
-
-	//! 2D Matrix scalar (pre)multiplication
-	inline
-	quadloco::ras::Grid<double>
-	operator*
-		( double const & scale
-		, quadloco::ras::Grid<double> const & matrix
-		)
-	{
-		using namespace quadloco;
-		ras::Grid<double> result(matrix.hwSize());
-		ras::Grid<double>::const_iterator itIn{ matrix.cbegin() };
-		ras::Grid<double>::iterator itOut{ result.begin() };
-		while (result.end() != itOut)
-		{
-			*itOut++ = scale * (*itIn++);
-		}
-		return result;
-	}
-
-	//! 2D Matrix (pre)multiplication: result = mat2D * vec2D
-	inline
-	quadloco::img::Vector<double>
-	operator*
-		( quadloco::ras::Grid<double> const & mat2D
-		, quadloco::img::Vector<double> const & vec2D
-		)
-	{
-		return quadloco::img::Vector<double>
-			{ mat2D(0, 0)*vec2D[0] + mat2D(0, 1)*vec2D[1]
-			, mat2D(1, 0)*vec2D[0] + mat2D(1, 1)*vec2D[1]
-			};
-	}
-
-} // [anon/global]
 

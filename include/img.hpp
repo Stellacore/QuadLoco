@@ -32,7 +32,15 @@
  */
 
 
-// #include "TODO.hpp"
+#include "imgArea.hpp"
+#include "imgCircle.hpp"
+#include "imgEdgel.hpp"
+#include "imgGrad.hpp"
+#include "imgHit.hpp"
+#include "imgQuadTarget.hpp"
+#include "imgRay.hpp"
+#include "imgSpot.hpp"
+#include "imgVector.hpp"
 
 
 namespace quadloco

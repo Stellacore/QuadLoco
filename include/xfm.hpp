@@ -32,7 +32,7 @@
  */
 
 
-// #include "TODO.hpp"
+#include "xfmMapSizeArea.hpp"
 
 
 namespace quadloco

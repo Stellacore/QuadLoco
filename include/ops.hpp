@@ -32,7 +32,15 @@
  */
 
 
-// #include "TODO.hpp"
+#include "opsAllPeaks2D.hpp"
+#include "opsAngleTracker.hpp"
+#include "opsCenterRefinerEdge.hpp"
+#include "opsCenterRefinerSSD.hpp"
+#include "opsFence.hpp"
+#include "opsfilter.hpp"
+#include "opsgrid.hpp"
+#include "opsPeakFinder1D.hpp"
+#include "opsSymRing.hpp"
 
 
 namespace quadloco

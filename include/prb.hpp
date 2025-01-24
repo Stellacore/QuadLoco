@@ -33,7 +33,9 @@
  */
 
 
-// #include "TODO.hpp"
+#include "prbGauss1D.hpp"
+#include "prbHisto.hpp"
+#include "prbStats.hpp"
 
 
 namespace quadloco

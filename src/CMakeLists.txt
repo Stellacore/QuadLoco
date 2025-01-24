@@ -51,18 +51,79 @@ add_library(
 		${thisProjLib}
 	)
 
-#[[
 target_sources(
 	${thisProjLib}
 	PUBLIC
-#		FILE_SET cppHeaders
-#			TYPE HEADERS
-#			BASE_DIRS
-#				../include/
-#			FILES
-#				../include/QuadLoco
+		FILE_SET cppHeaders
+			TYPE HEADERS
+			BASE_DIRS
+				../include/
+			FILES
+##				../include/QuadLoco
+				../include/ang.hpp
+				../include/angRing.hpp
+				../include/appcenter.hpp
+				../include/app.hpp
+				../include/appkeyed.hpp
+				../include/appQuadLike.hpp
+				../include/cast.hpp
+				../include/imgArea.hpp
+				../include/imgCircle.hpp
+				../include/imgEdgel.hpp
+				../include/imgGrad.hpp
+				../include/imgHit.hpp
+				../include/img.hpp
+				../include/imgQuadTarget.hpp
+				../include/imgRay.hpp
+				../include/imgSpot.hpp
+				../include/imgVector.hpp
+				../include/io.hpp
+				../include/matEigen2D.hpp
+				../include/mat.hpp
+				../include/meaCluster.hpp
+				../include/meaCovar.hpp
+				../include/mea.hpp
+				../include/meaVector.hpp
+				../include/objCamera.hpp
+				../include/obj.hpp
+				../include/objQuadTarget.hpp
+				../include/opsAllPeaks2D.hpp
+				../include/opsAngleTracker.hpp
+				../include/opsCenterRefinerEdge.hpp
+				../include/opsCenterRefinerSSD.hpp
+				../include/opsFence.hpp
+				../include/opsfilter.hpp
+				../include/opsgrid.hpp
+				../include/ops.hpp
+				../include/opsPeakFinder1D.hpp
+				../include/opsSymRing.hpp
+				../include/pix.hpp
+				../include/pixNoise.hpp
+				../include/prbGauss1D.hpp
+				../include/prbHisto.hpp
+				../include/prb.hpp
+				../include/prbStats.hpp
+				../include/QuadLoco.hpp
+				../include/rasChipSpec.hpp
+				../include/rasgrid.hpp
+				../include/rasGrid.hpp
+				../include/ras.hpp
+				../include/raskernel.hpp
+				../include/rasPeakRCV.hpp
+				../include/rasRelRC.hpp
+				../include/rasRowCol.hpp
+				../include/rasSizeHW.hpp
+				../include/simConfig.hpp
+				../include/simgrid.hpp
+				../include/sim.hpp
+				../include/simRender.hpp
+				../include/simSampler.hpp
+				../include/sysTimer.hpp
+				../include/valSpan.hpp
+				../include/xfm.hpp
+				../include/xfmMapSizeArea.hpp
+
 	)
-#]]
 
 target_compile_options(
 	${thisProjLib}
@@ -85,6 +146,7 @@ target_link_libraries(
 	${thisProjLib}
 	PRIVATE
 		Engabra::Engabra
+		Rigibra::Rigibra
 	)
 
 ##
@@ -123,7 +185,7 @@ install(TARGETS
 		${thisProjLib}
 	EXPORT
 		${PROJECT_NAME}Targets
-#	FILE_SET cppHeaders
+	FILE_SET cppHeaders
 	)
 
 install(EXPORT
