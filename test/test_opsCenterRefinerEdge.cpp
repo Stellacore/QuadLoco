@@ -69,8 +69,9 @@ namespace
 		img::Spot const expCenterSpot{ simQuadData.theImgQuad.centerSpot() };
 
 		// find nominal center with symmetry filter response peak
+		std::vector<std::size_t> const ringHalfSizes{ 5u, 3u };
 		std::vector<ras::PeakRCV> const peakRCVs
-			{ app::center::multiSymRingPeaks(srcGrid) };
+			{ app::center::multiSymRingPeaks(srcGrid, ringHalfSizes) };
 
 std::cout << "peakRCVs.size: " << peakRCVs.size() << '\n';
 		// use edge (magnitudes) to refine center locations

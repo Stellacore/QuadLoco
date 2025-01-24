@@ -74,8 +74,9 @@ namespace
 		// [DoxyExample01a]
 
 		// find nominal center with symmetry filter response peak
+		std::vector<std::size_t> const ringHalfSizes{ 5u, 3u };
 		std::vector<ras::PeakRCV> const peakRCVs
-			{ app::center::multiSymRingPeaks(srcGrid) };
+			{ app::center::multiSymRingPeaks(srcGrid, ringHalfSizes) };
 		double const distinction{ ops::AllPeaks2D::distinction(peakRCVs) };
 
 		// [DoxyExample01a]

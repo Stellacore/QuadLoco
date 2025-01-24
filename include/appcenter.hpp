@@ -71,7 +71,7 @@ namespace center
 			//!< Input intensity grid
 		, prb::Stats<float> const & srcStats
 			//!< Statisics for srcGrid values
-		, std::vector<std::size_t> const & ringHalfSizes = { 5u, 3u }
+		, std::vector<std::size_t> const & ringHalfSizes
 			//!< SymRing quantized radius - in order of application.
 		)
 	{
@@ -128,7 +128,7 @@ namespace center
 	multiSymRingPeaks
 		( ras::Grid<float> const & srcGrid
 			//!< Input intensity grid
-		, std::vector<std::size_t> const & ringHalfSizes = { 5u, 3u }
+		, std::vector<std::size_t> const & ringHalfSizes
 			//!< SymRing quantized radius - in order of application.
 		)
 	{
@@ -144,7 +144,7 @@ namespace center
 	img::Hit
 	refinedHitFrom
 		( ras::Grid<float> const & srcGrid
-		, std::vector<std::size_t> const & halfRingSizes = { 5u, 3u  }
+		, std::vector<std::size_t> const & halfRingSizes
 		)
 	{
 		img::Hit centerHit;

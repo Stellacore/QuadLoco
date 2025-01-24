@@ -174,20 +174,6 @@ namespace ras
 			return (rowIsIn && colIsIn);
 		}
 
-		//! Spot location in source image corresponding with chip spot
-		inline
-		img::Spot
-		fullSpotForChipSpot
-			( img::Spot const & chipSpot
-			) const
-		{
-			// rcInChip = (rcInFull - theSrcOrigRC)
-			return img::Spot
-				{ chipSpot.row() + static_cast<double>(theSrcOrigRC.row())
-				, chipSpot.col() + static_cast<double>(theSrcOrigRC.col())
-				};
-		}
-
 		//! Chip row/col expression given full image row/col (no checking)
 		inline
 		ras::RowCol
@@ -199,6 +185,20 @@ namespace ras
 			return ras::RowCol
 				{ rcInFull.row() - theSrcOrigRC.row()
 				, rcInFull.col() - theSrcOrigRC.col()
+				};
+		}
+
+		//! Spot location in source image corresponding with chip spot
+		inline
+		img::Spot
+		chipSpotForFullSpot
+			( img::Spot const & fullSpot
+			) const
+		{
+			// chipSpot = (fullSpot - theSrcOrigRC)
+			return img::Spot
+				{ fullSpot.row() - static_cast<double>(theSrcOrigRC.row())
+				, fullSpot.col() - static_cast<double>(theSrcOrigRC.col())
 				};
 		}
 
@@ -215,6 +215,20 @@ namespace ras
 			return ras::RowCol
 				{ rcInChip.row() + theSrcOrigRC.row()
 				, rcInChip.col() + theSrcOrigRC.col()
+				};
+		}
+
+		//! Spot location in source image corresponding with chip spot
+		inline
+		img::Spot
+		fullSpotForChipSpot
+			( img::Spot const & chipSpot
+			) const
+		{
+			// rcInFull = chipSpot + theSrcOrigRC
+			return img::Spot
+				{ chipSpot.row() + static_cast<double>(theSrcOrigRC.row())
+				, chipSpot.col() + static_cast<double>(theSrcOrigRC.col())
 				};
 		}
 

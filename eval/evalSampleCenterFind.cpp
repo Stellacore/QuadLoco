@@ -91,18 +91,28 @@ main
 	using namespace quadloco;
 	using app::keyed::QuadKey;
 
+	// Tuning constants
+	ras::SizeHW const hwChip{ 64u, 64u };
+//	std::vector<std::size_t> const ringHalfSizes{ 5u, 3u };
+	std::vector<std::size_t> const ringHalfSizes{ 9u, 7u };
+
 	// find centers for all chip specs
 	ras::Grid<std::uint8_t> const loadGrid{ io::readPGM(pgmPath) };
 
 	// Load nominal center locations from corresponding .meapoint file
-	ras::SizeHW const hwChip{ 64u, 64u };
 	std::map<QuadKey, ras::RowCol> const keyNominalRCs
 		{ app::keyed::keyMeaPointRCs(meaPath) };
+
+	// Define chip specs centered on locations of interest
+	std::map<QuadKey, ras::ChipSpec> const keyChips
+		{ app::keyed::keyChipSpecsFor
+			(keyNominalRCs, hwChip, loadGrid.hwSize())
+		};
 
 
 	// Find and refine quad target center locatinos
 	std::map<QuadKey, img::Hit> const keyCenterHits
-		{ app::keyed::keyCenterHitsNearTo(keyNominalRCs, hwChip, loadGrid) };
+		{ app::keyed::keyCenterHitsNearTo(keyChips, loadGrid, ringHalfSizes) };
 
 
 	// report input nominal values
@@ -125,6 +135,55 @@ main
 			<< ' ' << keyCenterHit.first
 			<< ' ' << keyCenterHit.second
 			<< '\n';
+	}
+
+	// Optionally save fit locations
+	constexpr bool saveChips{ true };
+	if (saveChips)
+	{
+		for (std::map<QuadKey, img::Hit>::value_type
+			const & keyCenterHit : keyCenterHits)
+		{
+			QuadKey const & key = keyCenterHit.first;
+
+			// generate local filename paths
+			std::ostringstream txt;
+			txt << "./fit" << key << ".pgm";
+			std::filesystem::path const fitPathPgm(txt.str());
+			std::filesystem::path fitPathMea{ fitPathPgm };
+			fitPathMea.replace_extension("meapoint");
+
+			std::map<QuadKey, ras::ChipSpec>::const_iterator
+				const itChip{ keyChips.find(key) };
+			if (keyChips.cend() != itChip)
+			{
+				ras::ChipSpec const & chipSpec = itChip->second;
+
+				// crop grid from source and convert to float
+				ras::Grid<float> const srcGrid
+					{ ras::grid::subGridValuesFrom<float>(loadGrid, chipSpec) };
+
+				// get center estimate info
+				img::Hit const & chipHit = keyCenterHit.second;
+				double const sigma{ chipHit.sigma() };
+				double const covar{ sigma * sigma };
+				img::Spot const chipSpot
+					{ chipSpec.chipSpotForFullSpot(chipHit.location()) };
+
+				// save image chip
+				(void)io::writeStretchPGM(fitPathPgm, srcGrid);
+
+				// save center measurements
+				std::ofstream ofs(fitPathMea);
+				ofs << key
+					<< ' ' << chipSpot
+					<< ' ' << covar
+					<< ' ' << 0.
+					<< ' ' << covar
+					<< '\n';
+			}
+		}
+
 	}
 
 	// summarize process
