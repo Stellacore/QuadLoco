@@ -27,26 +27,63 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::mat namespace
+ * \brief Declarations for quadloco::mat namespace types and constructors
  *
  */
 
 
-#include "matEigen2D.hpp"
-#include "matfunc.hpp"
-#include "mattype.hpp"
+#include "rasGrid.hpp"
+
+#include <algorithm>
+#include <initializer_list>
 
 
 namespace quadloco
 {
 
-/*! \brief Namespaced functions and utilities for (limited) matrix capabilties
- */
 namespace mat
 {
+
+	//! Use ras::Grid as a matrix data container
+	using Matrix = quadloco::ras::Grid<double>;
+
+	//
+	// Matrix constructions
+	//
+
+	//! A (dim x dim) identity matrix
+	inline
+	Matrix
+	identity
+		( std::size_t const & dim
+		)
+	{
+		Matrix mat(dim, dim);
+		std::fill(mat.begin(), mat.end(), 0.);
+		for (std::size_t nn{0u} ; nn < dim ; ++nn)
+		{
+			mat(nn, nn) = 1.;
+		}
+		return mat;
+	}
+
+	//! A diagonal matrix filled with elems along the diagonal
+	inline
+	Matrix
+	diagonal
+		( std::initializer_list<double> const & elems
+		)
+	{
+		Matrix mat{ elems.size(), elems.size() };
+		std::fill(mat.begin(), mat.end(), 0.);
+		for (std::size_t nn{0u} ; nn < elems.size() ; ++nn)
+		{
+			mat(nn, nn) = elems.begin()[nn];
+		}
+		return mat;
+	}
 
 } // [mat]
 
 } // [quadloco]
-
 

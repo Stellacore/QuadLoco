@@ -33,7 +33,9 @@
 
 
 #include "imgVector.hpp"
+#include "matfunc.hpp"
 #include "mat.hpp"
+#include "mattype.hpp"
 #include "rasGrid.hpp"
 
 #include <Engabra>
