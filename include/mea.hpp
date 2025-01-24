@@ -32,7 +32,9 @@
  */
 
 
-// #include "TODO.hpp"
+#include "meaCluster.hpp"
+#include "meaCovar.hpp"
+#include "meaVector.hpp"
 
 
 namespace quadloco

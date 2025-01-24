@@ -32,7 +32,8 @@
  */
 
 
-// #include "TODO.hpp"
+#include "objCamera.hpp"
+#include "objQuadTarget.hpp"
 
 
 namespace quadloco

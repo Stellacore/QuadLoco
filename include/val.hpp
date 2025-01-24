@@ -27,27 +27,24 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::app namespace
+ * \brief Declarations for quadloco::val namespace
  *
  */
 
 
-#include "appcenter.hpp"
-#include "appkeyed.hpp"
-#include "appQuadLike.hpp"
+#include "valSpan.hpp"
 
 
 namespace quadloco
 {
 
-/*! \brief Application (quad finding) related code in namespace quadloco::app
+/*! \brief Namespaced functions and utilities for scalar values
  */
-namespace app
+namespace val
 {
 
 
-
-} // [app]
+} // [val]
 
 } // [quadloco]
 

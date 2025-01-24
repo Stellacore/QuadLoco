@@ -32,7 +32,14 @@
  */
 
 
-// #include "TODO.hpp"
+#include "rasChipSpec.hpp"
+#include "rasgrid.hpp"
+#include "rasGrid.hpp"
+#include "raskernel.hpp"
+#include "rasPeakRCV.hpp"
+#include "rasRelRC.hpp"
+#include "rasRowCol.hpp"
+#include "rasSizeHW.hpp"
 
 
 namespace quadloco

@@ -32,6 +32,8 @@
  */
 
 
+#include "pixNoise.hpp"
+
 #include "valSpan.hpp"
 
 #include <cmath>

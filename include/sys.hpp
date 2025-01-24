@@ -27,27 +27,23 @@
 
 
 /*! \file
- * \brief Declarations for quadloco::app namespace
+ * \brief Declarations for quadloco::sys namespace
  *
  */
 
 
-#include "appcenter.hpp"
-#include "appkeyed.hpp"
-#include "appQuadLike.hpp"
+#include "sysTimer.hpp"
 
 
 namespace quadloco
 {
 
-/*! \brief Application (quad finding) related code in namespace quadloco::app
+/*! \brief Namespaced functions and utilities for system calls/interaction
  */
-namespace app
+namespace sys
 {
 
-
-
-} // [app]
+} // [sys]
 
 } // [quadloco]
 
