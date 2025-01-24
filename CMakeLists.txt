@@ -31,7 +31,7 @@ setReleaseTag(aSourceIdentity)
 
 project(
 	QuadLoco
-	VERSION 0.1.0
+	VERSION 1.0.0
 	DESCRIPTION "A fast, high precision, quadrant target center locator"
 	HOMEPAGE_URL
 		"https://github.com/Stellacore/QuadLoco"
@@ -43,7 +43,10 @@ set(thisProjLib "${PROJECT_NAME}")
 set(thePackageDescription
 	[[
 	This package provides a single algorithm focused on the accurate
-	location of the precise center of a quadrant target.
+	*localization* of the precise center of a quadrant target assuming
+	the target image is prominant within an input image chip. Note that
+	this is a quad center "localization" package. It does *not* provide
+	overall quad pattern "detection"/"extraction" capabilities.
 	]]
 	)
 set(thePackageVendor "Stellacore Corporation")
