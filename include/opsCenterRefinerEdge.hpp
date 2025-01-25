@@ -74,7 +74,7 @@ namespace ops
 			img::Vector<double> theLoc{};
 
 			//! Relative weight of this location
-			double theWeight{ 0. };
+			double theWgt{ 0. };
 
 		}; // Sample
 
@@ -103,10 +103,9 @@ namespace ops
 			double sumWgts{ 0. };
 			for (Sample const & samp : theSamps)
 			{
-				img::Vector<double> const & loc = samp.theLoc;
-				double const & wgt = samp.theWeight;
-				sumLocs = sumLocs + wgt * loc;
+				double const & wgt = samp.theWgt;
 				sumWgts += wgt;
+				sumLocs = sumLocs + (wgt * samp.theLoc);
 			}
 			if (std::numeric_limits<double>::epsilon() < sumWgts)
 			{
@@ -126,12 +125,13 @@ namespace ops
 
 			// scatter matrix
 			ras::Grid<double> scatter(2u, 2u);
+			std::fill(scatter.begin(), scatter.end(), 0.);
 			double sumWgts{ 0. };
 			for (Sample const & samp : theSamps)
 			{
 				img::Vector<double> const & absLoc = samp.theLoc;
 				img::Vector<double> const relLoc{ absLoc - meanLoc };
-				double const & wgt = samp.theWeight;
+				double const & wgt = samp.theWgt;
 
 				scatter(0u, 0u) += wgt * (relLoc[0] * relLoc[0]);
 				scatter(0u, 1u) += wgt * (relLoc[0] * relLoc[1]);
@@ -149,6 +149,30 @@ namespace ops
 
 			return axisMag;
 		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << '\n';
+			}
+			img::Vector<double> const mean{ centroid() };
+			oss
+				<< "numSamps: " << theSamps.size()
+				<< "  "
+				<< "centroid: " << mean
+				<< "  "
+				<< "semiAxisMax: " << semiAxisMax(mean)
+				;
+			return oss.str();
+		}
+
 
 	}; // EdgeGroup
 
@@ -357,6 +381,8 @@ namespace ops
 					<< "dirB1: " << theDirB1
 					<< ' '
 					<< "dirB2: " << theDirB2
+					<< '\n'
+					<< " prob: " << fixed(probability())
 					;
 
 				return oss.str();
@@ -488,18 +514,21 @@ namespace ops
 				, sampleGroups[3].centroid()
 				};
 
+			img::Vector<double> const dir0
+				{ sampleGroups[0].semiAxisMax(edgeLocs[0]) };
+			img::Vector<double> const dir1
+				{ sampleGroups[1].semiAxisMax(edgeLocs[1]) };
+			img::Vector<double> const dir2
+				{ sampleGroups[2].semiAxisMax(edgeLocs[2]) };
+			img::Vector<double> const dir3
+				{ sampleGroups[3].semiAxisMax(edgeLocs[3]) };
+
 			// averge directions from opposite radial edges to get
 			// oppositely consistent radial directions
-			img::Vector<double> const aveDirA
-				{ .5
-				* (sampleGroups[0].semiAxisMax(edgeLocs[0])
-				+ sampleGroups[2].semiAxisMax(edgeLocs[0]))
-				};
-			img::Vector<double> const aveDirB
-				{ .5
-				* (sampleGroups[1].semiAxisMax(edgeLocs[0])
-				+ sampleGroups[3].semiAxisMax(edgeLocs[0]))
-				};
+			double const sign02{ (0. < dot(dir0, dir2)) ? 1. : -1. };
+			double const sign13{ (0. < dot(dir1, dir3)) ? 1. : -1. };
+			img::Vector<double> const aveDirA{ .5 * (dir0 + sign02*dir2) };
+			img::Vector<double> const aveDirB{ .5 * (dir1 + sign13*dir3) };
 
 			// check if radial edge statistica are valid
 			if (aveDirA.isValid() && aveDirB.isValid())
@@ -586,18 +615,21 @@ namespace ops
 						{
 							// gradient in source
 							img::Grad const & grad = theGradGrid(row, col);
-							img::Edgel const edgel(loc, grad);
-							edgels.emplace_back(edgel);
-
-							// accumulation direction into angle historgram
-							constexpr std::size_t binSigma{ 1u };
-							double const edgeMag{ edgel.magnitude() };
-							angleTracker.consider
-								(edgel.angle(), edgeMag, binSigma);
-
-							if (edgeMagMax < edgeMag)
+							if (::isValid(grad))
 							{
-								edgeMagMax = edgeMag;
+								img::Edgel const edgel(loc, grad);
+								edgels.emplace_back(edgel);
+
+								// accumulation direction into angle historgram
+								constexpr std::size_t binSigma{ 1u };
+								double const edgeMag{ edgel.magnitude() };
+								angleTracker.consider
+									(edgel.angle(), edgeMag, binSigma);
+
+								if (edgeMagMax < edgeMag)
+								{
+									edgeMagMax = edgeMag;
+								}
 							}
 						}
 					}
