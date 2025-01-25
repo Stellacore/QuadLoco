@@ -164,6 +164,21 @@ namespace mea
 			return theEig.matrix();
 		}
 
+		//! True if this instance content is same as other's within tol
+		inline
+		bool
+		nearlyEquals
+			( Covar const & other
+				//!< Instance to compare
+			, double const & tolVar = std::numeric_limits<double>::epsilon()
+				//!< Tolerance on variance values (squared expectations)
+			) const
+		{
+			mat::Matrix const matCurr{ matrix() };
+			mat::Matrix const matOther{ other.matrix() };
+			return (matCurr.nearlyEquals(matOther, tolVar));
+		}
+
 		//! Descriptive information about this instance.
 		inline
 		std::string
@@ -222,6 +237,17 @@ namespace
 		)
 	{
 		return item.isValid();
+	}
+
+	inline
+	bool
+	nearlyEquals
+		( quadloco::mea::Covar const & itemA
+		, quadloco::mea::Covar const & itemB
+		, double const & tolVar = std::numeric_limits<double>::epsilon()
+		)
+	{
+		return itemA.nearlyEquals(itemB, tolVar);
 	}
 
 } // [anon/global]
