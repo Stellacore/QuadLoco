@@ -526,7 +526,6 @@ namespace ops
 			: theGradGrid{ ops::grid::gradientGridBy8x(srcGrid) }
 		{ }
 
-
 		/*! Use gradient grid values to estimate center point near to nomSpot
 		 *
 		 * Note: This assumes that nomSpot is sufficiently inside the
@@ -570,7 +569,7 @@ namespace ops
 				{
 					for (int col{colBeg} ; col < colEnd ; ++col)
 					{
-						// TODO - can precomppute angles for filter
+						// TODO - can precompute angles for filter
 						// value of gradient at this location
 
 						// location in source
@@ -580,9 +579,10 @@ namespace ops
 						// TODO Also enforce circle shape
 						// gradient element location relative to nominal point
 						// add some so that exact searchRadius pixels get used
-						double const radius
-							{ static_cast<double>(searchRadius + .5) };
-						if (magnitude(relSpot) < radius)
+						double const radius{ magnitude(relSpot) };
+						double const radMax // small pad to include exact pix
+							{ static_cast<double>(searchRadius + 1./1024.) };
+						if ((0. < radius) && (radius < radMax))
 						{
 							// gradient in source
 							img::Grad const & grad = theGradGrid(row, col);
@@ -636,16 +636,16 @@ namespace ops
 			std::vector<img::Hit> hits;
 
 			// active area for considering peaks
-			std::size_t const hwMin{ 2u * searchRadius };
+			std::size_t const hwMin{ 2u * searchRadius + 1u };
 			if ((hwMin < theGradGrid.high()) && (hwMin < theGradGrid.wide()))
 			{
 				val::Span const rowSpan
 					{ (double)searchRadius
-					, (double)(theGradGrid.high() - searchRadius)
+					, (double)(theGradGrid.high() - searchRadius - 1u)
 					};
 				val::Span const colSpan
 					{ (double)searchRadius
-					, (double)(theGradGrid.wide() - searchRadius)
+					, (double)(theGradGrid.wide() - searchRadius - 1u)
 					};
 				img::Area const liveArea{ rowSpan, colSpan };
 
@@ -669,10 +669,44 @@ namespace ops
 			return hits;
 		}
 
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << '\n';
+			}
+			oss << "theGradGrid: " << theGradGrid << '\n';
+			return oss.str();
+		}
+
+
 	}; // CenterRefinerEdge
 
 
 } // [ops]
 
 } // [quadloco]
+
+namespace
+{
+
+	//! Put instance to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::ops::CenterRefinerEdge const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+} // [anon/global]
 
