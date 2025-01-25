@@ -67,21 +67,21 @@ namespace mea
 		{
 			mea::Vector centroid{};
 			img::Vector<double> pntSum{ 0., 0. };
-			double sumWgt{ 0. };
+			double wgtSum{ 0. };
 			for (FwdIter iter{itBeg} ; itEnd != iter ; ++iter)
 			{
 				img::Vector<double> const & pnt = iter->location();
 				double const sampCovar{ iter->covar().covarianceRMS() };
 				double const sampWgt{ 1. / sampCovar };
 				pntSum = pntSum + sampWgt * pnt;
-				sumWgt += sampWgt;
+				wgtSum += sampWgt;
 			}
-			if (0. < sumWgt)
+			if (0. < wgtSum)
 			{
-				double const meanCovar{ 1. / sumWgt };
+				double const meanCovar{ 1. / wgtSum };
 				double const meanSigma{ std::sqrt(meanCovar) };
 				img::Vector<double> const meanLoc{ meanCovar * pntSum };
-				centroid = mea::Vector{ meanLoc, meanSigma };
+				centroid = mea::Vector(meanLoc, meanSigma);
 			}
 			return centroid;
 		}
