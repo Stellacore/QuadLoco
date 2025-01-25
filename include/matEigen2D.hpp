@@ -53,7 +53,7 @@ namespace mat
 {
 
 	//! \brief Eigen decomposition for a 2x2 matrix (no complex result support)
-	struct Eigen2D
+	class Eigen2D
 	{
 		//! Minimum eigenvalue
 		double theLamMin{ engabra::g3::null<double>() };
@@ -66,19 +66,6 @@ namespace mat
 
 		//! Eigenvector for maximum eigenvalue
 		img::Vector<double> theVecMax{};
-
-
-		//! True if decomposition is well defined
-		inline
-		bool
-		isValid
-			() const
-		{
-			return
-				(  engabra::g3::isValid(theLamMin)
-				&& engabra::g3::isValid(theLamMax)
-				);
-		}
 
 		//! True if absolute value of A and B are *both* less than machine eps
 		inline
@@ -96,6 +83,8 @@ namespace mat
 				);
 		}
 
+	public:
+
 		//! Default construction of a null (isValid() == false) instance
 		inline
 		explicit
@@ -111,15 +100,17 @@ namespace mat
 		{
 			double const det{ determinant2x2(mat2D) };
 			double const trc{ trace2x2(mat2D) };
-
-			double const radicand{ .25*trc*trc - det };
-			if (! (radicand < 0.))
+			double const gotRadicand{ .25*trc*trc - det };
+			// allow some tolerance for numeric error
+			// (this is probably not the best way to compute EVs)
+			constexpr double tol{ 2.*std::numeric_limits<double>::epsilon() };
+			if (-tol < gotRadicand)
 			{
-				double const root{ std::sqrt(radicand) };
+				double useRadicand{ std::max(0., gotRadicand) };
+				double const root{ std::sqrt(useRadicand) };
 				double const lam0{ .5 * trc };
 				theLamMin = lam0 - root;
 				theLamMax = lam0 + root;
-
 				double const & aa = mat2D(0, 0);
 				double const & bb = mat2D(0, 1);
 				double const & cc = mat2D(1, 0);
@@ -143,6 +134,18 @@ namespace mat
 				theVecMin = direction(theVecMin);
 				theVecMax = direction(theVecMax);
 			}
+		}
+
+		//! True if decomposition is well defined
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  engabra::g3::isValid(theLamMin)
+				&& engabra::g3::isValid(theLamMax)
+				);
 		}
 
 		//! Smallest eigenvalue
