@@ -187,34 +187,37 @@ namespace ops
 				//!< Spread weighting over into this many bins on each side
 			)
 		{
-			double const binDelta{ theRing.angleDelta() };
-			static prb::Gauss1D const gauss(0., binDelta);
-
-			// add largest weight into main bin
-			std::size_t const ndxCurr{ theRing.indexFor(angle) };
-			double const offset{ angle - angleAtIndex(ndxCurr) };
-			double const dSum{ weight * gauss(offset) };
-			theBinSums[ndxCurr] += dSum;
-			theTotalSum += dSum;
-
-			// add decreasing weights into (circularly) adjacent bins
-			for (std::size_t dn{0u} ; dn < halfBinSpread ; ++dn)
+			if (engabra::g3::isValid(angle))
 			{
-				double const angDelta{ binDelta * (double)dn };
+				double const binDelta{ theRing.angleDelta() };
+				static prb::Gauss1D const gauss(0., binDelta);
 
-				int const dnPos{ (int)dn };
-				std::size_t const ndxPos
-					{ theRing.indexRelativeTo(ndxCurr, dnPos) };
-				double const dSumPos{ weight * gauss(offset + angDelta) };
-				theBinSums[ndxPos] += dSumPos;
-				theTotalSum += dSumPos;
+				// add largest weight into main bin
+				std::size_t const ndxCurr{ theRing.indexFor(angle) };
+				double const offset{ angle - angleAtIndex(ndxCurr) };
+				double const dSum{ weight * gauss(offset) };
+				theBinSums[ndxCurr] += dSum;
+				theTotalSum += dSum;
 
-				int const dnNeg{ -dnPos };
-				std::size_t const ndxNeg
-					{ theRing.indexRelativeTo(ndxCurr, dnNeg) };
-				double const dSumNeg{ weight * gauss(offset - angDelta) };
-				theBinSums[ndxNeg] += dSumNeg;
-				theTotalSum += dSumNeg;
+				// add decreasing weights into (circularly) adjacent bins
+				for (std::size_t dn{1u} ; dn < halfBinSpread ; ++dn)
+				{
+					double const angDelta{ binDelta * (double)dn };
+
+					int const dnPos{ (int)dn };
+					std::size_t const ndxPos
+						{ theRing.indexRelativeTo(ndxCurr, dnPos) };
+					double const dSumPos{ weight * gauss(offset + angDelta) };
+					theBinSums[ndxPos] += dSumPos;
+					theTotalSum += dSumPos;
+
+					int const dnNeg{ -dnPos };
+					std::size_t const ndxNeg
+						{ theRing.indexRelativeTo(ndxCurr, dnNeg) };
+					double const dSumNeg{ weight * gauss(offset - angDelta) };
+					theBinSums[ndxNeg] += dSumNeg;
+					theTotalSum += dSumNeg;
+				}
 			}
 		}
 
@@ -309,6 +312,7 @@ namespace ops
 		{
 			std::ostringstream oss;
 			oss << infoString(title);
+			oss << "\n# binNdx  angle  binSum  probability";
 			for (std::size_t nbin{0u} ; nbin < theBinSums.size() ; ++nbin)
 			{
 				using engabra::g3::io::fixed;

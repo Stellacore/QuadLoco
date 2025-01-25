@@ -74,7 +74,7 @@ namespace ops
 			img::Vector<double> theLoc{};
 
 			//! Relative weight of this location
-			double theWeight{ 0. };
+			double theWgt{ 0. };
 
 		}; // Sample
 
@@ -103,10 +103,9 @@ namespace ops
 			double sumWgts{ 0. };
 			for (Sample const & samp : theSamps)
 			{
-				img::Vector<double> const & loc = samp.theLoc;
-				double const & wgt = samp.theWeight;
-				sumLocs = sumLocs + wgt * loc;
+				double const & wgt = samp.theWgt;
 				sumWgts += wgt;
+				sumLocs = sumLocs + (wgt * samp.theLoc);
 			}
 			if (std::numeric_limits<double>::epsilon() < sumWgts)
 			{
@@ -126,12 +125,13 @@ namespace ops
 
 			// scatter matrix
 			ras::Grid<double> scatter(2u, 2u);
+			std::fill(scatter.begin(), scatter.end(), 0.);
 			double sumWgts{ 0. };
 			for (Sample const & samp : theSamps)
 			{
 				img::Vector<double> const & absLoc = samp.theLoc;
 				img::Vector<double> const relLoc{ absLoc - meanLoc };
-				double const & wgt = samp.theWeight;
+				double const & wgt = samp.theWgt;
 
 				scatter(0u, 0u) += wgt * (relLoc[0] * relLoc[0]);
 				scatter(0u, 1u) += wgt * (relLoc[0] * relLoc[1]);
@@ -149,6 +149,30 @@ namespace ops
 
 			return axisMag;
 		}
+
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << '\n';
+			}
+			img::Vector<double> const mean{ centroid() };
+			oss
+				<< "numSamps: " << theSamps.size()
+				<< "  "
+				<< "centroid: " << mean
+				<< "  "
+				<< "semiAxisMax: " << semiAxisMax(mean)
+				;
+			return oss.str();
+		}
+
 
 	}; // EdgeGroup
 
@@ -357,6 +381,8 @@ namespace ops
 					<< "dirB1: " << theDirB1
 					<< ' '
 					<< "dirB2: " << theDirB2
+					<< '\n'
+					<< " prob: " << fixed(probability())
 					;
 
 				return oss.str();
@@ -488,18 +514,21 @@ namespace ops
 				, sampleGroups[3].centroid()
 				};
 
+			img::Vector<double> const dir0
+				{ sampleGroups[0].semiAxisMax(edgeLocs[0]) };
+			img::Vector<double> const dir1
+				{ sampleGroups[1].semiAxisMax(edgeLocs[1]) };
+			img::Vector<double> const dir2
+				{ sampleGroups[2].semiAxisMax(edgeLocs[2]) };
+			img::Vector<double> const dir3
+				{ sampleGroups[3].semiAxisMax(edgeLocs[3]) };
+
 			// averge directions from opposite radial edges to get
 			// oppositely consistent radial directions
-			img::Vector<double> const aveDirA
-				{ .5
-				* (sampleGroups[0].semiAxisMax(edgeLocs[0])
-				+ sampleGroups[2].semiAxisMax(edgeLocs[0]))
-				};
-			img::Vector<double> const aveDirB
-				{ .5
-				* (sampleGroups[1].semiAxisMax(edgeLocs[0])
-				+ sampleGroups[3].semiAxisMax(edgeLocs[0]))
-				};
+			double const sign02{ (0. < dot(dir0, dir2)) ? 1. : -1. };
+			double const sign13{ (0. < dot(dir1, dir3)) ? 1. : -1. };
+			img::Vector<double> const aveDirA{ .5 * (dir0 + sign02*dir2) };
+			img::Vector<double> const aveDirB{ .5 * (dir1 + sign13*dir3) };
 
 			// check if radial edge statistica are valid
 			if (aveDirA.isValid() && aveDirB.isValid())
@@ -525,7 +554,6 @@ namespace ops
 			)
 			: theGradGrid{ ops::grid::gradientGridBy8x(srcGrid) }
 		{ }
-
 
 		/*! Use gradient grid values to estimate center point near to nomSpot
 		 *
@@ -570,7 +598,7 @@ namespace ops
 				{
 					for (int col{colBeg} ; col < colEnd ; ++col)
 					{
-						// TODO - can precomppute angles for filter
+						// TODO - can precompute angles for filter
 						// value of gradient at this location
 
 						// location in source
@@ -580,24 +608,28 @@ namespace ops
 						// TODO Also enforce circle shape
 						// gradient element location relative to nominal point
 						// add some so that exact searchRadius pixels get used
-						double const radius
-							{ static_cast<double>(searchRadius + .5) };
-						if (magnitude(relSpot) < radius)
+						double const radius{ magnitude(relSpot) };
+						double const radMax // small pad to include exact pix
+							{ static_cast<double>(searchRadius + 1./1024.) };
+						if ((0. < radius) && (radius < radMax))
 						{
 							// gradient in source
 							img::Grad const & grad = theGradGrid(row, col);
-							img::Edgel const edgel(loc, grad);
-							edgels.emplace_back(edgel);
-
-							// accumulation direction into angle historgram
-							constexpr std::size_t binSigma{ 1u };
-							double const edgeMag{ edgel.magnitude() };
-							angleTracker.consider
-								(edgel.angle(), edgeMag, binSigma);
-
-							if (edgeMagMax < edgeMag)
+							if (::isValid(grad))
 							{
-								edgeMagMax = edgeMag;
+								img::Edgel const edgel(loc, grad);
+								edgels.emplace_back(edgel);
+
+								// accumulation direction into angle historgram
+								constexpr std::size_t binSigma{ 1u };
+								double const edgeMag{ edgel.magnitude() };
+								angleTracker.consider
+									(edgel.angle(), edgeMag, binSigma);
+
+								if (edgeMagMax < edgeMag)
+								{
+									edgeMagMax = edgeMag;
+								}
 							}
 						}
 					}
@@ -636,16 +668,16 @@ namespace ops
 			std::vector<img::Hit> hits;
 
 			// active area for considering peaks
-			std::size_t const hwMin{ 2u * searchRadius };
+			std::size_t const hwMin{ 2u * searchRadius + 1u };
 			if ((hwMin < theGradGrid.high()) && (hwMin < theGradGrid.wide()))
 			{
 				val::Span const rowSpan
 					{ (double)searchRadius
-					, (double)(theGradGrid.high() - searchRadius)
+					, (double)(theGradGrid.high() - searchRadius - 1u)
 					};
 				val::Span const colSpan
 					{ (double)searchRadius
-					, (double)(theGradGrid.wide() - searchRadius)
+					, (double)(theGradGrid.wide() - searchRadius - 1u)
 					};
 				img::Area const liveArea{ rowSpan, colSpan };
 
@@ -669,10 +701,44 @@ namespace ops
 			return hits;
 		}
 
+		//! Descriptive information about this instance.
+		inline
+		std::string
+		infoString
+			( std::string const & title = {}
+			) const
+		{
+			std::ostringstream oss;
+			if (! title.empty())
+			{
+				oss << title << '\n';
+			}
+			oss << "theGradGrid: " << theGradGrid << '\n';
+			return oss.str();
+		}
+
+
 	}; // CenterRefinerEdge
 
 
 } // [ops]
 
 } // [quadloco]
+
+namespace
+{
+
+	//! Put instance to stream
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, quadloco::ops::CenterRefinerEdge const & item
+		)
+	{
+		ostrm << item.infoString();
+		return ostrm;
+	}
+
+} // [anon/global]
 

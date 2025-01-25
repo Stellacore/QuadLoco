@@ -73,7 +73,6 @@ namespace
 		std::vector<ras::PeakRCV> const peakRCVs
 			{ app::center::multiSymRingPeaks(srcGrid, ringHalfSizes) };
 
-std::cout << "peakRCVs.size: " << peakRCVs.size() << '\n';
 		// use edge (magnitudes) to refine center locations
 		ops::CenterRefinerEdge const refiner(srcGrid);
 		std::size_t const halfRadius{ 6u }; // filter searh size
@@ -81,8 +80,6 @@ std::cout << "peakRCVs.size: " << peakRCVs.size() << '\n';
 			{ refiner.centerHits(peakRCVs, halfRadius) };
 		// (re)sort hits to put strongest detection at front
 		std::sort(edgeHits.rbegin(), edgeHits.rend());
-
-std::cout << "edgeHits.size: " << edgeHits.size() << '\n';
 
 		// [DoxyExample01]
 
