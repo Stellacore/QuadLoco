@@ -217,7 +217,6 @@ The top level "quadloco" namespace includes a number of sub-namespaces:
 * pix::  Picture element/radiometry (e.g.Noise, ...)
 * prb::  Probability theory (e.g. Gauss1D, Stats, ...)
 * ras::  Raster data (e.g. Grid, RowCol, SizeHW, ...)
-* sig::  Signal processing (e.g. QuadTarget, ParmAD, ...)
 * sim::  Simulation capabilities (e.g. Config, QuadTarget, grid, ...)
 * sys::  System utilities (e.g. timing)
 * val::  Value types (scalar data)
