@@ -28,7 +28,7 @@
 */
 
 
-#include "opsFence.hpp"
+#include "QuadLoco/opsFence.hpp"
 
 #include <iostream>
 #include <sstream>

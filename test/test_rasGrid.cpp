@@ -28,9 +28,7 @@
 */
 
 
-#include "rasGrid.hpp"
-
-#include "QuadLoco"
+#include "QuadLoco/rasGrid.hpp"
 
 #include <algorithm>
 #include <functional>

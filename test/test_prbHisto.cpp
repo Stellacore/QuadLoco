@@ -28,9 +28,9 @@
 */
 
 
-#include "opsPeakFinder1D.hpp"
-#include "prbHisto.hpp"
-#include "valSpan.hpp"
+#include "QuadLoco/opsPeakFinder1D.hpp"
+#include "QuadLoco/prbHisto.hpp"
+#include "QuadLoco/valSpan.hpp"
 
 #include <iostream>
 #include <sstream>

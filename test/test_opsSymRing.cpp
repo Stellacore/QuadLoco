@@ -28,14 +28,14 @@
 */
 
 
-#include "io.hpp"
-#include "opsAllPeaks2D.hpp"
-#include "opsSymRing.hpp"
-#include "prbStats.hpp"
-#include "rasChipSpec.hpp"
-#include "rasgrid.hpp"
-#include "rasGrid.hpp"
-#include "rasPeakRCV.hpp"
+#include "QuadLoco/io.hpp"
+#include "QuadLoco/opsAllPeaks2D.hpp"
+#include "QuadLoco/opsSymRing.hpp"
+#include "QuadLoco/prbStats.hpp"
+#include "QuadLoco/rasChipSpec.hpp"
+#include "QuadLoco/rasgrid.hpp"
+#include "QuadLoco/rasGrid.hpp"
+#include "QuadLoco/rasPeakRCV.hpp"
 
 #include <iostream>
 #include <sstream>

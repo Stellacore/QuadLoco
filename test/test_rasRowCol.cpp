@@ -28,7 +28,7 @@
 */
 
 
-#include "rasRowCol.hpp"
+#include "QuadLoco/rasRowCol.hpp"
 
 #include <iostream>
 #include <sstream>

@@ -28,14 +28,14 @@
 */
 
 
-#include "appQuadLike.hpp"
+#include "QuadLoco/appQuadLike.hpp"
 
-#include "imgQuadTarget.hpp"
-#include "objCamera.hpp"
-#include "objQuadTarget.hpp"
-#include "rasSizeHW.hpp"
-#include "simConfig.hpp"
-#include "simRender.hpp"
+#include "QuadLoco/imgQuadTarget.hpp"
+#include "QuadLoco/objCamera.hpp"
+#include "QuadLoco/objQuadTarget.hpp"
+#include "QuadLoco/rasSizeHW.hpp"
+#include "QuadLoco/simConfig.hpp"
+#include "QuadLoco/simRender.hpp"
 
 #include <Engabra>
 #include <Rigibra>

@@ -28,7 +28,7 @@
 */
 
 
-#include "imgQuadTarget.hpp"
+#include "QuadLoco/imgQuadTarget.hpp"
 
 #include <iostream>
 #include <sstream>

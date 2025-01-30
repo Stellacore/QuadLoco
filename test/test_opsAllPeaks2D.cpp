@@ -28,9 +28,9 @@
 */
 
 
-#include "opsAllPeaks2D.hpp"
-#include "rasGrid.hpp"
-#include "rasPeakRCV.hpp"
+#include "QuadLoco/opsAllPeaks2D.hpp"
+#include "QuadLoco/rasGrid.hpp"
+#include "QuadLoco/rasPeakRCV.hpp"
 
 #include <algorithm>
 #include <iostream>

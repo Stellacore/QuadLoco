@@ -28,14 +28,14 @@
 */
 
 
-#include "opsCenterRefinerEdge.hpp"
+#include "QuadLoco/opsCenterRefinerEdge.hpp"
 
-#include "appcenter.hpp"
-#include "imgQuadTarget.hpp"
-#include "io.hpp"
-#include "objCamera.hpp"
-#include "rasGrid.hpp"
-#include "simRender.hpp"
+#include "QuadLoco/appcenter.hpp"
+#include "QuadLoco/imgQuadTarget.hpp"
+#include "QuadLoco/io.hpp"
+#include "QuadLoco/objCamera.hpp"
+#include "QuadLoco/rasGrid.hpp"
+#include "QuadLoco/simRender.hpp"
 
 #include <Engabra>
 #include <Rigibra>
@@ -73,7 +73,6 @@ namespace
 		std::vector<ras::PeakRCV> const peakRCVs
 			{ app::center::multiSymRingPeaks(srcGrid, ringHalfSizes) };
 
-std::cout << "peakRCVs.size: " << peakRCVs.size() << '\n';
 		// use edge (magnitudes) to refine center locations
 		ops::CenterRefinerEdge const refiner(srcGrid);
 		std::size_t const halfRadius{ 6u }; // filter searh size
@@ -81,8 +80,6 @@ std::cout << "peakRCVs.size: " << peakRCVs.size() << '\n';
 			{ refiner.centerHits(peakRCVs, halfRadius) };
 		// (re)sort hits to put strongest detection at front
 		std::sort(edgeHits.rbegin(), edgeHits.rend());
-
-std::cout << "edgeHits.size: " << edgeHits.size() << '\n';
 
 		// [DoxyExample01]
 

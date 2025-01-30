@@ -1,7 +1,9 @@
 # QuadLoco - A fast, high precision, quadrant target center locator
 
 This package provides a single algorithm focused on the accurate
-location of the precise center of a quadrant target.
+location of the precise center of a quadrant target. The input image
+chip is assumed to contain a prominent quad target (e.g. "detection"
+or "extraction" of the quad target area is assumed done).
 
 ## Purpose
 
@@ -19,14 +21,15 @@ visible in industrial settings, on spacecraft launch vehicles and
 in precision metrology environments.
 
 QuadLoco is a C++ open source software library that provides fast,
-reliable and accurate finding of the center point in digital images
-quad targets.
+reliable and accurate location of the center point in digital image
+regaions that are assumed to contain a quad target image.
 
-
-There are multiple phases:
+In general practical applications, there are multiple phases:
 * Detection (finding what features in an image are likely quadrant targets)
 * Localization (finding center with subpixel precision and accuracy)
 * Verification (using "find" solution to verify raster sample is a quad target)
+
+This library focuses on localization.
 
 ## Build
 
@@ -166,63 +169,23 @@ for lens distortion.
 	are associated with the (darker) background signal, and higher values
 	are associated with the (lighter) foreground signal.
 
-///--- TBD
-* Compute edgel data from source image (keeping track of edge strengths
-  and locations.
+* Determine candidate center points
 
-	- Apply corrections for optical distortions present in the camera
-	system (if any)
+	- An annular filter is utilized to compute a pseudo-probability that
+	the radiometric content of the annular area has half-turn symmetry.
 
-* Utilize a specialized Hough detection to find candidates for the radial
-  edges
-
-	- Ideally for all four, but accept that one or two of the edges
-	may contain relatively few pixels compred with the other two.
----/// TBD
-
-* Estimate center point area
-
-	- intersection of pairs that represent candidates for adjacent radial
-	edges
-
-* Classify pixels as belonging to radial edges or not
-
-	- Determine consistency metric for each edgel w.r.t. each candidate
-	radial edge.
-
-* Select most promising quartet of radial edge candidates
-
-* For the candidate target(s),
-
-	- Assign weights to each edgel proportedly associated with the target
+	- Local maxima in the annular filter response are associated with
+	candidate peak locations (with resolution of integer pixel location)
 
 * Compute precise center
 
-	- Utilize a least squares adjustment on edgels from the four radii
+	- The strongest peaks are utilized as nominal locations about which
+	to run an area based half-turn symmetry filter. This area filter is
+	run on a small neighborhood around each candidate peak location.
 
+	- The area filter response is used to compute a subpixel location
+	for the filter response maximum.
 
-## Technical Concepts
-
-* Sample extraction: Given nominal center point, extract sample data that:
-
-	- represent a circular region of a perspective image (expected to contain
-	quad target center and significant-enough" number of pixels on each fo
-	the four radial edges.
-
-* Radon transform - search for minima and maxima in integral signals?
-
-* Hough detection - specialized version based on perimeter circle.
-
-	- Utilize a circumscribing circle that contains the entire sample area.
-
-		-- in practice extract sample from a circular region
-		-- scale position data such that perimeter circle has unit radius
-
-	- A line through the sample space intersects the bounding circle in
-	two places:
-
-		-- represent first intersection point as angle position on the circle
-		-- represent the second point as signed angular difference from first
 
 ## Software Components
 
@@ -241,118 +204,29 @@ e.g.
 
 The top level "quadloco" namespace includes a number of sub-namespaces:
 
+* app::  Application level utilities (a primary resource for consuming code)
+
 * ang::  Angle data (e.g. Ring, ...)
 * cast::  Casting functions
 * img::  Image space - 2D data types (e.g. Spot, Grad, Area, ...
 * io::  Input/Output basic capabilities
+* mat::  Matrix operations support (very minimal)
+* mea::  Measurements (values plus uncertainty information)
 * obj::  Object space - 3D data type (e.g. QuadTarget, ...)
 * ops::  Operations and processing (GridFilter, PeakFinder, ...)
 * pix::  Picture element/radiometry (e.g.Noise, ...)
 * prb::  Probability theory (e.g. Gauss1D, Stats, ...)
 * ras::  Raster data (e.g. Grid, RowCol, SizeHW, ...)
-* sig::  Signal processing (e.g. QuadTarget, ParmAD, ...)
 * sim::  Simulation capabilities (e.g. Config, QuadTarget, grid, ...)
-* xfm::  Transformationx (e.g. MapSizeArea, ...)
+* sys::  System utilities (e.g. timing)
+* val::  Value types (scalar data)
+* xfm::  Transformations (e.g. MapSizeArea, ...)
 
 #### Namespace Detail
 
 Each project namespace has its own namespace header file that includes all
-components of that namespace. The header files are:
+components of that namespace.
 
-* QuadLoco (or QuadLoco.hpp) - Project top level header - includes all others
-
-* ang.hpp - Angle data structures and manipulations
-
-	ang.hpp -- basic angle values and functions
-	angRing.hpp -- Wrap-around buffer
-	angLikely.hpp -- Pseudo-probability interpretation of ang::Ring buffer
-
-* cast.hpp - Casting functions for converting between data types
-
-	cast.hpp -- Basic cast functions
-
-* img.hpp - Image space - 2D - data types
-
-	img.hpp --
-
-	-- Discrete
-
-	imgChipSpec.hpp -- Sub area within a raster grid
-
-	-- Continuous
-
-	imgSpan.hpp -- A half open interval of values [min,max)
-	imgVector.hpp -- General 2D vector representation and operations
-	imgSpot.hpp -- An img::Vector with location specific methods
-	imgGrad.hpp -- An img::Vector with gradient specific methods
-
-	-- Composite
-
-	imgRay.hpp -- General 2D ray reprentation (start point and unit direction)
-	imgEdgel.hpp -- An img::Ray with edge gradient related methods
-
-	-- geometry
-
-	imgArea.hpp -- Rectangular region with half open high,wide spans
-	imgCircle.hpp -- Circle data (center spot and radius)
-
-
-* io.hpp - Input/Output basic capabilities
-
-	io.hpp -- Simple save and load functions (e.g. *.pgm files)
-
-* obj.hpp - Object space - 3D - data type
-
-	obj.hpp -- 
-	objCamera.hpp -- Perspective image projection model
-	objQuadTarget.hpp -- Description of quad target geometry and radiometry
-
-* ops.hpp - Operations and processing capabilities
-
-	ops.hpp --
-	opsAdderAD.hpp -- Accumulator for Hough (Alpha,Delta) parameters
-	opsFence.hpp -- Tracker for determining (min,max) of value samples
-	opsgrid.hpp -- Functions that operate on ras::Grid data
-	opsPeakFinder.hpp -- Location of multiple peaks within 1D buffer
-	opsGridFilter.hpp -- Digital filter computations on raster grid data
-
-* pix.hpp - Picture element (radiometry) related capabilities
-
-	pix.hpp -- Type definitions and validity testing for floating point pixels
-	pixNoise.hpp -- Digital imaging noise models
-
-* prb.hpp - Probability theory functions and utilities
-
-	prb.hpp -- 
-	prbGauss1D.hpp -- Gaussian probability PDF value computation
-	prbquad.hpp -- Assess "quad target-ness" of raster data signal
-	prbStats.hpp -- Statistics accumulation over scalar samples
-
-* ras.hpp - Raster data types
-
-	ras.hpp -- 
-	rasGrid.hpp -- Data structure of cells in a high,wide grid configuration
-	rasgrid.hpp -- Functions that operate on ras::Grid data
-	rasRowCol.hpp -- Indices pair specifying location within ras::Grid
-	rasSizeHW.hpp -- Value pair specifying height,width of ras::Grid like data
-
-* sig.hpp - Signal processing types and functions
-
-	sig.hpp --
-	sigParmAD.hpp -- Parameters "Alpha,Delta" representing Hough line segment
-	sigQuadTarget.hpp -- Description of (perspective) image of obj::QuadTarget
-
-* sim.hpp - Simulation capabilities
-
-	sim.hpp -- General functions useful for simulation
-	simConfig.hpp -- Description of geometry for img::QuadTarget simulation
-	simgrid.hpp -- Simulate ras::Grid data with various edge properties
-	simRender.hpp -- Produce a ras::Grid containing simulated img::QuadTarget
-	simSampler.hpp -- Ray-trace style radiometric sampling of obj::QuadTarget
-
-* xfm.hpp - Transformation functions and capabilities
-
-	xfm.hpp --
-	xfmMapSizeArea.hpp -- Transform data between ras::SizeHW and img::Area
-
+For details refer to the 'namespace' tab in project documenation created
+by Doxygen during project build.
 

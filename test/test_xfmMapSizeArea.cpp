@@ -28,8 +28,8 @@
 */
 
 
-#include "valSpan.hpp"
-#include "xfmMapSizeArea.hpp"
+#include "QuadLoco/valSpan.hpp"
+#include "QuadLoco/xfmMapSizeArea.hpp"
 
 #include <iostream>
 #include <sstream>

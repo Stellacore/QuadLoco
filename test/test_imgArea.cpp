@@ -28,8 +28,8 @@
 */
 
 
-#include "imgArea.hpp"
-#include "valSpan.hpp"
+#include "QuadLoco/imgArea.hpp"
+#include "QuadLoco/valSpan.hpp"
 
 #include <iostream>
 #include <sstream>

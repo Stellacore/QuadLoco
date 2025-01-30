@@ -28,14 +28,14 @@
 */
 
 
-#include "cast.hpp"
-#include "io.hpp"
-#include "opsAllPeaks2D.hpp"
-#include "opsFence.hpp"
-#include "opsgrid.hpp"
-#include "opsSymRing.hpp"
-#include "prbStats.hpp"
-#include "rasGrid.hpp"
+#include "QuadLoco/cast.hpp"
+#include "QuadLoco/io.hpp"
+#include "QuadLoco/opsAllPeaks2D.hpp"
+#include "QuadLoco/opsFence.hpp"
+#include "QuadLoco/opsgrid.hpp"
+#include "QuadLoco/opsSymRing.hpp"
+#include "QuadLoco/prbStats.hpp"
+#include "QuadLoco/rasGrid.hpp"
 
 #include <Engabra>
 

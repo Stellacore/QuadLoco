@@ -28,7 +28,7 @@
 */
 
 
-#include "QuadLoco.hpp"
+#include "QuadLoco/QuadLoco.hpp"
 
 #include <algorithm>
 #include <iostream>

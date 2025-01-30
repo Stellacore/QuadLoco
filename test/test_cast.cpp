@@ -28,7 +28,7 @@
 */
 
 
-#include "cast.hpp"
+#include "QuadLoco/cast.hpp"
 
 #include <iostream>
 #include <sstream>

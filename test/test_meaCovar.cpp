@@ -28,7 +28,7 @@
 */
 
 
-#include "meaCovar.hpp"
+#include "QuadLoco/meaCovar.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -76,7 +76,7 @@ namespace
 		double const expRMS{ expSigma };
 		mea::Covar const easyCovar(expSigma);
 		double const gotRMS{ easyCovar.deviationRMS() };
-		mea::Covar const copy(easyCovar);
+		mea::Covar const copyEasy(easyCovar);
 
 		// general covariance matrix (must be symmetric)
 		mat::Matrix expFullMat(2u, 2u);
@@ -102,6 +102,13 @@ namespace
 			oss << "Failure of covar FullMat reconstruction test\n";
 			oss << expFullMat.infoStringContents("exp:","%12.6f") << '\n';
 			oss << gotFullMat.infoStringContents("got:","%12.6f") << '\n';
+		}
+
+		if (! nearlyEquals(copyEasy, easyCovar))
+		{
+			oss << "Failure of copyEasy test\n";
+			oss << "exp: " << easyCovar << '\n';
+			oss << "got: " << copyEasy << '\n';
 		}
 
 		if (! engabra::g3::nearlyEquals(gotRMS, expRMS))

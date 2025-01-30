@@ -28,14 +28,14 @@
 */
 
 
-#include "opsgrid.hpp"
+#include "QuadLoco/opsgrid.hpp"
 
-#include "rasChipSpec.hpp"
-#include "rasgrid.hpp"
-#include "rasGrid.hpp"
-#include "raskernel.hpp"
-#include "rasRowCol.hpp"
-#include "simgrid.hpp"
+#include "QuadLoco/rasChipSpec.hpp"
+#include "QuadLoco/rasgrid.hpp"
+#include "QuadLoco/rasGrid.hpp"
+#include "QuadLoco/raskernel.hpp"
+#include "QuadLoco/rasRowCol.hpp"
+#include "QuadLoco/simgrid.hpp"
 
 #include <algorithm>
 #include <iostream>

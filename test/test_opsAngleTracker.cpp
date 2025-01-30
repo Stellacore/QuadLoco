@@ -28,7 +28,7 @@
 */
 
 
-#include "opsAngleTracker.hpp"
+#include "QuadLoco/opsAngleTracker.hpp"
 
 #include <iostream>
 #include <sstream>

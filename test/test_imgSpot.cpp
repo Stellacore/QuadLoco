@@ -28,9 +28,7 @@
 */
 
 
-#include "imgSpot.hpp"
-
-#include "QuadLoco"
+#include "QuadLoco/imgSpot.hpp"
 
 #include <iostream>
 #include <limits>

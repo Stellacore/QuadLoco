@@ -28,7 +28,7 @@
 */
 
 
-#include "objQuadTarget.hpp"
+#include "QuadLoco/objQuadTarget.hpp"
 
 #include <iostream>
 #include <sstream>

@@ -29,7 +29,7 @@
 
 #include <iostream> // TODO
 
-#include "sysTimer.hpp"
+#include "QuadLoco/sysTimer.hpp"
 
 #include <iostream>
 #include <sstream>
