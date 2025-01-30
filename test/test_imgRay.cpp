@@ -28,10 +28,10 @@
 */
 
 
-#include "imgRay.hpp"
+#include "QuadLoco/imgRay.hpp"
 
-#include "imgGrad.hpp"
-#include "imgSpot.hpp"
+#include "QuadLoco/imgGrad.hpp"
+#include "QuadLoco/imgSpot.hpp"
 
 #include <iostream>
 #include <sstream>

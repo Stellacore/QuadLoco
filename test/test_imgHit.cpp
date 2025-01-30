@@ -28,7 +28,7 @@
 */
 
 
-#include "imgHit.hpp"
+#include "QuadLoco/imgHit.hpp"
 
 #include <algorithm>
 #include <iostream>

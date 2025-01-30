@@ -28,14 +28,14 @@
 */
 
 
-#include "opsCenterRefinerEdge.hpp"
+#include "QuadLoco/opsCenterRefinerEdge.hpp"
 
-#include "appcenter.hpp"
-#include "imgQuadTarget.hpp"
-#include "io.hpp"
-#include "objCamera.hpp"
-#include "rasGrid.hpp"
-#include "simRender.hpp"
+#include "QuadLoco/appcenter.hpp"
+#include "QuadLoco/imgQuadTarget.hpp"
+#include "QuadLoco/io.hpp"
+#include "QuadLoco/objCamera.hpp"
+#include "QuadLoco/rasGrid.hpp"
+#include "QuadLoco/simRender.hpp"
 
 #include <Engabra>
 #include <Rigibra>

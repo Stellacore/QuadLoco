@@ -27,7 +27,7 @@
 */
 
 
-#include "opsPeakFinder1D.hpp"
+#include "QuadLoco/opsPeakFinder1D.hpp"
 
 #include <iostream>
 #include <set>

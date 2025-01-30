@@ -28,7 +28,7 @@
 */
 
 
-#include "prbGauss1D.hpp"
+#include "QuadLoco/prbGauss1D.hpp"
 
 #include <iostream>
 #include <sstream>

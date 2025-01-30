@@ -28,14 +28,14 @@
 */
 
 
-#include "rasgrid.hpp"
-#include "opsgrid.hpp" // /TODO remove
+#include "QuadLoco/rasgrid.hpp"
+#include "QuadLoco/opsgrid.hpp" // /TODO remove
 
-#include "imgGrad.hpp"
-#include "pix.hpp"
-#include "rasChipSpec.hpp"
-#include "rasgrid.hpp"
-#include "rasGrid.hpp"
+#include "QuadLoco/imgGrad.hpp"
+#include "QuadLoco/pix.hpp"
+#include "QuadLoco/rasChipSpec.hpp"
+#include "QuadLoco/rasgrid.hpp"
+#include "QuadLoco/rasGrid.hpp"
 
 #include <algorithm>
 #include <complex>

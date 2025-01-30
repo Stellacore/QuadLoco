@@ -28,7 +28,7 @@
 */
 
 
-#include "objCamera.hpp"
+#include "QuadLoco/objCamera.hpp"
 
 #include <Engabra>
 

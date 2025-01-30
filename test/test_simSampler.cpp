@@ -28,13 +28,13 @@
 */
 
 
-#include "appQuadLike.hpp"
-#include "io.hpp"
-#include "rasGrid.hpp"
-#include "simConfig.hpp"
-#include "sim.hpp"
-#include "simRender.hpp"
-#include "simSampler.hpp"
+#include "QuadLoco/appQuadLike.hpp"
+#include "QuadLoco/io.hpp"
+#include "QuadLoco/rasGrid.hpp"
+#include "QuadLoco/simConfig.hpp"
+#include "QuadLoco/sim.hpp"
+#include "QuadLoco/simRender.hpp"
+#include "QuadLoco/simSampler.hpp"
 
 #include <iostream>
 #include <sstream>

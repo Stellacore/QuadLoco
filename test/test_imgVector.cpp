@@ -28,7 +28,7 @@
 */
 
 
-#include "imgVector.hpp"
+#include "QuadLoco/imgVector.hpp"
 
 #include <iostream>
 #include <sstream>

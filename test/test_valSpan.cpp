@@ -28,7 +28,7 @@
 */
 
 
-#include "valSpan.hpp"
+#include "QuadLoco/valSpan.hpp"
 
 #include <iostream>
 #include <sstream>

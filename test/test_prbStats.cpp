@@ -28,7 +28,7 @@
 */
 
 
-#include "prbStats.hpp"
+#include "QuadLoco/prbStats.hpp"
 
 #include <Engabra>
 

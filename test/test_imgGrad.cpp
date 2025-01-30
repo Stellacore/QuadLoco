@@ -28,9 +28,9 @@
 */
 
 
-#include "imgGrad.hpp"
-#include "rasgrid.hpp"
-#include "rasGrid.hpp"
+#include "QuadLoco/imgGrad.hpp"
+#include "QuadLoco/rasgrid.hpp"
+#include "QuadLoco/rasGrid.hpp"
 
 #include <algorithm>
 #include <iostream>

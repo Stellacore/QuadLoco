@@ -28,19 +28,19 @@
 */
 
 
-#include "appcenter.hpp"
-#include "imgQuadTarget.hpp"
-#include "imgSpot.hpp"
-#include "io.hpp"
-#include "objCamera.hpp"
-#include "objQuadTarget.hpp"
-#include "opsAllPeaks2D.hpp"
-#include "opsCenterRefinerSSD.hpp"
-#include "rasGrid.hpp"
-#include "rasPeakRCV.hpp"
-#include "rasSizeHW.hpp"
-#include "simConfig.hpp"
-#include "simRender.hpp"
+#include "QuadLoco/appcenter.hpp"
+#include "QuadLoco/imgQuadTarget.hpp"
+#include "QuadLoco/imgSpot.hpp"
+#include "QuadLoco/io.hpp"
+#include "QuadLoco/objCamera.hpp"
+#include "QuadLoco/objQuadTarget.hpp"
+#include "QuadLoco/opsAllPeaks2D.hpp"
+#include "QuadLoco/opsCenterRefinerSSD.hpp"
+#include "QuadLoco/rasGrid.hpp"
+#include "QuadLoco/rasPeakRCV.hpp"
+#include "QuadLoco/rasSizeHW.hpp"
+#include "QuadLoco/simConfig.hpp"
+#include "QuadLoco/simRender.hpp"
 
 #include <iostream>
 #include <sstream>

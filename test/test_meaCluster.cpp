@@ -28,7 +28,7 @@
 */
 
 
-#include "meaCluster.hpp"
+#include "QuadLoco/meaCluster.hpp"
 
 #include <iostream>
 #include <sstream>

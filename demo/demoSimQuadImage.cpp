@@ -28,11 +28,11 @@
 */
 
 
-#include "io.hpp"
-#include "objQuadTarget.hpp"
-#include "rasSizeHW.hpp"
-#include "simConfig.hpp"
-#include "simRender.hpp"
+#include "QuadLoco/io.hpp"
+#include "QuadLoco/objQuadTarget.hpp"
+#include "QuadLoco/rasSizeHW.hpp"
+#include "QuadLoco/simConfig.hpp"
+#include "QuadLoco/simRender.hpp"
 
 #include <iostream>
 
