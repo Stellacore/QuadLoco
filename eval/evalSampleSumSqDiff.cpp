@@ -28,9 +28,9 @@
 */
 
 
-#include "io.hpp"
-#include "opsgrid.hpp"
-#include "rasGrid.hpp"
+#include "QuadLoco/io.hpp"
+#include "QuadLoco/opsgrid.hpp"
+#include "QuadLoco/rasGrid.hpp"
 
 #include <filesystem>
 #include <iostream>

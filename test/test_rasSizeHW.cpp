@@ -28,9 +28,7 @@
 */
 
 
-#include "rasSizeHW.hpp"
-
-#include "QuadLoco"
+#include "QuadLoco/rasSizeHW.hpp"
 
 #include <iostream>
 #include <sstream>

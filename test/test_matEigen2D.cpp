@@ -28,11 +28,11 @@
 */
 
 
-#include "matEigen2D.hpp"
+#include "QuadLoco/matEigen2D.hpp"
 
-#include "mat.hpp"
-#include "prbGauss1D.hpp"
-#include "rasGrid.hpp"
+#include "QuadLoco/mat.hpp"
+#include "QuadLoco/prbGauss1D.hpp"
+#include "QuadLoco/rasGrid.hpp"
 
 #include <Engabra>
 

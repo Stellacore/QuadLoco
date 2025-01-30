@@ -28,13 +28,13 @@
 */
 
 
-#include "io.hpp"
-#include "objQuadTarget.hpp"
-#include "pix.hpp"
-#include "rasGrid.hpp"
-#include "simConfig.hpp"
-#include "simRender.hpp"
-#include "valSpan.hpp"
+#include "QuadLoco/io.hpp"
+#include "QuadLoco/objQuadTarget.hpp"
+#include "QuadLoco/pix.hpp"
+#include "QuadLoco/rasGrid.hpp"
+#include "QuadLoco/simConfig.hpp"
+#include "QuadLoco/simRender.hpp"
+#include "QuadLoco/valSpan.hpp"
 
 #include <algorithm>
 #include <fstream>

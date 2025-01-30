@@ -28,15 +28,15 @@
 */
 
 
-#include "appcenter.hpp"
+#include "QuadLoco/appcenter.hpp"
 
-#include "cast.hpp"
-#include "imgSpot.hpp"
-#include "io.hpp"
-#include "opsAllPeaks2D.hpp"
-#include "opsSymRing.hpp"
-#include "rasGrid.hpp"
-#include "rasPeakRCV.hpp"
+#include "QuadLoco/cast.hpp"
+#include "QuadLoco/imgSpot.hpp"
+#include "QuadLoco/io.hpp"
+#include "QuadLoco/opsAllPeaks2D.hpp"
+#include "QuadLoco/opsSymRing.hpp"
+#include "QuadLoco/rasGrid.hpp"
+#include "QuadLoco/rasPeakRCV.hpp"
 
 #include <filesystem>
 #include <fstream>

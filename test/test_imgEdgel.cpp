@@ -28,10 +28,10 @@
 */
 
 
-#include "cast.hpp"
-#include "rasRowCol.hpp"
-#include "rasSizeHW.hpp"
-#include "imgEdgel.hpp"
+#include "QuadLoco/cast.hpp"
+#include "QuadLoco/rasRowCol.hpp"
+#include "QuadLoco/rasSizeHW.hpp"
+#include "QuadLoco/imgEdgel.hpp"
 
 #include <iostream>
 #include <sstream>

@@ -8,8 +8,10 @@
 
 # list in order from highest level to lowest - fewer crossing lines
 namespaces=\
-"sim app  sig  ops  obj xfm cast io prb  mat ras  pix mea  img  ang val sys"
+"sim app  ops  obj xfm cast io prb  mat ras  pix mea  img  ang val sys"
 
+
+IncDir="include/QuadLoco/"
 
 echo "digraph {"
 for nmHi in $namespaces; do
@@ -17,11 +19,7 @@ for nmHi in $namespaces; do
 	for nmLo in $namespaces; do
 	#	echo $nmLo " using " $nmHi
 		if [ "$nmLo" != "$nmHi" ]; then
-		#	grep '#include' include/${nmLo}* \
-		#	| grep '"'${nmHi} \
-		#	| tr ':' ' ' \
-		#	| awk '{print "   "  $3}'
-			result=$(grep '#include' include/${nmLo}* | grep '"'${nmHi})
+			result=$(grep '#include' ${IncDir}/${nmLo}* | grep '\/'${nmHi})
 			if [ "$result" != "" ]; then
 				echo "   ${nmLo} -> ${nmHi};"
 			#	echo $result

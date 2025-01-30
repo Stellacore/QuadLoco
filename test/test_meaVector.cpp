@@ -28,7 +28,7 @@
 */
 
 
-#include "meaVector.hpp"
+#include "QuadLoco/meaVector.hpp"
 
 
 #include <iostream>

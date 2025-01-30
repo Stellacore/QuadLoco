@@ -28,7 +28,7 @@
 */
 
 
-#include "QuadLoco"
+#include "QuadLoco/QuadLoco"
 
 #include <iostream>
 

@@ -27,7 +27,7 @@
 */
 
 
-#include "QuadLoco"
+#include "QuadLoco/QuadLoco.hpp"
 
 
 namespace quadloco

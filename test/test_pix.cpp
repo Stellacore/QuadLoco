@@ -28,10 +28,10 @@
 */
 
 
-#include "pix.hpp"
-#include "rasgrid.hpp"
-#include "rasGrid.hpp"
-#include "valSpan.hpp"
+#include "QuadLoco/pix.hpp"
+#include "QuadLoco/rasgrid.hpp"
+#include "QuadLoco/rasGrid.hpp"
+#include "QuadLoco/valSpan.hpp"
 
 #include <iostream>
 #include <sstream>

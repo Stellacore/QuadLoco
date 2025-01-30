@@ -28,9 +28,9 @@
 */
 
 
-#include "rasChipSpec.hpp"
-#include "rasgrid.hpp"
-#include "rasGrid.hpp"
+#include "QuadLoco/rasChipSpec.hpp"
+#include "QuadLoco/rasgrid.hpp"
+#include "QuadLoco/rasGrid.hpp"
 
 #include <algorithm>
 #include <iostream>

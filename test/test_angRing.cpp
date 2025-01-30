@@ -28,11 +28,11 @@
 */
 
 
-#include "angRing.hpp"
+#include "QuadLoco/angRing.hpp"
 
-#include "ang.hpp"
-#include "imgSpot.hpp"
-#include "prbGauss1D.hpp"
+#include "QuadLoco/ang.hpp"
+#include "QuadLoco/imgSpot.hpp"
+#include "QuadLoco/prbGauss1D.hpp"
 
 #include <Engabra>
 
