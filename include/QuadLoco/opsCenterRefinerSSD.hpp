@@ -128,6 +128,7 @@ namespace ops
 		ras::Grid<double>
 		gridOfAveSSD
 			( ras::RowCol const & rcHoodCenterInSrc
+			, prb::Stats<double> * const & ptSrcStats = { nullptr }
 			) const
 		{
 			// allocate and initialize sum-sqr-diff return grid
@@ -168,6 +169,11 @@ namespace ops
 
 					float const & fwdSrcVal = srcGrid(fwdRowCol);
 					float const & revSrcVal = srcGrid(revRowCol);
+					if (ptSrcStats)
+					{
+						ptSrcStats->consider((double)fwdSrcVal);
+						ptSrcStats->consider((double)revSrcVal);
+					}
 					if (pix::isValid(fwdSrcVal) && pix::isValid(revSrcVal))
 					{
 						double const diff
@@ -337,16 +343,13 @@ namespace ops
 
 			if (isInterior)
 			{
-				// compute SSD in neighborhood
+				// gather source image value stats (for use in
+				// assessing significance of SSD values)
+				// while computing SSD in neighborhood
+				prb::Stats<double> srcStats{};
 				ras::Grid<double> const aveGridSSD
-					{ gridOfAveSSD(rcHoodCenterInSrc) };
-
-				// gather source image value stats for use in
-				// assessing significance of SSD values
-				ras::Grid<float> const & srcGrid = *thePtSrcGrid;
-				prb::Stats<double> const ssdStats
-					(srcGrid.cbegin(), srcGrid.cend());
-				double const varSrcPix{ ssdStats.variance() };
+					{ gridOfAveSSD(rcHoodCenterInSrc, &srcStats) };
+				double const varSrcPix{ srcStats.variance() };
 
 				// estimate sub-cell location of minimum
 				img::Hit const minHitInGrid
