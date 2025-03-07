@@ -126,7 +126,7 @@ namespace ops
 		 */
 		inline
 		ras::Grid<double>
-		gridOfHoodPerPixSSD
+		gridOfAveSSD
 			( ras::RowCol const & rcHoodCenterInSrc
 			) const
 		{
@@ -192,61 +192,36 @@ namespace ops
 		/*! \brief A sub-cell estimate of location for minimum within ssdGrid
 		 *
 		 * Input grid, ssdGrid, is assumed to have cell values that
-		 * represent "SSD per (valid)pixel" through some neighborhood of
-		 * interest.
+		 * represent an "*average* of SSD values over valid cells"
+		 * throughout some neighborhood of interest.
 		 *
 		 * The ssd (per valid pixel) values have a theoretical minimum
 		 * of zero (every source image pixel values is exactly the same
 		 * as the diametrically opposite pixel).
 		 *
 		 * The ssd maximum value depends on the range of actual source
-		 * input values (e.g. for full range 8bit image, could be 255, but
-		 * in general max will be some arbitrary value based on image
-		 * exposure, scene content, etc).
+		 * input values (e.g. for full range 8bit image, this could be
+		 * 255, for a normalized image, it could be 1.0).  Thus, the
+		 * consuming code must provide an indication of the variance
+		 * present in the original source grid values.
 		 *
-		 * For conversion to pseudo probabilities,
-		 * \arg Define a "sigma" value
-		 * \arg Compute guassian-like function: exp(-sq(ssdValue/sigma));
-		 *
-		 * The sigma value is *arbitrarily* set to 1/4 of the maximum
-		 * ssdValue in the ssdGrid. This results in pseudo probabilities
-		 * that are very small for ssdGrid values that are near the
-		 * "worst" in the neighborhood.
-		 *
-		 * The "best" pseudo probability has a value of
-		 * \arg bestProb = exp(-sq(ssdGridMin/sigma).
-		 * \arg bestProb = exp(-sq(ssdGridMin/(.25*ssdGridMax))).
-		 *
-		 * If the minSSD is near zero, then the best pseudo prob will
-		 * be near 1.0 no matter what the sigma value is (as long as it
-		 * is not zero).  For the general case, the pseudo probability
-		 * will be a maximum at the ssdGrid minimum, but will have a
-		 * value that is rather arbitrarily scaled.
+		 * Pseudo probabilities are assigned based on the relationship
+		 * of the ssdGrid value and the provide variance via the
+		 * Gaussian-like pseudo probability value:
+		 * \arg std::exp(-(ssdValue / varSrcPix)) };
 		 */
 		inline
 		static
 		img::Hit
 		hitAtMinimumOf
 			( ras::Grid<double> const & ssdGrid
+				//!< Per pixel SSD values over neighborhood
+			, double const & varSrcPix
+				//!< Radiometric standard deviation of source grid values
 			)
 		{
 			img::Hit minHit{};
-			// gather stats over entire input grid
-			prb::Stats<double> const ssdStats
-				(ssdGrid.cbegin(), ssdGrid.cend());
-
-			// define pseudo-probability deviation
-			double sigma{ engabra::g3::null<double>() };
-			if (ssdStats.isValid())
-			{
-				// scale for pseudo probability distribution over ssd values
-				// arbitrary such that maximum ssd in neighborhood will
-				// have a very small pseudo prob.
-				constexpr double sigmaFracOfMax{ .25 };
-				sigma = sigmaFracOfMax * ssdStats.max();
-			}
-
-			if (engabra::g3::isValid(sigma))
+			if (ssdGrid.isValid() && engabra::g3::isValid(varSrcPix))
 			{
 				ras::Grid<double> probGrid(ssdGrid.hwSize());
 				std::fill(probGrid.begin(), probGrid.end(), 0.);
@@ -266,8 +241,8 @@ namespace ops
 						ras::RowCol const inRC{ ssdGrid.rasRowColFor(iter) };
 						img::Spot const locSpot{ cast::imgSpot(inRC) };
 
-						double const arg{ ssdValue / sigma };
-						double const prob{ std::exp(-arg*arg) };
+						double const argSq{ ssdValue / varSrcPix };
+						double const prob{ std::exp(-argSq) };
 
 						sumVec = sumVec + prob * locSpot;
 						sumProb += prob;
@@ -363,15 +338,22 @@ namespace ops
 			if (isInterior)
 			{
 				// compute SSD in neighborhood
-				ras::Grid<double> const ssdGrid
-					{ gridOfHoodPerPixSSD(rcHoodCenterInSrc) };
+				ras::Grid<double> const aveGridSSD
+					{ gridOfAveSSD(rcHoodCenterInSrc) };
+
+				// gather source image value stats for use in
+				// assessing significance of SSD values
+				ras::Grid<float> const & srcGrid = *thePtSrcGrid;
+				prb::Stats<double> const ssdStats
+					(srcGrid.cbegin(), srcGrid.cend());
+				double const varSrcPix{ ssdStats.variance() };
 
 				// estimate sub-cell location of minimum
 				img::Hit const minHitInGrid
-					{ hitAtMinimumOf(ssdGrid) };
+					{ hitAtMinimumOf(aveGridSSD, varSrcPix) };
 				img::Spot const & minSpotInGrid = minHitInGrid.location();
 
-				// adjust ssdGrid location into full source image
+				// adjust aveGridSSD location into full source image
 				img::Spot const fitSpot
 					{ minSpotInGrid.row()
 						+ (double)(rcHoodCenterInSrc.row())
