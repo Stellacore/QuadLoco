@@ -349,7 +349,17 @@ namespace ops
 				prb::Stats<double> srcStats{};
 				ras::Grid<double> const aveGridSSD
 					{ gridOfAveSSD(rcHoodCenterInSrc, &srcStats) };
-				double const varSrcPix{ srcStats.variance() };
+
+				// assume dominant random noise in the (presumably small)
+				// neighborhood is due to shot noise (which goes as square 
+				// root of intensity. For dark/light patches, the
+				// deviation should be sqrt(dark)/sqrt(light) which means
+				// the variance should be sum of expected min and expected
+				// max values. Assume (ad hoc) that the extreme min and
+				// max values are "reasonably" close to the expected min/max.
+				double const varBlack{ srcStats.min() };
+				double const varWhite{ srcStats.max() };
+				double const varSrcPix{ varBlack + varWhite };
 
 				// estimate sub-cell location of minimum
 				img::Hit const minHitInGrid
