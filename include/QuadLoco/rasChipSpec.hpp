@@ -79,7 +79,10 @@ namespace ras
 					{ (rcCenter.row() - halfHigh)
 					, (rcCenter.col() - halfWide)
 					};
-				ras::SizeHW const hwSize{ halfHigh, halfWide };
+				ras::SizeHW const hwSize
+					{ 2u * halfHigh + 1u
+					, 2u * halfWide + 1u
+					};
 				spec = ChipSpec{ rcOrig, hwSize };
 			}
 			return spec;
