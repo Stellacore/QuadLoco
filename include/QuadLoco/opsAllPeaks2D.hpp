@@ -48,7 +48,7 @@ namespace quadloco
 
 namespace ops
 {
-	//! \brief Group of functions for operating on 2D peaks
+	//! \brief Class that gruops functions for operating with 2D peaks
 	class AllPeaks2D
 	{
 		std::vector<ras::PeakRCV> thePeakRCVs{};
@@ -140,7 +140,7 @@ namespace ops
 			return peakRCVs;
 		}
 
-		/*! Same as unsortedPeakRCVs followed by sort() and resize().
+		/*! \brief Same as unsortedPeakRCVs followed by sort() and resize().
 		 *
 		 * The returned array contains PeakRCV values in sorted order
 		 * with the largest peak value first (e.g. in result.front()).
@@ -230,7 +230,7 @@ namespace ops
 			return thePeakRCVs;
 		}
 
-		//! Number of peaks found
+		//! \brief Number of peaks found
 		inline
 		std::size_t
 		size

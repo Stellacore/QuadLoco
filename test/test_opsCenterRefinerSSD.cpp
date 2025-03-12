@@ -69,6 +69,8 @@ namespace
 		ras::Grid<float> const & srcGrid = simQuadData.theGrid;
 		img::Spot const expCenterSpot{ simQuadData.theImgQuad.centerSpot() };
 
+		// (void)io::writeStretchPGM("fooTest.pgm", srcGrid);
+
 		//(void)io::writeStretchPGM("srcGrid.pgm", srcGrid);
 
 		// [DoxyExample01a]
@@ -81,10 +83,6 @@ namespace
 
 		// [DoxyExample01a]
 
-std::cout << "expCenterSpot: " << expCenterSpot << '\n';
-std::cout << "peakRCVs.size: " << peakRCVs.size() << '\n';
-std::cout << "  distinction: " << engabra::g3::io::fixed(distinction) << '\n';
-
 		if (peakRCVs.empty())
 		{
 			oss << "Failure of peakRCVs.empty() test\n";
@@ -94,28 +92,41 @@ std::cout << "  distinction: " << engabra::g3::io::fixed(distinction) << '\n';
 			// [DoxyExample01b]
 
 			ras::RowCol const & nominalCenterRC = peakRCVs.front().theRowCol;
+
+			// refine the location of the symmetry peak found aboe
 			ops::CenterRefinerSSD const refiner(&srcGrid, 2u, 6u);
 			img::Hit const gotCenterHit
 				{ refiner.fitHitNear(nominalCenterRC) };
-			img::Spot const & gotCenterSpot = gotCenterHit.location();
 
-			img::Spot const difCenterSpot
-				{ gotCenterHit.location() - expCenterSpot };
-			double const difMag{ magnitude(difCenterSpot) };
+			img::Spot const & gotCenterSpot = gotCenterHit.location();
 
 			// [DoxyExample01b]
 
-using engabra::g3::io::fixed;
-std::cout << " peakRCVs.front: " << peakRCVs.front() << '\n';
-std::cout << "nominalCenterRC: " << nominalCenterRC << '\n';
-std::cout << "  expCenterSpot: " << expCenterSpot << '\n';
-std::cout << "  gotCenterSpot: " << gotCenterSpot
-	<< "  from,hit: " << gotCenterHit << '\n';
-std::cout << "  difCenterSpot: "
-	<< difCenterSpot << "  mag: " << fixed(difMag, 2u, 2u) << '\n';
+			// NOTE: image (radiometric) noise affects the fit center
+			//       tolerance value here reflects this.
+			constexpr double tol{ 5./8. }; // [pix]
+			if (! nearlyEqualsAbs(gotCenterSpot, expCenterSpot, tol))
+			{
+				using engabra::g3::io::fixed;
+				img::Spot const difCenterSpot
+					{ gotCenterHit.location() - expCenterSpot };
+				double const difMag{ magnitude(difCenterSpot) };
+				oss << "Failure of (ssd)refined gotCenterSpot test\n";
+				oss << "exp: " << expCenterSpot << '\n';
+				oss << "got: " << gotCenterSpot << '\n';
+				oss << "dif: " << difCenterSpot
+					<< "  mag: " << fixed(difMag) << '\n';
+				oss << "tol: " << fixed(tol) << '\n';
+				oss << "detail:\n";
+				oss << "-- peakRCVs.front: " << peakRCVs.front() << '\n';
+				oss << "--nominalCenterRC: " << nominalCenterRC << '\n';
+				oss << "--  peakRCVs.size: " << peakRCVs.size() << '\n';
+				oss << "--    distinction: " << fixed(distinction) << '\n';
+				oss << "--   gotCenterHit: " << gotCenterHit << '\n';
+			}
 		}
 
-	}
+	} // test1
 
 }
 

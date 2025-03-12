@@ -31,6 +31,78 @@ In general practical applications, there are multiple phases:
 
 This library focuses on localization.
 
+## Usage
+
+### Common case
+
+There are two main algorithms that refine a nominal center location:
+* SSD: Center point at best radiometric symmetry under 1/2 turn rotation
+* Edge: Center point by intersecting 4 lines that best fit radial edge pixels
+
+The SSD algorithm seems to be more robust (at least with simulated imagery)
+and is the one recommended for general use.
+
+Both algorithms operate on image/raster data contained in an instance of
+quadloco::ras::Grid class. The file quadloco::ras::grid.hpp contains various
+functions for creating and manipulating Grid instances. The file
+quadloco::io.hpp contains functions for loading and saving Grid data for
+a few very simple formats.
+
+E.g.:
+```
+#include "QuadLoco/QuadLoco.hpp" // master include for entire project
+...
+{
+	using namespace quadloco;
+
+	// raster data loaded from 8-bit PGM file and cast to float type
+	ras::Grid<std::uint8_t> const uGrid{ io::readPGM(srcPath) };
+	ras::Grid<float> const srcGrid{ ras::grid::realGridOf<float>(uGrid) };
+}
+```
+
+#### SSD Center Refinement
+
+Starting with srcGrid similar to above, use class
+* quadloco::ops::CenterRefinerSSD
+
+Example code (from include/QuadLoco/opsCenterRefinerEdge.hpp)
+```
+{
+	// refine center location based on half-turn symmetry
+	using namespace quadloco;
+	ras::PeakRCV const & peak = symPeakRCVs.front();
+	ras::RowCol const & nomCenterRC = peak.theRowCol;
+	ops::CenterRefinerSSD const ssdRefiner(&srcGrid);
+	img::Hit const hit{ ssdRefiner.fitHitNear(nomCenterRC) };
+	img::Spot const gotCenter{ hit.location() };
+}
+```
+
+#### Edge Center Refinement
+
+Starting with srcGrid similar to above, use class
+* quadloco::ops::CenterRefinerEdge
+
+Example code (from include/QuadLoco/opsCenterRefinerEdge.hpp)
+```
+{
+	// refine center location based on edge response geometry
+	using namespace quadloco;
+	std::size_t const halfRadius{ 5u };
+	ops::CenterRefinerEdge const edgeRefiner(srcGrid);
+	std::vector<img::Hit> centerHits
+		{ edgeRefiner.centerHits(symPeakRCVs, halfRadius) };
+	if (! centerHits.empty())
+	{
+		// could just find the max prob or min uncertainty one
+		std::sort(centerHits.rbegin(), centerHits.rend());
+		img::Spot const gotCenter{ centerHits.front().location() };
+	}
+}
+```
+
+
 ## Build
 
 ```
