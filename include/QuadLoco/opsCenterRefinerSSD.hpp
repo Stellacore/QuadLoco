@@ -117,17 +117,24 @@ namespace ops
 			, theCorrRelRCs{ boxRelRCs(theHalfCorr) }
 		{ }
 
-		//! Grid of sum-squared-differences centered on source location
+		/*! \brief Grid of sum-squared-differences centered on source location
+		 *
+		 * The return value is the *expected* squared difference per *valid*
+		 * pair of pixels in the neighboor hood. E.g. it is the sum of 
+		 * squared difference of valid pixels divided by the number of
+		 * valid (diametrically opposite) pixels in the neighborhood.
+		 */
 		inline
 		ras::Grid<double>
-		ssdHoodGrid
+		gridOfAveSSD
 			( ras::RowCol const & rcHoodCenterInSrc
+			, prb::Stats<double> * const & ptSrcStats = { nullptr }
 			) const
 		{
 			// allocate and initialize sum-sqr-diff return grid
 			std::size_t const fullHood{ 2u*theHalfHood + 1u };
 			ras::Grid<double> ssdGrid(fullHood, fullHood);
-			std::fill(ssdGrid.begin(), ssdGrid.end(), 0.);
+			std::fill(ssdGrid.begin(), ssdGrid.end(), pix::null<float>());
 
 			// useful shorthand
 			ras::Grid<float> const & srcGrid = *thePtSrcGrid;
@@ -137,6 +144,7 @@ namespace ops
 
 			// loop over evaluation neighborhood (corresponding to output grid)
 			CorrIter outCorrIter{ ssdGrid.begin() };
+			double count{ 0. };
 			for (ras::RelRC const & hoodRelRC : theHoodRelRCs)
 			{
 				ras::RowCol const rcHood0
@@ -161,54 +169,86 @@ namespace ops
 
 					float const & fwdSrcVal = srcGrid(fwdRowCol);
 					float const & revSrcVal = srcGrid(revRowCol);
-					double const diff
-						{ static_cast<double>(fwdSrcVal - revSrcVal) };
-					sumSqDif += diff*diff;
+					if (ptSrcStats)
+					{
+						ptSrcStats->consider((double)fwdSrcVal);
+						ptSrcStats->consider((double)revSrcVal);
+					}
+					if (pix::isValid(fwdSrcVal) && pix::isValid(revSrcVal))
+					{
+						double const diff
+							{ static_cast<double>(fwdSrcVal - revSrcVal) };
+						sumSqDif += diff*diff;
+						count += 1.;
+					}
 				}
-				*outCorrIter++ = sumSqDif;
+
+				// compute 'expected ssd' per valid input pixel-pair
+				if (0. < count)
+				{
+					double const aveSqDif{ sumSqDif / count };
+					*outCorrIter++ = aveSqDif;
+				}
 
 			} // hood locations
 
 			return ssdGrid;
 		}
 
-		//! A sub-cell estimate of location for minimum within ssdGrid
+		/*! \brief A sub-cell estimate of location for minimum within ssdGrid
+		 *
+		 * Input grid, ssdGrid, is assumed to have cell values that
+		 * represent an "*average* of SSD values over valid cells"
+		 * throughout some neighborhood of interest.
+		 *
+		 * The ssd (per valid pixel) values have a theoretical minimum
+		 * of zero (every source image pixel values is exactly the same
+		 * as the diametrically opposite pixel).
+		 *
+		 * The ssd maximum value depends on the range of actual source
+		 * input values (e.g. for full range 8bit image, this could be
+		 * 255, for a normalized image, it could be 1.0).  Thus, the
+		 * consuming code must provide an indication of the variance
+		 * present in the original source grid values.
+		 *
+		 * Pseudo probabilities are assigned based on the relationship
+		 * of the ssdGrid value and the provide variance via the
+		 * Gaussian-like pseudo probability value:
+		 * \arg std::exp(-(ssdValue / varSrcPix)) };
+		 */
 		inline
 		static
 		img::Hit
 		hitAtMinimumOf
-			( ras::Grid<double> const & inGrid
+			( ras::Grid<double> const & ssdGrid
+				//!< Per pixel SSD values over neighborhood
+			, double const & varSrcPix
+				//!< Radiometric standard deviation of source grid values
 			)
 		{
 			img::Hit minHit{};
-			// gather stats over entire input grid
-			prb::Stats<double> const ssdStats(inGrid.cbegin(), inGrid.cend());
-			// use theoretical min value of zero and sample max value
-			// so that computed pseudo probabilities have meaning relative
-			// to theoretical perfect fit (the 0 value).
-			val::Span const ssdSpan{ 0., ssdStats.max() };
-			if (ssdSpan.isValid())
+			if (ssdGrid.isValid() && engabra::g3::isValid(varSrcPix))
 			{
-				ras::Grid<double> probGrid(inGrid.hwSize());
+				ras::Grid<double> probGrid(ssdGrid.hwSize());
 				std::fill(probGrid.begin(), probGrid.end(), 0.);
 
-				// compute weighted minimum over all elements of input grid
-				// (using a pseudo-probability weighting function to favor
-				// smaller values).
+				// Estimate best fit location (ssdGrid minimum)
 				img::Vector<double> sumVec{ 0., 0. };
 				double sumProb{ 0. };
 				for (ras::Grid<double>::const_iterator
-					iter{inGrid.cbegin()} ; inGrid.cend() != iter ; ++iter)
+					iter{ssdGrid.cbegin()} ; ssdGrid.cend() != iter ; ++iter)
 				{
+					// compute weighted minimum over all elements of input
+					// grid (using a pseudo-probability weighting function
+					// to favor smaller (better) ssdGrid values).
 					double const & ssdValue = *iter;
 					if (engabra::g3::isValid(ssdValue))
 					{
-						ras::RowCol const inRC{ inGrid.rasRowColFor(iter) };
+						ras::RowCol const inRC{ ssdGrid.rasRowColFor(iter) };
 						img::Spot const locSpot{ cast::imgSpot(inRC) };
 
-						double const frac{ ssdSpan.fractionAtValue(ssdValue) };
-						double const arg{ 4. * frac };
-						double const prob{ std::exp(-arg*arg) };
+						double const argSq{ ssdValue / varSrcPix };
+						double const prob{ std::exp(-argSq) };
 
 						sumVec = sumVec + prob * locSpot;
 						sumProb += prob;
@@ -217,6 +257,8 @@ namespace ops
 						probGrid(inRC) = prob;
 					}
 				}
+
+				// Estimate variance (deviation) of best fit location
 				if (0. < sumProb)
 				{
 					// The SSD computations are based on matching areas
@@ -233,12 +275,14 @@ namespace ops
 					double sumSq{ 0. };
 					double sumProb{ 0. };
 					for (ras::Grid<double>::const_iterator
-						iter{inGrid.cbegin()} ; inGrid.cend() != iter ; ++iter)
+						iter{ssdGrid.cbegin()}
+						; ssdGrid.cend() != iter ; ++iter)
 					{
 						double const & ssdValue = *iter;
 						if (engabra::g3::isValid(ssdValue))
 						{
-							ras::RowCol const inRC{ inGrid.rasRowColFor(iter) };
+							ras::RowCol const inRC
+								{ ssdGrid.rasRowColFor(iter) };
 							img::Spot const locSpot{ cast::imgSpot(inRC) };
 							img::Spot const relSpot{ locSpot - minSpot };
 							double const relMag{ magnitude(relSpot) };
@@ -299,16 +343,30 @@ namespace ops
 
 			if (isInterior)
 			{
-				// compute SSD in neighborhood
-				ras::Grid<double> const ssdGrid
-					{ ssdHoodGrid(rcHoodCenterInSrc) };
+				// gather source image value stats (for use in
+				// assessing significance of SSD values)
+				// while computing SSD in neighborhood
+				prb::Stats<double> srcStats{};
+				ras::Grid<double> const aveGridSSD
+					{ gridOfAveSSD(rcHoodCenterInSrc, &srcStats) };
+
+				// assume dominant random noise in the (presumably small)
+				// neighborhood is due to shot noise (which goes as square 
+				// root of intensity. For dark/light patches, the
+				// deviation should be sqrt(dark)/sqrt(light) which means
+				// the variance should be sum of expected min and expected
+				// max values. Assume (ad hoc) that the extreme min and
+				// max values are "reasonably" close to the expected min/max.
+				double const varBlack{ srcStats.min() };
+				double const varWhite{ srcStats.max() };
+				double const varSrcPix{ varBlack + varWhite };
 
 				// estimate sub-cell location of minimum
 				img::Hit const minHitInGrid
-					{ hitAtMinimumOf(ssdGrid) };
+					{ hitAtMinimumOf(aveGridSSD, varSrcPix) };
 				img::Spot const & minSpotInGrid = minHitInGrid.location();
 
-				// adjust ssdGrid location into full source image
+				// adjust aveGridSSD location into full source image
 				img::Spot const fitSpot
 					{ minSpotInGrid.row()
 						+ (double)(rcHoodCenterInSrc.row())

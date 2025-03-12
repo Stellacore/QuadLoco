@@ -62,12 +62,12 @@ namespace img
 
 	public:
 
-		//! Default construction of null instance (isValid()==false)
+		//! \brief Default construction of null instance (isValid()==false)
 		inline
 		Hit
 			() = default;
 
-		//! Value constructor
+		//! \brief Value constructor
 		inline
 		explicit
 		Hit
@@ -80,7 +80,7 @@ namespace img
 			, theUncertainty{ uncertainty }
 		{ }
 
-		//! Convenience construction from integer row/col indices
+		//! \brief Convenience construction from integer row/col indices
 		inline
 		explicit
 		Hit
@@ -98,7 +98,7 @@ namespace img
 		{ }
 
 
-		//! True if this instance contains valid data
+		//! \brief True if this instance contains valid data
 		inline
 		bool
 		isValid
@@ -111,6 +111,7 @@ namespace img
 				);
 		}
 
+		//! \brief Image spot for hit location
 		inline
 		img::Spot const &
 		location
@@ -119,7 +120,7 @@ namespace img
 			return theSpot;
 		}
 
-		//! Significance of peak (e.g. probability a feature was found)
+		//! \brief Significance of peak (e.g. probability a feature was found)
 		inline
 		double const &
 		value
@@ -128,7 +129,7 @@ namespace img
 			return theSignificance;
 		}
 
-		//! Geometric uncertainty (e.g. expected radial error) in theSpot
+		//! \brief Geometric uncertainty (e.g. expected radial error) in theSpot
 		inline
 		double const &
 		sigma
@@ -137,7 +138,7 @@ namespace img
 			return theUncertainty;
 		}
 
-		//! Order by significance value
+		//! \brief Order by significance value
 		inline
 		bool
 		operator<
@@ -147,7 +148,7 @@ namespace img
 			return (value() < other.value());
 		}
 
-		//! True if location is nearly equal
+		//! \brief True if location is nearly equal
 		inline
 		bool
 		nearlySameLocation
@@ -159,7 +160,7 @@ namespace img
 			return theSpot.nearlyEquals(other.theSpot, tol);
 		}
 
-		//! True if all data members are nearly equal
+		//! \brief True if all data members are nearly equal
 		inline
 		bool
 		nearlyEquals
@@ -176,7 +177,7 @@ namespace img
 				);
 		}
 
-		//! Descriptive information about this instance.
+		//! \brief Descriptive information about this instance.
 		inline
 		std::string
 		infoString

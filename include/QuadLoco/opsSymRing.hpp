@@ -391,66 +391,80 @@ namespace ops
 			) const
 		{
 			float outVal{ std::numeric_limits<float>::quiet_NaN() };
-			ras::Grid<float> const & srcGrid = *thePtSrc;
-
-			// compare first and second half of ring
-			// (ring pattern halves should repeat for half-turn symmetry)
-			RingStats ringStats{};
-
-			bool hitNull{ false };
-			for (std::size_t nn{0u} ; nn < theHalfRingSize ; ++nn)
+			bool const srcOkay
+				{  engabra::g3::isValid(theSrcFullRange)
+				&& (0. < theSrcFullRange)
+				};
+			if (srcOkay)
 			{
-				// check values at radially opposite portion of annulus
-				std::size_t & ndx1 = nn;
-				std::size_t ndx2{ ndx1 + theHalfRingSize };
+				ras::Grid<float> const & srcGrid = *thePtSrc;
 
-				// access radially opposite ring source values
-				ras::RelRC const & relRC1 = theRelRCs[ndx1];
-				float const & srcVal1 = srcGrid(relRC1.srcRowCol(row, col));
+				// compare first and second half of ring
+				// (ring pattern halves should repeat for half-turn symmetry)
+				RingStats ringStats{};
 
-				ras::RelRC const & relRC2 = theRelRCs[ndx2];
-				float const & srcVal2 = srcGrid(relRC2.srcRowCol(row, col));
-
-				if (pix::isValid(srcVal1) && pix::isValid(srcVal2))
+				bool hitNull{ false };
+				for (std::size_t nn{0u} ; nn < theHalfRingSize ; ++nn)
 				{
-					double const delta1{ (double)(srcVal1 - theSrcMidValue) };
-					double const delta2{ (double)(srcVal2 - theSrcMidValue) };
-					ringStats.consider(delta1, delta2);
-				}
-				else
+					// check values at radially opposite portion of annulus
+					std::size_t & ndx1 = nn;
+					std::size_t ndx2{ ndx1 + theHalfRingSize };
+
+					// access radially opposite ring source values
+					ras::RelRC const & relRC1 = theRelRCs[ndx1];
+					float const & srcVal1
+						= srcGrid(relRC1.srcRowCol(row, col));
+
+					ras::RelRC const & relRC2 = theRelRCs[ndx2];
+					float const & srcVal2
+						= srcGrid(relRC2.srcRowCol(row, col));
+
+					if (pix::isValid(srcVal1) && pix::isValid(srcVal2))
+					{
+						double const delta1
+							{ (double)(srcVal1 - theSrcMidValue) };
+						double const delta2
+							{ (double)(srcVal2 - theSrcMidValue) };
+						ringStats.consider(delta1, delta2);
+					}
+					else
+					{
+						hitNull = true;
+						break;
+					}
+
+				} // ring loop
+
+				// perform filter analysis
+				if (! hitNull)
 				{
-					hitNull = true;
-					break;
-				}
+					// Balanced lo/hi count threshold qualification
+					if (! ringStats.hasPosNegBalance(theMinPosNeg))
+					{
+						outVal = 0.f;
+					}
+					else // if (enoughPos && enoughNeg)
+					{
+						// Half-Turn Symmetry metric
+						double const valDifSig{ ringStats.sigmaValueDifs() };
+						double const valSigma{ theSrcFullRange / 8. };
+						double const valDifRatio{ valDifSig / valSigma };
+						// valDifProb ranges in [0,1]
+						double const valDifProb{ std::exp(-sq(valDifRatio)) };
 
-			} // ring loop
+						// High Contrast metric
+						// -- normalized to full range in source image
+						double const rngRing
+							{ ringStats.valueRange() / theSrcFullRange };
 
-			// perform filter analysis
-			if (! hitNull)
-			{
-				// Balanced lo/hi count threshold qualification
-				if (! ringStats.hasPosNegBalance(theMinPosNeg))
-				{
-					outVal = 0.f;
-				}
-				else // if (enoughPos && enoughNeg)
-				{
-					// Half-Turn Symmetry metric
-					double const valDifSig{ ringStats.sigmaValueDifs() };
-					double const valSigma{ theSrcFullRange / 8. };
-					double const valDifRatio{ valDifSig / valSigma };
-					double const valDifProb{ std::exp(-sq(valDifRatio)) };
+						// Center element has value near middle of range
+						// -- only relevant for well exposed targets. If
+						// target image is under/over exposed, then the
+						// center values are either dark or light.
 
-					// High Contrast metric
-					double const rngRing{ ringStats.valueRange() };
-
-					// Center element has value near middle of range
-				//	float const & midVal = srcGrid(row, col);
-				//	double const midProb{ ringStats.centerValueProb(midVal) };
-
-					// filter response value
-					outVal = (float)(rngRing * valDifProb);
-				//	outVal = (float)(rngRing * valDifProb * midProb);
+						// filter response value
+						outVal = (float)(rngRing * valDifProb);
+					}
 				}
 			}
 

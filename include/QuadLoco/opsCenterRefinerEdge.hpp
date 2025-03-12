@@ -555,7 +555,7 @@ namespace ops
 			: theGradGrid{ ops::grid::gradientGridBy8x(srcGrid) }
 		{ }
 
-		/*! Use gradient grid values to estimate center point near to nomSpot
+		/*! \brief Use gradient grid to estimate center point near to nomSpot
 		 *
 		 * Note: This assumes that nomSpot is sufficiently inside the
 		 * gradient grid dimensions (e.g. at least searchRadius cells

@@ -53,13 +53,42 @@ namespace ras
 	 */
 	struct ChipSpec
 	{
-		//! Chip upper left corner is at this location in source image.
-		ras::RowCol const theSrcOrigRC;
+		//! \brief Chip upper left corner is at this location in source image.
+		ras::RowCol theSrcOrigRC;
+
 		//! The height/width of this chip.
-		ras::SizeHW const theChipSizeHW;
+		ras::SizeHW theChipSizeHW;
 
 
-		//! True if this instance contains non trivial values
+		//! \brief ChipSpec centered on rcCenter with size (2u*half{H,W} + 1u)
+		inline
+		static
+		ChipSpec
+		centeredOn
+			( ras::RowCol const & rcCenter
+			, std::size_t const & halfHigh
+			, std::size_t const & halfWide
+			)
+		{
+			ChipSpec spec{};
+			if ( (! (rcCenter.row() < halfHigh))
+			  && (! (rcCenter.col() < halfWide))
+			   )
+			{
+				ras::RowCol const rcOrig
+					{ (rcCenter.row() - halfHigh)
+					, (rcCenter.col() - halfWide)
+					};
+				ras::SizeHW const hwSize
+					{ 2u * halfHigh + 1u
+					, 2u * halfWide + 1u
+					};
+				spec = ChipSpec{ rcOrig, hwSize };
+			}
+			return spec;
+		}
+
+		//! \brief True if this instance contains non trivial values
 		inline
 		bool
 		isValid
@@ -68,7 +97,7 @@ namespace ras
 			return theChipSizeHW.isValid();
 		}
 
-		//! The row/column in source image for this chip's UL corner
+		//! \brief The row/column in source image for this chip's UL corner
 		inline
 		ras::RowCol const &
 		srcOrigRC
@@ -77,7 +106,7 @@ namespace ras
 			return theSrcOrigRC;
 		}
 
-		//! Source spot location at center of chip
+		//! \brief Source spot location at center of chip
 		inline
 		img::Spot
 		srcCenterSpot
@@ -91,7 +120,7 @@ namespace ras
 				};
 		}
 
-		//! Size of this chip - convenience for theChipSizeHW
+		//! \brief Size of this chip - convenience for theChipSizeHW
 		inline
 		ras::SizeHW const &
 		hwSize
@@ -100,7 +129,7 @@ namespace ras
 			return theChipSizeHW;
 		}
 
-		//! Number rows in this chip - convenience for theChipSizeHW.high()
+		//! \brief Number rows in chip - convenience for theChipSizeHW.high()
 		inline
 		std::size_t
 		high
@@ -109,7 +138,7 @@ namespace ras
 			return theChipSizeHW.high();
 		}
 
-		//! Number columns in this chip - convenience for theChipSizeHW.wide()
+		//! \brief Number cols in chip - convenience for theChipSizeHW.wide()
 		inline
 		std::size_t
 		wide
@@ -118,7 +147,7 @@ namespace ras
 			return theChipSizeHW.wide();
 		}
 
-		//! Row within (implicit) full raster data where this chip starts
+		//! \brief Row within (implicit) full raster where this chip starts
 		inline
 		std::size_t const &
 		srcRowBeg
@@ -127,7 +156,7 @@ namespace ras
 			return theSrcOrigRC.row();
 		}
 
-		//! Column within (implicit) full raster data where this chip starts
+		//! \brief Column within (implicit) full raster where this chip starts
 		inline
 		std::size_t const &
 		srcColBeg
@@ -136,7 +165,7 @@ namespace ras
 			return theSrcOrigRC.col();
 		}
 
-		//! Row within (implicit) full raster data where this chip starts
+		//! \brief Row within (implicit) full raster where this chip ends
 		inline
 		std::size_t
 		srcRowEnd
@@ -145,7 +174,7 @@ namespace ras
 			return (srcRowBeg() + high());
 		}
 
-		//! Column within (implicit) full raster data where this chip starts
+		//! \brief Column within (implicit) full raster where this chip ends
 		inline
 		std::size_t
 		srcColEnd
@@ -154,7 +183,7 @@ namespace ras
 			return (srcColBeg() + wide());
 		}
 
-		//! True if this chip region entirely fits inside fullSizeHW.
+		//! \brief True if this chip region entirely fits inside fullSizeHW.
 		inline
 		bool
 		fitsInto
@@ -174,7 +203,7 @@ namespace ras
 			return (rowIsIn && colIsIn);
 		}
 
-		//! Chip row/col expression given full image row/col (no checking)
+		//! \brief Chip row/col expression for full image row/col (no checking)
 		inline
 		ras::RowCol
 		rcChipForFullRC
@@ -188,7 +217,7 @@ namespace ras
 				};
 		}
 
-		//! Spot location in source image corresponding with chip spot
+		//! \brief Spot location in source image corresponding with chip spot
 		inline
 		img::Spot
 		chipSpotForFullSpot
@@ -202,7 +231,7 @@ namespace ras
 				};
 		}
 
-		//! Full image row/col expression from chip row/col (no checking)
+		//! \brief Full image row/col from chip row/col (no checking)
 		inline
 		ras::RowCol
 		rcFullForChipRC
@@ -218,7 +247,7 @@ namespace ras
 				};
 		}
 
-		//! Spot location in source image corresponding with chip spot
+		//! \brief Spot location in source image corresponding with chip spot
 		inline
 		img::Spot
 		fullSpotForChipSpot
@@ -232,7 +261,7 @@ namespace ras
 				};
 		}
 
-		//! The row/col location into (an assumed) full size image
+		//! \brief The row/col location into (an assumed) full size image
 		inline
 		ras::RowCol
 		fullRowColFor
@@ -243,7 +272,7 @@ namespace ras
 			return fullRowColFor(ras::RowCol{ rowInChip, colInChip });
 		}
 
-		//! The row/col location into (an assumed) full size image
+		//! \brief The row/col location into (an assumed) full size image
 		inline
 		ras::RowCol
 		fullRowColFor
@@ -283,7 +312,7 @@ namespace ras
 
 namespace
 {
-	//! Put item.infoString() to stream
+	//! \brief Put item.infoString() to stream
 	inline
 	std::ostream &
 	operator<<
@@ -295,7 +324,7 @@ namespace
 		return ostrm;
 	}
 
-	//! True if item is not null
+	//! \brief True if item is not null
 	inline
 	bool
 	isValid
