@@ -53,6 +53,7 @@ namespace ras
 	{
 		//! Location of peak (within assumed raster grid)
 		ras::RowCol theRowCol;
+
 		//! Value (e.g elevation) of peak
 		double theValue{ engabra::g3::null<double>() };
 
@@ -63,6 +64,24 @@ namespace ras
 			() const
 		{
 			return engabra::g3::isValid(theValue);
+		}
+
+		//! Location of peak - reference to theRowCol
+		inline
+		ras::RowCol const &
+		rcLocation
+			() const
+		{
+			return theRowCol;
+		}
+
+		//! Value (e.g. "height") of peak - reference to theValue
+		inline
+		double const &
+		value
+			() const
+		{
+			return theValue;
 		}
 
 		//! Update self to track maximum value
