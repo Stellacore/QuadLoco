@@ -63,6 +63,12 @@ namespace center
 	 * location is used as evaluation point for the remaining SymRing
 	 * filters. The filter responses are combined (multiplicatively)
 	 * to produce the peak value in the returned peakRCV collection.
+	 *
+	 * The grid values are determined using ops::SymRing response at
+	 * each source grid input pixel. Criteria include a combination
+	 * of 1) balance between dark and light pixels; 2) high contrast
+	 * in the local area; and 3) symmetry of radiometric values under
+	 * a half-turn rotation.
 	 */
 	inline
 	std::vector<ras::PeakRCV>
