@@ -21,6 +21,27 @@
 # SOFTWARE.
 #
 
+## Files to be copied into "${CMAKE_CURRENT_BINARY_DIR}" so that tests
+## can access data locally (via e.g. "./${dataFile}" in test code)
+set(dataFiles
+
+	../data/p5q5.pgm
+	../data/p5q6.pgm
+
+    )
+
+foreach(dataFile ${dataFiles})
+
+    configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/${dataFile}
+        ${CMAKE_CURRENT_BINARY_DIR}
+        COPYONLY
+        )
+
+endforeach(dataFile ${dataFiles})
+
+
+
 # list of all developer unit tests (or could GLOB for filenames)
 set(unitTests
 
