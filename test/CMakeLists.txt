@@ -50,6 +50,7 @@ set(unitTests
 
 	test_angRing  # wrap around data structures e.g. for angles
 	test_appQuadLike  # probabilitic assessor of quad target pixel patterns
+	test_appRealData  # assess quad localization with actual data samples
 	test_cast  # data type conversion operations
 	test_imgArea  # a 2D range of values
 	test_imgEdgel  # individual pixel edge information (Spot and Grad)
