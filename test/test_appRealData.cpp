@@ -32,7 +32,6 @@
 
 #include <Engabra>
 
-#include <array>
 #include <iostream>
 #include <sstream>
 #include <utility>
@@ -62,6 +61,7 @@ namespace
 
 		// get peaks in symmetry ring filter response
 		std::vector<std::size_t> const ringHalfs{ 5u, 3u };
+		// std::vector<std::size_t> const ringHalfs{ 7u, 6u, 5u };
 		std::vector<ras::PeakRCV> const peaks
 			{ app::center::multiSymRingPeaks(srcGrid, srcStats, ringHalfs) };
 
@@ -104,11 +104,12 @@ namespace
 
 		// configure real data trial cases
 		using PathSpot = std::pair<std::filesystem::path, img::Spot>;
-		constexpr std::size_t numTrials{ 2u };
 		// data/filenames and expected quad center loc (from manual measure)
-		std::array<PathSpot, numTrials> const expPathSpots
+		std::vector<PathSpot> const expPathSpots
 			{ PathSpot{ "./p5q5.pgm", img::Spot{ 24.39, 25.05 } }
 			, PathSpot{ "./p5q6.pgm", img::Spot{ 25.06, 24.95 } }
+			  // 90-deg rotated version of p5q6.pgm (with fresh manual meas)
+			, PathSpot{ "./p5q6r90.pgm", img::Spot{ 24.67, 25.26 } }
 			};
 
 		// check each trial case
@@ -124,7 +125,7 @@ namespace
 			constexpr bool showPeakInfo{ false };
 			if (showPeakInfo)
 			{
-				std::cout << '\n';
+				std::cout << "\n========================\n";
 				std::cout << "srcPath: " << srcPath << '\n';
 				showPeaks(std::cout, allPeaks);
 				std::cout << '\n';
@@ -163,7 +164,6 @@ namespace
 				}
 			}
 		}
-
 	}
 
 }
