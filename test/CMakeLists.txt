@@ -27,6 +27,7 @@ set(dataFiles
 
 	../data/p5q5.pgm
 	../data/p5q6.pgm
+	../data/p5q6r90.pgm
 
     )
 
