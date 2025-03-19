@@ -160,16 +160,16 @@ namespace ops
 
 	/*! \brief An annular ring symmetry filter
 	 *
-	 * The response at at given cell is based on the values of neighbor
+	 * The response at a given cell is based on the values of neighbor
 	 * pixels defined by a symmetric (quantized) annular ring centered 
 	 * on the evaluation cell. Ideally, the annulus would be a circle
-	 * but quantization produces an irregular shape (diamonds and square
-	 * for very small annulus radii).
+	 * but quantization produces an irregular shape (e.g. diamonds and
+	 * squares for very small annulus radii).
 	 *
 	 * The response value is a pseudo-probability based on how well
 	 * the source data values in the annulus exhibit both "high contrast"
-	 * and "half-turn rotation symmetry" and the annular region contains
-	 * a "Balance" of small and large values.
+	 * and "half-turn rotation symmetry" and if the annular region
+	 * contains a reasonble "Balance" of small and large values.
 	 *
 	 * Contributions in filter response (via operator()) include:
 	 *
@@ -213,7 +213,7 @@ namespace ops
 		//! \brief Construct to operate on ptSrc image.
 		inline
 		explicit
-		SymRing
+		SymRing  // SymRing::
 			( ras::Grid<float> const * const & ptSrc
 				//!< Access source data grid (e.g. raw or smoothed image, etc)
 			, prb::Stats<float> const & srcStats
@@ -232,7 +232,7 @@ namespace ops
 		//! Nominal "radial" size of annulus
 		inline
 		std::size_t
-		halfSize
+		halfSize  // SymRing::
 			() const
 		{
 			return static_cast<std::size_t>(theHalfFilterSize);
@@ -241,7 +241,7 @@ namespace ops
 		//! Nominal "diagonal" size of annulus
 		inline
 		std::size_t
-		fullSize
+		fullSize  // SymRing::
 			() const
 		{
 			return (2u*halfSize() + 1u);
@@ -273,7 +273,7 @@ namespace ops
 			//! True if there is at least one sample
 			inline
 			bool
-			isValid
+			isValid  // RingStats::
 				() const
 			{
 				return (0u < theCount);
@@ -282,7 +282,7 @@ namespace ops
 			//! Consider pair of values on radial opposite sides of filter
 			inline
 			void
-			consider
+			consider  // RingStats::
 				( double const & delta1
 				, double const & delta2
 				)
@@ -323,7 +323,7 @@ namespace ops
 			//! Value halfway between theMin and theMax
 			inline
 			double
-			middleValue
+			middleValue  // RingStats::
 				() const
 			{
 				return (.5 * (theMax + theMin));
@@ -332,7 +332,7 @@ namespace ops
 			//! Range of values considered (max - min)
 			inline
 			double
-			valueRange
+			valueRange  // RingStats::
 				() const
 			{
 				return (theMax - theMin);
@@ -341,7 +341,7 @@ namespace ops
 			//! True if numPos and numNeg considered values more than minPosNeg
 			inline
 			bool
-			hasPosNegBalance
+			hasPosNegBalance  // RingStats::
 				( std::size_t const & minPosNeg
 				)
 			{
@@ -350,21 +350,31 @@ namespace ops
 				return (enoughPos && enoughNeg);
 			}
 
-			//! Standard deviation of values considered
+			//! Variance of all values considered
 			inline
 			double
-			sigmaValueDifs
+			varianceValueDifs  // RingStats::
 				() const
 			{
 				double const valDifVar{ theSumSqDif / (double)theCount };
-				double const valDifSig{ std::sqrt(valDifVar) };
+				return valDifVar;
+			}
+
+			//! Standard deviation of all values considered
+			inline
+			double
+			sigmaValueDifs  // RingStats::
+				() const
+			{
+				double const valDifSig{ std::sqrt(varianceValueDifs()) };
 				return valDifSig;
 			}
 
+			/*
 			//! Pseudo-Probability that center value is between min/max
 			inline
 			double
-			centerValueProb
+			centerValueProb  // RingStats::
 				( double const & centerValue
 				) const
 			{
@@ -378,6 +388,36 @@ namespace ops
 				}
 				return prob;
 			}
+			*/
+
+			//! Descriptive information about this instance.
+			inline
+			std::string
+			infoString  // RingStats::
+				( std::string const & title = {}
+				) const
+			{
+				std::ostringstream oss;
+				if (! title.empty())
+				{
+					oss << title << ' ';
+				}
+				using engabra::g3::io::fixed;
+				oss
+					<< "cnt: " << theCount
+					<< ' '
+					<< "minmax:"
+						<< ' ' << fixed(theMin, 3u, 2u)
+						<< ' ' << fixed(theMax, 3u, 2u)
+					<< ' '
+					<< "ssd: " << fixed(theSumSqDif, 6u, 2u)
+					<< ' '
+					<< "(+,-):"
+						<< ' ' << std::setw(3u) << theNumPos
+						<< ' ' << std::setw(3u) << theNumNeg
+					;
+				return oss.str();
+			}
 
 		}; // RingStats
 
@@ -385,7 +425,7 @@ namespace ops
 		//! \brief Evaluate the metric at source image (row,col) location
 		inline
 		float
-		operator()
+		operator()  // SymRing::
 			( std::size_t const & row
 			, std::size_t const & col
 			) const
@@ -429,6 +469,10 @@ namespace ops
 					}
 					else
 					{
+						// don't try to work around null input pixel(s)
+						// values (e.g. assume filter processing window is
+						// entirely within valid image area, and there are
+						// no missing pixels within this region)
 						hitNull = true;
 						break;
 					}
@@ -446,13 +490,25 @@ namespace ops
 					else // if (enoughPos && enoughNeg)
 					{
 						// Half-Turn Symmetry metric
-						double const valDifSig{ ringStats.sigmaValueDifs() };
-						double const valSigma{ theSrcFullRange / 8. };
-						double const valDifRatio{ valDifSig / valSigma };
+						double const valDifVar{ ringStats.varianceValueDifs() };
+						//
+						// for a pure bimodal signal with all values at
+						// either -k or +k, the variance for N samples
+						// is (N*sq(k))/(N-1) which is esentially sq(k)
+						// when N is large (close enough for here)
+						// HOWEVER - it seems half that value works better
+					//	double const kValue{ .5 * theSrcFullRange }; // 'k'
+						double const kValue{ .250 * theSrcFullRange }; // 'k'
+						double const valSrcVar{ sq(kValue) };
+						//
+						// use ratio of filter variance to source variance
+						// as argument for Guassian pseudo prob value
+						double const varianceRatio{ valDifVar / valSrcVar };
+						//
 						// valDifProb ranges in [0,1]
-						double const valDifProb{ std::exp(-sq(valDifRatio)) };
+						double const valDifProb{ std::exp(-varianceRatio) };
 
-						// High Contrast metric
+						// High Contrast metric (rather ad hoc)
 						// -- normalized to full range in source image
 						double const rngRing
 							{ ringStats.valueRange() / theSrcFullRange };
@@ -464,9 +520,27 @@ namespace ops
 
 						// filter response value
 						outVal = (float)(rngRing * valDifProb);
-					}
-				}
-			}
+
+/*
+//std::cout << "ringStats: " << ringStats.infoString() << '\n';
+using engabra::g3::io::fixed;
+std::cout
+//	<< "ringStat: " << ringStats.infoString()
+//	<< "SymRing::"
+	<< "rowcol:"
+		<< ' ' << std::setw(3u) << row
+		<< ' ' << std::setw(3u) << col
+	<< " valDifProb: " << fixed(valDifProb)
+	<< " rngRing: " << fixed(rngRing)
+	<< " outVal: " << fixed(outVal)
+	<< '\n';
+*/
+
+					} // has pos/neg balance
+
+				} // ! hitNull
+
+			} // srcOkay
 
 			return outVal;
 		}
@@ -474,7 +548,7 @@ namespace ops
 		//! Descriptive information about this instance.
 		inline
 		std::string
-		infoString
+		infoString  // SymRing::
 			( std::string const & title = {}
 			) const
 		{
@@ -508,7 +582,7 @@ namespace ops
 		//! Descriptive information about this instance.
 		inline
 		std::string
-		infoStringContents
+		infoStringContents  // SymRing::
 			( std::string const & title = {}
 			) const
 		{
