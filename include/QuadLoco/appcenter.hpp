@@ -63,6 +63,12 @@ namespace center
 	 * location is used as evaluation point for the remaining SymRing
 	 * filters. The filter responses are combined (multiplicatively)
 	 * to produce the peak value in the returned peakRCV collection.
+	 *
+	 * The grid values are determined using ops::SymRing response at
+	 * each source grid input pixel. Criteria include a combination
+	 * of 1) balance between dark and light pixels; 2) high contrast
+	 * in the local area; and 3) symmetry of radiometric values under
+	 * a half-turn rotation.
 	 */
 	inline
 	std::vector<ras::PeakRCV>
@@ -81,6 +87,8 @@ namespace center
 
 		if (srcOkay && (! ringHalfSizes.empty()))
 		{
+			// construct filter objects with requested geometry
+			// (e.g. define relative row/col offsets from filter origin)
 			std::vector<ops::SymRing> symRings;
 			symRings.reserve(ringHalfSizes.size());
 			for (std::size_t const & ringHalfSize : ringHalfSizes)
@@ -99,25 +107,44 @@ namespace center
 			std::size_t const numToGet{ srcGrid.size() }; // { 100u };
 			std::vector<ras::PeakRCV> const peakAs
 				{ allPeaksA.largestPeakRCVs(numToGet) };
-
-			// qualify 'A' peaks using symmetry response of 'B'
-			peakCombos.reserve(peakAs.size());
-			for (ras::PeakRCV const & peakA : peakAs)
+			if (! peakAs.empty())
 			{
-				std::size_t const & row = peakA.theRowCol.row();
-				std::size_t const & col = peakA.theRowCol.col();
-				double valueCombo{ peakA.theValue };
-				for (std::size_t nn{1u} ; nn < symRings.size() ; ++nn)
+				// qualify 'A' peaks using symmetry response of 'B'
+				peakCombos.reserve(peakAs.size());
+				for (ras::PeakRCV const & peakA : peakAs)
 				{
-					ops::SymRing const & symRingB = symRings[nn];
-					float const valueB{ symRingB(row, col) };
-					valueCombo *= static_cast<double>(valueB);
-				}
-				float const fVal{ static_cast<float>(valueCombo) };
-				peakCombos.emplace_back(ras::PeakRCV{ { row, col }, fVal });
-			}
-			std::sort(peakCombos.rbegin(), peakCombos.rend());
-		}
+					std::size_t const & row = peakA.theRowCol.row();
+					std::size_t const & col = peakA.theRowCol.col();
+					double valueCombo{ peakA.theValue };
+					for (std::size_t nn{1u} ; nn < symRings.size() ; ++nn)
+					{
+						ops::SymRing const & symRingB = symRings[nn];
+						float const valueB{ symRingB(row, col) };
+						valueCombo *= static_cast<double>(valueB);
+
+/*
+using engabra::g3::io::fixed;
+std::cout
+	<< "values{A,B,combo}:"
+	<< ' ' << fixed(peakA.theValue)
+	<< ' ' << fixed(valueB)
+	<< ' ' << fixed(valueCombo)
+	<< '\n';
+*/
+
+					}
+					float const fVal{ static_cast<float>(valueCombo) };
+				//	peakCombos.emplace_back(ras::PeakRCV{ { row, col }, fVal });
+					peakCombos.emplace_back
+						(ras::PeakRCV{ peakA.theRowCol, fVal });
+
+				} // peakAs
+
+				std::sort(peakCombos.rbegin(), peakCombos.rend());
+
+			} // ! peakAs.empty()
+
+		} // if (srcOkay && (! ringHalfSizes.empty()))
 
 		return peakCombos;
 	}

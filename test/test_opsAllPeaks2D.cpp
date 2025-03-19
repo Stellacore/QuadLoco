@@ -80,7 +80,7 @@ namespace
 		std::fill(dataGrid.begin(), dataGrid.end(), 0.);
 		for (ras::PeakRCV const & expPeakRCV : expPeakRCVs)
 		{
-			dataGrid(expPeakRCV.theRowCol) = expPeakRCV.theValue;
+			dataGrid(expPeakRCV.rcLocation()) = expPeakRCV.value();
 		}
 
 		// find filter response peaks sorted in order of peak value

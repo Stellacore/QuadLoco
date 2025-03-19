@@ -21,6 +21,28 @@
 # SOFTWARE.
 #
 
+## Files to be copied into "${CMAKE_CURRENT_BINARY_DIR}" so that tests
+## can access data locally (via e.g. "./${dataFile}" in test code)
+set(dataFiles
+
+	../data/p5q5.pgm
+	../data/p5q6.pgm
+	../data/p5q6r90.pgm
+
+    )
+
+foreach(dataFile ${dataFiles})
+
+    configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/${dataFile}
+        ${CMAKE_CURRENT_BINARY_DIR}
+        COPYONLY
+        )
+
+endforeach(dataFile ${dataFiles})
+
+
+
 # list of all developer unit tests (or could GLOB for filenames)
 set(unitTests
 
@@ -29,6 +51,7 @@ set(unitTests
 
 	test_angRing  # wrap around data structures e.g. for angles
 	test_appQuadLike  # probabilitic assessor of quad target pixel patterns
+	test_appRealData  # assess quad localization with actual data samples
 	test_cast  # data type conversion operations
 	test_imgArea  # a 2D range of values
 	test_imgEdgel  # individual pixel edge information (Spot and Grad)
