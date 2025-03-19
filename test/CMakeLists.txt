@@ -50,6 +50,7 @@ set(unitTests
 	test_Version  # test project version info retrieval
 
 	test_angRing  # wrap around data structures e.g. for angles
+	test_appAzimCycle  # probabily of Hi,Lo,Hi,Lo intensity cycles in azimuth
 	test_appQuadLike  # probabilitic assessor of quad target pixel patterns
 	test_appRealData  # assess quad localization with actual data samples
 	test_cast  # data type conversion operations
