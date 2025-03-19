@@ -164,8 +164,8 @@ namespace ops
 		 * For "first" and "second" largest peak values are extracted
 		 * from the *SORTED* collection, peakRCVs. Denote these as
 		 * F and S respectively with values:
-		 * \arg F = peakRCVs[ndxF]
-		 * \arg S = peakRCVs[ndxF+1u]
+		 * \arg F = peakRCVs[ndxF].value()
+		 * \arg S = peakRCVs[ndxF+1u].value()
 		 *
 		 * The returned value is:
 		 *
