@@ -54,7 +54,11 @@ namespace app
 	 * pattern that varies with azimuth relative to the center point.
 	 * This class provides the method, hasQuadTransitions(), that checks
 	 * if intensity values from a source image follow the expected pattern.
+	 *
+	 * The template type is to match the ras::Grid<GridType> source
+	 * data with which an instance is constructed.
 	 */
+	template <typename GridType = float>
 	class AzimCycle
 	{
 		//! Statistics for all source values within evaluation circle
@@ -91,7 +95,7 @@ namespace app
 		//! Construct statistics needed inside hasQuadTransition() member.
 		inline
 		AzimCycle
-			( quadloco::ras::Grid<float> const & srcGrid
+			( quadloco::ras::Grid<GridType> const & srcGrid
 				//!< Source values with which to evaluate
 			, quadloco::img::Spot const & evalCenter
 				//!< Spot about which to evaluate azimuth intensity cycles
@@ -127,7 +131,9 @@ namespace app
 						img::Spot const sampSpot{ relSpot + evalCenter };
 						using ras::grid::bilinValueAt;
 						double const sampValue
-							{ (double)bilinValueAt<float>(srcGrid, sampSpot) };
+							{ (double)bilinValueAt<GridType>
+								(srcGrid, sampSpot)
+							};
 
 						// add sample into azimuthal statistics collection
 						std::size_t const azimNdx
