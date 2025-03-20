@@ -41,9 +41,7 @@
 
 namespace
 {
-
-
-	//! Examples for documentation
+	//! Evaluate a quad azimuth pattern from real test image
 	void
 	test1
 		( std::ostream & oss
@@ -55,10 +53,10 @@ namespace
 
 		// load real image chip as test data...
 		std::filesystem::path const srcPath("./p5q5.pgm");
-		ras::Grid<uint8_t> const pgmGrid{ io::readPGM(srcPath) };
+		ras::Grid<uint8_t> const pgmGrid8{ io::readPGM(srcPath) };
 		// ... and cast to floating point grid
 		ras::Grid<float> const srcGrid
-			{ ras::grid::realGridOf<float>(pgmGrid) };
+			{ ras::grid::realGridOf<float>(pgmGrid8) };
 
 		// location to be checked for quad azimuth symmetry
 		img::Spot const evalCenter{ 24.4, 25.1 }; // from manual measurement
@@ -83,10 +81,17 @@ namespace
 			oss << "evalCenter: " << evalCenter << '\n';
 			oss << "evalRadius: " << fixed(evalRadius) << '\n';
 			oss << "evalMinRad: " << fixed(evalMinRad) << '\n';
-
-
 		}
-	}
+
+		// check AzimCycle operating directly on uint8_t source grid
+		quadloco::app::AzimCycle const azimCycle8
+			(pgmGrid8, evalCenter, evalRadius, evalMinRad);
+		if (! azimCycle8.hasQuadTransitions())
+		{
+			oss << "Failure of isQuadish(2) test with azimCycle8\n";
+		}
+
+	} // test1
 
 }
 
