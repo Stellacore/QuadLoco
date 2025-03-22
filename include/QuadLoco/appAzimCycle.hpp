@@ -38,7 +38,9 @@
 #include "prbStats.hpp"
 #include "rasgrid.hpp"
 #include "rasGrid.hpp"
+#include "valSpan.hpp"
 
+#include <numbers>
 #include <vector>
 
 
@@ -47,7 +49,6 @@ namespace quadloco
 
 namespace app
 {
-
 	/*! \brief Evaluation class to test for 'quad-like' pattern at a location.
 	 *
 	 * Quad target images are associated with a distinctive intensity
@@ -69,6 +70,326 @@ namespace app
 
 		//! Statistics for source values along each azimuth direction
 		std::vector<quadloco::prb::Stats<double> > theAzimStats{};
+
+		//! Simple structure for angle and sign of intensity deviation
+		struct AzimInten  // AzimCycle::
+		{
+			//! Tracking deviation
+			enum Inten
+				{ Unknown // not well defined
+				, Hi  // deviation is above expected mean value
+				, Lo  // deviation is below expected mean value
+				};
+
+			//! Angle of azimuth statistics
+			double theAngle{ std::numeric_limits<double>::quiet_NaN() };
+
+			//! Mean value of azimuth stats
+			double theMeanValue{ std::numeric_limits<double>::quiet_NaN() };
+
+			//! Classification of azimuth as Hi or Lo
+			Inten theHiLo{ Unknown };
+
+
+			//! String representation of enum Inten
+			inline
+			static
+			std::string
+			nameFor
+				( Inten const & inten
+				)
+			{
+				std::string str("Unknown");
+				if (Hi == inten) { str = "Hi"; }
+				else
+				if (Lo == inten) { str = "Lo"; }
+				return str;
+			}
+
+			//! Descriptive information about this instance.
+			inline
+			std::string
+			infoString
+				( std::string const & title = {}
+				) const
+			{
+				std::ostringstream oss;
+				if (! title.empty())
+				{
+					oss << title << ' ';
+				}
+				using engabra::g3::io::fixed;
+				oss
+					<< ' ' << fixed(theAngle)
+					<< ' ' << fixed(theMeanValue)
+					<< ' ' << nameFor(theHiLo)
+					;
+
+				return oss.str();
+			}
+
+		}; // AzimInten
+
+		//! \brief Transition of angle Inten (from Hi to Lo or v.v.)
+		struct AzimSwing  // AzimCycle::
+		{
+			double theAngle
+				{ std::numeric_limits<double>::quiet_NaN() };
+
+			double theMeanChange
+				{ std::numeric_limits<double>::quiet_NaN() };
+
+			/*! \brief A null or valid instance (valid if actual transition)
+			 *
+			 * A transition (swing) is indicated when aiBeg and aiEnd
+			 * have different states as (Hi and Lo) or (Lo and Hi). In
+			 * this case, intensity deviations (relative to fullMean arg
+			 * value) are computed for each of the beg/end values. These
+			 * computed deviations are used to (linearly) interpolate a
+			 * "fit" angle values at which the deviation can be expected
+			 * to be zero.
+			 */
+			inline
+			static
+			AzimSwing  // AzimCycle::AzimSwing
+			from
+				( AzimInten const & aiBeg
+				, AzimInten const & aiEnd
+				, double const & fullMean
+				)
+			{
+				AzimSwing azimSwing{};
+
+				typename AzimInten::Inten const & hlBeg = aiBeg.theHiLo;
+				typename AzimInten::Inten const & hlEnd = aiEnd.theHiLo;
+
+				// Swing requires transition between hi/lo (or lo/hi) states
+				if (! (hlEnd == hlBeg))
+				{
+					// angular locations of transtion beg/end
+					double const & angBeg = aiBeg.theAngle;
+					double angEnd{ aiEnd.theAngle };
+					if (angEnd < angBeg)
+					{
+						angEnd += ang::piTwo();
+					}
+					double const aSpan{ angEnd - angBeg }; // always pos
+
+					// intensity deviations at transition beg/end
+					double const devBeg{ aiBeg.theMeanValue - fullMean };
+					double const devEnd{ aiEnd.theMeanValue - fullMean };
+					double const dSpan{ devEnd - devBeg }; // can be +/-
+					double const dZero{ 0. - devBeg };
+
+					// estimate interpolated location at angle
+					// where (linearly) interpolated deviation is zero
+					double const aZero{ (aSpan / dSpan) * dZero };
+					double const angleFit
+						{ ang::principalAngle(angBeg + aZero) };
+
+					double const & meanChange = dSpan;
+					azimSwing = AzimSwing{ angleFit, meanChange };
+				}
+				return azimSwing;
+			}
+
+			//! True if all members contain valid data values
+			inline
+			bool
+			isValid
+				() const
+			{
+				return
+					(  engabra::g3::isValid(theAngle)
+					&& engabra::g3::isValid(theMeanChange)
+					);
+			}
+
+			/*! \brief True if theAngle of each is near +/-pi different
+			 *
+			 * Test is performed by creating two img::Spot on unit circle,
+			 * spotA and spotB.  If they are in approximately opposite
+			 * directions, more specifically
+			 * \arg if(dot(spotA, spotB) < -sqrt(.5))
+			 * 
+			 * Then the angle between them is tested via:
+			 * \arg std::abs(outer(spotA, spotB)) < std::sin(tolAng)
+			 *
+			 * This function returns the conjunction (&&) of above
+			 * conditions.
+			 */
+			inline
+			static
+			bool
+			nearlyOpposite  // AzimCycle::AzimSwing
+				( AzimSwing const & itemA
+				, AzimSwing const & itemB
+				, double const & tolAng = std::numeric_limits<double>::epsilon()
+				)
+			{
+				bool same{ false };
+				double const & angA = itemA.theAngle;
+				double const & angB = itemB.theAngle;
+				img::Spot const spotA{ std::cos(angA), std::sin(angA) };
+				img::Spot const spotB{ std::cos(angB), std::sin(angB) };
+
+				// check if approximately in opposite directions
+				constexpr double minDot{ 1. / std::numbers::sqrt2_v<double> };
+				double const dotAB{ dot(spotA, spotB) };
+				if (dotAB < minDot)
+				{
+					// check if angle between is less than tolerance angle
+					double const outAB{ outer(spotA, spotB) };
+					double const tol{ std::sin(tolAng) };
+					same = (std::abs(outAB) < std::abs(tol));
+				}
+
+				return same;
+			}
+
+			//! Descriptive information about this instance.
+			inline
+			std::string
+			infoString
+				( std::string const & title = {}
+				) const
+			{
+				std::ostringstream oss;
+				if (! title.empty())
+				{
+					oss << title << ' ';
+				}
+				using engabra::g3::io::fixed;
+				oss
+					<< "angle: " << fixed(theAngle)
+					<< ' '
+					<< "change: " << fixed(theMeanChange)
+					;
+				return oss.str();
+			}
+
+		}; // AzimSwing
+
+		//! Collection of significant azimuth classification instances
+		struct AzimProfile  // AzimCycle::
+		{
+			//! Threshold against which to compare individual azim statistics
+			double const theFullMean
+				{ std::numeric_limits<double>::quiet_NaN() };
+
+			//! Values only at azimuths with significant intensity deviations
+			std::vector<AzimInten> theAzimIntens{};
+
+			//! Initialize to consider() data against overall mean.
+			inline
+			explicit
+			AzimProfile  // AzimCycle::AzimProfile::
+				( double const & overallMean
+					//!< Signifance threshold (e.g. average over all azimuths)
+				, std::size_t const & numAzim = 1024u
+					//!< Number of azimuths to expect (for optimization)
+				)
+				: theFullMean{ overallMean }
+				, theAzimIntens{}
+			{
+				theAzimIntens.reserve(numAzim);
+			}
+
+			//! \brief Determine if azimStats represent significant Inten
+			inline
+			typename AzimInten::Inten
+			intenFor  // AzimCycle::AzimProfile::
+				( prb::Stats<double> const & azimStat
+				) const
+			{
+				typename AzimInten::Inten inten{ AzimInten::Unknown };
+				double const azimMin{ azimStat.min() };
+				double const azimMax{ azimStat.max() };
+				if (theFullMean < azimMin) // +: Higher than theFullMean
+				{
+					inten = AzimInten::Hi;
+				}
+				if (azimMax < theFullMean) // -: Lower than theFullMean
+				{
+					inten = AzimInten::Lo;
+				}
+				return inten;
+			}
+
+			//! Incorporate azimInten if it is significant (not unknown) 
+			inline
+			void
+			consider  // AzimCycle::AzimProfile::
+				( AzimInten const & azimInten
+				)
+			{
+				if (! (AzimInten::Unknown == azimInten.theHiLo))
+				{
+					theAzimIntens.emplace_back(azimInten);
+				}
+			}
+
+			//! Incorporate azimInten if it is significant (not unknown) 
+			inline
+			void
+			consider  // AzimCycle::AzimProfile::
+				( double const & azimAngle
+				, prb::Stats<double> const & azimStat
+				)
+			{
+				typename AzimInten::Inten const inten{ intenFor(azimStat) };
+				double const meanValue{ azimStat.mean() };
+				AzimInten const azimInten{ azimAngle, meanValue, inten };
+				consider(azimInten);
+			}
+
+			/*! \brief Extract AzimSwing transitions from theAzimIntens.
+			 *
+			 * This profile AzimInten sequence is condensed by finding the
+			 * transition points for which Inten transitions from Hi to Lo
+			 * or from Lo to Hi. Note that one of these transitions may be
+			 * at then profile end/beg in association with angle wraparound.
+			 *
+			 * At each transition point, use the associated "From" and "Into"
+			 * AzimInten instances to interpolate a "fitAngle" value based
+			 * on the "from" angle/radValue and the "into" angle/radValue.
+			 */
+			inline
+			std::vector<AzimSwing>
+			allAzimSwings  // AzimCycle::AzimProfile::
+				() const
+			{
+				std::vector<AzimSwing> azimSwings{};
+
+				// wrap around index management
+				std::size_t const numSamps{ theAzimIntens.size() };
+				quadloco::ang::Ring const sampRing(numSamps);
+
+				// allocate space: overkill - expect 4
+				azimSwings.reserve(2u * numSamps + 1u);
+
+				// loop over profile (with wrap)
+				for (std::size_t ndxBeg{0u} ; ndxBeg < numSamps ; ++ndxBeg)
+				{
+					std::size_t const ndxEnd
+						{ sampRing.indexRelativeTo(ndxBeg, +1) };
+
+					AzimInten const & aiBeg = theAzimIntens[ndxBeg];
+					AzimInten const & aiEnd = theAzimIntens[ndxEnd];
+
+					// check for transition
+					AzimSwing const azimSwing
+						{ AzimSwing::from(aiBeg, aiEnd, theFullMean) };
+					if (azimSwing.isValid())
+					{
+						azimSwings.emplace_back(azimSwing);
+					}
+				}
+
+				return azimSwings;
+			}
+
+		}; // AzimProfile
 
 		/*! \brief Define an azimuth index/value map based on radius size
 		 *
@@ -158,96 +479,79 @@ namespace app
 		 *      the overall patch mean value.
 		 *
 		 * Each azimuth in theAzimStats is evaluated and classified as
-		 * either Hi or Lo or (not Hi/Lo). Azimuths associated with "not
-		 * Hi/Lo" are ignored. Considering the remaining azimuth
+		 * either Hi or Lo or Unknown. Azimuths associated with
+		 * Unknown are ignored. Considering the remaining azimuth
 		 * classifications in angle order then produces a sequence of
-		 * Hi and Lo values. This sequence is condensed by removing
-		 * duplicate adjacent Hi and duplicate adjacent Lo values. The
-		 * remaining values characterizes a sequence of transitions that
-		 * are statistically significant. (e.g. Hi,Lo,Hi,Lo,Hi).
-		 *
-		 * The return vector contains a representation of this Hi/Lo
-		 * sequence that is encoded as +/-1 values (+1:Hi, -1:Lo).
+		 * Hi and Lo values.
 		 */
 		inline
-		std::vector<int>
-		azimHiLoSigns
+		AzimProfile
+		fullAzimProfile
 			() const
 		{
-			std::vector<int> signs{};
 			// evaluate "run-lengths" for which min/max azimuth statistics
 			// are above/below (respectively) the overall patch mean value.
 			double const fullMean{ theSrcStat.mean() };
 			std::size_t const numAzim{ theAzimRing.size() };
-			signs.reserve(numAzim);
-			int prevSign{ 0 };
+			AzimProfile azimProfile(fullMean, numAzim);
+
+			// check each azimuth - add significant deviations to profile
 			for (std::size_t aNdx{0u} ; aNdx < numAzim ; ++aNdx)
 			{
-				using namespace quadloco;
-
+				double const angle{ theAzimRing.angleAtIndex(aNdx) };
 				prb::Stats<double> const & azimStat = theAzimStats[aNdx];
-				double const azimMin{ azimStat.min() };
-				double const azimMax{ azimStat.max() };
+				azimProfile.consider(angle, azimStat);
 
-				int currSign{ 0 };
-				if (fullMean < azimMin) // +
-				{
-					currSign = +1;
-				}
-				if (azimMax < fullMean) // -
-				{
-					currSign = -1;
-				}
-
-				// only significant signs are of interest
-				if (! (0 == currSign))
-				{
-					// update signs array
-					if ( signs.empty()   // start with first significant sign
-					  || (prevSign != currSign) // and add any change in sith
-					   )
-					{
-						signs.emplace_back(currSign);
-						prevSign = currSign;
-
-					}
-				}
 			} // aNdx loop
 
-			return signs;
+			return azimProfile;
 		}
 
-		/*! \brief True if the sequence as four transitios. Ref azimHiLoSigns()
+		/*! \brief True if profile sequence is consistent with quad pattern
 		 *
-		 * Looks for four transitions in the azimSigns array. I.e. 
-		 * Assuming the azimSigns array is condensed (as is produced
-		 * by azimHiLoSigns() method) then this array contains a sequence
-		 * of alternating signs and the size of the array indicates the
-		 * number of transitions. E.g.
-		 * \arg 5u==size: This is the general case, in which the azimuth
-		 *      sampling begins in the middle of a Hi(or Lo) region then
-		 *      transitions 4x times to end again in the Hi(or Lo) region.
-		 *      E.g. (Hi,Lo,Hi,Lo,Hi) or (Lo,Hi,Lo,Hi,Lo)
-		 * \arg 4u==size: This is the special case situation in which the
-		 *      azimuth sampling begins on/near a quad image radial edge
-		 *      and only full Hi/Lo intervals are produced.
-		 *      E.g. (Hi,Lo,Hi,Lo) or (Lo,Hi,Lo,Hi)
+		 * Looks for exactly four transitions in the AzimProfile array.
+		 *
+		 * If this is true, then the four individual transitions are
+		 * evaluated to determine if the (interpolated) angle crossings
+		 * have approximate half-turn symmetry between each pair.
+		 *
+		 * I.e. there should be four transitions, (a,b,c,d), in any true
+		 * quad pattern it is expected that (a & c) are about 1/2 turn
+		 * apart from each other and that (b & d) are also about one half
+		 * turn different from each other.
 		 */
 		inline
 		bool
 		hasQuadTransitions
-			( std::vector<int> const & azimSigns
-				//!< Such as returned from azimHiLoSigns()
+			( AzimProfile const & azimProfile
+				//!< Such as returned from azimProfile()
+			, double const & tolNumAzimDelta = 2.
+				//!< Number theAzimRing.angleDelta() for symmetry tolerance
 			) const
 		{
-			// Quad-like azimuth data should have alternating pattern of
-			// signs (e.g. (-1,+1,-1,+1,-1) or (+1,-1,+1,-1)
-			// less than 4 or greater than 5 transitions (between high/low
-			// values) violates the expected quad pattern symmetry.
-			return
-				{  (5u == azimSigns.size())  // general case
-				|| (4u == azimSigns.size())  // special case
-				};
+			bool quadlike{ false };
+
+			// get profile transitions (between 'Hi' and 'Lo' regions)
+			std::vector<AzimSwing> const swings{ azimProfile.allAzimSwings() };
+
+			// since quad-like azimuth data should have alternating pattern
+			// of intensity transitions, a legitimate quad target should
+			// therefore have four distinct transitions.
+			if (4u == swings.size())
+			{
+				// if there are a correct number of transitions, then
+				// check if the transition angular positions occur
+				// in pairs that are nearly a half turn different.
+				double const tol{ tolNumAzimDelta * theAzimRing.angleDelta() };
+				if ( AzimSwing::nearlyOpposite(swings[0], swings[2], tol)
+				  && AzimSwing::nearlyOpposite(swings[1], swings[3], tol)
+				   )
+				{
+					quadlike = true;
+				}
+			}
+
+			return quadlike;
 		}
 
 		/*! \brief True if ctor's srcGrid has quad-like azimuth transitions.
@@ -257,7 +561,7 @@ namespace app
 		 * variation. I.e. relative to the local srcGrid area mean
 		 * intensity, azimuth sampling of source values should produce
 		 * one of several characteristic "Hi,Lo,Hi,Lo (or Lo,Hi,Lo,Hi)
-		 * style variations. (ref azimHiLoSigns()).
+		 * style variations. (ref fullAzimProfile()).
 		 *
 		 * This is the primary member function for general use. I.e.
 		 * \arg First construct an instance (which computes needed
@@ -267,15 +571,14 @@ namespace app
 		 *      the evalCenter location used in ctor.
 		 *
 		 * This function is equivalent to calling the composite
-		 * \arg hasQuadTransitions(azimHiLoSigns())
+		 * \arg hasQuadTransitions(fullAzimProfile())
 		 */
 		inline
 		bool
 		hasQuadTransitions
 			() const
 		{
-			std::vector<int> const signs{ azimHiLoSigns() };
-			return hasQuadTransitions(signs);
+			return hasQuadTransitions(fullAzimProfile());
 		}
 
 
