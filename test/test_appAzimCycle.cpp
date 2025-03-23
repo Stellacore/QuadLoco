@@ -70,6 +70,9 @@ namespace
 		// test if azimuth cycles are consistent with a quad pattern
 		bool const isQuadish{ azimCycle.hasQuadTransitions() };
 
+		// extract estimated img::QuadTarget parameters
+		img::QuadTarget const gotQuad{ azimCycle.imgQuadTarget() };
+
 		// [DoxyExample01]
 
 		if (! isQuadish)
@@ -82,6 +85,23 @@ namespace
 			oss << "evalRadius: " << fixed(evalRadius) << '\n';
 			oss << "evalMinRad: " << fixed(evalMinRad) << '\n';
 		}
+
+		// check img::QuadTarget extraction
+		img::QuadTarget const expQuad
+			{ evalCenter
+			// directions from manual measurement of p5q5.pgm
+			, direction(img::Vector<double>{   1.02,  34.03 })
+			, direction(img::Vector<double>{ -34.12,    .06 })
+			};
+		double const tolLoc{ 1. };
+		double const tolDir{ 1./evalRadius };
+		if (! nearlyEquals(gotQuad, expQuad, tolLoc, tolDir))
+		{
+			oss << "Failure of imgQuadTarget test\n";
+			oss << "expQuad: " << expQuad << '\n';
+			oss << "gotQuad: " << gotQuad << '\n';
+		}
+
 
 		// check AzimCycle operating directly on uint8_t source grid
 		quadloco::app::AzimCycle const azimCycle8
