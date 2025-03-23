@@ -34,6 +34,7 @@
 
 #include "ang.hpp"
 #include "angRing.hpp"
+#include "imgQuadTarget.hpp"
 #include "imgSpot.hpp"
 #include "prbStats.hpp"
 #include "rasgrid.hpp"
@@ -65,6 +66,9 @@ namespace app
 		//! Statistics for all source values within evaluation circle
 		quadloco::prb::Stats<double> theSrcStat{};
 
+		//! Location in source image being evaluated as possible quad center
+		quadloco::img::Spot const theEvalCenter{};
+
 		//! Index/angle map (with wrapparound but wrap is not needed here)
 		quadloco::ang::Ring const theAzimRing{};
 
@@ -95,7 +99,7 @@ namespace app
 			inline
 			static
 			std::string
-			nameFor
+			nameFor  // AzimCycle::AzimInten::
 				( Inten const & inten
 				)
 			{
@@ -109,7 +113,7 @@ namespace app
 			//! Descriptive information about this instance.
 			inline
 			std::string
-			infoString
+			infoString  // AzimCycle::AzimInten::
 				( std::string const & title = {}
 				) const
 			{
@@ -136,7 +140,7 @@ namespace app
 			double theAngle
 				{ std::numeric_limits<double>::quiet_NaN() };
 
-			double theMeanChange
+			double theChangeInMean
 				{ std::numeric_limits<double>::quiet_NaN() };
 
 			/*! \brief A null or valid instance (valid if actual transition)
@@ -187,8 +191,8 @@ namespace app
 					double const angleFit
 						{ ang::principalAngle(angBeg + aZero) };
 
-					double const & meanChange = dSpan;
-					azimSwing = AzimSwing{ angleFit, meanChange };
+					double const & changeInMean = dSpan;
+					azimSwing = AzimSwing{ angleFit, changeInMean };
 				}
 				return azimSwing;
 			}
@@ -196,13 +200,44 @@ namespace app
 			//! True if all members contain valid data values
 			inline
 			bool
-			isValid
+			isValid  // AzimCycle::AzimSwing
 				() const
 			{
 				return
 					(  engabra::g3::isValid(theAngle)
-					&& engabra::g3::isValid(theMeanChange)
+					&& engabra::g3::isValid(theChangeInMean)
+					&& (0. != theChangeInMean)
 					);
+			}
+
+			//! Direction of transition
+			inline
+			bool
+			isFromLoIntoHi  // AzimCycle::AzimSwing
+				() const
+			{
+				// true if theChangeInMean is positive
+				return (0. < theChangeInMean);
+			}
+
+			//! Direction of transition
+			inline
+			bool
+			isFromHiIntoLo  // AzimCycle::AzimSwing
+				() const
+			{
+				// true if theChangeInMean is negative
+				return (theChangeInMean < 0);
+			}
+
+			//! Direction vector associated with theAngle
+			inline
+			quadloco::img::Vector<double>
+			direction  // AzimCycle::AzimSwing
+				() const
+			{
+				double const & angle = theAngle;
+				return { std::cos(angle), std::sin(angle) };
 			}
 
 			/*! \brief True if theAngle of each is near +/-pi different
@@ -250,7 +285,7 @@ namespace app
 			//! Descriptive information about this instance.
 			inline
 			std::string
-			infoString
+			infoString  // AzimCycle::AzimSwing::
 				( std::string const & title = {}
 				) const
 			{
@@ -263,7 +298,7 @@ namespace app
 				oss
 					<< "angle: " << fixed(theAngle)
 					<< ' '
-					<< "change: " << fixed(theMeanChange)
+					<< "change: " << fixed(theChangeInMean)
 					;
 				return oss.str();
 			}
@@ -400,7 +435,7 @@ namespace app
 		inline
 		static
 		quadloco::ang::Ring
-		azimRing
+		azimRing  // AzimCycle::
 			( double const & radius
 				//!< With angle increment of 1 element at this radius
 			)
@@ -415,7 +450,7 @@ namespace app
 
 		//! Construct statistics needed inside hasQuadTransition() member.
 		inline
-		AzimCycle
+		AzimCycle  // AzimCycle::
 			( quadloco::ras::Grid<GridType> const & srcGrid
 				//!< Source values with which to evaluate
 			, quadloco::img::Spot const & evalCenter
@@ -426,6 +461,7 @@ namespace app
 				//!< min radius (skip if less than this)
 			)
 			: theSrcStat{}
+			, theEvalCenter{ evalCenter }
 			, theAzimRing(azimRing(evalRadius))
 			, theAzimStats(theAzimRing.size(), quadloco::prb::Stats<double>{})
 		{
@@ -449,7 +485,7 @@ namespace app
 							{ ang::atan2(relSpot[1], relSpot[0]) };
 
 						// extract (interpolated) source image value
-						img::Spot const sampSpot{ relSpot + evalCenter };
+						img::Spot const sampSpot{ relSpot + theEvalCenter };
 						using ras::grid::bilinValueAt;
 						double const sampValue
 							{ (double)bilinValueAt<GridType>
@@ -486,7 +522,7 @@ namespace app
 		 */
 		inline
 		AzimProfile
-		fullAzimProfile
+		fullAzimProfile  // AzimCycle::
 			() const
 		{
 			// evaluate "run-lengths" for which min/max azimuth statistics
@@ -522,7 +558,7 @@ namespace app
 		 */
 		inline
 		bool
-		hasQuadTransitions
+		hasQuadTransitions  // AzimCycle::
 			( AzimProfile const & azimProfile
 				//!< Such as returned from azimProfile()
 			, double const & tolNumAzimDelta = 2.
@@ -575,10 +611,76 @@ namespace app
 		 */
 		inline
 		bool
-		hasQuadTransitions
+		hasQuadTransitions  // AzimCycle::
 			() const
 		{
 			return hasQuadTransitions(fullAzimProfile());
+		}
+
+		//! Quad target image parameters estimated from azimuth profile
+		inline
+		quadloco::img::QuadTarget
+		imgQuadTarget  // AzimCycle::
+			() const
+		{
+			quadloco::img::QuadTarget imgQuad{};
+
+			// get profile transitions (between 'Hi' and 'Lo' regions)
+			AzimProfile const azimProfile{ fullAzimProfile() };
+			std::vector<AzimSwing> const swings{ azimProfile.allAzimSwings() };
+
+			// since quad-like azimuth data should have alternating pattern
+			// of intensity transitions, a legitimate quad target should
+			// therefore have four distinct transitions.
+			if (4u == swings.size())
+			{
+				// get the four radial edge transitions
+				AzimSwing const & itemAp = swings[0];
+				AzimSwing const & itemBp = swings[1];
+				AzimSwing const & itemAn = swings[2];
+				AzimSwing const & itemBn = swings[3];
+
+				if ( theEvalCenter.isValid()
+				  && itemAp.isValid()
+				  && itemAn.isValid()
+				  && itemBp.isValid()
+				  && itemBn.isValid()
+				   )
+				{
+					// define four spots at transitions on unit circle
+					// (these are expected to be in positive angle order!)
+					img::Vector<double> const spotAp{ itemAp.direction() };
+					img::Vector<double> const spotBp{ itemBp.direction() };
+					img::Vector<double> const spotAn{ itemAn.direction() };
+					img::Vector<double> const spotBn{ itemBn.direction() };
+
+					// compute average radial directions from antipodal pairs
+					// of the unit circle spots
+					img::Vector<double> const sumA{ spotAp - spotAn };
+					img::Vector<double> const sumB{ spotBp - spotBn };
+					img::Vector<double> const dirA{ direction(sumA) };
+					img::Vector<double> const dirB{ direction(sumB) };
+
+					// dirX is (Hi to right, and Lo to left) (azimSwing Hi->Lo)
+					// dirY is adjacent to dirX in positive rotation sense
+					if (itemAp.isFromHiIntoLo())
+					{
+						img::Vector<double> const & dirX = dirA;
+						img::Vector<double> const & dirY = dirB;
+						imgQuad = img::QuadTarget{ theEvalCenter, dirX, dirY };
+					}
+					else
+					if (itemAp.isFromLoIntoHi())
+					{
+						img::Vector<double> const & dirX = dirB;
+						img::Vector<double> const dirY{ -dirA };
+						imgQuad = img::QuadTarget{ theEvalCenter, dirX, dirY };
+					}
+					// else no change across itemAp
+				}
+			}
+
+			return imgQuad;
 		}
 
 
