@@ -64,16 +64,16 @@ namespace app
 	class AzimCycle
 	{
 		//! Statistics for all source values within evaluation circle
-		quadloco::prb::Stats<double> theSrcStat{};
+		prb::Stats<double> theSrcStat{};
 
 		//! Location in source image being evaluated as possible quad center
-		quadloco::img::Spot const theEvalCenter{};
+		img::Spot const theEvalCenter{};
 
 		//! Index/angle map (with wrapparound but wrap is not needed here)
-		quadloco::ang::Ring const theAzimRing{};
+		ang::Ring const theAzimRing{};
 
 		//! Statistics for source values along each azimuth direction
-		std::vector<quadloco::prb::Stats<double> > theAzimStats{};
+		std::vector<prb::Stats<double> > theAzimStats{};
 
 		//! Simple structure for angle and sign of intensity deviation
 		struct AzimInten  // AzimCycle::
@@ -232,7 +232,7 @@ namespace app
 
 			//! Direction vector associated with theAngle
 			inline
-			quadloco::img::Vector<double>
+			img::Vector<double>
 			direction  // AzimCycle::AzimSwing
 				() const
 			{
@@ -398,7 +398,7 @@ namespace app
 
 				// wrap around index management
 				std::size_t const numSamps{ theAzimIntens.size() };
-				quadloco::ang::Ring const sampRing(numSamps);
+				ang::Ring const sampRing(numSamps);
 
 				// allocate space: overkill - expect 4
 				azimSwings.reserve(2u * numSamps + 1u);
@@ -434,16 +434,16 @@ namespace app
 		 */
 		inline
 		static
-		quadloco::ang::Ring
+		ang::Ring
 		azimRing  // AzimCycle::
 			( double const & radius
 				//!< With angle increment of 1 element at this radius
 			)
 		{
 			// number of samples for unit sampling of perimeter at radius
-			double const perim{ quadloco::ang::piTwo()*radius };
+			double const perim{ ang::piTwo()*radius };
 			std::size_t const numSamp{ (std::size_t)std::floor(perim) };
-			return quadloco::ang::Ring(numSamp);
+			return ang::Ring(numSamp);
 		}
 
 	public:
@@ -451,9 +451,9 @@ namespace app
 		//! Construct statistics needed inside hasQuadTransition() member.
 		inline
 		AzimCycle  // AzimCycle::
-			( quadloco::ras::Grid<GridType> const & srcGrid
+			( ras::Grid<GridType> const & srcGrid
 				//!< Source values with which to evaluate
-			, quadloco::img::Spot const & evalCenter
+			, img::Spot const & evalCenter
 				//!< Spot about which to evaluate azimuth intensity cycles
 			, double const & evalRadius = 7.0
 				//!< max radius of evaluation space
@@ -463,7 +463,7 @@ namespace app
 			: theSrcStat{}
 			, theEvalCenter{ evalCenter }
 			, theAzimRing(azimRing(evalRadius))
-			, theAzimStats(theAzimRing.size(), quadloco::prb::Stats<double>{})
+			, theAzimStats(theAzimRing.size(), prb::Stats<double>{})
 		{
 			// sample a circular patch from the source image. Compute the
 			// angle for each source pixel and accumulate its value into
@@ -619,11 +619,11 @@ namespace app
 
 		//! Quad target image parameters estimated from azimuth profile
 		inline
-		quadloco::img::QuadTarget
+		img::QuadTarget
 		imgQuadTarget  // AzimCycle::
 			() const
 		{
-			quadloco::img::QuadTarget imgQuad{};
+			img::QuadTarget imgQuad{};
 
 			// get profile transitions (between 'Hi' and 'Lo' regions)
 			AzimProfile const azimProfile{ fullAzimProfile() };
