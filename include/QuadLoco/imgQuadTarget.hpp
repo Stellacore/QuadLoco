@@ -164,7 +164,8 @@ namespace img
 		bool
 		nearlyEquals
 			( img::QuadTarget const & other
-			, double const tol = std::numeric_limits<double>::epsilon()
+			, double const tolLoc = std::numeric_limits<double>::epsilon()
+			, double const tolAng = std::numeric_limits<double>::epsilon()
 			) const
 		{
 			bool same{ isValid() && other.isValid() };
@@ -172,21 +173,41 @@ namespace img
 			{
 				// centers need to be the same
 				bool const okayCenter
-					{ ::nearlyEquals(theCenter, other.theCenter, tol) };
+					{ ::nearlyEquals(theCenter, other.theCenter, tolLoc) };
+				same &= okayCenter;
+				if (same)
+				{
+					// check directions - primary direction alignment first
+					bool okayDir{ false };
+					double const tolSin{ std::abs(std::sin(tolAng)) };
+					double const gotSinX{ outer(theDirX, other.theDirX) };
+					if (std::abs(gotSinX) < tolSin)
+					{
+						// primary direction is either aligned or anti-aligned
+						// so turn attention the secondary radial direction
 
-				// both directions need to be parallel or anti-parallel
-				bool const okayPos
-					{  ::nearlyEquals(theDirX,  other.theDirX, tol)
-					&& ::nearlyEquals(theDirY,  other.theDirY, tol)
-					};
-				bool const okayNeg
-					{  ::nearlyEquals(theDirX, -other.theDirX, tol)
-					&& ::nearlyEquals(theDirY, -other.theDirY, tol)
-					};
-				bool const okayDir{ okayPos || okayNeg };
+						// decide wheter to test positive or negative secondary
+						double const dotX{ dot(theDirX, other.theDirX) };
 
-				// center *and* one of direction conventions
-				same = okayCenter && okayDir;
+						// if primary direction is aligned, ...
+						// ... then test positive secondary direction
+						img::Vector<double> tstY{ other.theDirY };
+						if (dotX < 0.)
+						{
+							// if primary direction is anti-aligned, ...
+							// ... then test negative secondary direction
+							tstY = -(other.theDirY);
+						}
+
+						// evaluate secondary direction alignemnt
+						double const gotSinY{ outer(theDirY, tstY) };
+						if (std::abs(gotSinY) < tolSin)
+						{
+							okayDir = same;
+						}
+					}
+					same &= okayDir;
+				}
 			}
 			return same;
 		}
@@ -257,10 +278,11 @@ namespace
 	nearlyEquals
 		( quadloco::img::QuadTarget const & itemA
 		, quadloco::img::QuadTarget const & itemB
-		, double const tol = std::numeric_limits<double>::epsilon()
+		, double const tolLoc = std::numeric_limits<double>::epsilon()
+		, double const tolAng = std::numeric_limits<double>::epsilon()
 		)
 	{
-		return itemA.nearlyEquals(itemB, tol);
+		return itemA.nearlyEquals(itemB, tolLoc, tolAng);
 	}
 
 
