@@ -86,6 +86,18 @@ namespace
 			oss << "evalMinRad: " << fixed(evalMinRad) << '\n';
 		}
 
+		// check AzimCycle operating directly on uint8_t source grid
+		quadloco::app::AzimCycle const azimCycle8
+			(pgmGrid8, evalCenter, evalRadius, evalMinRad);
+		if (! azimCycle8.hasQuadTransitions())
+		{
+			oss << "Failure of isQuadish(2) test with azimCycle8\n";
+		}
+
+		//
+		// Check img::QuadTarget evaluation
+		//
+
 		// check img::QuadTarget extraction
 		img::QuadTarget const expQuad
 			{ evalCenter
@@ -102,13 +114,16 @@ namespace
 			oss << "gotQuad: " << gotQuad << '\n';
 		}
 
-
-		// check AzimCycle operating directly on uint8_t source grid
-		quadloco::app::AzimCycle const azimCycle8
-			(pgmGrid8, evalCenter, evalRadius, evalMinRad);
-		if (! azimCycle8.hasQuadTransitions())
+		double const gotProb{ app::quadProbabilityFor(gotQuad, srcGrid) };
+		double const tolProb{ .50 }; // arbitrary threshold between [0,1]
+		if (! (tolProb < gotProb))
 		{
-			oss << "Failure of isQuadish(2) test with azimCycle8\n";
+			using engabra::g3::io::fixed;
+			oss << "Failure of quadProbabilityFor() test\n";
+			oss << "tolProb: " << fixed(tolProb) << '\n';
+			oss << "gotProb: " << fixed(gotProb) << '\n';
+			oss << "expQuad: " << expQuad << '\n';
+			oss << "gotQuad: " << gotQuad << '\n';
 		}
 
 	} // test1
