@@ -85,7 +85,7 @@ namespace
 		// assess the quadness of pixels w.r.t. the estimated "found" geometry
 		std::ostringstream msg; // diagnostic info
 		double const probQuad
-			{ quadloco::app::isQuadlike(pixGrid, gotImgQuad, &msg) };
+			{ quadloco::app::quadProbabilityFor(gotImgQuad, pixGrid, &msg) };
 
 		// [DoxyExample01]
 

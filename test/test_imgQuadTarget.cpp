@@ -89,7 +89,9 @@ namespace
 		quadloco::img::QuadTarget const imgQuadB
 			{ center, -dirX, -dirY, centerSigma };
 		bool const expSame{ true };
-		bool const gotSame{ nearlyEquals(imgQuadA, imgQuadB) };
+		constexpr double tolLoc{ std::numeric_limits<double>::epsilon() };
+		constexpr double tolAng{ std::numeric_limits<double>::epsilon() };
+		bool const gotSame{ nearlyEquals(imgQuadA, imgQuadB, tolLoc, tolAng) };
 
 		// [DoxyExample01]
 

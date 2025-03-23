@@ -70,6 +70,9 @@ namespace
 		// test if azimuth cycles are consistent with a quad pattern
 		bool const isQuadish{ azimCycle.hasQuadTransitions() };
 
+		// extract estimated img::QuadTarget parameters
+		img::QuadTarget const gotQuad{ azimCycle.imgQuadTarget() };
+
 		// [DoxyExample01]
 
 		if (! isQuadish)
@@ -89,6 +92,38 @@ namespace
 		if (! azimCycle8.hasQuadTransitions())
 		{
 			oss << "Failure of isQuadish(2) test with azimCycle8\n";
+		}
+
+		//
+		// Check img::QuadTarget evaluation
+		//
+
+		// check img::QuadTarget extraction
+		img::QuadTarget const expQuad
+			{ evalCenter
+			// directions from manual measurement of p5q5.pgm
+			, direction(img::Vector<double>{   1.02,  34.03 })
+			, direction(img::Vector<double>{ -34.12,    .06 })
+			};
+		double const tolLoc{ 1. };
+		double const tolDir{ 1./evalRadius };
+		if (! nearlyEquals(gotQuad, expQuad, tolLoc, tolDir))
+		{
+			oss << "Failure of imgQuadTarget test\n";
+			oss << "expQuad: " << expQuad << '\n';
+			oss << "gotQuad: " << gotQuad << '\n';
+		}
+
+		double const gotProb{ app::quadProbabilityFor(gotQuad, srcGrid) };
+		double const tolProb{ .50 }; // arbitrary threshold between [0,1]
+		if (! (tolProb < gotProb))
+		{
+			using engabra::g3::io::fixed;
+			oss << "Failure of quadProbabilityFor() test\n";
+			oss << "tolProb: " << fixed(tolProb) << '\n';
+			oss << "gotProb: " << fixed(gotProb) << '\n';
+			oss << "expQuad: " << expQuad << '\n';
+			oss << "gotQuad: " << gotQuad << '\n';
 		}
 
 	} // test1
