@@ -74,6 +74,38 @@ namespace img
 		double theCenterSigma{ std::numeric_limits<double>::quiet_NaN() };
 
 
+		/*! \brief Same target as 'aQuad' but with consistent alignment.
+		 *
+		 * The returned quad has directions aligned with aQuad but
+		 * ensuring that the dirX() points toward the first quadrant.
+		 * E.g. such that return quad
+		 * \arg (0. < dot(result.dirX(), (e1+e2))
+		 */
+		inline
+		static
+		QuadTarget
+		principalRotationFor
+			( QuadTarget const & aQuad
+			)
+		{
+			// either return quad as is,...
+			QuadTarget outQuad{ aQuad };
+			// ... or, if necessary spin quad a half turn to ensure
+			// that direction component, (x+y)[1], is positive.
+			Vector<double> const darkDir{ aQuad.dirX() + aQuad.dirY() };
+			if (darkDir[1] < 0.)
+			{
+				// Rotate a half turn
+				outQuad = QuadTarget
+					{ aQuad.centerSpot()
+					, -aQuad.dirX()
+					, -aQuad.dirY()
+					, aQuad.centerSigma()
+					};
+			}
+			return outQuad;
+		}
+
 		//! True if this instance contains valid data (not null)
 		inline
 		bool
@@ -94,6 +126,15 @@ namespace img
 			() const
 		{
 			return theCenter;
+		}
+
+		//! Version of this quad that has dirX(),dirY() aligned consistently
+		inline
+		QuadTarget
+		principalRotation
+			() const
+		{
+			return principalRotationFor(*this);
 		}
 
 		//! Scalar uncertainty in centerSpot() location (from construction)

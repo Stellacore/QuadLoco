@@ -677,6 +677,9 @@ namespace app
 						imgQuad = img::QuadTarget{ theEvalCenter, dirX, dirY };
 					}
 					// else no change across itemAp
+
+					// return result having directions aligned consistently
+					imgQuad = imgQuad.principalRotation();
 				}
 			}
 
