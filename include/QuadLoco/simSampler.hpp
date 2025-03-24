@@ -312,8 +312,7 @@ namespace sim
 			Vector<double> const xDir{ direction(xMidInDet - centerInDet) };
 			Vector<double> const yDir{ direction(yMidInDet - centerInDet) };
 
-			constexpr double centerSigma{ 1./1024. };
-			img::QuadTarget const simQuad{ center, xDir, yDir, centerSigma };
+			img::QuadTarget const simQuad{ center, xDir, yDir };
 			return simQuad;
 		}
 
