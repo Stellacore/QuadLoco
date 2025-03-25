@@ -96,8 +96,11 @@ namespace center
 						};
 
 					// update centroid tracking sums
-					sumLocs  = sumLocs + sampValue * sampSpot;
-					sumInten = sumInten + sampValue;
+					if (engabra::g3::isValid(sampValue))
+					{
+						sumLocs  = sumLocs + sampValue * sampSpot;
+						sumInten = sumInten + sampValue;
+					}
 				}
 			}
 		}
