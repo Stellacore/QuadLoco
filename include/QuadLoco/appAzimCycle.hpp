@@ -63,18 +63,6 @@ namespace app
 	template <typename GridType = float>
 	class AzimCycle
 	{
-		//! Statistics for all source values within evaluation circle
-		prb::Stats<double> theSrcStat{};
-
-		//! Location in source image being evaluated as possible quad center
-		img::Spot const theEvalCenter{};
-
-		//! Index/angle map (with wrapparound but wrap is not needed here)
-		ang::Ring const theAzimRing{};
-
-		//! Statistics for source values along each azimuth direction
-		std::vector<prb::Stats<double> > theAzimStats{};
-
 		//! Simple structure for angle and sign of intensity deviation
 		struct AzimInten  // AzimCycle::
 		{
@@ -425,6 +413,20 @@ namespace app
 			}
 
 		}; // AzimProfile
+
+	private: // data
+
+		//! Statistics for all source values within evaluation circle
+		prb::Stats<double> theSrcStat{};
+
+		//! Location in source image being evaluated as possible quad center
+		img::Spot const theEvalCenter{};
+
+		//! Index/angle map (with wrapparound but wrap is not needed here)
+		ang::Ring const theAzimRing{};
+
+		//! Statistics for source values along each azimuth direction
+		std::vector<prb::Stats<double> > theAzimStats{};
 
 		/*! \brief Define an azimuth index/value map based on radius size
 		 *
