@@ -36,6 +36,7 @@
 #include "QuadLoco/imgHit.hpp"
 #include "QuadLoco/imgSpot.hpp"
 #include "QuadLoco/prbStats.hpp"
+#include "QuadLoco/rasChipSpec.hpp"
 #include "QuadLoco/rasGrid.hpp"
 #include "QuadLoco/rasRelRC.hpp"
 #include "QuadLoco/rasRowCol.hpp"
@@ -128,11 +129,11 @@ namespace ops
 		ras::Grid<double>
 		gridOfAveSSD
 			( ras::RowCol const & rcHoodCenterInSrc
+			, std::size_t const & fullHood // i.e. (2u*halfHood+1u)
 			, prb::Stats<double> * const & ptSrcStats = { nullptr }
 			) const
 		{
 			// allocate and initialize sum-sqr-diff return grid
-			std::size_t const fullHood{ 2u*theHalfHood + 1u };
 			ras::Grid<double> ssdGrid(fullHood, fullHood);
 			std::fill(ssdGrid.begin(), ssdGrid.end(), pix::null<float>());
 
@@ -261,14 +262,8 @@ namespace ops
 				// Estimate variance (deviation) of best fit location
 				if (0. < sumProb)
 				{
-					// The SSD computations are based on matching areas
-					// of grid cells and the weighted average computed
-					// here is related to the center of the cells.
-					// Therefore, add a half cell to recognize this
-					img::Vector<double> const halfCell{ .5, .5 };
-					img::Vector<double> const aveVec
-						{ (1./sumProb) * sumVec  + halfCell };
-					img::Spot const minSpot{ cast::imgSpot(aveVec) };
+					img::Spot const aveVec{ (1./sumProb) * sumVec  };
+					img::Spot const & minSpot = aveVec;
 
 					// Estimate variance
 					// TODO pbly could optimize to loop only near to minSpot
@@ -347,8 +342,16 @@ namespace ops
 				// assessing significance of SSD values)
 				// while computing SSD in neighborhood
 				prb::Stats<double> srcStats{};
+				std::size_t const fullHood{ 2u*theHalfHood + 1u };
 				ras::Grid<double> const aveGridSSD
-					{ gridOfAveSSD(rcHoodCenterInSrc, &srcStats) };
+					{ gridOfAveSSD(rcHoodCenterInSrc, fullHood, &srcStats) };
+
+				// upper left corner of ssd evaluation chip
+				ras::RowCol const rcChipTL
+					{ rcHoodCenterInSrc.row() - theHalfHood
+					, rcHoodCenterInSrc.col() - theHalfHood
+					};
+				ras::ChipSpec const chipSpec{ rcChipTL, aveGridSSD.hwSize() };
 
 				// assume dominant random noise in the (presumably small)
 				// neighborhood is due to shot noise (which goes as square 
@@ -359,26 +362,20 @@ namespace ops
 				// max values are "reasonably" close to the expected min/max.
 				double const varBlack{ srcStats.min() };
 				double const varWhite{ srcStats.max() };
-				double const varSrcPix{ varBlack + varWhite };
+				double const varSrcPix{ (1./10.) * (varBlack + varWhite) };
 
 				// estimate sub-cell location of minimum
-				img::Hit const minHitInGrid
+				img::Hit const minHitInChip
 					{ hitAtMinimumOf(aveGridSSD, varSrcPix) };
-				img::Spot const & minSpotInGrid = minHitInGrid.location();
+				img::Spot const & minSpotInChip = minHitInChip.location();
 
-				// adjust aveGridSSD location into full source image
-				img::Spot const fitSpot
-					{ minSpotInGrid.row()
-						+ (double)(rcHoodCenterInSrc.row())
-						- (double)(theHalfHood)
-					, minSpotInGrid.col()
-						+ (double)(rcHoodCenterInSrc.col())
-						- (double)(theHalfHood)
-					};
+				// get full source image location for ssd Chip minimum
+				img::Spot const minSpotInGrid
+					{ chipSpec.fullSpotForChipSpot(minSpotInChip) };
 
-				double const & prob = minHitInGrid.value();
-				double const & sigma = minHitInGrid.sigma();
-				fitHit = img::Hit(fitSpot, prob, sigma);
+				double const & prob = minHitInChip.value();
+				double const & sigma = minHitInChip.sigma();
+				fitHit = img::Hit(minSpotInGrid, prob, sigma);
 			}
 
 			return fitHit;
