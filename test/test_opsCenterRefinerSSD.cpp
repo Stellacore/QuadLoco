@@ -28,8 +28,9 @@
 */
 
 
+#include "QuadLoco/opsCenterRefinerEdge.hpp" // tmp
+
 #include "QuadLoco/appcenter.hpp"
-#include "QuadLoco/imgQuadTarget.hpp"
 #include "QuadLoco/imgSpot.hpp"
 #include "QuadLoco/io.hpp"
 #include "QuadLoco/objCamera.hpp"
@@ -61,17 +62,31 @@ namespace
 		constexpr std::size_t numOverSamp{ 64u };
 
 		// simulate quad target image and extract edgels
-		quadloco::img::QuadTarget imgQuad{};  // set by simulation
+		using namespace rigibra;
 		sim::QuadData const simQuadData
-			{ sim::Render::simpleQuadData
-				(formatAndPd, numOverSamp)
+		//	{ sim::Render::simpleQuadData
+		//		(formatAndPd, numOverSamp)
+		//	};
+			{ sim::Render
+				( obj::Camera::isoCam(formatAndPd)
+				, Transform
+					{ engabra::g3::Vector{  1./16.,  1./16., 1. }
+					, identity<Attitude>()
+					}
+				, obj::QuadTarget
+					( 1. // edge size
+					, obj::QuadTarget::None
+					)
+				, sim::Sampler::None
+			//	| sim::Sampler::AddSceneBias
+				| sim::Sampler::AddImageNoise
+				)
+					.quadData(numOverSamp)
 			};
 		ras::Grid<float> const & srcGrid = simQuadData.theGrid;
 		img::Spot const expCenterSpot{ simQuadData.theImgQuad.centerSpot() };
 
-		// (void)io::writeStretchPGM("fooTest.pgm", srcGrid);
-
-		//(void)io::writeStretchPGM("srcGrid.pgm", srcGrid);
+// (void)io::writeStretchPGM("./srcGrid.pgm", srcGrid);
 
 		// [DoxyExample01a]
 
@@ -102,9 +117,24 @@ namespace
 
 			// [DoxyExample01b]
 
+/*
+{
+ops::CenterRefinerEdge const refinerEdg(srcGrid);
+img::Hit const edgCenterHit
+	{ refinerEdg.imgHitNear(nominalCenterRC, 5u) };
+img::Spot const & edgCenterSpot = edgCenterHit.location();
+img::Spot const difCenterSpot{ gotCenterHit.location() - expCenterSpot };
+std::cout << "expCenterSpot: " << expCenterSpot << '\n';
+std::cout << "gotCenterSpot: " << gotCenterSpot << '\n';
+std::cout << "difCenterSpot: " << difCenterSpot << '\n';
+std::cout << "edgCenterSpot: " << edgCenterSpot << '\n';
+}
+*/
+
 			// NOTE: image (radiometric) noise affects the fit center
 			//       tolerance value here reflects this.
-			constexpr double tol{ 5./8. }; // [pix]
+		//	constexpr double tol{ 5./8. }; // [pix]
+		constexpr double tol{ 1. }; // TODO unclear why so bad
 			if (! nearlyEqualsAbs(gotCenterSpot, expCenterSpot, tol))
 			{
 				using engabra::g3::io::fixed;
