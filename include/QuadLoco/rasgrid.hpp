@@ -350,20 +350,21 @@ namespace grid
 	 *
 	 * ref uPix8() for details on value mapping.
 	 */
+	template <typename RealType>
 	inline
 	ras::Grid<uint8_t>
 	uGrid8
-		( ras::Grid<float> const & fgrid
+		( ras::Grid<RealType> const & fgrid
 		, val::Span const & fSpan
 		)
 	{
 		ras::Grid<uint8_t> ugrid{ fgrid.hwSize() };
 
-		ras::Grid<float>::const_iterator itIn{ fgrid.cbegin() };
+		typename ras::Grid<RealType>::const_iterator itIn{ fgrid.cbegin() };
 		ras::Grid<uint8_t>::iterator itOut{ ugrid.begin() };
 		while (ugrid.end() != itOut)
 		{
-			*itOut++ = pix::uPix8(*itIn++, fSpan);
+			*itOut++ = pix::uPix8<RealType>(*itIn++, fSpan);
 		}
 		return ugrid;
 	}
