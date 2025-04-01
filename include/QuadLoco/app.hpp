@@ -32,6 +32,7 @@
  */
 
 
+#include "QuadLoco/appAzimCycle.hpp"
 #include "QuadLoco/appcenter.hpp"
 #include "QuadLoco/appkeyed.hpp"
 #include "QuadLoco/appQuadLike.hpp"

@@ -61,6 +61,7 @@ target_sources(
 			FILES
 				../include/QuadLoco/ang.hpp
 				../include/QuadLoco/angRing.hpp
+				../include/QuadLoco/appAzimCycle.hpp
 				../include/QuadLoco/appcenter.hpp
 				../include/QuadLoco/app.hpp
 				../include/QuadLoco/appkeyed.hpp
@@ -126,6 +127,7 @@ target_sources(
 				../include/QuadLoco/valSpan.hpp
 				../include/QuadLoco/xfm.hpp
 				../include/QuadLoco/xfmMapSizeArea.hpp
+
 	)
 
 target_compile_options(

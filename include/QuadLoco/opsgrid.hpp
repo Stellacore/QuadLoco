@@ -61,18 +61,15 @@ namespace ops
 
 namespace grid
 {
-	/*! \brief Compute img::Grad for each pixel within specified ranges.
+	/*! \brief graident response from eight neighbors around (rowM,colM)
 	 *
-	 * For each pixel within specified row/col ranges, the gradient is
-	 * computed from the 8 immediate neighbor pixels as a least squares
-	 * linear fit. I.e. like fitting a geometric plane to the radiometric
-	 * "surface" defined by the 9 neighborhood values.  The 4 corner
-	 * samples are weighted by 1/sqrt(2) the weight of the 4 edge samples.
+	 * The gradient is computed from the 8 immediate neighbor pixels as
+	 * a least squares linear fit. I.e. like fitting a geometric plane to
+	 * the radiometric "surface" defined by the 8 neighborhood values.
+	 * The 4 corner samples are weighted by 1/sqrt(2) of the weight of
+	 * the 4 edge samples.
 	 *
-	 * Results are placed directly into an *externally allocated* output
-	 * grid via the pointer ptGrads.
-	 *
-	 * NOTE: This function *assumes* the row/col begin/end ranges are
+	 * \note This function *assumes* the row/col begin/end ranges are
 	 * valid and fall *entirely* inside the source image.
 	 *
 	 * The gradient computation may be expressed as a digital window with
@@ -93,6 +90,63 @@ namespace grid
 	 * \endverbatim
 	 */
 	inline
+	img::Grad
+	responseGradientBy8x
+		( ras::Grid<float> const & inGrid
+		, std::size_t const & rowT
+		, std::size_t const & rowM
+		, std::size_t const & rowB
+		, std::size_t const & colL
+		, std::size_t const & colM
+		, std::size_t const & colR
+		)
+	{
+		double const & TL = inGrid(rowT, colL);
+		double const & TM = inGrid(rowT, colM);
+		double const & TR = inGrid(rowT, colR);
+
+		double const & ML = inGrid(rowM, colL);
+		//double const & MM = inGrid(rowM, colM);
+		double const & MR = inGrid(rowM, colR);
+
+		double const & BL = inGrid(rowB, colL);
+		double const & BM = inGrid(rowB, colM);
+		double const & BR = inGrid(rowB, colR);
+
+		// corner and edge filter values and (normalized) weights
+		constexpr double fC{ 1./std::numbers::sqrt2_v<double> };
+		constexpr double fE{ 1. };
+		constexpr double wSum{ 4.*fC + 2.*fE };
+		constexpr double wC{ fC / wSum };
+		constexpr double wE{ fE / wSum };
+
+		double const rowGrad
+			{ wC * (BL - TL)
+			+ wE * (BM - TM)
+			+ wC * (BR - TR)
+			};
+
+		double const colGrad
+			{ wC * (TR - TL)
+			+ wE * (MR - ML)
+			+ wC * (BR - BL)
+			};
+
+		return img::Grad{ rowGrad, colGrad };
+	}
+
+
+	/*! \brief Compute img::Grad for each pixel within specified ranges.
+	 *
+	 * For each pixel within specified row/col ranges, a gradient value
+	 * is evaluated by calling responseGradientBy8x(). The results are
+	 * placed directly into an *externally allocated* output grid via
+	 * the pointer ptGrads.
+	 *
+	 * NOTE: This function *assumes* the ChipSpec area is contained
+	 * \b entirely inside the source image.
+	 */
+	inline
 	void
 	fillGradientBy8x
 		( ras::Grid<img::Grad> * const & ptGrads
@@ -109,48 +163,25 @@ namespace grid
 
 		for (std::size_t row{rowNdxBeg} ; row < rowNdxEnd ; ++row)
 		{
+			// specify the rows involved
 			std::size_t const rowT{ row - 1u };
 			std::size_t const & rowM = row;
 			std::size_t const rowB{ row + 1u };
 
 			for (std::size_t col{colNdxBeg} ; col < colNdxEnd ; ++col)
 			{
+				// specify the columns involved
 				std::size_t const colL{ col - 1u };
 				std::size_t const & colM = col;
 				std::size_t const colR{ col + 1u };
 
-				double const & TL = inGrid(rowT, colL);
-				double const & TM = inGrid(rowT, colM);
-				double const & TR = inGrid(rowT, colR);
-
-				double const & ML = inGrid(rowM, colL);
-				//double const & MM = inGrid(rowM, colM);
-				double const & MR = inGrid(rowM, colR);
-
-				double const & BL = inGrid(rowB, colL);
-				double const & BM = inGrid(rowB, colM);
-				double const & BR = inGrid(rowB, colR);
-
-				// corner and edge filter values and (normalized) weights
-				constexpr double fC{ 1./std::numbers::sqrt2_v<double> };
-				constexpr double fE{ 1. };
-				constexpr double wSum{ 4.*fC + 2.*fE };
-				constexpr double wC{ fC / wSum };
-				constexpr double wE{ fE / wSum };
-
-				double const rowGrad
-					{ wC * (BL - TL)
-					+ wE * (BM - TM)
-					+ wC * (BR - TR)
-					};
-
-				double const colGrad
-					{ wC * (TR - TL)
-					+ wE * (MR - ML)
-					+ wC * (BR - BL)
-					};
-
-				grads(row,col) = img::Grad{ rowGrad, colGrad };
+				// evalate the gradient
+				grads(row,col)
+					= responseGradientBy8x
+						( inGrid
+						, rowT, rowM, rowB
+						, colL, colM, colR
+						);
 			}
 		}
 	}

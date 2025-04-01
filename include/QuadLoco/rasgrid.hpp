@@ -350,20 +350,21 @@ namespace grid
 	 *
 	 * ref uPix8() for details on value mapping.
 	 */
+	template <typename RealType>
 	inline
 	ras::Grid<uint8_t>
 	uGrid8
-		( ras::Grid<float> const & fgrid
+		( ras::Grid<RealType> const & fgrid
 		, val::Span const & fSpan
 		)
 	{
 		ras::Grid<uint8_t> ugrid{ fgrid.hwSize() };
 
-		ras::Grid<float>::const_iterator itIn{ fgrid.cbegin() };
+		typename ras::Grid<RealType>::const_iterator itIn{ fgrid.cbegin() };
 		ras::Grid<uint8_t>::iterator itOut{ ugrid.begin() };
 		while (ugrid.end() != itOut)
 		{
-			*itOut++ = pix::uPix8(*itIn++, fSpan);
+			*itOut++ = pix::uPix8<RealType>(*itIn++, fSpan);
 		}
 		return ugrid;
 	}
@@ -499,6 +500,140 @@ namespace grid
 
 	}
 
+	//! \brief Interpolation cell boundary specification
+	struct InterpBound
+	{
+		//! Spot at which interpolation is to be computed
+		img::Spot const theAtSpot{};
+
+		//! Top/Lft Row/Col containing the spot
+		ras::RowCol const theBegRC{};
+
+		//! Bot/Rgt Row/Col just after the spot
+		ras::RowCol const theEndRC{};
+
+		//! \brief Create indices needed to interpolate at evalSpot location
+		template <typename Type>
+		inline
+		static
+		InterpBound
+		from
+			( ras::Grid<Type> const & grid
+			, img::Spot const & evalSpot
+			)
+		{
+			// interpret 0,1 as row,col into grid
+			double const & evalRow = evalSpot[0];
+			double const & evalCol = evalSpot[1];
+
+			// check if 'at' point is within grid at first (min) corner
+			double const minRow{ std::floor(evalRow) };
+			double const minCol{ std::floor(evalCol) };
+			bool const isInMin{ (0. < minRow) && (0. < minCol) };
+			if (isInMin)
+			{
+				// indices into grid (at minRow, minCol)
+				std::size_t const ndxRow1{ static_cast<std::size_t>(evalRow) };
+				std::size_t const ndxCol1{ static_cast<std::size_t>(evalCol) };
+				std::size_t const ndxRow2{ ndxRow1 + 1u };
+				std::size_t const ndxCol2{ ndxCol1 + 1u };
+
+				// check if 'at' point is within grid at opposite (max) corner
+				bool const isInMax
+					{ (ndxRow2 < grid.high()) && (ndxCol2 < grid.wide()) };
+				if (isInMax)
+				{
+					return InterpBound
+						{ evalSpot
+						, ras::RowCol{ ndxRow1, ndxCol1 }
+						, ras::RowCol{ ndxRow2, ndxCol2 }
+						};
+				}
+			}
+			return InterpBound{};
+		}
+
+		//! True if all members contain valid data
+		inline
+		bool
+		isValid
+			() const
+		{
+			return
+				(  theAtSpot.isValid()
+				&& theBegRC.isValid()
+				&& theEndRC.isValid()
+				);
+		}
+
+		//! The location at which interpolation is to be evaluated
+		inline
+		img::Spot const &
+		evalSpot
+			() const
+		{
+			return theAtSpot;
+		}
+
+		//! The Top/Lft row/col bound (above and left of evalSpot())
+		inline
+		ras::RowCol
+		row1col1
+			() const
+		{
+			return ras::RowCol{ theBegRC.row(), theBegRC.col() };
+		}
+
+		//! The Top/Rgt row/col bound (above and right of evalSpot())
+		inline
+		ras::RowCol
+		row1col2
+			() const
+		{
+			return ras::RowCol{ theBegRC.row(), theEndRC.col() };
+		}
+
+		//! The Bot/Lft row/col bound (below and left of evalSpot())
+		inline
+		ras::RowCol
+		row2col1
+			() const
+		{
+			return ras::RowCol{ theEndRC.row(), theBegRC.col() };
+		}
+
+		//! The Bot/Rgt row/col bound (below and right of evalSpot)
+		inline
+		ras::RowCol
+		row2col2
+			() const
+		{
+			return ras::RowCol{ theEndRC.row(), theEndRC.col() };
+		}
+
+		//! Fraction of distance from begin row to evalSpot()
+		inline
+		double
+		rowFraction
+			() const
+		{
+			double const rowFloor{ std::floor(theAtSpot.row()) };
+			return { (theAtSpot.row() - rowFloor) };
+		}
+
+		//! Fraction of distance from begin column to evalSpot()
+		inline
+		double
+		colFraction
+			() const
+		{
+			double const colFloor{ std::floor(theAtSpot.col()) };
+			return { (theAtSpot.col() - colFloor) };
+		}
+
+	}; // InterpBound
+
+
 	/*! Value interpolated at location within grid using bilinear model.
 	 *
 	 * \note: Type must support operations including
@@ -510,49 +645,72 @@ namespace grid
 	Type
 	bilinValueAt
 		( ras::Grid<Type> const & grid
-		, img::Spot const & at
+		, img::Spot const & atSpot
 		)
 	{
 		Type value{ pix::null<Type>() };
 
-		// interpret 0,1 as row,col into grid
-		double const & atRow = at[0];
-		double const & atCol = at[1];
-
-		// check if 'at' point is within grid at first (min) corner
-		double const minRow{ std::floor(atRow) };
-		double const minCol{ std::floor(atCol) };
-		bool const isInMin{ (0. < minRow) && (0. < minCol) };
-		if (isInMin)
+		InterpBound const interBound{ InterpBound::from<Type>(grid, atSpot) };
+		if (interBound.isValid())
 		{
-			// indices into grid (at minRow, minCol)
-			std::size_t const ndxRow1{ static_cast<std::size_t>(atRow) };
-			std::size_t const ndxCol1{ static_cast<std::size_t>(atCol) };
-			std::size_t const ndxRow2{ ndxRow1 + 1u };
-			std::size_t const ndxCol2{ ndxCol1 + 1u };
+			// get values at corners of interpolation boundary
+			Type const & val11 = grid(interBound.row1col1());
+			Type const & val21 = grid(interBound.row2col1());
+			Type const & val12 = grid(interBound.row1col2());
+			Type const & val22 = grid(interBound.row2col2());
 
-			// check if 'at' point is within grid at opposite (max) corner
-			bool const isInMax
-				{ (ndxRow2 < grid.high()) && (ndxCol2 < grid.wide()) };
-			if (isInMax)
-			{
-				// interpolate along first (lower bounding) edge
-				Type const val11{ grid(ndxRow1, ndxCol1) };
-				Type const val21{ grid(ndxRow2, ndxCol1) };
-				Type const val12{ grid(ndxRow1, ndxCol2) };
-				Type const val22{ grid(ndxRow2, ndxCol2) };
+			// interpolate in row direction
+			double const sclRow{ interBound.rowFraction() };
+			Type const dValA{ (Type)(sclRow * (val21 - val11)) };
+			Type const dValB{ (Type)(sclRow * (val22 - val12)) };
+			Type const valA{ val11 + dValA };
+			Type const valB{ val12 + dValB };
 
-				double const sclRow{ (atRow - minRow) };
-				Type const dValA{ (Type)(sclRow * (val21 - val11)) };
-				Type const dValB{ (Type)(sclRow * (val22 - val12)) };
-				Type const valA{ val11 + dValA };
-				Type const valB{ val12 + dValB };
+			// interpolate the row-interp-results in column direction
+			double const sclCol{ interBound.colFraction() };
+			Type const dVal0{ (Type)(sclCol * (valB - valA)) };
+			Type const val0{ dVal0 + valA };
+			value = val0;
+		}
 
-				double const sclCol{ (atCol - minCol) };
-				Type const dVal0{ (Type)(sclCol * (valB - valA)) };
-				Type const val0{ dVal0 + valA };
-				value = val0;
-			}
+		return value;
+	}
+
+	//! Specialization of bilinValueAt() for uint8_t input grid data.
+	template <>
+	inline
+	uint8_t
+	bilinValueAt
+		( ras::Grid<uint8_t> const & grid
+		, img::Spot const & atSpot
+		)
+	{
+		uint8_t value{ pix::null<uint8_t>() };
+
+		InterpBound const interBound
+			{ InterpBound::from<uint8_t>(grid, atSpot) };
+		if (interBound.isValid())
+		{
+			// get values at corners of interpolation boundary
+			double const val11{ (double)grid(interBound.row1col1()) };
+			double const val21{ (double)grid(interBound.row2col1()) };
+			double const val12{ (double)grid(interBound.row1col2()) };
+			double const val22{ (double)grid(interBound.row2col2()) };
+
+			// interpolate in row direction
+			double const sclRow{ interBound.rowFraction() };
+			double const dValA{ sclRow * (val21 - val11) };
+			double const dValB{ sclRow * (val22 - val12) };
+			double const valA{ val11 + dValA };
+			double const valB{ val12 + dValB };
+
+			// interpolate the row-interp-results in column direction
+			double const sclCol{ interBound.colFraction() };
+			double const dVal0{ sclCol * (valB - valA) };
+			double const val0{ dVal0 + valA };
+
+			// cast value back to input grid type
+			value = static_cast<uint8_t>(val0);
 		}
 
 		return value;

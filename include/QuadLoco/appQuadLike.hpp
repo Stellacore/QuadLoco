@@ -266,9 +266,9 @@ namespace app
 	template <typename Type>
 	inline
 	double
-	isQuadlike
-		( ras::Grid<Type> const & pixGrid
-		, img::QuadTarget const & imgQuad
+	quadProbabilityFor
+		( img::QuadTarget const & imgQuad
+		, ras::Grid<Type> const & pixGrid
 		, std::ostream * const & ptMessages = nullptr
 		)
 	{

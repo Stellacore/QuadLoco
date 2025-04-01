@@ -361,6 +361,105 @@ namespace
 		}
 	}
 
+	//! Check coordinate conversions between chip and source grid frames
+	void
+	test4
+		( std::ostream & oss
+		)
+	{
+		using namespace quadloco;
+		
+		// create full grid and fill grid with row/col indices
+		ras::SizeHW const hwFull{ 37u, 43u };
+		ras::Grid<ras::RowCol> fullGrid(hwFull);
+		for (std::size_t row{0u} ; row < hwFull.high() ; ++row)
+		{
+			for (std::size_t col{0u} ; col < hwFull.wide() ; ++col)
+			{
+				fullGrid(row, col) = ras::RowCol{ row, col };
+			}
+		}
+
+		// define a sub area
+		ras::RowCol const rcChip0{  7u,  3u };
+		ras::SizeHW const hwChip{  5u,  7u };
+		ras::ChipSpec const chipSpec{ rcChip0, hwChip };
+
+		// extract sub area grid (as extra check on subGridValuesFrom)
+		ras::Grid<ras::RowCol> const chipGrid
+			{ ras::grid::subGridValuesFrom<ras::RowCol>(fullGrid, chipSpec) };
+
+		// [DoxyExample04]
+
+		// check quantized row/col computations
+		ras::RowCol const expChipRC{ 3u, 5u };
+		ras::RowCol const expFullRC
+			{ expChipRC.row() + rcChip0.row()
+			, expChipRC.col() + rcChip0.col()
+			};
+		ras::RowCol const gotFullRC{ chipSpec.rcFullForChipRC(expChipRC) };
+		ras::RowCol const gotChipRC{ chipSpec.rcChipForFullRC(expFullRC) };
+
+		// check that subGrid is consistent with this
+		ras::RowCol const expGridValue{ fullGrid(expFullRC) };
+		ras::RowCol const gotGridValue{ chipGrid(gotChipRC) };
+
+		// check (subpixel) spot computations
+		img::Spot const expChipSpot{ 5.25, 9.75 };
+		img::Spot const expFullSpot
+			{ expChipSpot.row() + (double)rcChip0.row()
+			, expChipSpot.col() + (double)rcChip0.col()
+			};
+		img::Spot const gotFullSpot
+			{ chipSpec.fullSpotForChipSpot(expChipSpot) };
+		img::Spot const gotChipSpot
+			{ chipSpec.chipSpotForFullSpot(expFullSpot) };
+
+		// [DoxyExample04]
+
+		if (! nearlyEquals(gotChipRC, expChipRC))
+		{
+			oss << "Failure of gotChipRC test\n";
+			oss << "expChipRC: " << expChipRC << '\n';
+			oss << "gotChipRC: " << gotChipRC << '\n';
+		}
+		if (! nearlyEquals(gotFullRC, expFullRC))
+		{
+			oss << "Failure of gotFullRC test\n";
+			oss << "expFullRC: " << expFullRC << '\n';
+			oss << "gotFullRC: " << gotFullRC << '\n';
+		}
+
+		if (! nearlyEquals(gotGridValue, expGridValue))
+		{
+			oss << "Failure of gotGridValue test\n";
+			oss << "expGridValue " << expGridValue<< '\n';
+			oss << "gotGridValue " << gotGridValue<< '\n';
+			for (std::size_t row{0u} ; row < chipGrid.high() ; ++row)
+			{
+				oss << "row: " << row << '\n';
+				for (std::size_t col{0u} ; col < chipGrid.wide() ; ++col)
+				{
+					oss << "  ... " << chipGrid(row, col);
+				}
+				oss << '\n';
+			}
+		}
+
+		if (! nearlyEquals(gotChipSpot, expChipSpot))
+		{
+			oss << "Failure of gotChipSpot test\n";
+			oss << "expChipSpot: " << expChipSpot << '\n';
+			oss << "gotChipSpot: " << gotChipSpot << '\n';
+		}
+		if (! nearlyEquals(gotFullSpot, expFullSpot))
+		{
+			oss << "Failure of gotFullSpot test\n";
+			oss << "expFullSpot: " << expFullSpot << '\n';
+			oss << "gotFullSpot: " << gotFullSpot << '\n';
+		}
+	}
+
 }
 
 //! Standard test case main wrapper
@@ -375,6 +474,7 @@ main
 	test1(oss);
 	test2(oss);
 	test3(oss);
+	test4(oss);
 
 	if (oss.str().empty()) // Only pass if no errors were encountered
 	{

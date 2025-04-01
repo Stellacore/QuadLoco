@@ -87,7 +87,7 @@ namespace ras
 		operator=
 			(Grid const & rhs) = delete;
 
-		//! Examplicit null instance (zero size, no data). Same as Grid{};
+		//! Explicit null instance (zero size, no data). Same as Grid{};
 		static
 		Grid
 		null

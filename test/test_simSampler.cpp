@@ -110,7 +110,9 @@ namespace
 				{ render.imgQuadTarget() };
 			std::ostringstream msg;
 			double const quadProb
-				{ quadloco::app::isQuadlike(pixGrid, expImgQuad, &msg) };
+				{ quadloco::app::quadProbabilityFor
+					(expImgQuad, pixGrid, &msg)
+				};
 
 			// note test case result
 			testcase.theQuadProb = quadProb;

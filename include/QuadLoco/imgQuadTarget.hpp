@@ -70,9 +70,37 @@ namespace img
 		//! \brief Second of two *UNITARY* directions - target "y-axis".
 		img::Vector<double> theDirY{};
 
-		//! Uncertainty associated with theCenter location
-		double theCenterSigma{ std::numeric_limits<double>::quiet_NaN() };
 
+		/*! \brief Same target as 'aQuad' but with consistent alignment.
+		 *
+		 * The returned quad has directions aligned with aQuad but
+		 * ensuring that the dirX() points toward the first quadrant.
+		 * E.g. such that return quad
+		 * \arg (0. < dot(result.dirX(), (e1+e2))
+		 */
+		inline
+		static
+		QuadTarget
+		principalRotationFor
+			( QuadTarget const & aQuad
+			)
+		{
+			// either return quad as is,...
+			QuadTarget outQuad{ aQuad };
+			// ... or, if necessary spin quad a half turn to ensure
+			// that direction component, (x+y)[1], is positive.
+			Vector<double> const darkDir{ aQuad.dirX() + aQuad.dirY() };
+			if (darkDir[1] < 0.)
+			{
+				// Rotate a half turn
+				outQuad = QuadTarget
+					{ aQuad.centerSpot()
+					, -aQuad.dirX()
+					, -aQuad.dirY()
+					};
+			}
+			return outQuad;
+		}
 
 		//! True if this instance contains valid data (not null)
 		inline
@@ -96,13 +124,13 @@ namespace img
 			return theCenter;
 		}
 
-		//! Scalar uncertainty in centerSpot() location (from construction)
+		//! Version of this quad that has dirX(),dirY() aligned consistently
 		inline
-		double const &
-		centerSigma
+		QuadTarget
+		principalRotation
 			() const
 		{
-			return theCenterSigma;
+			return principalRotationFor(*this);
 		}
 
 		//! Direction of 'X-axis" (with a background spot to left)
@@ -164,7 +192,8 @@ namespace img
 		bool
 		nearlyEquals
 			( img::QuadTarget const & other
-			, double const tol = std::numeric_limits<double>::epsilon()
+			, double const tolLoc = std::numeric_limits<double>::epsilon()
+			, double const tolAng = std::numeric_limits<double>::epsilon()
 			) const
 		{
 			bool same{ isValid() && other.isValid() };
@@ -172,21 +201,41 @@ namespace img
 			{
 				// centers need to be the same
 				bool const okayCenter
-					{ ::nearlyEquals(theCenter, other.theCenter, tol) };
+					{ ::nearlyEquals(theCenter, other.theCenter, tolLoc) };
+				same &= okayCenter;
+				if (same)
+				{
+					// check directions - primary direction alignment first
+					bool okayDir{ false };
+					double const tolSin{ std::abs(std::sin(tolAng)) };
+					double const gotSinX{ outer(theDirX, other.theDirX) };
+					if (std::abs(gotSinX) < tolSin)
+					{
+						// primary direction is either aligned or anti-aligned
+						// so turn attention the secondary radial direction
 
-				// both directions need to be parallel or anti-parallel
-				bool const okayPos
-					{  ::nearlyEquals(theDirX,  other.theDirX, tol)
-					&& ::nearlyEquals(theDirY,  other.theDirY, tol)
-					};
-				bool const okayNeg
-					{  ::nearlyEquals(theDirX, -other.theDirX, tol)
-					&& ::nearlyEquals(theDirY, -other.theDirY, tol)
-					};
-				bool const okayDir{ okayPos || okayNeg };
+						// decide wheter to test positive or negative secondary
+						double const dotX{ dot(theDirX, other.theDirX) };
 
-				// center *and* one of direction conventions
-				same = okayCenter && okayDir;
+						// if primary direction is aligned, ...
+						// ... then test positive secondary direction
+						img::Vector<double> tstY{ other.theDirY };
+						if (dotX < 0.)
+						{
+							// if primary direction is anti-aligned, ...
+							// ... then test negative secondary direction
+							tstY = -(other.theDirY);
+						}
+
+						// evaluate secondary direction alignemnt
+						double const gotSinY{ outer(theDirY, tstY) };
+						if (std::abs(gotSinY) < tolSin)
+						{
+							okayDir = same;
+						}
+					}
+					same &= okayDir;
+				}
 			}
 			return same;
 		}
@@ -209,8 +258,6 @@ namespace img
 					<< "  isDextral: " << std::boolalpha << isDextral()
 				<< '\n'
 				<< "center(r,c): " << centerSpot()
-					<< ' '
-					<< "sigma: " << engabra::g3::io::fixed(centerSigma())
 				<< '\n'
 				<< "  dirX(r,c): " << dirX()
 				<< '\n'
@@ -257,10 +304,11 @@ namespace
 	nearlyEquals
 		( quadloco::img::QuadTarget const & itemA
 		, quadloco::img::QuadTarget const & itemB
-		, double const tol = std::numeric_limits<double>::epsilon()
+		, double const tolLoc = std::numeric_limits<double>::epsilon()
+		, double const tolAng = std::numeric_limits<double>::epsilon()
 		)
 	{
-		return itemA.nearlyEquals(itemB, tol);
+		return itemA.nearlyEquals(itemB, tolLoc, tolAng);
 	}
 
 

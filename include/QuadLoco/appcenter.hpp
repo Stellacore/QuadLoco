@@ -36,6 +36,7 @@
 #include "QuadLoco/opsCenterRefinerSSD.hpp"
 #include "QuadLoco/opsSymRing.hpp"
 #include "QuadLoco/prbStats.hpp"
+#include "QuadLoco/rasgrid.hpp"
 #include "QuadLoco/rasGrid.hpp"
 #include "QuadLoco/rasPeakRCV.hpp"
 
@@ -50,6 +51,67 @@ namespace app
 
 namespace center
 {
+	//! Intensity value centroid in annulus about evalCenter
+	template <typename GridType>
+	inline
+	img::Spot
+	valueCentroid
+		( ras::Grid<GridType> const & srcGrid
+			//!< Source values with which to evaluate
+		, img::Spot const & evalCenter
+			//!< Spot about which to evaluate azimuth intensity cycles
+		, double const & evalMaxRad = 7.0
+			//!< max radius of evaluation space
+		, double const & evalMinRad = 2.5
+			//!< min radius (skip if less than this)
+		)
+	{
+		img::Vector<double> centroid{};
+
+		// weighted centroid of patch should be near eval center
+		img::Vector<double> sumLocs{ 0., 0. };
+		double sumInten{ 0. };
+
+		// sample a circular patch from the source image. Compute the
+		// angle for each source pixel and accumulate its value into
+		// the appropriate azimuth statistics bin.
+		double const rcMax{ evalMaxRad + .5 };
+		for (double dr{-evalMaxRad} ; dr < rcMax ; dr += 1.)
+		{
+			for (double dc{-evalMaxRad} ; dc < rcMax ; dc += 1.)
+			{
+				using namespace quadloco;
+
+				// relative sample location w.r.t. evaluation center
+				img::Spot const relSpot{ dr, dc };
+				double const sampRadius{ magnitude(relSpot) };
+				if (! (sampRadius < evalMinRad)) // inside eval circle
+				{
+					// extract (interpolated) source image value
+					img::Spot const sampSpot{ relSpot + evalCenter };
+					using ras::grid::bilinValueAt;
+					double const sampValue
+						{ (double)bilinValueAt<GridType>
+							(srcGrid, sampSpot)
+						};
+
+					// update centroid tracking sums
+					if (engabra::g3::isValid(sampValue))
+					{
+						sumLocs  = sumLocs + sampValue * sampSpot;
+						sumInten = sumInten + sampValue;
+					}
+				}
+			}
+		}
+
+		// compute centroid from running sums
+		if (0. < sumInten)
+		{
+			centroid = (1./sumInten) * sumLocs;
+		}
+		return img::Spot{ centroid };
+	}
 
 	/*! \brief Peaks from application of multiple combined symmetry filters
 	 *
