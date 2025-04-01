@@ -70,9 +70,6 @@ namespace img
 		//! \brief Second of two *UNITARY* directions - target "y-axis".
 		img::Vector<double> theDirY{};
 
-		//! Uncertainty associated with theCenter location
-		double theCenterSigma{ std::numeric_limits<double>::quiet_NaN() };
-
 
 		/*! \brief Same target as 'aQuad' but with consistent alignment.
 		 *
@@ -100,7 +97,6 @@ namespace img
 					{ aQuad.centerSpot()
 					, -aQuad.dirX()
 					, -aQuad.dirY()
-					, aQuad.centerSigma()
 					};
 			}
 			return outQuad;
@@ -135,15 +131,6 @@ namespace img
 			() const
 		{
 			return principalRotationFor(*this);
-		}
-
-		//! Scalar uncertainty in centerSpot() location (from construction)
-		inline
-		double const &
-		centerSigma
-			() const
-		{
-			return theCenterSigma;
 		}
 
 		//! Direction of 'X-axis" (with a background spot to left)
@@ -271,8 +258,6 @@ namespace img
 					<< "  isDextral: " << std::boolalpha << isDextral()
 				<< '\n'
 				<< "center(r,c): " << centerSpot()
-					<< ' '
-					<< "sigma: " << engabra::g3::io::fixed(centerSigma())
 				<< '\n'
 				<< "  dirX(r,c): " << dirX()
 				<< '\n'

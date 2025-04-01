@@ -63,18 +63,6 @@ namespace app
 	template <typename GridType = float>
 	class AzimCycle
 	{
-		//! Statistics for all source values within evaluation circle
-		prb::Stats<double> theSrcStat{};
-
-		//! Location in source image being evaluated as possible quad center
-		img::Spot const theEvalCenter{};
-
-		//! Index/angle map (with wrapparound but wrap is not needed here)
-		ang::Ring const theAzimRing{};
-
-		//! Statistics for source values along each azimuth direction
-		std::vector<prb::Stats<double> > theAzimStats{};
-
 		//! Simple structure for angle and sign of intensity deviation
 		struct AzimInten  // AzimCycle::
 		{
@@ -426,6 +414,20 @@ namespace app
 
 		}; // AzimProfile
 
+	private: // data
+
+		//! Statistics for all source values within evaluation circle
+		prb::Stats<double> theSrcStat{};
+
+		//! Location in source image being evaluated as possible quad center
+		img::Spot const theEvalCenter{};
+
+		//! Index/angle map (with wrapparound but wrap is not needed here)
+		ang::Ring const theAzimRing{};
+
+		//! Statistics for source values along each azimuth direction
+		std::vector<prb::Stats<double> > theAzimStats{};
+
 		/*! \brief Define an azimuth index/value map based on radius size
 		 *
 		 * The returned buffer map contains a number of bins that provide
@@ -455,23 +457,23 @@ namespace app
 				//!< Source values with which to evaluate
 			, img::Spot const & evalCenter
 				//!< Spot about which to evaluate azimuth intensity cycles
-			, double const & evalRadius = 7.0
+			, double const & evalMaxRad = 7.0
 				//!< max radius of evaluation space
 			, double const & evalMinRad = 2.5
 				//!< min radius (skip if less than this)
 			)
 			: theSrcStat{}
 			, theEvalCenter{ evalCenter }
-			, theAzimRing(azimRing(evalRadius))
+			, theAzimRing(azimRing(evalMaxRad))
 			, theAzimStats(theAzimRing.size(), prb::Stats<double>{})
 		{
 			// sample a circular patch from the source image. Compute the
 			// angle for each source pixel and accumulate its value into
 			// the appropriate azimuth statistics bin.
-			double const rcMax{ evalRadius + .5 };
-			for (double dr{-evalRadius} ; dr < rcMax ; dr += 1.)
+			double const rcMax{ evalMaxRad + .5 };
+			for (double dr{-evalMaxRad} ; dr < rcMax ; dr += 1.)
 			{
-				for (double dc{-evalRadius} ; dc < rcMax ; dc += 1.)
+				for (double dc{-evalMaxRad} ; dc < rcMax ; dc += 1.)
 				{
 					using namespace quadloco;
 
