@@ -136,11 +136,10 @@ namespace sim
 			{  8u };
 		//	{  0u };  // nearest neighbor - amiguity in edges
 
-	constexpr unsigned const sQuadOptions
-		//	{ obj::QuadTarget::WithTriangle | obj::QuadTarget::WithSurround };
-		//	{ obj::QuadTarget::WithTriangle };
-		//	{ obj::QuadTarget::WithSurround };
-			{ obj::QuadTarget::None };
+	static quadloco::obj::QuadTarget::ConfigOptions const sQuadOptions
+		{ .theWithTriangle = false
+		, .theWithSurround = false
+		};
 
 	// Ref: Function stationLocsPolar() to define station locations
 

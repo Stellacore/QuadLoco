@@ -64,9 +64,10 @@ namespace
 		// define a quad target object
 		quadloco::obj::QuadTarget const objQuad
 			( edgeMag
-			, quadloco::obj::QuadTarget::None
-		//	| quadloco::obj::QuadTarget::WithTriangle
-		//	| quadloco::obj::QuadTarget::WithSurround
+			, quadloco::obj::QuadTarget::ConfigOptions
+				{ .theWithTriangle = false
+				, .theWithSurround = false
+				}
 			);
 
 		// configure camera and orientation such that
@@ -135,9 +136,10 @@ namespace
 		// define a quad target object
 		quadloco::obj::QuadTarget const objQuad
 			( edgeMag
-			, quadloco::obj::QuadTarget::None
-		//	| quadloco::obj::QuadTarget::WithTriangle
-			| quadloco::obj::QuadTarget::WithSurround
+			, quadloco::obj::QuadTarget::ConfigOptions
+				{ .theWithTriangle = false
+				, .theWithSurround = true
+				}
 			);
 
 		// simulate image of a quad target

@@ -60,9 +60,10 @@ namespace
 		constexpr std::size_t numOver{ 0u };
 		quadloco::obj::QuadTarget const objQuad
 			( edgeMag
-			, quadloco::obj::QuadTarget::None
-		//	| quadloco::obj::QuadTarget::WithTriangle
-		//	| quadloco::obj::QuadTarget::WithSurround
+			, quadloco::obj::QuadTarget::ConfigOptions
+				{ .theWithTriangle = false
+				, .theWithSurround = false
+				}
 			);
 
 		// simulate face-on 1:1 image of a quad target

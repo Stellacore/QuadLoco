@@ -91,9 +91,10 @@ namespace sim
 					}
 				, QuadTarget
 					( objQuadEdgeSize
-					, QuadTarget::None
-					| QuadTarget::WithSurround
-					| QuadTarget::WithTriangle
+					, QuadTarget::ConfigOptions
+						{ .theWithTriangle = true
+						, .theWithSurround = true
+						}
 					)
 				, Sampler::None
 				| Sampler::AddSceneBias
