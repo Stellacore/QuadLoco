@@ -67,7 +67,7 @@ namespace app
 		struct AzimInten  // AzimCycle::
 		{
 			//! Tracking deviation
-			enum Inten
+			enum class Inten
 				{ Unknown // not well defined
 				, Hi  // deviation is above expected mean value
 				, Lo  // deviation is below expected mean value
@@ -80,7 +80,7 @@ namespace app
 			double theMeanValue{ std::numeric_limits<double>::quiet_NaN() };
 
 			//! Classification of azimuth as Hi or Lo
-			Inten theHiLo{ Unknown };
+			Inten theHiLo{ Inten::Unknown };
 
 
 			//! String representation of enum Inten
@@ -92,9 +92,9 @@ namespace app
 				)
 			{
 				std::string str("Unknown");
-				if (Hi == inten) { str = "Hi"; }
+				if (Inten::Hi == inten) { str = "Hi"; }
 				else
-				if (Lo == inten) { str = "Lo"; }
+				if (Inten::Lo == inten) { str = "Lo"; }
 				return str;
 			}
 
@@ -325,16 +325,16 @@ namespace app
 				( prb::Stats<double> const & azimStat
 				) const
 			{
-				typename AzimInten::Inten inten{ AzimInten::Unknown };
+				typename AzimInten::Inten inten{ AzimInten::Inten::Unknown };
 				double const azimMin{ azimStat.min() };
 				double const azimMax{ azimStat.max() };
 				if (theFullMean < azimMin) // +: Higher than theFullMean
 				{
-					inten = AzimInten::Hi;
+					inten = AzimInten::Inten::Hi;
 				}
 				if (azimMax < theFullMean) // -: Lower than theFullMean
 				{
-					inten = AzimInten::Lo;
+					inten = AzimInten::Inten::Lo;
 				}
 				return inten;
 			}
@@ -346,7 +346,7 @@ namespace app
 				( AzimInten const & azimInten
 				)
 			{
-				if (! (AzimInten::Unknown == azimInten.theHiLo))
+				if (! (AzimInten::Inten::Unknown == azimInten.theHiLo))
 				{
 					theAzimIntens.emplace_back(azimInten);
 				}

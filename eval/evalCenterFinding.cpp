@@ -127,20 +127,20 @@ namespace sim
 	// Global simulation options
 	//
 
-	constexpr unsigned const sSamplerOptions
-			{ Sampler::AddSceneBias | Sampler::AddImageNoise };
-		//	{ Sampler::None };
+	static quadloco::sim::Sampler::RenderOptions const sRenderOptions
+		{ .theAddSceneBias = true
+		, .theAddImageNoise = true
+		};
 
 	constexpr std::size_t const sSamplerOverNum
 		//	{ 64u };  // reasonably good radiometric quality
 			{  8u };
 		//	{  0u };  // nearest neighbor - amiguity in edges
 
-	constexpr unsigned const sQuadOptions
-		//	{ obj::QuadTarget::WithTriangle | obj::QuadTarget::WithSurround };
-		//	{ obj::QuadTarget::WithTriangle };
-		//	{ obj::QuadTarget::WithSurround };
-			{ obj::QuadTarget::None };
+	static quadloco::obj::QuadTarget::ConfigOptions const sQuadOptions
+		{ .theWithTriangle = false
+		, .theWithSurround = false
+		};
 
 	// Ref: Function stationLocsPolar() to define station locations
 
@@ -388,7 +388,7 @@ namespace sim
 		ras::Grid<float> grid{};
 		if (ptConfig)
 		{
-			sim::Render const render{ *ptConfig, sSamplerOptions };
+			sim::Render const render{ *ptConfig, sRenderOptions };
 			ras::ChipSpec const chipSpec{ ptConfig->chipSpecForQuad(pad) };
 			grid = render.quadChip(sSamplerOverNum, chipSpec);
 		}

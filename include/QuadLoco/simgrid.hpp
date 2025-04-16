@@ -47,7 +47,7 @@ namespace quadloco
 namespace sim
 {
 	//! Specify property of edge transition
-	enum Transition
+	enum class Transition
 	{
 		  Step //!< Abrupt transition from background to foreground value
 		, Ramp //!< Linear interpolation at scale of grid cell distance
@@ -61,7 +61,7 @@ namespace sim
 			//!< Size of grid to create
 		, img::Edgel const & edgel
 			//!< Location and direction of edge to create
-		, Transition const & edgeDetail = Ramp
+		, Transition const & edgeDetail = Transition::Ramp
 			//!< Specify edge characteristic
 		, float const & valueBackground = 0.
 			//!< Value to assign behind the edge
@@ -88,7 +88,7 @@ namespace sim
 				for (std::size_t col{0u} ; col < hwSize.wide() ; ++col)
 				{
 					double pixValue{ pix::fNull };
-					if (Ramp == edgeDetail)
+					if (Transition::Ramp == edgeDetail)
 					{
 						// linear interpolation at edge
 						img::Spot const imgSpot{ (double)row, (double)col };
@@ -108,7 +108,7 @@ namespace sim
 						}
 					}
 					else
-					if (Step == edgeDetail)
+					if (Transition::Step == edgeDetail)
 					{
 						// immediate step up at edge
 						img::Spot const spotLoc{ row, col };

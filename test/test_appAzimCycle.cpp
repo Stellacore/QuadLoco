@@ -64,7 +64,7 @@ namespace
 		// create quad azimuth cycle assessor
 		double const evalRadius{ 7.0 }; // max radius of evaluation space
 		double const evalMinRad{ 2.5 }; // min radius (skip if less than this)
-		quadloco::app::AzimCycle const azimCycle
+		quadloco::app::AzimCycle<float> const azimCycle
 			(srcGrid, evalCenter, evalRadius, evalMinRad);
 
 		// test if azimuth cycles are consistent with a quad pattern
@@ -87,7 +87,7 @@ namespace
 		}
 
 		// check AzimCycle operating directly on uint8_t source grid
-		quadloco::app::AzimCycle const azimCycle8
+		quadloco::app::AzimCycle<uint8_t> const azimCycle8
 			(pgmGrid8, evalCenter, evalRadius, evalMinRad);
 		if (! azimCycle8.hasQuadTransitions())
 		{

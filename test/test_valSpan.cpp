@@ -40,12 +40,23 @@ namespace
 	//! Test case data for checking value relative to interval
 	struct AtTest
 	{
-		enum InOut{ Null = 0, In = 100, Out = 999 };
+		enum class InOut{ Null = 0, In = 100, Out = 999 };
 
 		double const theValue;
 		InOut const theIsIn;
 		std::string const theName;
 	};
+
+	inline
+	std::ostream &
+	operator<<
+		( std::ostream & ostrm
+		, AtTest::InOut const & item
+		)
+	{
+		ostrm << static_cast<int>(item);
+		return ostrm;
+	}
 
 	//! Enum value interpretation of boolean flag
 	inline
@@ -54,14 +65,14 @@ namespace
 		( bool const & gotInBool
 		)
 	{
-		AtTest::InOut anInOut{ AtTest::Null };
+		AtTest::InOut anInOut{ AtTest::InOut::Null };
 		if (gotInBool)
 		{
-			anInOut = AtTest::In;
+			anInOut = AtTest::InOut::In;
 		}
 		else
 		{
-			anInOut = AtTest::Out;
+			anInOut = AtTest::InOut::Out;
 		}
 		return anInOut;
 	}
@@ -101,11 +112,11 @@ namespace
 		// test values in relationship to being contained in span
 		// example test cases: AtTest fields: (value, in/out of span, testId)
 		std::vector<AtTest> const atTests
-			{ { (expBeg - eps), AtTest::Out , "A"}
-			, { (expBeg      ), AtTest::In  , "B"}
-			, { (expEnd - eps), AtTest::In  , "C"}
-			, { (expEnd      ), AtTest::Out , "D"}
-			, { (expEnd + eps), AtTest::Out , "E"}
+			{ { (expBeg - eps), AtTest::InOut::Out , "A"}
+			, { (expBeg      ), AtTest::InOut::In  , "B"}
+			, { (expEnd - eps), AtTest::InOut::In  , "C"}
+			, { (expEnd      ), AtTest::InOut::Out , "D"}
+			, { (expEnd + eps), AtTest::InOut::Out , "E"}
 			};
 
 		// [DoxyExample01]

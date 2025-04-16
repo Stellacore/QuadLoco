@@ -228,7 +228,10 @@ namespace ops
 			() const
 		{
 			return PeakFinder1D
-				(theBinSums.cbegin(), theBinSums.cend(), PeakFinder1D::Circle);
+				( theBinSums.cbegin()
+				, theBinSums.cend()
+				, PeakFinder1D::DataDomain::Circle
+				);
 		}
 
 		//! Indices for local peaks (near middle for plateaus)

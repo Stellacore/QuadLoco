@@ -39,6 +39,7 @@
 #include <Engabra>
 
 #include <array>
+#include <bitset>
 #include <cmath>
 #include <numbers>
 #include <random>
@@ -54,6 +55,18 @@ namespace obj
 	 */
 	class QuadTarget
 	{
+	
+	public: // structs
+
+		//! Configuration options
+		struct ConfigOptions
+		{
+			bool const theWithTriangle{ false };
+			bool const theWithSurround{ false };
+		};
+
+	private:
+
 		static constexpr double theBlack{ 0. };
 		static constexpr double theWhite{ 1. };
 		static constexpr double theMeanValue{ .5 * (theBlack + theWhite) };
@@ -64,11 +77,8 @@ namespace obj
 		//! Bounding (half open) area - distinguish target from surround
 		img::Area const theArea{};
 
-		//! If true clip the background patches into triangles
-		bool const theWithTriangle{ false };
-
-		//! If true, quadSignalAt() returns dithered background values
-		bool const theWithSurround{ true };
+		//! Configuration options
+		ConfigOptions const theConfigOptions{};
 
 		//! Area symmetric about origin with theEdgeMag size on each side
 		inline
@@ -85,33 +95,7 @@ namespace obj
 				};
 		}
 
-	public:
-
-		//! Rendering options
-		enum OptionFlags
-		{
-			  None            = 0x0000
-			, WithSurround    = 0x0001
-			, WithTriangle    = 0x0002
-		};
-
-	private:
-
-		//! True if testVal bit is set within haveBits
-		inline
-		static
-		bool
-		isSet
-			( unsigned const & haveBits
-			, OptionFlags const & testVal
-			)
-		{
-			unsigned const setVal{ haveBits & (unsigned)testVal };
-			bool const hasBit (0u != setVal);
-			return hasBit;
-		}
-
-	public:
+	public: // general methods
 
 		//! Construct a null instance
 		inline
@@ -124,16 +108,15 @@ namespace obj
 		QuadTarget
 			( double const & fullEdgeLength
 				//!< Length of center lines (twice a radial edge length)
-			, unsigned const & options =
-				( WithSurround
-			//	| WithTriangle
-				)
-				//!< Or'd combo of quadloco::obj::QuadTarget::OptionFlags
+			, ConfigOptions const & configOptions =
+				{ .theWithTriangle = false
+				, .theWithSurround = false
+				}
+				//!< Specific configuration options
 			)
 			: theEdgeMag{ fullEdgeLength }
 			, theArea{ areaFor(theEdgeMag) }
-			, theWithTriangle{ isSet(options, WithTriangle) }
-			, theWithSurround{ isSet(options, WithSurround) }
+			, theConfigOptions{ configOptions }
 		{ }
 
 		//! True if this instance contains valid data (is not null)
@@ -322,7 +305,7 @@ namespace obj
 				value = (signEval < 0.) ? theWhite : theBlack;
 
 				// introduce triangle clipping
-				if (theWithTriangle && (theBlack == value))
+				if (theConfigOptions.theWithTriangle && (theBlack == value))
 				{
 					// apply foreground color to outer triangle areas
 					// of background signal to produce a double-triangle
@@ -336,7 +319,7 @@ namespace obj
 				}
 			}
 			else
-			if (theWithSurround)
+			if (theConfigOptions.theWithSurround)
 			{
 				// requested to filling surrounding area
 				value = surroundSignalAt(spotOnQuad);

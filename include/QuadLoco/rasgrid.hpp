@@ -618,7 +618,7 @@ namespace grid
 			() const
 		{
 			double const rowFloor{ std::floor(theAtSpot.row()) };
-			return { (theAtSpot.row() - rowFloor) };
+			return (theAtSpot.row() - rowFloor);
 		}
 
 		//! Fraction of distance from begin column to evalSpot()
@@ -628,7 +628,7 @@ namespace grid
 			() const
 		{
 			double const colFloor{ std::floor(theAtSpot.col()) };
-			return { (theAtSpot.col() - colFloor) };
+			return (theAtSpot.col() - colFloor);
 		}
 
 	}; // InterpBound

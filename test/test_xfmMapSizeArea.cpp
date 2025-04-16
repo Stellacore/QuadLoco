@@ -116,7 +116,7 @@ namespace
 			};
 
 		xfm::MapSizeArea const map
-			(areaInto, areaFrom, xfm::MapSizeArea::Wrap);
+			(areaInto, areaFrom, xfm::MapSizeArea::EdgeMode::Wrap);
 
 		// From                         Into
 		//   (min,min) = { -10.,  9. }    (min,min) = {   0.,  1. }

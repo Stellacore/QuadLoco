@@ -75,11 +75,15 @@ namespace
 					}
 				, obj::QuadTarget
 					( 1. // edge size
-					, obj::QuadTarget::None
+					, obj::QuadTarget::ConfigOptions
+						{ .theWithTriangle = false
+						, .theWithSurround = false
+						}
 					)
-				, sim::Sampler::None
-			//	| sim::Sampler::AddSceneBias
-				| sim::Sampler::AddImageNoise
+				, sim::Sampler::RenderOptions
+					{ .theAddSceneBias = false
+					, .theAddImageNoise = true
+					}
 				)
 					.quadData(numOverSamp)
 			};
