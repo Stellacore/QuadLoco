@@ -54,7 +54,7 @@ namespace xfm
 		img::Area theArea{};
 
 		//! \brief Interpretation at Area edges
-		enum EdgeMode
+		enum class EdgeMode
 			{ Clip //!< Return null for data outide of *theArea*
 			, Wrap //!< Wrap data into *theArea*
 			};
@@ -68,7 +68,7 @@ namespace xfm
 		MapSizeArea
 			( img::Area const & intoArea
 			, img::Area const & fromArea
-			, EdgeMode const & edgeMode = Clip
+			, EdgeMode const & edgeMode = EdgeMode::Clip
 			)
 			: theSize{ intoArea }
 			, theArea{ fromArea }
@@ -81,7 +81,7 @@ namespace xfm
 		MapSizeArea
 			( ras::SizeHW const & hwGridSize
 			, img::Area const & fromArea
-			, EdgeMode const & edgeMode = Clip
+			, EdgeMode const & edgeMode = EdgeMode::Clip
 			)
 			: MapSizeArea
 				( img::Area
@@ -133,7 +133,7 @@ namespace xfm
 			img::Spot sizeSpot{};
 			img::Area::Dyad const fracDyad
 				{ theArea.fractionDyadAtSpot(areaSpot) };
-			if (Clip == theEdgeMode)
+			if (EdgeMode::Clip == theEdgeMode)
 			{
 				if (theArea.contains(areaSpot))
 				{
@@ -141,7 +141,7 @@ namespace xfm
 				}
 			}
 			else
-			if (Wrap == theEdgeMode)
+			if (EdgeMode::Wrap == theEdgeMode)
 			{
 				img::Area::Dyad const pFracDyad
 					{ theArea.principalFractionDyad(fracDyad) };
