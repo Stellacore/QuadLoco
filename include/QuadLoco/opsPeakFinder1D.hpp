@@ -61,14 +61,14 @@ namespace ops
 		 * of data[0]=2 is considered a Rise, and data[0]=-1 is considered
 		 * a Drop.
 		 */
-		enum DataDomain
+		enum class DataDomain
 		{
 			  Linear //!< Input data domain is finite and unwrapped
 			, Circle //!< Input data domain wraps around (e.g. angles)
 		};
 
 		//! Data value transition type (current pixel w.r.t. prevous pixel)
-		enum Change
+		enum class Change
 		{
 			  Drop = 0
 			, Flat = 1
@@ -132,15 +132,15 @@ namespace ops
 					Type const & valPrev = *itPrev;
 					Type const & valCurr = *itCurr;
 
-					Change change{ Flat };
+					Change change{ Change::Flat };
 					if (valPrev < valCurr)
 					{
-						change = Rise;
+						change = Change::Rise;
 					}
 					else
 					if (valCurr < valPrev)
 					{
-						change = Drop;
+						change = Change::Drop;
 					}
 					ndxChanges.emplace_back(NdxChange{ nn, change });
 
@@ -167,15 +167,15 @@ namespace ops
 			, Type const & valCurr
 			)
 		{
-			Change change{ Flat };
+			Change change{ Change::Flat };
 			if (valPrev < valCurr)
 			{
-				change = Rise;
+				change = Change::Rise;
 			}
 			else
 			if (valCurr < valPrev)
 			{
-				change = Drop;
+				change = Change::Drop;
 			}
 			return change;
 		}
@@ -213,7 +213,7 @@ namespace ops
 			, FwdIter const & itBeg
 			)
 		{
-			Change change{ Flat };
+			Change change{ Change::Flat };
 			if ((0u < ndxCurr) && ((ndxCurr + 1u) < numElem))
 			{
 				change = changeForIndexCircle(ndxCurr, numElem, itBeg);
@@ -250,12 +250,12 @@ namespace ops
 			, DataDomain const & dataDomain
 			)
 		{
-			if (Circle == dataDomain)
+			if (DataDomain::Circle == dataDomain)
 			{
 				return changeForIndexCircle(ndxCurr, numElem, itBeg);
 			}
 			else
-			// if (Linear == dataDomain)
+			// if (DataDomain::Linear == dataDomain)
 			{
 				return changeForIndexLinear(ndxCurr, numElem, itBeg);
 			}
@@ -268,7 +268,7 @@ namespace ops
 		PeakFinder1D
 			( FwdIter const & itBeg
 			, FwdIter const & itEnd
-			, DataDomain const & dataDomain = Circle
+			, DataDomain const & dataDomain = DataDomain::Circle
 			)
 			: thePeakNdxGrps{ peakIndexGroups(itBeg, itEnd, dataDomain) }
 		{ }
@@ -387,13 +387,13 @@ namespace ops
 				, std::size_t const & ndx
 				)
 			{
-				if (Rise == changePrevToCurr)
+				if (Change::Rise == changePrevToCurr)
 				{
 					// not part of a peak, start of peak potentially follows
 					beginPeakMaybe(ndx);
 				}
 				else
-				if (Drop == changePrevToCurr)
+				if (Change::Drop == changePrevToCurr)
 				{
 					if (isTracking())
 					{
@@ -401,7 +401,7 @@ namespace ops
 					}
 					// else // continue waiting for a rise
 				}
-				else // (Flat == changePrevToCurr)
+				else // (Change::Flat == changePrevToCurr)
 				{
 					if (isTracking())
 					{
@@ -428,7 +428,7 @@ namespace ops
 		peakIndexGroups
 			( FwdIter const & itBeg
 			, FwdIter const & itEnd
-			, DataDomain const & dataDomain = Circle
+			, DataDomain const & dataDomain = DataDomain::Circle
 			)
 		{
 			std::vector<std::vector<std::size_t> > peakNdxGrps;
@@ -443,7 +443,7 @@ namespace ops
 
 				Type valuePrior{ 0 };
 				Type valueAfter{ 0 };
-				if (Circle == dataDomain)
+				if (DataDomain::Circle == dataDomain)
 				{
 					valuePrior = *(itBeg + numLast);
 					valueAfter = *itBeg;
@@ -507,7 +507,7 @@ std::cout << "ndx,change:"
 				ndx = numElem;
 				FwdIter const iterLast{ itBeg + numLast };
 				Change const changeLast{ changeFor(*iterLast, valueAfter) };
-				if (Drop == changeLast)
+				if (Change::Drop == changeLast)
 				{
 					tracker.endPeak();
 				}
@@ -524,22 +524,24 @@ std::cout << "ndx,change:"
 }
 
 				// Wrap-around peak continuation
-				if (Drop == changeLast)
+				if (Change::Drop == changeLast)
 				{
 					tracker.endPeak();
 				}
 				else
-				if (Rise == changeLast)
+				if (Change::Rise == changeLast)
 				{
 					// tracker.beginPeakMaybe(); // no effect afterward
 				}
 				else
-				if (Flat == changeLast)
+				if (Change::Flat == changeLast)
 				{
 					// for circular domain,
 					// if peak is active at end, continue (re-)tracking
 					// from begining of currently active peak
-					if (tracker.isTracking() && (Circle == dataDomain))
+					if ( tracker.isTracking()
+					  && (DataDomain::Circle == dataDomain)
+					   )
 					{
 						std::size_t const begNdx{ tracker.currPeakBegNdx() };
 						if (begNdx < std::numeric_limits<std::size_t>::max())
@@ -583,9 +585,9 @@ std::cout << "ndx,change:"
 
 						} // begNdx
 
-					} // tracking Circle
+					} // tracking DataDomain::Circle
 
-				} // (Flat == changeLast)
+				} // (Change::Flat == changeLast)
 
 				peakNdxGrps = tracker.thePeakNdxGrps;
 
