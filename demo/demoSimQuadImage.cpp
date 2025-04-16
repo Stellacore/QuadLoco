@@ -83,9 +83,10 @@ main
 		constexpr double edgeMag{ .050 }; // quad target 5cm on a side
 		obj::QuadTarget const objQuad
 			( edgeMag
-			, obj::QuadTarget::None
-		//	| obj::QuadTarget::WithTriangle
-		//	| obj::QuadTarget::WithSurround
+			, quadloco::obj::QuadTarget::ConfigOptions
+				{ .theWithTriangle = false
+				, .theWithSurround = false
+				}
 			);
 
 		// define camera location w.r.t. target [m]
@@ -98,9 +99,10 @@ main
 			// xformCamWrtTgt - orients camera to point at target center
 			, sim::Config::xformCamWrtTgt(camLoc, rollSize)
 			, objQuad
-			, sim::Sampler::None
-			| sim::Sampler::AddSceneBias
-			| sim::Sampler::AddImageNoise
+			, quadloco::sim::Sampler::RenderOptions
+				{ .theAddSceneBias = true
+				, .theAddImageNoise = true
+				}
 			};
 
 		// simulation test configuration

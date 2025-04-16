@@ -149,7 +149,10 @@ namespace
 		{
 			using quadloco::ops::PeakFinder1D;
 			return PeakFinder1D::peakIndexGroups
-				(theData.cbegin(), theData.cend(), PeakFinder1D::Linear);
+				( theData.cbegin()
+				, theData.cend()
+				, PeakFinder1D::DataDomain::Linear
+				);
 		}
 
 		inline
@@ -159,7 +162,10 @@ namespace
 		{
 			using quadloco::ops::PeakFinder1D;
 			return PeakFinder1D::peakIndexGroups
-				(theData.cbegin(), theData.cend(), PeakFinder1D::Circle);
+				( theData.cbegin()
+				, theData.cend()
+				, PeakFinder1D::DataDomain::Circle
+				);
 		}
 
 		inline

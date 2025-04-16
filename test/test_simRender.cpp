@@ -64,9 +64,10 @@ namespace
 		// define a quad target object
 		quadloco::obj::QuadTarget const objQuad
 			( edgeMag
-			, quadloco::obj::QuadTarget::None
-		//	| quadloco::obj::QuadTarget::WithTriangle
-		//	| quadloco::obj::QuadTarget::WithSurround
+			, quadloco::obj::QuadTarget::ConfigOptions
+				{ .theWithTriangle = false
+				, .theWithSurround = false
+				}
 			);
 
 		// configure camera and orientation such that
@@ -76,10 +77,13 @@ namespace
 
 
 		// render result
-		using opt = quadloco::sim::Sampler::OptionFlags;
 		quadloco::sim::Render const render
 			( config
-			, opt::None // no SceneBias nor ImageNoise
+			// no SceneBias nor ImageNoise
+			, quadloco::sim::Sampler::RenderOptions
+				{ .theAddSceneBias = false
+				, .theAddImageNoise = false
+				}
 			);
 		quadloco::ras::Grid<float> const gotPixGrid
 			{ render.quadGrid(numOverSample) };
@@ -135,9 +139,10 @@ namespace
 		// define a quad target object
 		quadloco::obj::QuadTarget const objQuad
 			( edgeMag
-			, quadloco::obj::QuadTarget::None
-		//	| quadloco::obj::QuadTarget::WithTriangle
-			| quadloco::obj::QuadTarget::WithSurround
+			, quadloco::obj::QuadTarget::ConfigOptions
+				{ .theWithTriangle = false
+				, .theWithSurround = true
+				}
 			);
 
 		// simulate image of a quad target
@@ -149,10 +154,13 @@ namespace
 
 
 		// render result
-		using opt = quadloco::sim::Sampler::OptionFlags;
 		quadloco::sim::Render const render
 			( config
-			, opt::None // no SceneBias nor ImageNoise
+			// no SceneBias nor ImageNoise
+			, quadloco::sim::Sampler::RenderOptions
+				{ .theAddSceneBias = false
+				, .theAddImageNoise = false
+				}
 			);
 
 		quadloco::ras::Grid<float> const fGrid

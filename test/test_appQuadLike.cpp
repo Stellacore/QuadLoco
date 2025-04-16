@@ -60,9 +60,10 @@ namespace
 		constexpr std::size_t numOver{ 0u };
 		quadloco::obj::QuadTarget const objQuad
 			( edgeMag
-			, quadloco::obj::QuadTarget::None
-		//	| quadloco::obj::QuadTarget::WithTriangle
-		//	| quadloco::obj::QuadTarget::WithSurround
+			, quadloco::obj::QuadTarget::ConfigOptions
+				{ .theWithTriangle = false
+				, .theWithSurround = false
+				}
 			);
 
 		// simulate face-on 1:1 image of a quad target
@@ -70,10 +71,12 @@ namespace
 			{ quadloco::sim::Config::faceOn(objQuad, numPix) };
 
 		// render simulated image
-		using opt = quadloco::sim::Sampler::OptionFlags;
 		quadloco::sim::Render const render
 			( config
-			, opt::None // no SceneBias nor ImageNoise
+			, quadloco::sim::Sampler::RenderOptions
+				{ .theAddSceneBias = false
+				, .theAddImageNoise = false
+				}
 			);
 		quadloco::ras::Grid<float> const pixGrid{ render.quadGrid(numOver) };
 		// retrieve geometry of the simulated image

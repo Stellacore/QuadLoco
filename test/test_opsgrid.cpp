@@ -81,7 +81,7 @@ namespace
 			// simulate grid with a (straight) step consisten with expEdgel.
 			img::Edgel const expEdgel = expEdgels[ntest];
 			ras::Grid<float> const pixGrid
-				{ sim::gridWithEdge(hwSize, expEdgel, sim::Step) };
+				{ sim::gridWithEdge(hwSize, expEdgel, sim::Transition::Step) };
 			ras::Grid<img::Grad> const gradGrid
 				{ ops::grid::gradientGridBy8x(pixGrid) };
 
