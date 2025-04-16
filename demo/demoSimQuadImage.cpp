@@ -99,9 +99,10 @@ main
 			// xformCamWrtTgt - orients camera to point at target center
 			, sim::Config::xformCamWrtTgt(camLoc, rollSize)
 			, objQuad
-			, sim::Sampler::None
-			| sim::Sampler::AddSceneBias
-			| sim::Sampler::AddImageNoise
+			, quadloco::sim::Sampler::RenderOptions
+				{ .theAddSceneBias = true
+				, .theAddImageNoise = true
+				}
 			};
 
 		// simulation test configuration

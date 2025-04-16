@@ -127,9 +127,10 @@ namespace sim
 	// Global simulation options
 	//
 
-	constexpr unsigned const sSamplerOptions
-			{ Sampler::AddSceneBias | Sampler::AddImageNoise };
-		//	{ Sampler::None };
+	static quadloco::sim::Sampler::RenderOptions const sRenderOptions
+		{ .theAddSceneBias = true
+		, .theAddImageNoise = true
+		};
 
 	constexpr std::size_t const sSamplerOverNum
 		//	{ 64u };  // reasonably good radiometric quality
@@ -387,7 +388,7 @@ namespace sim
 		ras::Grid<float> grid{};
 		if (ptConfig)
 		{
-			sim::Render const render{ *ptConfig, sSamplerOptions };
+			sim::Render const render{ *ptConfig, sRenderOptions };
 			ras::ChipSpec const chipSpec{ ptConfig->chipSpecForQuad(pad) };
 			grid = render.quadChip(sSamplerOverNum, chipSpec);
 		}

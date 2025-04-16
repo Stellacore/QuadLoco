@@ -96,9 +96,10 @@ namespace sim
 						, .theWithSurround = true
 						}
 					)
-				, Sampler::None
-				| Sampler::AddSceneBias
-				| Sampler::AddImageNoise
+				, Sampler::RenderOptions
+					{ .theAddSceneBias = true
+					, .theAddImageNoise = true
+					}
 				);
 
 			return render.quadData(numOverSample);
@@ -116,13 +117,13 @@ namespace sim
 				//!< Orientation of camera (exterior) frame w.r.t. objQuad
 			, obj::QuadTarget const & objQuad
 				//!< Quad target (defines the quad reference frame) 
-			, unsigned const & samplerOptions =
-				( Sampler::AddSceneBias
-				| Sampler::AddImageNoise
-				)
+			, Sampler::RenderOptions const & renderOptions =
+				{ .theAddSceneBias = true
+				, .theAddImageNoise = true
+				}
 				//!< XOR of quadloco::sim::Sampler::OptionFlags
 			)
-			: theSampler(camera, xCamWrtQuad, objQuad, samplerOptions)
+			: theSampler(camera, xCamWrtQuad, objQuad, renderOptions)
 		{ }
 
 		//! Construct rendering engine to simulate quad target images
@@ -131,17 +132,17 @@ namespace sim
 		Render
 			( sim::Config const & simConfig
 				//!< Simulation configuration
-			, unsigned const & samplerOptions =
-				( Sampler::AddSceneBias
-				| Sampler::AddImageNoise
-				)
+			, Sampler::RenderOptions const & renderOptions =
+				{ .theAddSceneBias = true
+				, .theAddImageNoise = true
+				}
 				//!< XOR of quadloco::sim::Sampler::OptionFlags
 			)
 			: Render
 				( simConfig.camera()
 				, simConfig.xformStaWrtQuad()
 				, simConfig.objQuadTarget()
-				, samplerOptions
+				, renderOptions
 				)
 		{ }
 

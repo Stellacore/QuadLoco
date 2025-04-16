@@ -71,10 +71,12 @@ namespace
 			{ quadloco::sim::Config::faceOn(objQuad, numPix) };
 
 		// render simulated image
-		using opt = quadloco::sim::Sampler::OptionFlags;
 		quadloco::sim::Render const render
 			( config
-			, opt::None // no SceneBias nor ImageNoise
+			, quadloco::sim::Sampler::RenderOptions
+				{ .theAddSceneBias = false
+				, .theAddImageNoise = false
+				}
 			);
 		quadloco::ras::Grid<float> const pixGrid{ render.quadGrid(numOver) };
 		// retrieve geometry of the simulated image

@@ -96,11 +96,13 @@ namespace
 				};
 
 			// render result
-			using opt = quadloco::sim::Sampler::OptionFlags;
 			quadloco::sim::Render const render
 				( config
-				// None, AddSceneBias, AddImageNoise
-				, opt::None | opt::AddImageNoise
+				// add noise
+				, quadloco::sim::Sampler::RenderOptions
+					{ .theAddSceneBias = false
+					, .theAddImageNoise = true
+					}
 				);
 			quadloco::ras::Grid<float> const pixGrid{ render.quadGrid() };
 			//quadloco::io::writeStretchPGM("sample.pgm", pixGrid);

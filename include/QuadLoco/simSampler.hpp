@@ -68,6 +68,18 @@ namespace sim
 	//! Functor for sampling quad target given camera detector location
 	class Sampler
 	{
+
+	public:
+
+		//! Options to modify simulation sampling
+		struct RenderOptions
+		{
+			bool const theAddSceneBias{ false };
+			bool const theAddImageNoise{ false };
+		};
+
+	private:
+
 		//! Camera geometry to use in sampling process (simulated imaging)
 		obj::Camera const theCamera{};
 
@@ -86,8 +98,7 @@ namespace sim
 		rigibra::Transform const theQuadWrtCam{};
 
 		// Sampling options
-		bool const theAddSceneBias{ true };
-		bool const theAddImageNoise{ true };
+		RenderOptions const theRenderOptions{};
 
 
 		//! Intersection of ray with the Z=0 (e12) plane
@@ -108,32 +119,6 @@ namespace sim
 
 	public:
 
-		//! Options to modify simulation sampling
-		enum OptionFlags
-		{
-			  None           = 0x0000
-			, AddSceneBias   = 0x0001
-			, AddImageNoise  = 0x0002
-		};
-
-	private:
-
-		//! True if testVal bit is set within haveBits
-		inline
-		static
-		bool
-		isSet
-			( unsigned const & haveBits
-			, OptionFlags const & testVal
-			)
-		{
-			unsigned const setVal{ haveBits & (unsigned)testVal };
-			bool const hasBit (0u != setVal);
-			return hasBit;
-		}
-
-	public:
-
 		//! Construct with information required to generate many samples
 		inline
 		explicit
@@ -141,14 +126,16 @@ namespace sim
 			( obj::Camera const & camera
 			, rigibra::Transform const & xCamWrtQuad
 			, obj::QuadTarget const & objQuad
-			, unsigned const & optionsMask = (AddSceneBias | AddImageNoise)
+			, RenderOptions const & renderOptions =
+				{ .theAddSceneBias = true
+				, .theAddImageNoise = true
+				}
 			)
 			: theCamera{ camera }
 			, theCamWrtQuad{ xCamWrtQuad }
 			, theObjQuad{ objQuad }
 			, theQuadWrtCam{ rigibra::inverse(theCamWrtQuad) }
-			, theAddSceneBias{ isSet(optionsMask, AddSceneBias) }
-			, theAddImageNoise{ isSet(optionsMask, AddImageNoise) }
+			, theRenderOptions{ renderOptions }
 		{ }
 
 		//! True if this instance contains valid data
@@ -345,7 +332,7 @@ namespace sim
 
 				// illumination bias across target
 				double valueBias{ 0. };
-				if (theAddSceneBias)
+				if (theRenderOptions.theAddSceneBias)
 				{
 					valueBias = noiseBias(spotInQuad);
 				}
@@ -355,7 +342,7 @@ namespace sim
 
 				// combined noise (dark and shot)
 				double valueNoise{ 0. };
-				if (theAddImageNoise)
+				if (theRenderOptions.theAddImageNoise)
 				{
 					valueNoise = theNoiseModel.valueFor(incidentValue);
 				}
