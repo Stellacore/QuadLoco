@@ -88,6 +88,50 @@ namespace ras
 			return spec;
 		}
 
+		/*! \brief ChipSpec that will fit a moving (square) filter window
+		 *
+		 * Computes a chip spec that specifies a high enough and wide
+		 * enough region to support computation with as square shapped
+		 * moving filter. E.g. for full filter size of
+		 * (2*halfFilterSize)(x)(2*halfFilterSize) that is to be moved
+		 * from -halfFilterMove to +halfFilterMove units (in both row and
+		 * col directions), then the returned instance will specify a chip
+		 * area that:
+		 * \arg has center at requested location
+		 *
+		 * And that
+		 * \arg has enough room for the size filter itself; PLUS
+		 * \arg has 'fMove' paddig in all directions (+/-row and +/-col)
+		 *
+		 * Note that the arguments are the half sizes that are applied
+		 * in both the negative and positive grid directions. I.e. the
+		 * resulting chip spec has full size that is (2*fSize + 2*fMove).
+		 */
+		inline
+		static
+		ChipSpec
+		chipSpecAround
+			( img::Spot const & centerSpot
+				//!< Center for filter motion (will be cast to ras::RowCol)
+			, std::size_t const & halfFilterMove
+				//!< The "+/-" travel [cell] during filter evaluation
+			, std::size_t const & halfFilterSize
+				//!< Radius of filter to be run [cell]
+			)
+		{
+			// define 'radius' of grid to extract
+			std::size_t const halfHigh{ halfFilterSize + halfFilterMove };
+			std::size_t const halfWide{ halfFilterSize + halfFilterMove };
+			// and center pixel row/col
+			using namespace quadloco;
+			ras::RowCol const rcCenter
+				{ (std::size_t)centerSpot[0]
+				, (std::size_t)centerSpot[1]
+				};
+			// use to create chip specification
+			return ras::ChipSpec::centeredOn(rcCenter, halfHigh, halfWide);
+		}
+
 		//! \brief True if this instance contains non trivial values
 		inline
 		bool
